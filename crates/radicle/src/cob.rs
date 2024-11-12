@@ -7,6 +7,7 @@ pub mod issue;
 pub mod op;
 pub mod patch;
 pub mod store;
+pub mod stream;
 pub mod thread;
 
 #[cfg(test)]
