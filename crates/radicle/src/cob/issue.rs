@@ -19,6 +19,7 @@ use crate::identity::doc::DocError;
 use crate::node::device::Device;
 use crate::node::NodeId;
 use crate::prelude::{Did, Doc, ReadRepository, RepoId};
+use crate::storage;
 use crate::storage::{HasRepoId, RepositoryError, WriteRepository};
 
 pub use cache::Cache;
@@ -32,6 +33,15 @@ pub static TYPENAME: LazyLock<TypeName> =
 
 /// Identifier for an issue.
 pub type IssueId = ObjectId;
+
+pub type IssueStream<'a> = cob::stream::Stream<'a, Action>;
+
+impl<'a> IssueStream<'a> {
+    pub fn init(issue: IssueId, store: &'a storage::git::Repository) -> Self {
+        let history = cob::stream::CobRange::new(&TYPENAME, &issue);
+        Self::new(&store.backend, history, TYPENAME.clone())
+    }
+}
 
 /// Error updating or creating issues.
 #[derive(Error, Debug)]

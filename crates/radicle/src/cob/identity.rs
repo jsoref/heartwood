@@ -12,6 +12,7 @@ use thiserror::Error;
 use crate::identity::doc::Doc;
 use crate::node::device::Device;
 use crate::node::NodeId;
+use crate::storage;
 use crate::{
     cob,
     cob::{
@@ -37,6 +38,15 @@ pub type Op = cob::Op<Action>;
 
 /// Identifier for an identity revision.
 pub type RevisionId = EntryId;
+
+pub type IdentityStream<'a> = cob::stream::Stream<'a, Action>;
+
+impl<'a> IdentityStream<'a> {
+    pub fn init(identity: ObjectId, store: &'a storage::git::Repository) -> Self {
+        let history = cob::stream::CobRange::new(&TYPENAME, &identity);
+        Self::new(&store.backend, history, TYPENAME.clone())
+    }
+}
 
 /// Proposal operation.
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
