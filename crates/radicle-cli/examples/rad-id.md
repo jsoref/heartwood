@@ -100,12 +100,12 @@ author   z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 date     Thu, 15 Dec 2022 17:28:04 +0000
 
     {
-      "blob": "053541ba7b90534b35dd8718e0ceaa408979b02b",
-      "description": "Add Bob as a delegate",
-      "parent": "0656c217f917c3e06234771e9ecae53aba5e173e",
-      "signature": "z3AyzixN2eWLtRfQWowtBXwWyRH3iJ8oJ25W6KFYFw5ANLntbzfavge15muNU6AVAUkxSxQvgg9yh2gupbUecavQY",
+      "type": "revision",
       "title": "Add Bob",
-      "type": "revision"
+      "description": "Add Bob as a delegate",
+      "blob": "053541ba7b90534b35dd8718e0ceaa408979b02b",
+      "parent": "0656c217f917c3e06234771e9ecae53aba5e173e",
+      "signature": "z3AyzixN2eWLtRfQWowtBXwWyRH3iJ8oJ25W6KFYFw5ANLntbzfavge15muNU6AVAUkxSxQvgg9yh2gupbUecavQY"
     }
 
 commit   0656c217f917c3e06234771e9ecae53aba5e173e
@@ -113,11 +113,11 @@ author   z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 date     Thu, 15 Dec 2022 17:28:04 +0000
 
     {
+      "type": "revision",
+      "title": "Initial revision",
       "blob": "d96f425412c9f8ad5d9a9a05c9831d0728e2338d",
       "parent": null,
-      "signature": "z5nGqUvrmfiSyLjNCHWTWYvVMcPUZcvo9TxPKzEKXYBdSgUzbrqf1cYsmpGgbQvYunnsrLSsubEmxZaRdKM4quqQR",
-      "title": "Initial revision",
-      "type": "revision"
+      "signature": "z5nGqUvrmfiSyLjNCHWTWYvVMcPUZcvo9TxPKzEKXYBdSgUzbrqf1cYsmpGgbQvYunnsrLSsubEmxZaRdKM4quqQR"
     }
 
 ```

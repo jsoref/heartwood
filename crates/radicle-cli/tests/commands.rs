@@ -165,6 +165,11 @@ fn rad_cob_migrate() {
 }
 
 #[test]
+fn rad_cob_operations() {
+    Environment::alice(["rad-init", "rad-cob-operations"]);
+}
+
+#[test]
 #[ignore = "part of many other tests"]
 fn rad_init() {
     Environment::alice(["rad-init"]);

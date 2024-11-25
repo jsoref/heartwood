@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## New Features
 
+- `rad cob log` now supports the arguments `--from` and `--to` which can be used
+  to range over particular operations on a COB.
+
 ## Fixed Bugs
 
 ## 1.3.0 - 2025-08-12

@@ -68,13 +68,13 @@ author   z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 date     Thu, 15 Dec 2022 17:28:04 +0000
 
     {
-      "body": "Flux capacitor power requirements exceed current supply",
-      "type": "comment"
+      "type": "comment",
+      "body": "Flux capacitor power requirements exceed current supply"
     }
 
     {
-      "title": "flux capacitor underpowered",
-      "type": "edit"
+      "type": "edit",
+      "title": "flux capacitor underpowered"
     }
 
 ```
@@ -91,16 +91,16 @@ author   z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 date     Thu, 15 Dec 2022 17:28:04 +0000
 
     {
-      "base": "f2de534b5e81d7c6e2dcaf58c3dd91573c0a0354",
+      "type": "revision",
       "description": "See details.",
-      "oid": "3e674d1a1df90807e934f9ae5da2591dd6848a33",
-      "type": "revision"
+      "base": "f2de534b5e81d7c6e2dcaf58c3dd91573c0a0354",
+      "oid": "3e674d1a1df90807e934f9ae5da2591dd6848a33"
     }
 
     {
-      "target": "delegates",
+      "type": "edit",
       "title": "Define power requirements",
-      "type": "edit"
+      "target": "delegates"
     }
 
 ```
@@ -117,10 +117,10 @@ author   z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 date     Thu, 15 Dec 2022 17:28:04 +0000
 
     {
+      "type": "label",
       "labels": [
         "bug"
-      ],
-      "type": "label"
+      ]
     }
 
 commit   d87dcfe8c2b3200e78b128d9b959cfdf7063fefe
@@ -129,13 +129,13 @@ author   z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 date     Thu, 15 Dec 2022 17:28:04 +0000
 
     {
-      "body": "Flux capacitor power requirements exceed current supply",
-      "type": "comment"
+      "type": "comment",
+      "body": "Flux capacitor power requirements exceed current supply"
     }
 
     {
-      "title": "flux capacitor underpowered",
-      "type": "edit"
+      "type": "edit",
+      "title": "flux capacitor underpowered"
     }
 
 ```
