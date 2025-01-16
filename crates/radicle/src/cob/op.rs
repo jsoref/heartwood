@@ -35,17 +35,15 @@ pub struct ManifestError {
 /// Error loading an `Op` from storage.
 #[derive(Error, Debug)]
 pub enum LoadError {
-    #[error("failed to load Op at '{object}': {err}")]
+    #[error("failed to load Op at '{object}': {source}")]
     Load {
         object: git::Oid,
-        #[source]
-        err: Box<dyn std::error::Error + Send + Sync + 'static>,
+        source: Box<dyn std::error::Error + Send + Sync + 'static>,
     },
-    #[error("failed to decode Op at '{object}': {err}")]
+    #[error("failed to decode Op at '{object}': {source}")]
     Encoding {
         object: git::Oid,
-        #[source]
-        err: OpEncodingError,
+        source: OpEncodingError,
     },
 }
 
@@ -146,9 +144,12 @@ impl<A> Op<A> {
     {
         let entry = store.load(id).map_err(|err| LoadError::Load {
             object: id,
-            err: Box::new(err),
+            source: Box::new(err),
         })?;
-        Op::try_from(&entry).map_err(|err| LoadError::Encoding { object: id, err })
+        Op::try_from(&entry).map_err(|err| LoadError::Encoding {
+            object: id,
+            source: err,
+        })
     }
 }
 
