@@ -82,6 +82,10 @@ impl change::Storage for Repository {
     fn parents_of(&self, id: &Oid) -> Result<Vec<Oid>, Self::LoadError> {
         self.backend.parents_of(id)
     }
+
+    fn manifest_of(&self, id: &Oid) -> Result<cob::Manifest, Self::LoadError> {
+        self.backend.manifest_of(id)
+    }
 }
 
 impl cob::object::Storage for Repository {
@@ -222,6 +226,10 @@ impl<R: storage::WriteRepository> change::Storage for DraftStore<'_, R> {
 
     fn parents_of(&self, id: &Oid) -> Result<Vec<Oid>, Self::LoadError> {
         self.repo.raw().parents_of(id)
+    }
+
+    fn manifest_of(&self, id: &Oid) -> Result<cob::Manifest, Self::LoadError> {
+        self.repo.raw().manifest_of(id)
     }
 }
 
