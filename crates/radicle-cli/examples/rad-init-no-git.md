@@ -16,7 +16,10 @@ Now we try again.
 
 ``` (fail)
 $ rad init
-✗ Error: repository head must point to a commit
+✗ Error: could not determine default branch in repository
+✗ Hint: perhaps you need to create a branch?
+✗ Error: aborting `rad init`
 ```
 
-Looks like we need a commit.
+Looks like we need to get to work and start working on a branch and add commits
+to it.

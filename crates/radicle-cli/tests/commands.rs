@@ -213,6 +213,18 @@ fn rad_init_no_git() {
 }
 
 #[test]
+fn rad_init_detached_head() {
+    let mut environment = Environment::new();
+    let profile = environment.profile("alice");
+
+    // NOTE: There is no repository set up here.
+
+    environment
+        .test("rad-init-detached-head", &profile)
+        .unwrap();
+}
+
+#[test]
 fn rad_inspect() {
     let mut environment = Environment::new();
     let profile = environment.profile("alice");
