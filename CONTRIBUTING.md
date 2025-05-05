@@ -1,6 +1,23 @@
 # CONTRIBUTING
 
-Contributions are very welcome. When contributing code, please follow these
+Contributions are very welcome. 
+
+## Contributing Issues
+
+Contributing issues are an excellent way to ensure your problem will 
+eventually get looked at. 
+
+If creating an issue, please make sure to include:
+- actual behaviour you're observing, 
+- the behaviour you were expecting instead,
+- steps to reproduce your issue,
+- the output of `rad debug`,
+- the contents of the log files referred to by that output.
+
+
+## Contributing Code 
+
+When contributing code, please follow these
 simple guidelines.
 
 * Follow the coding guidelines when proposing code changes ([see below](#code-style)).
@@ -14,11 +31,11 @@ simple guidelines.
 [guide]: https://radicle.xyz/guides/user#working-with-patches
 [zulip]: https://radicle.zulipchat.com
 
-## Submitting patches
+### Submitting patches
 
 Patch formatting follows the same rules as commit formatting. See below.
 
-## Linting & formatting
+### Linting & formatting
 
 Always check your code with the linter (`clippy`), by running:
 
@@ -30,7 +47,7 @@ And make sure your code is formatted with, using:
 
 Finally, ensure there is no trailing whitespace anywhere.
 
-## Running tests
+### Running tests
 
 Make sure all tests are passing with:
 
@@ -39,18 +56,18 @@ Make sure all tests are passing with:
 Some tests require `jq`. If `jq` is not detected, these tests will succeed
 without effectively testing anything.
 
-## Checking the docs
+### Checking the docs
 
 If you make documentation changes, you may want to check whether there are any
 warnings or errors:
 
     $ cargo doc --workspace --all-features
 
-## Code style
+### Code style
 
 The following code guidelines will help make code review smoother.
 
-### Use of `unwrap` and `expect`
+#### Use of `unwrap` and `expect`
 
 Use `unwrap` only in either of three circumstances:
 
@@ -78,7 +95,7 @@ expectation in the message. For example:
     logger::init(log::Level::Debug)
         .expect("logger must only be initialized once");
 
-### Module imports
+#### Module imports
 
 Modules are declared at the top of the file, before the imports. Public modules
 are separated from private modules with a blank line:
@@ -106,7 +123,7 @@ Imports are organized in groups, from least specific to more specific:
     use crate::storage::refs::Refs;
     use crate::storage::RemoteId;
 
-### Variable naming
+#### Variable naming
 
 Use short 1-letter names when the variable scope is only a few lines, or the context is
 obvious, eg.
@@ -125,14 +142,14 @@ Use the most descriptive names for globals:
 
     pub const KEEP_ALIVE_DELTA: LocalDuration = LocalDuration::from_secs(30);
 
-### Function naming
+#### Function naming
 
 Stay concise. Use the function doc comment to describe
 what the function does, not the name. Keep in mind functions are in the
 context of the parent module and/or object and repeating that would be
 redundant.
 
-### Logging
+#### Logging
 
 When writing log statements, always include a `target` and include enough
 context in the log message that it is useful on its own, eg.
@@ -142,14 +159,14 @@ context in the log message that it is useful on its own, eg.
 Check the file you are working on for what the `target` name should be; most
 logs should be at the *debug* level.
 
-## Dependencies
+### Dependencies
 
 Before adding any code dependencies, check with the maintainers if this is okay.
 In general, we try not to add external dependencies unless it's necessary.
 Dependencies increase counter-party risk, build-time, attack surface, and
 make code harder to audit.
 
-## Documentation
+### Documentation
 
 Public types and functions should be documented. Modules *may* be documented,
 if you see the need.
@@ -163,7 +180,7 @@ for the reader:
     for rid in self.storage.inventory()? {
         ...
 
-## Proposing changes
+### Proposing changes
 
 When proposing changes via a patch:
 
@@ -194,7 +211,7 @@ When proposing changes via a patch:
 To help with the above, use `git commit --amend` and `git rebase -i`. You can
 also interactively construct a commit from a working tree using `git add -p`.
 
-## Writing commit messages
+### Writing commit messages
 
 A properly formed git commit subject line should always be able to complete the
 following sentence:
