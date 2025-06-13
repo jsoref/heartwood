@@ -138,7 +138,7 @@ mod test {
     fn test_limitter_refill() {
         let mut r = RateLimiter::default();
         let t = (3, 0.2); // Three tokens burst. One token every 5 seconds.
-        let a = HostName::Dns(String::from("seed.radicle.xyz"));
+        let a = HostName::Dns(String::from("seed.radicle.example.com"));
         let n = arbitrary::gen::<NodeId>(1);
         let n = Some(&n);
 
@@ -172,8 +172,8 @@ mod test {
         let n = arbitrary::gen::<NodeId>(1);
         let n = Some(&n);
         let mut r = RateLimiter::default();
-        let addr1 = HostName::Dns(String::from("seed.radicle.xyz"));
-        let addr2 = HostName::Dns(String::from("seed.radicle.net"));
+        let addr1 = HostName::Dns(String::from("seed.radicle.example.com"));
+        let addr2 = HostName::Dns(String::from("seed.radicle.example.net"));
 
         assert_eq!(r.limit(addr1.clone(), n, &t, LocalTime::from_secs(0)), false);
         assert_eq!(r.limit(addr1.clone(), n, &t, LocalTime::from_secs(0)), true);
@@ -193,8 +193,8 @@ mod test {
         let n = arbitrary::gen::<NodeId>(1);
         let n = Some(&n);
         let mut r = RateLimiter::default();
-        let addr1 = HostName::Dns(String::from("seed.radicle.xyz"));
-        let addr2 = HostName::Dns(String::from("seed.radicle.net"));
+        let addr1 = HostName::Dns(String::from("seed.radicle.example.com"));
+        let addr2 = HostName::Dns(String::from("seed.radicle.example.net"));
 
         assert_eq!(r.limit(addr1.clone(), n, &t1, LocalTime::from_secs(0)), false);
         assert_eq!(r.limit(addr1.clone(), n, &t1, LocalTime::from_secs(0)), true);

@@ -42,15 +42,6 @@ pub mod seeds {
             .unwrap()
             .into()
     });
-
-    /// The Radicle seed node that the Radicle team uses.
-    pub static RADICLE_NODE_TEAM: LazyLock<ConnectAddress> = LazyLock::new(|| {
-        // SAFETY: `ConnectAddress` is known at compile time.
-        #[allow(clippy::unwrap_used)]
-        PeerAddr::from_str("z6MksmpU5b1dS7oaqF2bHXhQi1DWy2hB7Mh9CuN7y1DN6QSz@seed.radicle.xyz:8776")
-            .unwrap()
-            .into()
-    });
 }
 
 /// Peer-to-peer network.
@@ -67,13 +58,10 @@ impl Network {
     /// Bootstrap nodes for this network.
     pub fn bootstrap(&self) -> Vec<(Alias, ProtocolVersion, ConnectAddress)> {
         match self {
-            Self::Main => [
-                (
-                    "iris.radicle.xyz",
-                    seeds::RADICLE_NODE_BOOTSTRAP_IRIS.clone(),
-                ),
-                ("seed.radicle.xyz", seeds::RADICLE_NODE_TEAM.clone()),
-            ]
+            Self::Main => [(
+                "iris.radicle.xyz",
+                seeds::RADICLE_NODE_BOOTSTRAP_IRIS.clone(),
+            )]
             .into_iter()
             .map(|(a, s)| (Alias::new(a), 1, s))
             .collect(),

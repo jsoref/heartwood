@@ -6,8 +6,7 @@ $ rad config
 {
   "publicExplorer": "https://app.radicle.xyz/nodes/$host/$rid$path",
   "preferredSeeds": [
-    "z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776",
-    "z6MksmpU5b1dS7oaqF2bHXhQi1DWy2hB7Mh9CuN7y1DN6QSz@seed.radicle.xyz:8776"
+    "z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776"
   ],
   "web": {
     "pinned": {
@@ -65,7 +64,6 @@ $ rad config get node.alias
 alice
 $ rad config get preferredSeeds
 z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776
-z6MksmpU5b1dS7oaqF2bHXhQi1DWy2hB7Mh9CuN7y1DN6QSz@seed.radicle.xyz:8776
 $ rad config get node.limits.routingMaxSize
 1000
 ```

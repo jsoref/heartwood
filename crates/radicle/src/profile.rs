@@ -724,14 +724,14 @@ mod test {
           },
           "cli": { "hints": true },
           "node": {
-            "alias": "seed.radicle.xyz",
+            "alias": "seed.radicle.example.com",
             "listen": [],
             "peers": { "type": "dynamic", "target": 8 },
             "connect": [
               "z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo@rosa.radicle.xyz:8776",
               "z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776"
             ],
-            "externalAddresses": [ "seed.radicle.xyz:8776" ],
+            "externalAddresses": [ "seed.radicle.example.com:8776" ],
             "db": { "journalMode": "wal" },
             "network": "main",
             "log": "INFO",
