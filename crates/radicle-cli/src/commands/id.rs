@@ -764,7 +764,12 @@ fn print_diff(
     let current = serde_json::to_string_pretty(&current.doc)?;
 
     let tmp = tempfile::tempdir()?;
-    let repo = radicle::git::raw::Repository::init_bare(tmp.path())?;
+    let repo = radicle::git::raw::Repository::init_opts(
+        tmp.path(),
+        radicle::git::raw::RepositoryInitOptions::new()
+            .external_template(false)
+            .bare(true),
+    )?;
 
     let previous = if let Some(previous) = previous {
         let tree = radicle::git::write_tree(&doc::PATH, previous.as_bytes(), &repo)?;

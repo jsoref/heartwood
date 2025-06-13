@@ -89,7 +89,11 @@ where
 
 /// Creates a regular repository at the given path with a couple of commits.
 pub fn repository<P: AsRef<Path>>(path: P) -> (git2::Repository, git2::Oid) {
-    let repo = git2::Repository::init(path).unwrap();
+    let repo = git2::Repository::init_opts(
+        path,
+        git2::RepositoryInitOptions::new().external_template(false),
+    )
+    .unwrap();
     let user_name = "anonymous";
     let user_email = "anonymous@radicle.xyz";
     {
@@ -209,7 +213,11 @@ pub mod gen {
 
     /// Creates a regular repository at the given path with a couple of commits.
     pub fn repository<P: AsRef<Path>>(path: P) -> (git2::Repository, git2::Oid) {
-        let repo = git2::Repository::init(path).unwrap();
+        let repo = git2::Repository::init_opts(
+            path,
+            git2::RepositoryInitOptions::new().external_template(false),
+        )
+        .unwrap();
         let sig = git2::Signature::now(string(6).as_str(), email().as_str()).unwrap();
         let head = git::initial_commit(&repo, &sig).unwrap();
         let tree =

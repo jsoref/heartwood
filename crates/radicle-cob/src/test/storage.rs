@@ -41,7 +41,11 @@ pub struct Storage {
 impl Storage {
     pub fn new() -> Self {
         let temp = tempfile::tempdir().unwrap();
-        let raw = git2::Repository::init(temp.path()).unwrap();
+        let raw = git2::Repository::init_opts(
+            temp.path(),
+            git2::RepositoryInitOptions::new().external_template(false),
+        )
+        .unwrap();
         let mut config = raw.config().unwrap();
         config.set_str("user.name", "Terry Pratchett").unwrap();
         config
