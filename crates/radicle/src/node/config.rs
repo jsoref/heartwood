@@ -58,10 +58,16 @@ impl Network {
     /// Bootstrap nodes for this network.
     pub fn bootstrap(&self) -> Vec<(Alias, ProtocolVersion, ConnectAddress)> {
         match self {
-            Self::Main => [(
-                "iris.radicle.xyz",
-                seeds::RADICLE_NODE_BOOTSTRAP_IRIS.clone(),
-            )]
+            Self::Main => [
+                (
+                    "iris.radicle.xyz",
+                    seeds::RADICLE_NODE_BOOTSTRAP_IRIS.clone(),
+                ),
+                (
+                    "rosa.radicle.xyz",
+                    seeds::RADICLE_NODE_BOOTSTRAP_ROSA.clone(),
+                ),
+            ]
             .into_iter()
             .map(|(a, s)| (Alias::new(a), 1, s))
             .collect(),
