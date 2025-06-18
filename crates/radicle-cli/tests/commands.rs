@@ -2518,6 +2518,48 @@ fn git_tag() {
 }
 
 #[test]
+fn git_push_canonical_tags() {
+    let mut environment = Environment::new();
+    let alice = environment.node("alice");
+    let bob = environment.node("bob");
+
+    let rid = RepoId::from_str("z42hL2jL4XNk6K8oHQaSWfMgCL7ji").unwrap();
+
+    fixtures::repository(environment.work(&alice));
+
+    test(
+        "examples/rad-init.md",
+        environment.work(&alice),
+        Some(&alice.home),
+        [],
+    )
+    .unwrap();
+
+    let alice = alice.spawn();
+    let mut bob = bob.spawn();
+
+    bob.connect(&alice).converge([&alice]);
+    bob.clone(rid, environment.work(&bob)).unwrap();
+    formula(
+        &environment.tempdir(),
+        "examples/git/git-push-canonical-tags.md",
+    )
+    .unwrap()
+    .home(
+        "alice",
+        environment.work(&alice),
+        [("RAD_HOME", alice.home.path().display())],
+    )
+    .home(
+        "bob",
+        environment.work(&bob),
+        [("RAD_HOME", bob.home.path().display())],
+    )
+    .run()
+    .unwrap();
+}
+
+#[test]
 fn rad_workflow() {
     let mut environment = Environment::new();
     let alice = environment.node("alice");
