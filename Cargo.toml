@@ -47,6 +47,7 @@ radicle-dag = { version = "0.10", path = "crates/radicle-dag" }
 radicle-fetch = { version = "0.12", path = "crates/radicle-fetch" }
 radicle-git-ext = { version = "0.8", default-features = false }
 radicle-node = { version = "0.12", path = "crates/radicle-node" }
+radicle-protocol = { version = "0.1", path = "crates/radicle-protocol" }
 radicle-signals = { version = "0.11", path = "crates/radicle-signals" }
 radicle-ssh = { version = "0.9", path = "crates/radicle-ssh", default-features = false }
 radicle-systemd = { version = "0.9", path = "crates/radicle-systemd" }

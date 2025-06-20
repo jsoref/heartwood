@@ -1,17 +1,14 @@
 [package]
-name = "radicle-node"
-description = "The Radicle Node"
+name = "radicle-protocol"
+description = "The Radicle Protocol"
 homepage.workspace = true
 license.workspace = true
-version = "0.12.0"
-authors = ["cloudhead <cloudhead@radicle.xyz>"]
+version = "0.1.0"
+authors = ["Radicle Team <team@radicle.xyz>"]
 edition.workspace = true
-build = "build.rs"
 rust-version.workspace = true
 
 [features]
-default = ["systemd"]
-systemd = ["dep:radicle-systemd"]
 test = ["radicle/test", "radicle-crypto/test", "radicle-crypto/cyphernet", "qcheck", "snapbox"]
 
 [dependencies]
@@ -34,12 +31,7 @@ nonempty = { workspace = true, features = ["serialize"] }
 qcheck = { workspace = true, optional = true }
 radicle = { workspace = true, features = ["logger"] }
 radicle-fetch = { workspace = true }
-# N.b. this is required to use macros, even though it's re-exported
-# through radicle
 radicle-git-ext = { workspace = true, features = ["serde"] }
-radicle-protocol = { workspace = true }
-radicle-signals = { workspace = true }
-radicle-systemd = { workspace = true, optional = true }
 sqlite = { workspace = true, features = ["bundled"] }
 scrypt = { version = "0.11.0", default-features = false }
 serde = { workspace = true, features = ["derive"] }
