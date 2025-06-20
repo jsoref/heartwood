@@ -9,8 +9,8 @@ use radicle::storage::refs::RefsAt;
 use crate::identity::RepoId;
 use crate::node::{Alias, Config, ConnectOptions, ConnectResult, Event, FetchResult, Seeds};
 use crate::runtime::HandleError;
-use crate::service::policy;
-use crate::service::NodeId;
+use radicle::node::policy;
+use radicle::node::NodeId;
 
 #[derive(Default, Clone)]
 pub struct Handle {

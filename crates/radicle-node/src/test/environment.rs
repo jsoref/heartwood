@@ -19,8 +19,10 @@ use radicle::git::refname;
 use radicle::identity::{RepoId, Visibility};
 use radicle::node::config::ConnectAddress;
 use radicle::node::device::Device;
+use radicle::node::events::Event;
 use radicle::node::policy::store as policy;
 use radicle::node::seed::Store as _;
+pub use radicle::node::Config;
 use radicle::node::{Alias, Database, UserAgent, POLICIES_DB_FILE};
 use radicle::node::{ConnectOptions, Handle as _};
 use radicle::profile;
@@ -34,11 +36,8 @@ use radicle::{cob, explorer};
 use radicle::{git, web};
 
 use crate::node::NodeId;
-use crate::service::Event;
 use crate::storage::git::transport;
 use crate::{runtime, runtime::Handle, service, Runtime};
-
-pub use service::Config;
 
 /// Test environment.
 pub struct Environment {

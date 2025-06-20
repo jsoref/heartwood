@@ -2,13 +2,17 @@ use std::{io, mem, net};
 
 use byteorder::{NetworkEndian, ReadBytesExt};
 use cyphernet::addr::{tor, Addr, HostName, NetAddr};
+use radicle::crypto::Signature;
 use radicle::git::Oid;
+use radicle::identity::RepoId;
 use radicle::node::Address;
+use radicle::node::NodeId;
+use radicle::node::Timestamp;
 
-use crate::prelude::*;
+use crate::bounded::BoundedVec;
+use crate::service::filter::Filter;
 use crate::service::message::*;
 use crate::wire;
-use crate::wire::{Decode, Encode};
 
 /// Message type.
 #[repr(u16)]
@@ -64,22 +68,6 @@ impl Message {
             Self::Pong { .. } => MessageType::Pong,
         }
         .into()
-    }
-}
-
-impl netservices::Frame for Message {
-    type Error = wire::Error;
-
-    fn unmarshall(mut reader: impl io::Read) -> Result<Option<Self>, Self::Error> {
-        match Message::decode(&mut reader) {
-            Ok(msg) => Ok(Some(msg)),
-            Err(wire::Error::Io(_)) => Ok(None),
-            Err(err) => Err(err),
-        }
-    }
-
-    fn marshall(&self, mut writer: impl io::Write) -> Result<usize, Self::Error> {
-        self.encode(&mut writer).map_err(wire::Error::from)
     }
 }
 
@@ -463,8 +451,8 @@ mod tests {
     use radicle::storage::refs::RefsAt;
 
     use crate::deserializer::Deserializer;
-    use crate::test::arbitrary;
     use crate::wire::{self, Encode};
+    use radicle::test::arbitrary;
 
     #[test]
     fn test_refs_ann_max_size() {

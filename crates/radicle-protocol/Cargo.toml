@@ -9,24 +9,16 @@ edition.workspace = true
 rust-version.workspace = true
 
 [features]
-test = ["radicle/test", "radicle-crypto/test", "radicle-crypto/cyphernet", "qcheck", "snapbox"]
+test = ["radicle/test", "radicle-crypto/test", "radicle-crypto/cyphernet", "qcheck"]
 
 [dependencies]
-amplify = { workspace = true }
-anyhow = { workspace = true }
 bloomy = "1.2"
 byteorder = { workspace = true }
-chrono = { workspace = true, features = ["clock"] }
-colored = { workspace = true }
 crossbeam-channel = { workspace = true }
-cyphernet = { workspace = true, features = ["tor", "dns", "ed25519", "p2p-ed25519"] }
+cyphernet = { workspace = true, features = ["tor"] }
 fastrand = { workspace = true }
-io-reactor = { version = "0.5.1", features = ["popol"] }
-lexopt = { workspace = true }
-libc = { workspace = true }
 log = { workspace = true, features = ["std"] }
 localtime = { workspace = true }
-netservices = { version = "0.8.0", features = ["io-reactor", "socket2"] }
 nonempty = { workspace = true, features = ["serialize"] }
 qcheck = { workspace = true, optional = true }
 radicle = { workspace = true, features = ["logger"] }
@@ -36,9 +28,6 @@ sqlite = { workspace = true, features = ["bundled"] }
 scrypt = { version = "0.11.0", default-features = false }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["preserve_order"] }
-snapbox = { workspace = true, optional = true }
-socket2 = "0.5.7"
-tempfile = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
@@ -46,4 +35,3 @@ qcheck = { workspace = true }
 qcheck-macros = { workspace = true }
 radicle = { workspace = true, features = ["test"] }
 radicle-crypto = { workspace = true, features = ["test", "cyphernet"] }
-snapbox = { workspace = true }

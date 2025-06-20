@@ -5,13 +5,15 @@ use radicle::crypto::Signature;
 use sqlite as sql;
 use thiserror::Error;
 
-use crate::node::{Database, NodeId};
-use crate::prelude::{Filter, Timestamp};
+use crate::service::filter::Filter;
 use crate::service::message::{
     Announcement, AnnouncementMessage, InventoryAnnouncement, NodeAnnouncement, RefsAnnouncement,
 };
 use crate::wire;
 use crate::wire::Decode;
+use radicle::node::Database;
+use radicle::node::NodeId;
+use radicle::prelude::Timestamp;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -395,11 +397,12 @@ mod parse {
 #[allow(clippy::unwrap_used)]
 mod test {
     use super::*;
-    use crate::prelude::{BoundedVec, RepoId};
-    use crate::test::arbitrary;
+    use crate::bounded::BoundedVec;
     use localtime::LocalTime;
     use radicle::assert_matches;
+    use radicle::identity::RepoId;
     use radicle::node::device::Device;
+    use radicle::test::arbitrary;
 
     #[test]
     fn test_announced() {

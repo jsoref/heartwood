@@ -22,6 +22,7 @@ use radicle::node::config::ConnectAddress;
 use radicle::node::policy::store as policy;
 use radicle::node::seed::Store as _;
 use radicle::node::Config;
+use radicle::node::Event;
 use radicle::node::{self, Alias};
 use radicle::node::{ConnectOptions, Handle as _};
 use radicle::node::{Database, POLICIES_DB_FILE};
@@ -33,7 +34,6 @@ use radicle::Storage;
 
 use crate::node::device::Device;
 use crate::node::NodeId;
-use crate::service::Event;
 use crate::storage::git::transport;
 use crate::{runtime, runtime::Handle, service, Runtime};
 

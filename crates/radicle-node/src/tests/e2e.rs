@@ -1,6 +1,8 @@
 use std::{collections::HashSet, thread, time};
 
 use radicle::node::device::Device;
+use radicle::node::policy::Scope;
+use radicle::node::Event;
 use radicle::node::{Alias, ConnectResult, FetchResult, Handle as _, DEFAULT_TIMEOUT};
 use radicle::storage::{
     ReadRepository, ReadStorage, RefUpdate, RemoteRepository, SignRepository, ValidateRepository,
@@ -13,7 +15,6 @@ use radicle::{git, issue};
 use crate::node::config::Limits;
 use crate::node::{Config, ConnectOptions};
 use crate::service;
-use crate::service::policy::Scope;
 use crate::storage::git::transport;
 use crate::test::logger;
 use crate::test::node::{converge, Node};
@@ -688,8 +689,7 @@ fn test_large_fetch() {
     bob_events
         .wait(
             |e| {
-                matches!(e, service::Event::RefsFetched { updated, .. } if !updated.is_empty())
-                    .then_some(())
+                matches!(e, Event::RefsFetched { updated, .. } if !updated.is_empty()).then_some(())
             },
             time::Duration::from_secs(9 * scale as u64),
         )
@@ -717,7 +717,7 @@ fn test_concurrent_fetches() {
     let mut alice_repos = HashSet::new();
     let mut alice = Node::init(
         tmp.path(),
-        service::Config {
+        radicle::node::config::Config {
             limits: limits.clone(),
             relay: radicle::node::config::Relay::Always,
             ..config::relay("alice")
@@ -725,7 +725,7 @@ fn test_concurrent_fetches() {
     );
     let mut bob = Node::init(
         tmp.path(),
-        service::Config {
+        radicle::node::config::Config {
             limits,
             relay: radicle::node::config::Relay::Always,
             ..config::relay("bob")
@@ -766,7 +766,7 @@ fn test_concurrent_fetches() {
 
     while !bob_repos.is_empty() {
         match alice_events.recv().unwrap() {
-            service::Event::RefsFetched { rid, updated, .. } if !updated.is_empty() => {
+            Event::RefsFetched { rid, updated, .. } if !updated.is_empty() => {
                 bob_repos.remove(&rid);
                 log::debug!(target: "test", "{} fetched {rid} ({} left)",alice.id, bob_repos.len());
             }
@@ -776,7 +776,7 @@ fn test_concurrent_fetches() {
 
     while !alice_repos.is_empty() {
         match bob_events.recv().unwrap() {
-            service::Event::RefsFetched { rid, updated, .. } if !updated.is_empty() => {
+            Event::RefsFetched { rid, updated, .. } if !updated.is_empty() => {
                 alice_repos.remove(&rid);
                 log::debug!(target: "test", "{} fetched {rid} ({} left)", bob.id, alice_repos.len());
             }
@@ -1255,8 +1255,7 @@ fn missing_delegate_default_branch() {
     bob_events
         .wait(
             |e| {
-                matches!(e, service::Event::RefsFetched { updated, .. } if !updated.is_empty())
-                    .then_some(())
+                matches!(e, Event::RefsFetched { updated, .. } if !updated.is_empty()).then_some(())
             },
             DEFAULT_TIMEOUT,
         )
@@ -1416,7 +1415,7 @@ fn test_background_foreground_fetch() {
     bob.handle.announce_refs(rid).unwrap();
     alice_events
         .wait(
-            |e| matches!(e, service::Event::RefsAnnounced { .. }).then_some(()),
+            |e| matches!(e, Event::RefsAnnounced { .. }).then_some(()),
             DEFAULT_TIMEOUT,
         )
         .unwrap();

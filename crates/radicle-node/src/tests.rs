@@ -9,17 +9,19 @@ use std::sync::LazyLock;
 use std::time;
 
 use crossbeam_channel as chan;
-use netservices::Direction as Link;
 use radicle::identity::Visibility;
 use radicle::node::address::Store as _;
 use radicle::node::device::Device;
+use radicle::node::policy;
 use radicle::node::refs::Store as _;
 use radicle::node::routing::Store as _;
+use radicle::node::Link;
 use radicle::node::{ConnectOptions, DEFAULT_TIMEOUT};
 use radicle::storage::refs::RefsAt;
 use radicle::storage::RefUpdate;
 use radicle::test::arbitrary::gen;
 use radicle::test::storage::MockRepository;
+use radicle_protocol::bounded::BoundedVec;
 
 use crate::collections::{RandomMap, RandomSet};
 use crate::identity::RepoId;
@@ -49,7 +51,6 @@ use crate::test::simulator::{Peer as _, Simulation};
 use crate::test::storage::MockStorage;
 use crate::wire::Decode;
 use crate::wire::Encode;
-use crate::worker;
 use crate::worker::fetch;
 use crate::LocalTime;
 use crate::{git, identity, rad, runtime, service, test};
@@ -1462,7 +1463,7 @@ fn test_fetch_missing_inventory_on_schedule() {
     alice.fetched(
         rid,
         bob.id,
-        Err(worker::FetchError::Io(
+        Err(radicle_protocol::worker::FetchError::Io(
             io::ErrorKind::ConnectionReset.into(),
         )),
     );
@@ -1806,7 +1807,7 @@ fn test_init_and_seed() {
         .find(|e| {
             matches!(
                 e,
-                service::Event::RefsFetched { remote, .. }
+                radicle::node::events::Event::RefsFetched { remote, .. }
                 if *remote == eve.node_id()
             )
         })

@@ -28,7 +28,6 @@ use crate::runtime::Emitter;
 use crate::service;
 use crate::service::io::Io;
 use crate::service::message::*;
-use crate::service::policy::{Scope, SeedingPolicy};
 use crate::service::*;
 use crate::storage::git::transport::remote;
 use crate::storage::{RemoteId, WriteStorage};
@@ -36,6 +35,10 @@ use crate::test::storage::MockStorage;
 use crate::test::{arbitrary, fixtures, simulator};
 use crate::wire::MessageType;
 use crate::{Link, LocalDuration, LocalTime, PROTOCOL_VERSION};
+use radicle::node::events::Events;
+use radicle::node::policy::config as policy;
+use radicle::node::policy::{Scope, SeedingPolicy};
+use radicle_protocol::bounded::BoundedVec;
 
 /// Service instantiation used for testing.
 pub type Service<S, G> = service::Service<Database, S, G>;
@@ -100,7 +103,7 @@ where
 }
 
 pub struct Config<G: crypto::signature::Signer<crypto::Signature> + 'static> {
-    pub config: service::Config,
+    pub config: radicle::node::Config,
     pub local_time: LocalTime,
     pub policy: SeedingPolicy,
     pub signer: Device<G>,
@@ -113,7 +116,7 @@ impl Default for Config<MockSigner> {
         let mut rng = fastrand::Rng::new();
         let signer = Device::mock_rng(&mut rng);
         let tmp = tempfile::TempDir::new().unwrap();
-        let config = service::Config::test(Alias::from_str("mocky").unwrap());
+        let config = radicle::node::Config::test(Alias::from_str("mocky").unwrap());
 
         Config {
             config,

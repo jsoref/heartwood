@@ -12,7 +12,7 @@ rust-version.workspace = true
 [features]
 default = ["systemd"]
 systemd = ["dep:radicle-systemd"]
-test = ["radicle/test", "radicle-crypto/test", "radicle-crypto/cyphernet", "qcheck", "snapbox"]
+test = ["radicle/test", "radicle-crypto/test", "radicle-crypto/cyphernet", "radicle-protocol/test", "qcheck", "snapbox"]
 
 [dependencies]
 amplify = { workspace = true }

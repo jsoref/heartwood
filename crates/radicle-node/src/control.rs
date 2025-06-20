@@ -246,9 +246,9 @@ mod tests {
 
     use super::*;
     use crate::identity::RepoId;
+    use crate::node::policy::Scope;
     use crate::node::Handle;
     use crate::node::{Alias, Node, NodeId};
-    use crate::service::policy::Scope;
     use crate::test;
 
     #[test]

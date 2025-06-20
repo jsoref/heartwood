@@ -1,12 +1,9 @@
-mod frame;
-mod message;
-mod protocol;
-mod varint;
+pub mod frame;
+pub mod message;
+pub mod varint;
 
 pub use frame::StreamId;
 pub use message::{AddressType, MessageType};
-pub use protocol::{Control, Wire, WireReader, WireSession, WireWriter};
-use radicle::node::UserAgent;
 
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
@@ -18,18 +15,21 @@ use std::{io, mem};
 use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
 use cyphernet::addr::tor;
 
-use crate::crypto::{PublicKey, Signature, Unverified};
-use crate::git;
-use crate::git::fmt;
-use crate::identity::RepoId;
-use crate::node;
-use crate::node::Alias;
-use crate::prelude::*;
+use radicle::crypto::{PublicKey, Signature, Unverified};
+use radicle::git;
+use radicle::git::fmt;
+use radicle::identity::RepoId;
+use radicle::node;
+use radicle::node::Alias;
+use radicle::node::NodeId;
+use radicle::node::Timestamp;
+use radicle::node::UserAgent;
+use radicle::storage::refs::Refs;
+use radicle::storage::refs::RefsAt;
+use radicle::storage::refs::SignedRefs;
+
+use crate::bounded::BoundedVec;
 use crate::service::filter;
-use crate::storage::refs::Refs;
-use crate::storage::refs::RefsAt;
-use crate::storage::refs::SignedRefs;
-use crate::Timestamp;
 
 /// The default type we use to represent sizes on the wire.
 ///
@@ -569,9 +569,9 @@ mod tests {
     use qcheck;
     use qcheck_macros::quickcheck;
 
-    use crate::crypto::Unverified;
-    use crate::storage::refs::SignedRefs;
-    use crate::test::assert_matches;
+    use radicle::assert_matches;
+    use radicle::crypto::Unverified;
+    use radicle::storage::refs::SignedRefs;
 
     #[quickcheck]
     fn prop_u8(input: u8) {

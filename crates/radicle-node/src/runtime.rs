@@ -21,6 +21,8 @@ use radicle::node;
 use radicle::node::address;
 use radicle::node::address::Store as _;
 use radicle::node::notifications;
+use radicle::node::policy::config as policy;
+use radicle::node::Event;
 use radicle::node::Handle as _;
 use radicle::node::UserAgent;
 use radicle::profile::Home;
@@ -29,7 +31,7 @@ use radicle::{cob, git, storage, Storage};
 use crate::control;
 use crate::node::{routing, NodeId};
 use crate::service::message::NodeAnnouncement;
-use crate::service::{gossip, policy, Event, INITIAL_SUBSCRIBE_BACKLOG_DELTA};
+use crate::service::{gossip, INITIAL_SUBSCRIBE_BACKLOG_DELTA};
 use crate::wire;
 use crate::wire::{Decode, Wire};
 use crate::worker;
@@ -117,7 +119,7 @@ impl Runtime {
     /// This function spawns threads.
     pub fn init<G>(
         home: Home,
-        config: service::Config,
+        config: radicle::node::Config,
         listen: Vec<net::SocketAddr>,
         signals: chan::Receiver<Signal>,
         signer: Device<G>,

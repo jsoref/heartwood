@@ -2,7 +2,7 @@ use std::io;
 use std::marker::PhantomData;
 
 use crate::bounded;
-use crate::prelude::BoundedVec;
+use crate::bounded::BoundedVec;
 use crate::service::message::Message;
 use crate::wire;
 
@@ -104,7 +104,7 @@ mod test {
     use super::*;
     use qcheck_macros::quickcheck;
 
-    use crate::test::assert_matches;
+    use radicle::assert_matches;
 
     const MSG_HELLO: &[u8] = &[5, b'h', b'e', b'l', b'l', b'o'];
     const MSG_BYE: &[u8] = &[3, b'b', b'y', b'e'];
@@ -117,11 +117,11 @@ mod test {
         assert_matches!(decoder.deserialize_next(), Ok(None));
         assert_eq!(decoder.unparsed.len(), 2);
 
-        decoder.input(&[b'y']).unwrap();
+        decoder.input(b"y").unwrap();
         assert_matches!(decoder.deserialize_next(), Ok(None));
         assert_eq!(decoder.unparsed.len(), 3);
 
-        decoder.input(&[b'e']).unwrap();
+        decoder.input(b"e").unwrap();
         assert_matches!(decoder.deserialize_next(), Ok(Some(s)) if s.as_str() == "bye");
         assert_eq!(decoder.unparsed.len(), 0);
         assert!(decoder.is_empty());

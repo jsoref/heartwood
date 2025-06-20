@@ -1,12 +1,17 @@
 use std::collections::VecDeque;
 use std::time;
 
+use localtime::LocalDuration;
 use log::*;
+use radicle::identity::RepoId;
 use radicle::node::config::FetchPackSizeLimit;
+use radicle::node::Address;
+use radicle::node::NodeId;
 use radicle::storage::refs::RefsAt;
 
-use crate::prelude::*;
+use crate::service::message::Message;
 use crate::service::session::Session;
+use crate::service::DisconnectReason;
 use crate::service::Link;
 
 use super::gossip;
@@ -189,7 +194,7 @@ impl Outbox {
     }
 
     #[cfg(any(test, feature = "test"))]
-    pub(crate) fn queue(&mut self) -> &mut VecDeque<Io> {
+    pub fn queue(&mut self) -> &mut VecDeque<Io> {
         &mut self.io
     }
 }

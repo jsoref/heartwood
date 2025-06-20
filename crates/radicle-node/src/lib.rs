@@ -3,11 +3,12 @@
 // suggestions did not make sense.
 #![allow(clippy::byte_char_slices)]
 
-pub mod bounded;
+use std::str::FromStr;
+use std::sync::LazyLock;
+
 pub mod control;
-pub mod deserializer;
 pub mod runtime;
-pub mod service;
+pub(crate) use radicle_protocol::service;
 #[cfg(any(test, feature = "test"))]
 pub mod test;
 #[cfg(test)]
@@ -18,7 +19,8 @@ pub mod worker;
 use radicle::version::Version;
 
 pub use localtime::{LocalDuration, LocalTime};
-pub use netservices::Direction as Link;
+pub use radicle::node::Link;
+pub use radicle::node::UserAgent;
 pub use radicle::node::PROTOCOL_VERSION;
 pub use radicle::prelude::Timestamp;
 pub use radicle::{collections, crypto, git, identity, node, profile, rad, storage};
@@ -32,14 +34,18 @@ pub const VERSION: Version = Version {
     timestamp: env!("SOURCE_DATE_EPOCH"),
 };
 
+/// This node's user agent string.
+pub static USER_AGENT: LazyLock<UserAgent> = LazyLock::new(|| {
+    FromStr::from_str(format!("/radicle:{}/", VERSION.version).as_str())
+        .expect("user agent is valid")
+});
+
 pub mod prelude {
-    pub use crate::bounded::BoundedVec;
     pub use crate::crypto::{PublicKey, Signature};
-    pub use crate::deserializer::Deserializer;
     pub use crate::identity::{Did, RepoId};
-    pub use crate::node::Address;
+    pub use crate::node::{config::Network, Address, Event, NodeId};
     pub use crate::service::filter::Filter;
-    pub use crate::service::{DisconnectReason, Event, Message, Network, NodeId};
+    pub use crate::service::{DisconnectReason, Message};
     pub use crate::storage::refs::Refs;
     pub use crate::storage::WriteStorage;
     pub use crate::{LocalDuration, LocalTime, Timestamp};

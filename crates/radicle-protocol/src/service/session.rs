@@ -2,16 +2,15 @@ use std::collections::{HashSet, VecDeque};
 use std::{fmt, time};
 
 use crossbeam_channel as chan;
+use radicle::node::config::Limits;
+use radicle::node::{FetchResult, Severity};
+use radicle::node::{Link, Timestamp};
+pub use radicle::node::{PingState, State};
+use radicle::storage::refs::RefsAt;
 
-use crate::node::config::Limits;
-use crate::node::{FetchResult, Severity};
 use crate::service::message;
 use crate::service::message::Message;
 use crate::service::{Address, LocalDuration, LocalTime, NodeId, Outbox, RepoId, Rng};
-use crate::storage::refs::RefsAt;
-use crate::{Link, Timestamp};
-
-pub use crate::node::{PingState, State};
 
 /// Time after which a connection is considered stable.
 pub const CONNECTION_STABLE_THRESHOLD: LocalDuration = LocalDuration::from_mins(1);

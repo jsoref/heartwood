@@ -239,3 +239,15 @@ impl<T: std::fmt::Debug, const N: usize> std::fmt::Debug for BoundedVec<T, N> {
         self.v.fmt(f)
     }
 }
+
+#[cfg(any(test, feature = "test"))]
+impl<T, const N: usize> qcheck::Arbitrary for BoundedVec<T, N>
+where
+    T: qcheck::Arbitrary + Eq,
+{
+    fn arbitrary(g: &mut qcheck::Gen) -> Self {
+        let mut v: Vec<T> = qcheck::Arbitrary::arbitrary(g);
+        v.truncate(N);
+        v.try_into().expect("size within bounds")
+    }
+}

@@ -7,6 +7,8 @@ use radicle::node;
 use radicle::node::address::Store as _;
 use radicle::node::config::seeds::RADICLE_NODE_BOOTSTRAP_IRIS;
 use radicle::node::config::DefaultSeedingPolicy;
+use radicle::node::events::Event;
+use radicle::node::policy::Scope;
 use radicle::node::routing::Store as _;
 use radicle::node::UserAgent;
 use radicle::node::{Address, Alias, Config, Handle as _, DEFAULT_TIMEOUT};
@@ -16,8 +18,6 @@ use radicle::profile::Home;
 use radicle::storage::{ReadStorage, RefUpdate, RemoteRepository};
 use radicle::test::fixtures;
 
-use radicle_node::service::policy::Scope;
-use radicle_node::service::Event;
 #[allow(unused_imports)]
 use radicle_node::test::logger;
 use radicle_node::test::node::Node;

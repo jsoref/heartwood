@@ -4,14 +4,15 @@ use std::str::FromStr;
 use std::sync::LazyLock;
 
 use super::*;
-use crate::{PROTOCOL_VERSION, VERSION};
+use crate::bounded::BoundedVec;
 use radicle::node::UserAgent;
+use radicle::node::PROTOCOL_VERSION;
 
 pub use store::{AnnouncementId, Error, RelayStatus, Store};
 
 /// This node's user agent string.
-pub static USER_AGENT: LazyLock<UserAgent> = LazyLock::new(|| {
-    FromStr::from_str(format!("/radicle:{}/", VERSION.version).as_str())
+pub static PROTOCOL_VERSION_STRING: LazyLock<UserAgent> = LazyLock::new(|| {
+    FromStr::from_str(format!("/radicle:{}/", PROTOCOL_VERSION).as_str())
         .expect("user agent is valid")
 });
 
@@ -23,7 +24,7 @@ pub fn node(config: &Config, timestamp: Timestamp) -> NodeAnnouncement {
         .clone()
         .try_into()
         .expect("external addresses are within the limit");
-    let agent = USER_AGENT.clone();
+    let agent = PROTOCOL_VERSION_STRING.clone();
     let version = PROTOCOL_VERSION;
 
     NodeAnnouncement {

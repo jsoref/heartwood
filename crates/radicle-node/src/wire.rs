@@ -24,20 +24,22 @@ use reactor::{ResourceId, ResourceType, Timestamp};
 use radicle::collections::RandomMap;
 use radicle::crypto;
 use radicle::node::config::AddressConfig;
+use radicle::node::Link;
 use radicle::node::NodeId;
 use radicle::storage::WriteStorage;
+use radicle_protocol::deserializer::Deserializer;
+pub use radicle_protocol::wire::frame;
+pub use radicle_protocol::wire::frame::{Frame, FrameData, StreamId};
+pub use radicle_protocol::wire::*;
+use radicle_protocol::worker::{FetchRequest, FetchResult};
 
-use crate::prelude::Deserializer;
 use crate::service;
 use crate::service::io::Io;
 use crate::service::FETCH_TIMEOUT;
 use crate::service::{session, DisconnectReason, Metrics, Service};
-use crate::wire::frame;
-use crate::wire::frame::{Frame, FrameData, StreamId};
-use crate::wire::Encode;
 use crate::worker;
-use crate::worker::{ChannelEvent, ChannelsConfig, FetchRequest, FetchResult, Task, TaskResult};
-use crate::Link;
+use crate::worker::{ChannelEvent, ChannelsConfig};
+use crate::worker::{Task, TaskResult};
 
 /// NoiseXK handshake pattern.
 pub const NOISE_XK: HandshakePattern = HandshakePattern {
@@ -573,7 +575,10 @@ where
                         return;
                     }
                 };
-                let transport = match NetTransport::with_session(session, Link::Inbound) {
+                let transport = match NetTransport::with_session(
+                    session,
+                    netservices::Direction::Inbound,
+                ) {
                     Ok(transport) => transport,
                     Err(err) => {
                         log::error!(target: "wire", "Failed to create transport for accepted connection: {err}");
@@ -1024,7 +1029,10 @@ where
                         self.service.config(),
                     )
                     .and_then(|session| {
-                        NetTransport::<WireSession<G>>::with_session(session, Link::Outbound)
+                        NetTransport::<WireSession<G>>::with_session(
+                            session,
+                            netservices::Direction::Outbound,
+                        )
                     }) {
                         Ok(transport) => {
                             self.outbound.insert(
@@ -1134,7 +1142,7 @@ pub fn dial<G: Ecdh<Pk = NodeId>>(
     remote_addr: NetAddr<HostName>,
     remote_id: <G as EcSk>::Pk,
     signer: G,
-    config: &service::Config,
+    config: &radicle::node::Config,
 ) -> io::Result<WireSession<G>> {
     // Determine what address to establish a TCP connection with, given the remote peer
     // address and our node configuration.
@@ -1248,7 +1256,7 @@ mod test {
 
     #[test]
     fn test_pong_message_with_extension() {
-        use crate::deserializer;
+        use radicle_protocol::deserializer;
 
         let mut stream = Vec::new();
         let pong = Message::Pong {
@@ -1281,7 +1289,7 @@ mod test {
 
     #[test]
     fn test_inventory_ann_with_extension() {
-        use crate::deserializer;
+        use radicle_protocol::deserializer;
 
         #[derive(Debug)]
         struct MessageWithExt {

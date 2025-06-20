@@ -1,4 +1,3 @@
-pub mod arbitrary;
 pub mod gossip;
 pub mod handle;
 pub mod node;

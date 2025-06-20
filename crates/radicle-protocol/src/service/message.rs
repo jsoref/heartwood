@@ -1,18 +1,18 @@
 use std::{fmt, io, mem};
 
 use nonempty::NonEmpty;
+use radicle::crypto;
 use radicle::git;
+use radicle::identity::RepoId;
+use radicle::node;
 use radicle::node::device::Device;
+use radicle::node::{Address, Alias, UserAgent};
+use radicle::storage;
 use radicle::storage::refs::RefsAt;
 
-use crate::crypto;
-use crate::identity::RepoId;
-use crate::node;
-use crate::node::{Address, Alias, UserAgent};
-use crate::prelude::BoundedVec;
+use crate::bounded::BoundedVec;
 use crate::service::filter::Filter;
 use crate::service::{Link, NodeId, Timestamp};
-use crate::storage;
 use crate::wire;
 
 /// Maximum number of addresses which can be announced to other nodes.
@@ -363,7 +363,7 @@ impl Announcement {
     #[cfg(not(debug_assertions))]
     pub const POW_PARAMS: (u8, u32, u32) = (15, 8, 1);
     /// Salt used for generating PoW.
-    pub const POW_SALT: &'static [u8] = &[b'r', b'a', b'd'];
+    pub const POW_SALT: &'static [u8] = b"rad";
 
     /// Verify this announcement's signature.
     pub fn verify(&self) -> bool {
@@ -589,6 +589,87 @@ impl ZeroBytes {
     }
 }
 
+#[cfg(any(test, feature = "test"))]
+#[allow(clippy::unwrap_used)]
+impl qcheck::Arbitrary for Message {
+    fn arbitrary(g: &mut qcheck::Gen) -> Self {
+        use qcheck::Arbitrary;
+
+        match g.choose(&[1, 2, 3, 4, 5, 6, 7]).unwrap() {
+            1 => Announcement {
+                node: NodeId::arbitrary(g),
+                message: InventoryAnnouncement {
+                    inventory: BoundedVec::arbitrary(g),
+                    timestamp: Timestamp::arbitrary(g),
+                }
+                .into(),
+                signature: crypto::Signature::from(<[u8; 64]>::arbitrary(g)),
+            }
+            .into(),
+            2 => Announcement {
+                node: NodeId::arbitrary(g),
+                message: RefsAnnouncement {
+                    rid: RepoId::arbitrary(g),
+                    refs: BoundedVec::arbitrary(g),
+                    timestamp: Timestamp::arbitrary(g),
+                }
+                .into(),
+                signature: crypto::Signature::from(<[u8; 64]>::arbitrary(g)),
+            }
+            .into(),
+            3 => {
+                let message = NodeAnnouncement {
+                    version: u8::arbitrary(g),
+                    features: u64::arbitrary(g).into(),
+                    timestamp: Timestamp::arbitrary(g),
+                    alias: Alias::arbitrary(g),
+                    addresses: Arbitrary::arbitrary(g),
+                    nonce: u64::arbitrary(g),
+                    agent: UserAgent::arbitrary(g),
+                }
+                .into();
+                let bytes: [u8; 64] = Arbitrary::arbitrary(g);
+                let signature = crypto::Signature::from(bytes);
+
+                Announcement {
+                    node: NodeId::arbitrary(g),
+                    signature,
+                    message,
+                }
+                .into()
+            }
+            4 => {
+                let message = Info::RefsAlreadySynced {
+                    rid: RepoId::arbitrary(g),
+                    at: radicle::test::arbitrary::oid(),
+                };
+                Self::Info(message)
+            }
+            5 => Self::Subscribe(Subscribe {
+                filter: Filter::arbitrary(g),
+                since: Timestamp::arbitrary(g),
+                until: Timestamp::arbitrary(g),
+            }),
+            6 => {
+                let mut rng = fastrand::Rng::with_seed(u64::arbitrary(g));
+
+                Self::Ping(Ping::new(&mut rng))
+            }
+            7 => Self::Pong {
+                zeroes: ZeroBytes::new(u16::arbitrary(g).min(Ping::MAX_PONG_ZEROES)),
+            },
+            _ => panic!("Invalid choice for Message::arbitrary"),
+        }
+    }
+}
+
+#[cfg(any(test, feature = "test"))]
+impl qcheck::Arbitrary for ZeroBytes {
+    fn arbitrary(g: &mut qcheck::Gen) -> Self {
+        ZeroBytes::new(u16::arbitrary(g))
+    }
+}
+
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
@@ -599,9 +680,9 @@ mod tests {
     use radicle::git::raw;
 
     use super::*;
-    use crate::prelude::*;
-    use crate::test::arbitrary;
     use crate::wire::Encode;
+    use localtime::LocalTime;
+    use radicle::test::arbitrary;
 
     #[test]
     fn test_ref_remote_limit() {

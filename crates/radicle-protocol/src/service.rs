@@ -38,32 +38,36 @@ use radicle::storage::refs::SIGREFS_BRANCH;
 use radicle::storage::RepositoryError;
 use radicle_fetch::policy::SeedingPolicy;
 
-use crate::identity::RepoId;
-use crate::node::routing;
-use crate::node::routing::InsertResult;
-use crate::node::{
-    Address, Alias, Features, FetchResult, HostName, Seed, Seeds, SyncStatus, SyncedAt,
-};
-use crate::prelude::*;
-use crate::runtime::Emitter;
 use crate::service::gossip::Store as _;
 use crate::service::message::{
     Announcement, AnnouncementMessage, Info, NodeAnnouncement, Ping, RefsAnnouncement, RefsStatus,
 };
 use crate::service::policy::{store::Write, Scope};
-use crate::storage;
-use crate::storage::{refs::RefsAt, Namespaces, ReadStorage};
-use crate::worker::fetch;
-use crate::worker::FetchError;
-use crate::Link;
-use crate::{crypto, PROTOCOL_VERSION};
+use radicle::identity::RepoId;
+use radicle::node::events::Emitter;
+use radicle::node::routing;
+use radicle::node::routing::InsertResult;
+use radicle::node::{
+    Address, Alias, Features, FetchResult, HostName, Seed, Seeds, SyncStatus, SyncedAt,
+};
+use radicle::prelude::*;
+use radicle::storage;
+use radicle::storage::{refs::RefsAt, Namespaces, ReadStorage};
+// use radicle::worker::fetch;
+// use crate::worker::FetchError;
+use radicle::crypto;
+use radicle::node::Link;
+use radicle::node::PROTOCOL_VERSION;
 
-pub use crate::node::events::{Event, Events};
-pub use crate::node::{config::Network, Config, NodeId};
+use crate::bounded::BoundedVec;
+use crate::service::filter::Filter;
 pub use crate::service::message::{Message, ZeroBytes};
 pub use crate::service::session::{QueuedFetch, Session};
+use crate::worker::FetchError;
+use radicle::node::events::{Event, Events};
+use radicle::node::{Config, NodeId};
 
-pub use radicle::node::policy::config as policy;
+use radicle::node::policy::config as policy;
 
 use self::io::Outbox;
 use self::limiter::RateLimiter;
@@ -221,7 +225,7 @@ pub trait Store:
 {
 }
 
-impl Store for node::Database {}
+impl Store for radicle::node::Database {}
 
 /// Function used to query internal service state.
 pub type QueryState = dyn Fn(&dyn ServiceState) -> Result<(), CommandError> + Send + Sync;
@@ -1133,7 +1137,7 @@ where
         &mut self,
         rid: RepoId,
         remote: NodeId,
-        result: Result<fetch::FetchResult, FetchError>,
+        result: Result<crate::worker::fetch::FetchResult, crate::worker::FetchError>,
     ) {
         let Some(fetching) = self.fetching.remove(&rid) else {
             error!(target: "service", "Received unexpected fetch result for {rid}, from {remote}");
@@ -1169,7 +1173,7 @@ where
         }
 
         match result {
-            Ok(fetch::FetchResult {
+            Ok(crate::worker::fetch::FetchResult {
                 updated,
                 namespaces,
                 clone,

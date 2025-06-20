@@ -1,6 +1,5 @@
-pub mod error;
+pub(crate) use radicle_protocol::worker::fetch::error;
 
-use std::collections::HashSet;
 use std::str::FromStr;
 
 use localtime::LocalTime;
@@ -8,7 +7,6 @@ use localtime::LocalTime;
 use radicle::cob::TypedId;
 use radicle::crypto::PublicKey;
 use radicle::identity::crefs::GetCanonicalRefs as _;
-use radicle::identity::DocAt;
 use radicle::prelude::NodeId;
 use radicle::prelude::RepoId;
 use radicle::storage::git::Repository;
@@ -20,31 +18,9 @@ use radicle::storage::{
 use radicle::{cob, git, node, Storage};
 use radicle_fetch::git::refs::Applied;
 use radicle_fetch::{Allowed, BlockList, FetchLimit};
+pub use radicle_protocol::worker::fetch::FetchResult;
 
 use super::channels::ChannelsFlush;
-
-#[derive(Debug, Clone)]
-pub struct FetchResult {
-    /// The set of updated references.
-    pub updated: Vec<RefUpdate>,
-    /// The set of remote namespaces that were updated.
-    pub namespaces: HashSet<PublicKey>,
-    /// The fetch was a full clone.
-    pub clone: bool,
-    /// Identity doc of fetched repo.
-    pub doc: DocAt,
-}
-
-impl FetchResult {
-    pub fn new(doc: DocAt) -> Self {
-        Self {
-            updated: vec![],
-            namespaces: HashSet::new(),
-            clone: false,
-            doc,
-        }
-    }
-}
 
 pub enum Handle {
     Clone {

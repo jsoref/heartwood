@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 
 pub use bloomy::BloomFilter;
 
-use crate::identity::RepoId;
+use radicle::identity::RepoId;
 
 /// Size in bytes of *large* bloom filter.
 /// It can store about 13'675 items with a false positive rate of 1%.
@@ -90,10 +90,26 @@ impl From<BloomFilter<RepoId>> for Filter {
     }
 }
 
+#[allow(clippy::unwrap_used)]
+#[cfg(any(test, feature = "test"))]
+impl qcheck::Arbitrary for Filter {
+    fn arbitrary(g: &mut qcheck::Gen) -> Self {
+        let size = *g
+            .choose(&[FILTER_SIZE_S, FILTER_SIZE_M, FILTER_SIZE_L])
+            .unwrap();
+        let mut bytes = vec![0; size];
+        for _ in 0..64 {
+            let index = usize::arbitrary(g) % bytes.len();
+            bytes[index] = u8::arbitrary(g);
+        }
+        Self::from(BloomFilter::from(bytes))
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test::arbitrary;
+    use radicle::test::arbitrary;
 
     #[test]
     fn test_parameters() {
