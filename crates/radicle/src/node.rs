@@ -723,7 +723,7 @@ impl Command {
 }
 
 /// Connection link direction.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub enum Link {
@@ -731,6 +731,18 @@ pub enum Link {
     Outbound,
     /// Incoming connection.
     Inbound,
+}
+
+impl Link {
+    /// Check if this is an outbound link.
+    pub fn is_outbound(&self) -> bool {
+        matches!(self, Self::Outbound)
+    }
+
+    /// Check if this is an inbound link.
+    pub fn is_inbound(&self) -> bool {
+        matches!(self, Self::Inbound)
+    }
 }
 
 /// An established network connection with a peer.
