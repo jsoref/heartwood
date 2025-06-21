@@ -79,8 +79,8 @@ fn test_inventory_decode() {
     let timestamp: Timestamp = LocalTime::now().into();
 
     let mut buf = Vec::new();
-    inventory.as_slice().encode(&mut buf).unwrap();
-    timestamp.encode(&mut buf).unwrap();
+    inventory.as_slice().encode(&mut buf);
+    timestamp.encode(&mut buf);
 
     let m = InventoryAnnouncement::decode(&mut buf.as_slice()).expect("message decodes");
     assert_eq!(inventory.as_slice(), m.inventory.as_slice());

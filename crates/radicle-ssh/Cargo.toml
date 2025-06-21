@@ -14,7 +14,7 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-byteorder = { workspace = true }
+byteorder = "1.4"
 log = { workspace = true }
 thiserror = { workspace = true }
 zeroize = { workspace = true }

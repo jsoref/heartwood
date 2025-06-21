@@ -58,7 +58,7 @@ impl<const B: usize, D: wire::Decode> Deserializer<B, D> {
 
                 Ok(Some(msg))
             }
-            Err(err) if err.is_eof() => Ok(None),
+            Err(wire::Error::UnexpectedEnd { .. }) => Ok(None),
             Err(err) => Err(err),
         }
     }
@@ -76,6 +76,20 @@ impl<const B: usize, D: wire::Decode> Deserializer<B, D> {
     /// Return the size of the unparsed data.
     pub fn len(&self) -> usize {
         self.unparsed.len()
+    }
+}
+
+unsafe impl<const B: usize, D: wire::Decode> bytes::BufMut for Deserializer<B, D> {
+    fn remaining_mut(&self) -> usize {
+        self.unparsed.remaining_mut()
+    }
+
+    unsafe fn advance_mut(&mut self, cnt: usize) {
+        self.unparsed.advance_mut(cnt);
+    }
+
+    fn chunk_mut(&mut self) -> &mut bytes::buf::UninitSlice {
+        self.unparsed.chunk_mut()
     }
 }
 

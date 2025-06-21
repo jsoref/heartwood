@@ -1001,9 +1001,7 @@ where
                     metrics.sent_gossip_messages += msgs.len();
 
                     for msg in msgs {
-                        Frame::gossip(link, msg)
-                            .encode(&mut data)
-                            .expect("in-memory writes never fail");
+                        Frame::gossip(link, msg).encode(&mut data);
                     }
                     metrics.sent_bytes += data.len();
 
@@ -1262,18 +1260,16 @@ mod test {
         let pong = Message::Pong {
             zeroes: ZeroBytes::new(42),
         };
-        frame::PROTOCOL_VERSION_STRING.encode(&mut stream).unwrap();
-        frame::StreamId::gossip(Link::Outbound)
-            .encode(&mut stream)
-            .unwrap();
+        frame::PROTOCOL_VERSION_STRING.encode(&mut stream);
+        frame::StreamId::gossip(Link::Outbound).encode(&mut stream);
 
         // Serialize gossip message with some extension fields.
         let mut gossip = wire::serialize(&pong);
-        String::from("extra").encode(&mut gossip).unwrap();
-        48u8.encode(&mut gossip).unwrap();
+        String::from("extra").encode(&mut gossip);
+        48u8.encode(&mut gossip);
 
         // Encode gossip message using the varint-prefix format into the stream.
-        varint::payload::encode(&gossip, &mut stream).unwrap();
+        varint::payload::encode(&gossip, &mut stream);
 
         let mut de = deserializer::Deserializer::<1024, Frame>::new(1024);
         de.input(&stream).unwrap();
@@ -1298,16 +1294,14 @@ mod test {
         }
 
         impl wire::Encode for MessageWithExt {
-            fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-                let mut n = self.msg.encode(writer)?;
-                n += self.ext.encode(writer)?;
-
-                Ok(n)
+            fn encode(&self, writer: &mut impl bytes::BufMut) {
+                self.msg.encode(writer);
+                self.ext.encode(writer);
             }
         }
 
         impl wire::Decode for MessageWithExt {
-            fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, wire::Error> {
+            fn decode(reader: &mut impl bytes::Buf) -> Result<Self, wire::Error> {
                 let msg = Message::decode(reader)?;
                 let ext = String::decode(reader).unwrap_or_default();
 
@@ -1337,12 +1331,9 @@ mod test {
                 ext: String::from("extra"),
             },
         )
-        .encode(&mut stream)
-        .unwrap();
+        .encode(&mut stream);
         // Pong message that comes after, without extension.
-        frame::Frame::gossip(Link::Outbound, pong.clone())
-            .encode(&mut stream)
-            .unwrap();
+        frame::Frame::gossip(Link::Outbound, pong.clone()).encode(&mut stream);
 
         // First test deserializing using the message with extension type.
         {

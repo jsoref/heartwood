@@ -1,6 +1,8 @@
-use std::{fmt, io, mem};
+use std::{fmt, mem};
 
+use bytes::{Buf, BufMut};
 use nonempty::NonEmpty;
+
 use radicle::crypto;
 use radicle::git;
 use radicle::identity::RepoId;
@@ -117,32 +119,28 @@ impl NodeAnnouncement {
 }
 
 impl wire::Encode for NodeAnnouncement {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        let mut n = 0;
-
-        n += self.version.encode(writer)?;
-        n += self.features.encode(writer)?;
-        n += self.timestamp.encode(writer)?;
-        n += self.alias.encode(writer)?;
-        n += self.addresses.encode(writer)?;
-        n += self.nonce.encode(writer)?;
-        n += self.agent.encode(writer)?;
-
-        Ok(n)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.version.encode(buf);
+        self.features.encode(buf);
+        self.timestamp.encode(buf);
+        self.alias.encode(buf);
+        self.addresses.encode(buf);
+        self.nonce.encode(buf);
+        self.agent.encode(buf);
     }
 }
 
 impl wire::Decode for NodeAnnouncement {
-    fn decode<R: std::io::Read + ?Sized>(reader: &mut R) -> Result<Self, wire::Error> {
-        let version = u8::decode(reader)?;
-        let features = node::Features::decode(reader)?;
-        let timestamp = Timestamp::decode(reader)?;
-        let alias = wire::Decode::decode(reader)?;
-        let addresses = BoundedVec::<Address, ADDRESS_LIMIT>::decode(reader)?;
-        let nonce = u64::decode(reader)?;
-        let agent = match UserAgent::decode(reader) {
+    fn decode(buf: &mut impl Buf) -> Result<Self, wire::Error> {
+        let version = u8::decode(buf)?;
+        let features = node::Features::decode(buf)?;
+        let timestamp = Timestamp::decode(buf)?;
+        let alias = wire::Decode::decode(buf)?;
+        let addresses = BoundedVec::<Address, ADDRESS_LIMIT>::decode(buf)?;
+        let nonce = u64::decode(buf)?;
+        let agent = match UserAgent::decode(buf) {
             Ok(ua) => ua,
-            Err(e) if e.is_eof() => UserAgent::default(),
+            Err(wire::Error::UnexpectedEnd { .. }) => UserAgent::default(),
             Err(e) => return Err(e),
         };
 
@@ -708,8 +706,8 @@ mod tests {
         .signed(&Device::mock())
         .into();
 
-        let mut buf: Vec<u8> = Vec::new();
-        assert!(msg.encode(&mut buf).is_ok());
+        let mut buf = Vec::new();
+        msg.encode(&mut buf);
 
         let decoded = wire::deserialize(buf.as_slice());
         assert!(decoded.is_ok());
@@ -728,10 +726,7 @@ mod tests {
             &Device::mock(),
         );
         let mut buf: Vec<u8> = Vec::new();
-        assert!(
-            msg.encode(&mut buf).is_ok(),
-            "INVENTORY_LIMIT is a valid limit for encoding",
-        );
+        msg.encode(&mut buf);
 
         let decoded = wire::deserialize(buf.as_slice());
         assert!(

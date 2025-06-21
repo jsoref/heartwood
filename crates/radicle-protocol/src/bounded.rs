@@ -28,7 +28,7 @@ impl<T, const N: usize> BoundedVec<T, N> {
     /// # Examples
     ///
     /// ```
-    /// use radicle_node::bounded;
+    /// use radicle_protocol::bounded;
     ///
     /// let mut iter = (0..4).into_iter();
     /// let bounded: bounded::BoundedVec<i32,3> = bounded::BoundedVec::collect_from(&mut iter);
@@ -48,7 +48,7 @@ impl<T, const N: usize> BoundedVec<T, N> {
     /// # Examples
     ///
     /// ```
-    /// use radicle_node::bounded;
+    /// use radicle_protocol::bounded;
     ///
     /// let mut vec = vec![1, 2, 3];
     /// let bounded = bounded::BoundedVec::<_, 2>::truncate(vec);
@@ -64,7 +64,7 @@ impl<T, const N: usize> BoundedVec<T, N> {
     /// # Examples
     ///
     /// ```
-    /// use radicle_node::bounded;
+    /// use radicle_protocol::bounded;
     ///
     /// let vec = bounded::BoundedVec::<i32, 11>::with_capacity(10).unwrap();
     ///
@@ -94,7 +94,7 @@ impl<T, const N: usize> BoundedVec<T, N> {
     /// # Examples
     ///
     /// ```
-    /// use radicle_node::bounded;
+    /// use radicle_protocol::bounded;
     ///
     /// type Inventory = bounded::BoundedVec<(), 10>;
     /// assert_eq!(Inventory::max(), 10);
@@ -120,7 +120,7 @@ impl<T, const N: usize> BoundedVec<T, N> {
     /// # Examples
     ///
     /// ```
-    /// use radicle_node::bounded;
+    /// use radicle_protocol::bounded;
     ///
     /// let mut vec: bounded::BoundedVec<_,3> = vec![1, 2].try_into().unwrap();
     /// vec.push(3).expect("within limit");
@@ -147,7 +147,7 @@ impl<T, const N: usize> BoundedVec<T, N> {
     /// # Examples
     ///
     /// ```
-    /// use radicle_node::bounded;
+    /// use radicle_protocol::bounded;
     ///
     /// let mut bounded: bounded::BoundedVec<_,3> = vec![1, 2, 3].try_into().unwrap();
     /// let mut vec = bounded.unbound();
@@ -237,6 +237,51 @@ impl<T, const N: usize> From<BoundedVec<T, N>> for Vec<T> {
 impl<T: std::fmt::Debug, const N: usize> std::fmt::Debug for BoundedVec<T, N> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.v.fmt(f)
+    }
+}
+
+unsafe impl<const N: usize> bytes::BufMut for BoundedVec<u8, N> {
+    fn remaining_mut(&self) -> usize {
+        N - self.v.len()
+    }
+
+    unsafe fn advance_mut(&mut self, cnt: usize) {
+        let len = {
+            let len = self.v.len();
+            let remaining = N - len;
+
+            if remaining >= cnt {
+                len + cnt
+            } else {
+                panic!("advance out of bounds: have {remaining} remaining, but advancing by {cnt}",);
+            }
+        };
+
+        debug_assert!(len <= N);
+
+        // Addition will not overflow since the sum is at most the capacity.
+        self.v.set_len(len);
+    }
+
+    fn chunk_mut(&mut self) -> &mut bytes::buf::UninitSlice {
+        let len = self.v.len();
+
+        // If the vector is full, we double its capacity using `reserve`, but not beyond the limit.
+        if self.v.capacity() == len {
+            self.v.reserve(std::cmp::min(len, N - len));
+        }
+
+        let cap = self.v.capacity();
+
+        debug_assert!(cap <= N);
+        debug_assert!(len <= cap);
+
+        let ptr = self.v.as_mut_ptr();
+
+        // SAFETY: Since `ptr` is valid for `cap` bytes, `ptr.add(len)` must be
+        // valid for `cap - len` bytes. The subtraction will not underflow since
+        // `len <= cap`.
+        unsafe { bytes::buf::UninitSlice::from_raw_parts_mut(ptr.add(len), cap - len) }
     }
 }
 

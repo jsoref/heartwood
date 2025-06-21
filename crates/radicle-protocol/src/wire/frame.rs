@@ -2,9 +2,11 @@
 #![warn(clippy::missing_docs_in_private_items)]
 use std::{fmt, io};
 
+use bytes::{Buf, BufMut};
+use radicle::node::Link;
+
 use crate::service::Message;
 use crate::{wire, wire::varint, wire::varint::VarInt, PROTOCOL_VERSION};
-use radicle::node::Link;
 
 /// Protocol version strings all start with the magic sequence `rad`, followed
 /// by a version number.
@@ -29,17 +31,16 @@ impl Version {
 }
 
 impl wire::Encode for Version {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        writer.write_all(&PROTOCOL_VERSION_STRING.0)?;
-
-        Ok(PROTOCOL_VERSION_STRING.0.len())
+    fn encode(&self, buf: &mut impl BufMut) {
+        buf.put_slice(&PROTOCOL_VERSION_STRING.0);
     }
 }
 
 impl wire::Decode for Version {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, wire::Error> {
+    fn decode(buf: &mut impl Buf) -> Result<Self, wire::Error> {
         let mut version = [0u8; 4];
-        reader.read_exact(&mut version[..])?;
+
+        buf.try_copy_to_slice(&mut version[..])?;
 
         if version != PROTOCOL_VERSION_STRING.0 {
             return Err(wire::Error::InvalidProtocolVersion(version));
@@ -144,15 +145,15 @@ impl fmt::Display for StreamId {
 }
 
 impl wire::Decode for StreamId {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, wire::Error> {
-        let id = VarInt::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, wire::Error> {
+        let id = VarInt::decode(buf)?;
         Ok(Self(id))
     }
 }
 
 impl wire::Encode for StreamId {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        self.0.encode(writer)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.0.encode(buf)
     }
 }
 
@@ -272,19 +273,19 @@ pub enum Control {
 }
 
 impl wire::Decode for Control {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, wire::Error> {
-        let command = u8::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, wire::Error> {
+        let command = u8::decode(buf)?;
         match command {
             CONTROL_OPEN => {
-                let stream = StreamId::decode(reader)?;
+                let stream = StreamId::decode(buf)?;
                 Ok(Control::Open { stream })
             }
             CONTROL_CLOSE => {
-                let stream = StreamId::decode(reader)?;
+                let stream = StreamId::decode(buf)?;
                 Ok(Control::Close { stream })
             }
             CONTROL_EOF => {
-                let stream = StreamId::decode(reader)?;
+                let stream = StreamId::decode(buf)?;
                 Ok(Control::Eof { stream })
             }
             other => Err(wire::Error::InvalidControlMessage(other)),
@@ -293,38 +294,35 @@ impl wire::Decode for Control {
 }
 
 impl wire::Encode for Control {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        let mut n = 0;
-
+    fn encode(&self, buf: &mut impl BufMut) {
         match self {
             Self::Open { stream: id } => {
-                n += CONTROL_OPEN.encode(writer)?;
-                n += id.encode(writer)?;
+                CONTROL_OPEN.encode(buf);
+                id.encode(buf);
             }
             Self::Eof { stream: id } => {
-                n += CONTROL_EOF.encode(writer)?;
-                n += id.encode(writer)?;
+                CONTROL_EOF.encode(buf);
+                id.encode(buf);
             }
             Self::Close { stream: id } => {
-                n += CONTROL_CLOSE.encode(writer)?;
-                n += id.encode(writer)?;
+                CONTROL_CLOSE.encode(buf);
+                id.encode(buf);
             }
         }
-        Ok(n)
     }
 }
 
 impl<M: wire::Decode> wire::Decode for Frame<M> {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, wire::Error> {
-        let version = Version::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, wire::Error> {
+        let version = Version::decode(buf)?;
         if version.number() != PROTOCOL_VERSION {
             return Err(wire::Error::WrongProtocolVersion(version.number()));
         }
-        let stream = StreamId::decode(reader)?;
+        let stream = StreamId::decode(buf)?;
 
         match stream.kind() {
             Ok(StreamKind::Control) => {
-                let ctrl = Control::decode(reader)?;
+                let ctrl = Control::decode(buf)?;
                 let frame = Frame {
                     version,
                     stream,
@@ -333,7 +331,7 @@ impl<M: wire::Decode> wire::Decode for Frame<M> {
                 Ok(frame)
             }
             Ok(StreamKind::Gossip) => {
-                let data = varint::payload::decode(reader)?;
+                let data = varint::payload::decode(buf)?;
                 let mut cursor = io::Cursor::new(data);
                 let msg = M::decode(&mut cursor)?;
                 let frame = Frame {
@@ -348,7 +346,7 @@ impl<M: wire::Decode> wire::Decode for Frame<M> {
                 Ok(frame)
             }
             Ok(StreamKind::Git { .. }) => {
-                let data = varint::payload::decode(reader)?;
+                let data = varint::payload::decode(buf)?;
                 Ok(Frame::git(stream, data))
             }
             Err(n) => Err(wire::Error::InvalidStreamKind(n)),
@@ -357,18 +355,14 @@ impl<M: wire::Decode> wire::Decode for Frame<M> {
 }
 
 impl<M: wire::Encode> wire::Encode for Frame<M> {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        let mut n = 0;
-
-        n += self.version.encode(writer)?;
-        n += self.stream.encode(writer)?;
-        n += match &self.data {
-            FrameData::Control(ctrl) => ctrl.encode(writer)?,
-            FrameData::Git(data) => varint::payload::encode(data, writer)?,
-            FrameData::Gossip(msg) => varint::payload::encode(&wire::serialize(msg), writer)?,
-        };
-
-        Ok(n)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.version.encode(buf);
+        self.stream.encode(buf);
+        match &self.data {
+            FrameData::Control(ctrl) => ctrl.encode(buf),
+            FrameData::Git(data) => varint::payload::encode(data, buf),
+            FrameData::Gossip(msg) => varint::payload::encode(&wire::serialize(msg), buf),
+        }
     }
 }
 

@@ -7,12 +7,13 @@ pub use message::{AddressType, MessageType};
 
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
+use std::mem;
 use std::ops::Deref;
 use std::str::FromStr;
 use std::string::FromUtf8Error;
-use std::{io, mem};
 
-use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
+use bytes::{Buf, BufMut};
+
 use cyphernet::addr::tor;
 
 use radicle::crypto::{PublicKey, Signature, Unverified};
@@ -41,8 +42,6 @@ pub type Size = u16;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("i/o: {0}")]
-    Io(#[from] io::Error),
     #[error("UTF-8 error: {0}")]
     FromUtf8(#[from] FromUtf8Error),
     #[error("invalid size: expected {expected}, got {actual}")]
@@ -75,24 +74,32 @@ pub enum Error {
     UnknownInfoType(u16),
     #[error("unexpected bytes")]
     UnexpectedBytes,
+    #[error("unexpected end of buffer, requested {requested} more bytes but only {available} are available")]
+    UnexpectedEnd { available: usize, requested: usize },
 }
 
-impl Error {
-    /// Whether we've reached the end of file. This will be true when we fail to decode
-    /// a message because there's not enough data in the stream.
-    pub fn is_eof(&self) -> bool {
-        matches!(self, Self::Io(err) if err.kind() == io::ErrorKind::UnexpectedEof)
+impl From<bytes::TryGetError> for Error {
+    fn from(
+        bytes::TryGetError {
+            available,
+            requested,
+        }: bytes::TryGetError,
+    ) -> Self {
+        Self::UnexpectedEnd {
+            available,
+            requested,
+        }
     }
 }
 
 /// Things that can be encoded as binary.
 pub trait Encode {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error>;
+    fn encode(&self, buffer: &mut impl BufMut);
 }
 
 /// Things that can be decoded from binary.
 pub trait Decode: Sized {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error>;
+    fn decode(buffer: &mut impl Buf) -> Result<Self, Error>;
 }
 
 /// Encode an object into a byte vector.
@@ -100,79 +107,62 @@ pub trait Decode: Sized {
 /// # Panics
 ///
 /// If the encoded object exceeds [`Size::MAX`].
-pub fn serialize<T: Encode + ?Sized>(data: &T) -> Vec<u8> {
-    let mut buffer = Vec::new();
-    // SAFETY: We expect this to panic if the user passes
-    // in data that exceeds the maximum allowed size.
-    #[allow(clippy::unwrap_used)]
-    let len = data.encode(&mut buffer).unwrap();
-
-    debug_assert_eq!(len, buffer.len());
-
-    buffer
+pub fn serialize<E: Encode + ?Sized>(data: &E) -> Vec<u8> {
+    let mut buffer = Vec::new().limit(Size::MAX as usize);
+    data.encode(&mut buffer);
+    buffer.into_inner()
 }
 
-/// Decode an object from a vector.
-pub fn deserialize<T: Decode>(data: &[u8]) -> Result<T, Error> {
-    let mut cursor = io::Cursor::new(data);
-    let obj = T::decode(&mut cursor)?;
+/// Decode an object from a slice.
+pub fn deserialize<T: Decode>(mut data: &[u8]) -> Result<T, Error> {
+    let result = T::decode(&mut data)?;
 
-    if cursor.position() as usize != cursor.get_ref().len() {
-        return Err(Error::UnexpectedBytes);
+    if data.is_empty() {
+        Ok(result)
+    } else {
+        Err(Error::UnexpectedBytes)
     }
-    Ok(obj)
 }
 
 impl Encode for u8 {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        writer.write_u8(*self)?;
-
-        Ok(mem::size_of::<Self>())
+    fn encode(&self, buf: &mut impl BufMut) {
+        buf.put_u8(*self);
     }
 }
 
 impl Encode for u16 {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        writer.write_u16::<NetworkEndian>(*self)?;
-
-        Ok(mem::size_of::<Self>())
+    fn encode(&self, buf: &mut impl BufMut) {
+        buf.put_u16(*self);
     }
 }
 
 impl Encode for u32 {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        writer.write_u32::<NetworkEndian>(*self)?;
-
-        Ok(mem::size_of::<Self>())
+    fn encode(&self, buf: &mut impl BufMut) {
+        buf.put_u32(*self);
     }
 }
 
 impl Encode for u64 {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        writer.write_u64::<NetworkEndian>(*self)?;
-
-        Ok(mem::size_of::<Self>())
+    fn encode(&self, buf: &mut impl BufMut) {
+        buf.put_u64(*self);
     }
 }
 
 impl Encode for PublicKey {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        self.deref().encode(writer)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.deref().encode(buf)
     }
 }
 
 impl<const T: usize> Encode for &[u8; T] {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        writer.write_all(&**self)?;
-        Ok(mem::size_of::<Self>())
+    fn encode(&self, buf: &mut impl BufMut) {
+        buf.put_slice(&**self);
     }
 }
 
 impl<const T: usize> Encode for [u8; T] {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        writer.write_all(self)?;
-
-        Ok(mem::size_of::<Self>())
+    fn encode(&self, buf: &mut impl BufMut) {
+        buf.put_slice(self);
     }
 }
 
@@ -180,13 +170,12 @@ impl<T> Encode for &[T]
 where
     T: Encode,
 {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        let mut n = (self.len() as Size).encode(writer)?;
+    fn encode(&self, buf: &mut impl BufMut) {
+        (self.len() as Size).encode(buf);
 
         for item in self.iter() {
-            n += item.encode(writer)?;
+            item.encode(buf);
         }
-        Ok(n)
     }
 }
 
@@ -194,75 +183,72 @@ impl<T, const N: usize> Encode for BoundedVec<T, N>
 where
     T: Encode,
 {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        self.as_slice().encode(writer)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.as_slice().encode(buf)
     }
 }
 
 impl Encode for &str {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
+    fn encode(&self, buf: &mut impl BufMut) {
         assert!(self.len() <= u8::MAX as usize);
 
-        let n = (self.len() as u8).encode(writer)?;
+        (self.len() as u8).encode(buf);
         let bytes = self.as_bytes();
 
         // Nb. Don't use the [`Encode`] instance here for &[u8], because we are prefixing the
         // length ourselves.
-        writer.write_all(bytes)?;
-
-        Ok(n + bytes.len())
+        buf.put_slice(bytes);
     }
 }
 
 impl Encode for String {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        self.as_str().encode(writer)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.as_str().encode(buf)
     }
 }
 
 impl Encode for git::Url {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        self.to_string().encode(writer)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.to_string().encode(buf)
     }
 }
 
 impl Encode for RepoId {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        self.deref().encode(writer)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.deref().encode(buf)
     }
 }
 
 impl Encode for Refs {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
+    fn encode(&self, buf: &mut impl BufMut) {
         let len: Size = self
             .len()
             .try_into()
-            .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
-        let mut n = len.encode(writer)?;
+            .expect("`Refs::len()` must be less than or equal to `Size::MAX`");
+        len.encode(buf);
 
         for (name, oid) in self.iter() {
-            n += name.as_str().encode(writer)?;
-            n += oid.encode(writer)?;
+            name.as_str().encode(buf);
+            oid.encode(buf);
         }
-        Ok(n)
     }
 }
 
 impl Encode for cyphernet::addr::tor::OnionAddrV3 {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        self.into_raw_bytes().encode(writer)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.into_raw_bytes().encode(buf)
     }
 }
 
 impl Encode for UserAgent {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        self.as_ref().encode(writer)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.as_ref().encode(buf)
     }
 }
 
 impl Encode for Alias {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        self.as_ref().encode(writer)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.as_ref().encode(buf)
     }
 }
 
@@ -271,51 +257,50 @@ where
     A: Encode,
     B: Encode,
 {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        let mut n = self.0.encode(writer)?;
-        n += self.1.encode(writer)?;
-        Ok(n)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.0.encode(buf);
+        self.1.encode(buf);
     }
 }
 
 impl Encode for git::RefString {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        self.as_str().encode(writer)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.as_str().encode(buf)
     }
 }
 
 impl Encode for Signature {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        self.deref().encode(writer)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.deref().encode(buf)
     }
 }
 
 impl Encode for git::Oid {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
+    fn encode(&self, buf: &mut impl BufMut) {
         // Nb. We use length-encoding here to support future SHA-2 object ids.
-        self.as_bytes().encode(writer)
+        self.as_bytes().encode(buf)
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Decode for PublicKey {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let buf: [u8; 32] = Decode::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let buf: [u8; 32] = Decode::decode(buf)?;
 
         Ok(PublicKey::from(buf))
     }
 }
 
 impl Decode for Refs {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let len = Size::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let len = Size::decode(buf)?;
         let mut refs = BTreeMap::new();
 
         for _ in 0..len {
-            let name = String::decode(reader)?;
+            let name = String::decode(buf)?;
             let name = git::RefString::try_from(name).map_err(Error::from)?;
-            let oid = git::Oid::decode(reader)?;
+            let oid = git::Oid::decode(buf)?;
 
             refs.insert(name, oid);
         }
@@ -324,22 +309,21 @@ impl Decode for Refs {
 }
 
 impl Decode for git::RefString {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let ref_str = String::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let ref_str = String::decode(buf)?;
         git::RefString::try_from(ref_str).map_err(Error::from)
     }
 }
 
 impl Decode for UserAgent {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        String::decode(reader)
-            .and_then(|s| UserAgent::from_str(&s).map_err(Error::InvalidUserAgent))
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        String::decode(buf).and_then(|s| UserAgent::from_str(&s).map_err(Error::InvalidUserAgent))
     }
 }
 
 impl Decode for Alias {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        String::decode(reader).and_then(|s| Alias::from_str(&s).map_err(Error::from))
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        String::decode(buf).and_then(|s| Alias::from_str(&s).map_err(Error::from))
     }
 }
 
@@ -348,16 +332,16 @@ where
     A: Decode,
     B: Decode,
 {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let a = A::decode(reader)?;
-        let b = B::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let a = A::decode(buf)?;
+        let b = B::decode(buf)?;
         Ok((a, b))
     }
 }
 
 impl Decode for git::Oid {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let len = Size::decode(reader)? as usize;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let len = Size::decode(buf)? as usize;
         #[allow(non_upper_case_globals)]
         const expected: usize = mem::size_of::<git::raw::Oid>();
 
@@ -368,7 +352,7 @@ impl Decode for git::Oid {
             });
         }
 
-        let buf: [u8; expected] = Decode::decode(reader)?;
+        let buf: [u8; expected] = Decode::decode(buf)?;
         let oid = git::raw::Oid::from_bytes(&buf).expect("the buffer is exactly the right size");
         let oid = git::Oid::from(oid);
 
@@ -377,41 +361,41 @@ impl Decode for git::Oid {
 }
 
 impl Decode for Signature {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let bytes: [u8; 64] = Decode::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let bytes: [u8; 64] = Decode::decode(buf)?;
 
         Ok(Signature::from(bytes))
     }
 }
 
 impl Decode for u8 {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        reader.read_u8().map_err(Error::from)
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        Ok(buf.try_get_u8()?)
     }
 }
 
 impl Decode for u16 {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        reader.read_u16::<NetworkEndian>().map_err(Error::from)
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        Ok(buf.try_get_u16()?)
     }
 }
 
 impl Decode for u32 {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        reader.read_u32::<NetworkEndian>().map_err(Error::from)
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        Ok(buf.try_get_u32()?)
     }
 }
 
 impl Decode for u64 {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        reader.read_u64::<NetworkEndian>().map_err(Error::from)
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        Ok(buf.try_get_u64()?)
     }
 }
 
 impl<const N: usize> Decode for [u8; N] {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
         let mut ary = [0; N];
-        reader.read_exact(&mut ary)?;
+        buf.try_copy_to_slice(&mut ary).map_err(Error::from)?;
 
         Ok(ary)
     }
@@ -421,15 +405,15 @@ impl<T, const N: usize> Decode for BoundedVec<T, N>
 where
     T: Decode,
 {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let len: usize = Size::decode(reader)? as usize;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let len: usize = Size::decode(buf)? as usize;
         let mut items = Self::with_capacity(len).map_err(|_| Error::InvalidSize {
             expected: Self::max(),
             actual: len,
         })?;
 
         for _ in 0..items.capacity() {
-            let item = T::decode(reader)?;
+            let item = T::decode(buf)?;
             items.push(item).ok();
         }
         Ok(items)
@@ -437,11 +421,11 @@ where
 }
 
 impl Decode for String {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let len = u8::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let len = u8::decode(buf)?;
         let mut bytes = vec![0; len as usize];
 
-        reader.read_exact(&mut bytes)?;
+        buf.try_copy_to_slice(&mut bytes)?;
 
         let string = String::from_utf8(bytes)?;
 
@@ -450,32 +434,29 @@ impl Decode for String {
 }
 
 impl Decode for RepoId {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let oid: git::Oid = Decode::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let oid: git::Oid = Decode::decode(buf)?;
 
         Ok(Self::from(oid))
     }
 }
 
 impl Encode for filter::Filter {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        let mut n = 0;
-
-        n += self.deref().as_bytes().encode(writer)?;
-
-        Ok(n)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.deref().as_bytes().encode(buf);
     }
 }
 
 impl Decode for filter::Filter {
-    fn decode<R: std::io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let size: usize = Size::decode(reader)? as usize;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let size: usize = Size::decode(buf)? as usize;
         if !filter::FILTER_SIZES.contains(&size) {
             return Err(Error::InvalidFilterSize(size));
         }
 
         let mut bytes = vec![0; size];
-        reader.read_exact(&mut bytes[..])?;
+
+        buf.try_copy_to_slice(&mut bytes)?;
 
         let f = filter::BloomFilter::from(bytes);
         debug_assert_eq!(f.hashes(), filter::FILTER_HASHES);
@@ -485,63 +466,55 @@ impl Decode for filter::Filter {
 }
 
 impl<V> Encode for SignedRefs<V> {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        let mut n = 0;
-
-        n += self.id.encode(writer)?;
-        n += self.refs.encode(writer)?;
-        n += self.signature.encode(writer)?;
-
-        Ok(n)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.id.encode(buf);
+        self.refs.encode(buf);
+        self.signature.encode(buf);
     }
 }
 
 impl Decode for SignedRefs<Unverified> {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let id = NodeId::decode(reader)?;
-        let refs = Refs::decode(reader)?;
-        let signature = Signature::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let id = NodeId::decode(buf)?;
+        let refs = Refs::decode(buf)?;
+        let signature = Signature::decode(buf)?;
 
         Ok(Self::new(refs, id, signature))
     }
 }
 
 impl Encode for RefsAt {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        let mut n = 0;
-
-        n += self.remote.encode(writer)?;
-        n += self.at.encode(writer)?;
-
-        Ok(n)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.remote.encode(buf);
+        self.at.encode(buf);
     }
 }
 
 impl Decode for RefsAt {
-    fn decode<R: std::io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let remote = NodeId::decode(reader)?;
-        let at = git::Oid::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let remote = NodeId::decode(buf)?;
+        let at = git::Oid::decode(buf)?;
         Ok(Self { remote, at })
     }
 }
 
 impl Encode for node::Features {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        self.deref().encode(writer)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.deref().encode(buf)
     }
 }
 
 impl Decode for node::Features {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let features = u64::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let features = u64::decode(buf)?;
 
         Ok(Self::from(features))
     }
 }
 
 impl Decode for tor::OnionAddrV3 {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let bytes: [u8; tor::ONION_V3_RAW_LEN] = Decode::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let bytes: [u8; tor::ONION_V3_RAW_LEN] = Decode::decode(buf)?;
         let addr = tor::OnionAddrV3::from_raw_bytes(bytes)?;
 
         Ok(addr)
@@ -549,14 +522,14 @@ impl Decode for tor::OnionAddrV3 {
 }
 
 impl Encode for Timestamp {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        self.deref().encode(writer)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.deref().encode(buf)
     }
 }
 
 impl Decode for Timestamp {
-    fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Self, Error> {
-        let millis = u64::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
+        let millis = u64::decode(buf)?;
         let ts = Timestamp::try_from(millis).map_err(Error::InvalidTimestamp)?;
 
         Ok(ts)

@@ -1,6 +1,7 @@
-use std::{io, mem, net};
+use std::{mem, net};
 
-use byteorder::{NetworkEndian, ReadBytesExt};
+use bytes::Buf;
+use bytes::BufMut;
 use cyphernet::addr::{tor, Addr, HostName, NetAddr};
 use radicle::crypto::Signature;
 use radicle::git::Oid;
@@ -114,32 +115,28 @@ impl TryFrom<u8> for AddressType {
 }
 
 impl wire::Encode for AnnouncementMessage {
-    fn encode<W: std::io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, std::io::Error> {
+    fn encode(&self, buf: &mut impl BufMut) {
         match self {
-            Self::Node(ann) => ann.encode(writer),
-            Self::Inventory(ann) => ann.encode(writer),
-            Self::Refs(ann) => ann.encode(writer),
+            Self::Node(ann) => ann.encode(buf),
+            Self::Inventory(ann) => ann.encode(buf),
+            Self::Refs(ann) => ann.encode(buf),
         }
     }
 }
 
 impl wire::Encode for RefsAnnouncement {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        let mut n = 0;
-
-        n += self.rid.encode(writer)?;
-        n += self.refs.encode(writer)?;
-        n += self.timestamp.encode(writer)?;
-
-        Ok(n)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.rid.encode(buf);
+        self.refs.encode(buf);
+        self.timestamp.encode(buf);
     }
 }
 
 impl wire::Decode for RefsAnnouncement {
-    fn decode<R: std::io::Read + ?Sized>(reader: &mut R) -> Result<Self, wire::Error> {
-        let rid = RepoId::decode(reader)?;
-        let refs = BoundedVec::<_, REF_REMOTE_LIMIT>::decode(reader)?;
-        let timestamp = Timestamp::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, wire::Error> {
+        let rid = RepoId::decode(buf)?;
+        let refs = BoundedVec::<_, REF_REMOTE_LIMIT>::decode(buf)?;
+        let timestamp = Timestamp::decode(buf)?;
 
         Ok(Self {
             rid,
@@ -150,20 +147,16 @@ impl wire::Decode for RefsAnnouncement {
 }
 
 impl wire::Encode for InventoryAnnouncement {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        let mut n = 0;
-
-        n += self.inventory.encode(writer)?;
-        n += self.timestamp.encode(writer)?;
-
-        Ok(n)
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.inventory.encode(buf);
+        self.timestamp.encode(buf);
     }
 }
 
 impl wire::Decode for InventoryAnnouncement {
-    fn decode<R: std::io::Read + ?Sized>(reader: &mut R) -> Result<Self, wire::Error> {
-        let inventory = BoundedVec::decode(reader)?;
-        let timestamp = Timestamp::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, wire::Error> {
+        let inventory = BoundedVec::decode(buf)?;
+        let timestamp = Timestamp::decode(buf)?;
 
         Ok(Self {
             inventory,
@@ -212,28 +205,25 @@ impl From<&Info> for InfoType {
 }
 
 impl wire::Encode for Info {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        let mut n = 0;
-        n += u16::from(InfoType::from(self)).encode(writer)?;
+    fn encode(&self, buf: &mut impl BufMut) {
+        u16::from(InfoType::from(self)).encode(buf);
         match self {
             Info::RefsAlreadySynced { rid, at } => {
-                n += rid.encode(writer)?;
-                n += at.encode(writer)?;
+                rid.encode(buf);
+                at.encode(buf);
             }
         }
-
-        Ok(n)
     }
 }
 
 impl wire::Decode for Info {
-    fn decode<R: std::io::Read + ?Sized>(reader: &mut R) -> Result<Self, wire::Error> {
-        let info_type = reader.read_u16::<NetworkEndian>()?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, wire::Error> {
+        let info_type = buf.try_get_u16()?;
 
         match InfoType::try_from(info_type) {
             Ok(InfoType::RefsAlreadySynced) => {
-                let rid = RepoId::decode(reader)?;
-                let at = Oid::decode(reader)?;
+                let rid = RepoId::decode(buf)?;
+                let at = Oid::decode(buf)?;
 
                 Ok(Self::RefsAlreadySynced { rid, at })
             }
@@ -243,8 +233,8 @@ impl wire::Decode for Info {
 }
 
 impl wire::Encode for Message {
-    fn encode<W: std::io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, std::io::Error> {
-        let mut n = self.type_id().encode(writer)?;
+    fn encode(&self, buf: &mut impl BufMut) {
+        self.type_id().encode(buf);
 
         match self {
             Self::Subscribe(Subscribe {
@@ -252,50 +242,42 @@ impl wire::Encode for Message {
                 since,
                 until,
             }) => {
-                n += filter.encode(writer)?;
-                n += since.encode(writer)?;
-                n += until.encode(writer)?;
+                filter.encode(buf);
+                since.encode(buf);
+                until.encode(buf);
             }
             Self::Announcement(Announcement {
                 node,
                 message,
                 signature,
             }) => {
-                n += node.encode(writer)?;
-                n += signature.encode(writer)?;
-                n += message.encode(writer)?;
+                node.encode(buf);
+                signature.encode(buf);
+                message.encode(buf);
             }
             Self::Info(info) => {
-                n += info.encode(writer)?;
+                info.encode(buf);
             }
             Self::Ping(Ping { ponglen, zeroes }) => {
-                n += ponglen.encode(writer)?;
-                n += zeroes.encode(writer)?;
+                ponglen.encode(buf);
+                zeroes.encode(buf);
             }
             Self::Pong { zeroes } => {
-                n += zeroes.encode(writer)?;
+                zeroes.encode(buf);
             }
         }
-
-        if n > wire::Size::MAX as usize {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "Message exceeds maximum size",
-            ));
-        }
-        Ok(n)
     }
 }
 
 impl wire::Decode for Message {
-    fn decode<R: std::io::Read + ?Sized>(reader: &mut R) -> Result<Self, wire::Error> {
-        let type_id = reader.read_u16::<NetworkEndian>()?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, wire::Error> {
+        let type_id = buf.try_get_u16()?;
 
         match MessageType::try_from(type_id) {
             Ok(MessageType::Subscribe) => {
-                let filter = Filter::decode(reader)?;
-                let since = Timestamp::decode(reader)?;
-                let until = Timestamp::decode(reader)?;
+                let filter = Filter::decode(buf)?;
+                let since = Timestamp::decode(buf)?;
+                let until = Timestamp::decode(buf)?;
 
                 Ok(Self::Subscribe(Subscribe {
                     filter,
@@ -304,9 +286,9 @@ impl wire::Decode for Message {
                 }))
             }
             Ok(MessageType::NodeAnnouncement) => {
-                let node = NodeId::decode(reader)?;
-                let signature = Signature::decode(reader)?;
-                let message = NodeAnnouncement::decode(reader)?.into();
+                let node = NodeId::decode(buf)?;
+                let signature = Signature::decode(buf)?;
+                let message = NodeAnnouncement::decode(buf)?.into();
 
                 Ok(Announcement {
                     node,
@@ -316,9 +298,9 @@ impl wire::Decode for Message {
                 .into())
             }
             Ok(MessageType::InventoryAnnouncement) => {
-                let node = NodeId::decode(reader)?;
-                let signature = Signature::decode(reader)?;
-                let message = InventoryAnnouncement::decode(reader)?.into();
+                let node = NodeId::decode(buf)?;
+                let signature = Signature::decode(buf)?;
+                let message = InventoryAnnouncement::decode(buf)?.into();
 
                 Ok(Announcement {
                     node,
@@ -328,9 +310,9 @@ impl wire::Decode for Message {
                 .into())
             }
             Ok(MessageType::RefsAnnouncement) => {
-                let node = NodeId::decode(reader)?;
-                let signature = Signature::decode(reader)?;
-                let message = RefsAnnouncement::decode(reader)?.into();
+                let node = NodeId::decode(buf)?;
+                let signature = Signature::decode(buf)?;
+                let message = RefsAnnouncement::decode(buf)?.into();
 
                 Ok(Announcement {
                     node,
@@ -340,16 +322,16 @@ impl wire::Decode for Message {
                 .into())
             }
             Ok(MessageType::Info) => {
-                let info = Info::decode(reader)?;
+                let info = Info::decode(buf)?;
                 Ok(Self::Info(info))
             }
             Ok(MessageType::Ping) => {
-                let ponglen = u16::decode(reader)?;
-                let zeroes = ZeroBytes::decode(reader)?;
+                let ponglen = u16::decode(buf)?;
+                let zeroes = ZeroBytes::decode(buf)?;
                 Ok(Self::Ping(Ping { ponglen, zeroes }))
             }
             Ok(MessageType::Pong) => {
-                let zeroes = ZeroBytes::decode(reader)?;
+                let zeroes = ZeroBytes::decode(buf)?;
                 Ok(Self::Pong { zeroes })
             }
             Err(other) => Err(wire::Error::UnknownMessageType(other)),
@@ -358,85 +340,82 @@ impl wire::Decode for Message {
 }
 
 impl wire::Encode for Address {
-    fn encode<W: std::io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, std::io::Error> {
-        let mut n = 0;
-
+    fn encode(&self, buf: &mut impl BufMut) {
         match self.host {
             HostName::Ip(net::IpAddr::V4(ip)) => {
-                n += u8::from(AddressType::Ipv4).encode(writer)?;
-                n += ip.octets().encode(writer)?;
+                u8::from(AddressType::Ipv4).encode(buf);
+                ip.octets().encode(buf);
             }
             HostName::Ip(net::IpAddr::V6(ip)) => {
-                n += u8::from(AddressType::Ipv6).encode(writer)?;
-                n += ip.octets().encode(writer)?;
+                u8::from(AddressType::Ipv6).encode(buf);
+                ip.octets().encode(buf);
             }
             HostName::Dns(ref dns) => {
-                n += u8::from(AddressType::Dns).encode(writer)?;
-                n += dns.encode(writer)?;
+                u8::from(AddressType::Dns).encode(buf);
+                dns.encode(buf);
             }
             HostName::Tor(addr) => {
-                n += u8::from(AddressType::Onion).encode(writer)?;
-                n += addr.encode(writer)?;
+                u8::from(AddressType::Onion).encode(buf);
+                addr.encode(buf);
             }
             _ => {
-                return Err(io::ErrorKind::Unsupported.into());
+                unimplemented!(
+                    "Encoding not defined for addresses of the same type as the following: {:?}",
+                    self.host
+                );
             }
         }
-        n += self.port().encode(writer)?;
-
-        Ok(n)
+        self.port().encode(buf);
     }
 }
 
 impl wire::Decode for Address {
-    fn decode<R: std::io::Read + ?Sized>(reader: &mut R) -> Result<Self, wire::Error> {
-        let addrtype = reader.read_u8()?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, wire::Error> {
+        let addrtype = buf.try_get_u8()?;
+
         let host = match AddressType::try_from(addrtype) {
             Ok(AddressType::Ipv4) => {
-                let octets: [u8; 4] = wire::Decode::decode(reader)?;
+                let octets: [u8; 4] = wire::Decode::decode(buf)?;
                 let ip = net::Ipv4Addr::from(octets);
 
                 HostName::Ip(net::IpAddr::V4(ip))
             }
             Ok(AddressType::Ipv6) => {
-                let octets: [u8; 16] = wire::Decode::decode(reader)?;
+                let octets: [u8; 16] = wire::Decode::decode(buf)?;
                 let ip = net::Ipv6Addr::from(octets);
 
                 HostName::Ip(net::IpAddr::V6(ip))
             }
             Ok(AddressType::Dns) => {
-                let dns: String = wire::Decode::decode(reader)?;
+                let dns: String = wire::Decode::decode(buf)?;
 
                 HostName::Dns(dns)
             }
             Ok(AddressType::Onion) => {
-                let onion: tor::OnionAddrV3 = wire::Decode::decode(reader)?;
+                let onion: tor::OnionAddrV3 = wire::Decode::decode(buf)?;
 
                 HostName::Tor(onion)
             }
             Err(other) => return Err(wire::Error::UnknownAddressType(other)),
         };
-        let port = u16::decode(reader)?;
+        let port = u16::decode(buf)?;
 
         Ok(Self::from(NetAddr { host, port }))
     }
 }
 
 impl wire::Encode for ZeroBytes {
-    fn encode<W: io::Write + ?Sized>(&self, writer: &mut W) -> Result<usize, io::Error> {
-        let mut n = (self.len() as u16).encode(writer)?;
-        for _ in 0..self.len() {
-            n += 0u8.encode(writer)?;
-        }
-        Ok(n)
+    fn encode(&self, buf: &mut impl BufMut) {
+        (self.len() as u16).encode(buf);
+        buf.put_bytes(0u8, self.len());
     }
 }
 
 impl wire::Decode for ZeroBytes {
-    fn decode<R: std::io::Read + ?Sized>(reader: &mut R) -> Result<Self, wire::Error> {
-        let zeroes = u16::decode(reader)?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, wire::Error> {
+        let zeroes = u16::decode(buf)?;
         for _ in 0..zeroes {
-            _ = u8::decode(reader)?;
+            _ = u8::decode(buf)?;
         }
         Ok(ZeroBytes::new(zeroes))
     }
@@ -508,40 +487,31 @@ mod tests {
 
     #[test]
     fn test_pingpong_encode_max_size() {
-        let mut buf = Vec::new();
-
-        let ping = Message::Ping(Ping {
+        wire::serialize(&Message::Ping(Ping {
             ponglen: 0,
             zeroes: ZeroBytes::new(Ping::MAX_PING_ZEROES),
-        });
-        ping.encode(&mut buf)
-            .expect("ping should be within max message size");
+        }));
 
-        let pong = Message::Pong {
+        wire::serialize(&Message::Pong {
             zeroes: ZeroBytes::new(Ping::MAX_PONG_ZEROES),
-        };
-        pong.encode(&mut buf)
-            .expect("pong should be within max message size");
+        });
     }
 
     #[test]
-    fn test_pingpong_encode_size_overflow() {
-        let ping = Message::Ping(Ping {
+    #[should_panic(expected = "advance out of bounds")]
+    fn test_ping_encode_size_overflow() {
+        wire::serialize(&Message::Ping(Ping {
             ponglen: 0,
             zeroes: ZeroBytes::new(Ping::MAX_PING_ZEROES + 1),
-        });
+        }));
+    }
 
-        let mut buf = Vec::new();
-        ping.encode(&mut buf)
-            .expect_err("ping should exceed max message size");
-
-        let pong = Message::Pong {
+    #[test]
+    #[should_panic(expected = "advance out of bounds")]
+    fn test_pong_encode_size_overflow() {
+        wire::serialize(&Message::Pong {
             zeroes: ZeroBytes::new(Ping::MAX_PONG_ZEROES + 1),
-        };
-
-        let mut buf = Vec::new();
-        pong.encode(&mut buf)
-            .expect_err("pong should exceed max message size");
+        });
     }
 
     #[quickcheck]
@@ -558,7 +528,7 @@ mod tests {
             let mut decoder = Deserializer::<1048576, Message>::new(8);
 
             for item in &items {
-                item.encode(&mut decoder).unwrap();
+                item.encode(&mut decoder);
             }
             for item in items {
                 assert_eq!(decoder.next().unwrap().unwrap(), item);
@@ -570,12 +540,24 @@ mod tests {
             .quickcheck(property as fn(items: Vec<Message>));
     }
 
-    #[quickcheck]
-    fn prop_zero_bytes_encode_decode(zeroes: ZeroBytes) {
-        assert_eq!(
-            wire::deserialize::<ZeroBytes>(&wire::serialize(&zeroes)).unwrap(),
-            zeroes
-        );
+    #[test]
+    fn prop_zero_bytes_encode_decode() {
+        fn property(zeroes: wire::Size) {
+            if zeroes > Ping::MAX_PING_ZEROES {
+                return;
+            }
+
+            let zeroes = ZeroBytes::new(zeroes);
+
+            assert_eq!(
+                wire::deserialize::<ZeroBytes>(&wire::serialize(&zeroes)).unwrap(),
+                zeroes
+            );
+        }
+
+        qcheck::QuickCheck::new()
+            .gen(qcheck::Gen::new(16))
+            .quickcheck(property as fn(zeroes: wire::Size));
     }
 
     #[quickcheck]

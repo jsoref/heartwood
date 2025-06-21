@@ -3,9 +3,9 @@
 
 // This implementation is largely based on the `quinn` crate.
 // Copyright (c) 2018 The quinn developers.
-use std::{fmt, io, ops};
+use std::{fmt, ops};
 
-use byteorder::ReadBytesExt;
+use bytes::{Buf, BufMut};
 use thiserror::Error;
 
 use crate::wire;
@@ -43,6 +43,10 @@ impl VarInt {
         } else {
             Err(BoundsExceeded)
         }
+    }
+
+    pub fn new_unchecked(x: u64) -> Self {
+        Self(x)
     }
 }
 
@@ -98,27 +102,27 @@ impl fmt::Display for VarInt {
 pub struct BoundsExceeded;
 
 impl Decode for VarInt {
-    fn decode<R: io::Read + ?Sized>(r: &mut R) -> Result<Self, wire::Error> {
-        let mut buf = [0; 8];
-        buf[0] = r.read_u8()?;
+    fn decode(buf: &mut impl Buf) -> Result<Self, wire::Error> {
+        let mut tmp = [0; 8];
+        tmp[0] = buf.try_get_u8()?;
 
         // Integer length.
-        let tag = buf[0] >> 6;
-        buf[0] &= 0b0011_1111;
+        let tag = tmp[0] >> 6;
+        tmp[0] &= 0b0011_1111;
 
         let x = match tag {
-            0b00 => u64::from(buf[0]),
+            0b00 => u64::from(tmp[0]),
             0b01 => {
-                r.read_exact(&mut buf[1..2])?;
-                u64::from(u16::from_be_bytes([buf[0], buf[1]]))
+                buf.try_copy_to_slice(&mut tmp[1..2])?;
+                u64::from(u16::from_be_bytes([tmp[0], tmp[1]]))
             }
             0b10 => {
-                r.read_exact(&mut buf[1..4])?;
-                u64::from(u32::from_be_bytes([buf[0], buf[1], buf[2], buf[3]]))
+                buf.try_copy_to_slice(&mut tmp[1..4])?;
+                u64::from(u32::from_be_bytes([tmp[0], tmp[1], tmp[2], tmp[3]]))
             }
             0b11 => {
-                r.read_exact(&mut buf[1..8])?;
-                u64::from_be_bytes(buf)
+                buf.try_copy_to_slice(&mut tmp[1..8])?;
+                u64::from_be_bytes(tmp)
             }
             // SAFETY: It should be obvious that we can't have any other bit pattern
             // than the above, since all other bits are zeroed.
@@ -129,7 +133,7 @@ impl Decode for VarInt {
 }
 
 impl Encode for VarInt {
-    fn encode<W: io::Write + ?Sized>(&self, w: &mut W) -> io::Result<usize> {
+    fn encode(&self, w: &mut impl BufMut) {
         let x: u64 = self.0;
 
         if x < 2u64.pow(6) {
@@ -151,25 +155,19 @@ pub mod payload {
     use super::*;
 
     /// Encode varint-prefixed data payload.
-    pub fn encode<W: io::Write + ?Sized>(payload: &[u8], writer: &mut W) -> io::Result<usize> {
-        let mut n = 0;
+    pub fn encode(payload: &[u8], buf: &mut impl BufMut) {
         let len = payload.len();
-        let varint =
-            VarInt::new(len as u64).map_err(|_| io::Error::from(io::ErrorKind::InvalidInput))?;
+        let varint = VarInt::new_unchecked(len as u64);
 
-        n += varint.encode(writer)?; // The length of the payload length.
-        n += len; // The length of the data payload itself.
-
-        writer.write_all(payload)?;
-
-        Ok(n)
+        varint.encode(buf); // The length of the payload length.
+        buf.put_slice(payload);
     }
 
     /// Decode varint-prefixed data payload.
-    pub fn decode<R: io::Read + ?Sized>(reader: &mut R) -> Result<Vec<u8>, wire::Error> {
-        let size = VarInt::decode(reader)?;
+    pub fn decode(buf: &mut impl Buf) -> Result<Vec<u8>, wire::Error> {
+        let size = VarInt::decode(buf)?;
         let mut data = vec![0; *size as usize];
-        reader.read_exact(&mut data[..])?;
+        buf.try_copy_to_slice(&mut data[..])?;
 
         Ok(data)
     }

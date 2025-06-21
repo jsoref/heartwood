@@ -13,7 +13,7 @@ test = ["radicle/test", "radicle-crypto/test", "radicle-crypto/cyphernet", "qche
 
 [dependencies]
 bloomy = "1.2"
-byteorder = { workspace = true }
+bytes = { workspace = true }
 crossbeam-channel = { workspace = true }
 cyphernet = { workspace = true, features = ["tor"] }
 fastrand = { workspace = true }
