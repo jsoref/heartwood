@@ -49,7 +49,7 @@ pub trait Cob: Sized + PartialEq + Debug {
     /// Error returned by `apply` function.
     type Error: std::error::Error + Send + Sync + 'static;
 
-    /// Initialize a collarorative object from a root operation.
+    /// Initialize a collaborative object from a root operation.
     fn from_root<R: ReadRepository>(op: Op<Self::Action>, repo: &R) -> Result<Self, Self::Error>;
 
     /// Apply an operation to the state.
