@@ -123,7 +123,7 @@
       }:
         rust.craneLib.buildPackage (rust.commonArgs
           // {
-            inherit (rust.craneLib.crateNameFromCargoToml {cargoToml = src + "/" + name + "/Cargo.toml";}) pname version;
+            inherit (rust.craneLib.crateNameFromCargoToml {cargoToml = src + "/crates/" + name + "/Cargo.toml";}) pname version;
             cargoExtraArgs = "-p ${name}";
             doCheck = false;
             postInstall = ''
