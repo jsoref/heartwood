@@ -1,6 +1,8 @@
 #!/usr/bin/make -f
 
 DEB_BUILD_OPTIONS=nostrip
+export RADICLE_VERSION=$(shell build/version)
+export GIT_HEAD=$(shell git rev-parse HEAD)
 
 %:
 	dh $@
