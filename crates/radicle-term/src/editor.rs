@@ -133,11 +133,19 @@ impl Editor {
         let stderr = unsafe { libc::dup(stderr) };
         let stdin = if io::stdin().is_terminal() {
             process::Stdio::inherit()
-        } else {
-            let tty = termion::get_tty()?;
+        } else if cfg!(unix) {
             // If standard input is not a terminal device, the editor won't work correctly.
             // In that case, we use the terminal device, eg. `/dev/tty` as standard input.
+            let tty = fs::OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open("/dev/tty")?;
             process::Stdio::from(tty)
+        } else {
+            return Err(io::Error::new(
+                io::ErrorKind::Unsupported,
+                format!("standard input is not a terminal, refusing to execute editor {cmd:?}"),
+            ));
         };
 
         process::Command::new(program)
