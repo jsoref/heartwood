@@ -1,4 +1,4 @@
-use std::io::{IsTerminal, Write};
+use std::io::IsTerminal;
 use std::mem::ManuallyDrop;
 use std::sync::{Arc, Mutex};
 use std::{fmt, io, thread, time};
@@ -20,6 +20,9 @@ pub const DEFAULT_STYLE: [Paint<&'static str>; 4] = [
     Paint::magenta("◤"),
     Paint::blue("◥"),
 ];
+
+const CLEAR_UNTIL_NEWLINE: crossterm::terminal::Clear =
+    crossterm::terminal::Clear(crossterm::terminal::ClearType::UntilNewLine);
 
 struct Progress {
     state: State,
@@ -129,7 +132,7 @@ pub fn spinner(message: impl ToString) -> Spinner {
 pub fn spinner_to(
     message: impl ToString,
     mut completion: impl io::Write + Send + 'static,
-    animation: impl io::Write + Send + 'static,
+    mut animation: impl io::Write + Send + 'static,
 ) -> Spinner {
     let message = message.to_string();
     let progress = Arc::new(Mutex::new(Progress::new(Paint::new(message))));
@@ -141,7 +144,7 @@ pub fn spinner_to(
             let progress = progress.clone();
 
             move || {
-                let mut animation = termion::cursor::HideCursor::from(animation);
+                write!(animation, "{}", crossterm::cursor::Hide).ok();
 
                 loop {
                     let Ok(mut progress) = progress.lock() else {
@@ -151,7 +154,7 @@ pub fn spinner_to(
                     if sig_result.is_ok() {
                         match sig_rx.try_recv() {
                             Ok(sig) if sig == Signal::Interrupt || sig == Signal::Terminate => {
-                                write!(animation, "\r{}", termion::clear::UntilNewline).ok();
+                                write!(animation, "\r{CLEAR_UNTIL_NEWLINE}").ok();
                                 writeln!(
                                     completion,
                                     "{ERROR_PREFIX} {} {}",
@@ -173,12 +176,7 @@ pub fn spinner_to(
                         } => {
                             let spinner = DEFAULT_STYLE[*cursor];
 
-                            write!(
-                                animation,
-                                "\r{}{spinner} {message}",
-                                termion::clear::UntilNewline,
-                            )
-                            .ok();
+                            write!(animation, "\r{}{spinner} {message}", CLEAR_UNTIL_NEWLINE,).ok();
 
                             *cursor += 1;
                             *cursor %= DEFAULT_STYLE.len();
@@ -187,7 +185,7 @@ pub fn spinner_to(
                             state: State::Done,
                             message,
                         } => {
-                            write!(animation, "\r{}", termion::clear::UntilNewline).ok();
+                            write!(animation, "\r{CLEAR_UNTIL_NEWLINE}").ok();
                             writeln!(completion, "{} {message}", Paint::green("✓")).ok();
                             break;
                         }
@@ -195,7 +193,7 @@ pub fn spinner_to(
                             state: State::Canceled,
                             message,
                         } => {
-                            write!(animation, "\r{}", termion::clear::UntilNewline).ok();
+                            write!(animation, "\r{CLEAR_UNTIL_NEWLINE}").ok();
                             writeln!(
                                 completion,
                                 "{ERROR_PREFIX} {message} {}",
@@ -208,7 +206,7 @@ pub fn spinner_to(
                             state: State::Warn,
                             message,
                         } => {
-                            write!(animation, "\r{}", termion::clear::UntilNewline).ok();
+                            write!(animation, "\r{CLEAR_UNTIL_NEWLINE}").ok();
                             writeln!(completion, "{WARNING_PREFIX} {message}").ok();
                             break;
                         }
@@ -216,7 +214,7 @@ pub fn spinner_to(
                             state: State::Error,
                             message,
                         } => {
-                            write!(animation, "\r{}", termion::clear::UntilNewline).ok();
+                            write!(animation, "\r{CLEAR_UNTIL_NEWLINE}").ok();
                             writeln!(completion, "{ERROR_PREFIX} {message}").ok();
                             break;
                         }
@@ -224,6 +222,9 @@ pub fn spinner_to(
                     drop(progress);
                     thread::sleep(DEFAULT_TICK);
                 }
+
+                write!(animation, "{}", crossterm::cursor::Show).ok();
+
                 if sig_result.is_ok() {
                     let _ = signals::uninstall();
                 }
