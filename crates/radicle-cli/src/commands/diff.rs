@@ -145,7 +145,7 @@ pub fn run(options: Options, _ctx: impl term::Context) -> anyhow::Result<()> {
     let mut hi = Highlighter::default();
     let pretty = diff.pretty(&mut hi, &(), &repo);
 
-    term::pager::page(pretty)?;
+    crate::pager::run(pretty)?;
 
     Ok(())
 }
