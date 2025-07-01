@@ -136,7 +136,7 @@ Values for changes are being validated.
 
 ``` (fail)
 $ rad config set web.pinned.repositories 5
-✗ Error: writing configuration to "[..]/.radicle/config.json" failed: validation failure due to invalid type: integer `5`, expected a sequence
+✗ Error: writing configuration to "[..]/.radicle/config.json" failed: validation failure due to invalid type: integer `5`, expected a set
 ```
 
 The type of the operation is validated.
