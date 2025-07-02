@@ -394,9 +394,9 @@ fn link_direction_label() -> term::Paint<String> {
 }
 
 fn link_direction_inbound() -> term::Paint<String> {
-    term::format::yellow("🡦".to_string())
+    term::format::yellow("↘".to_string())
 }
 
 fn link_direction_outbound() -> term::Paint<String> {
-    term::format::dim("🡥".to_string())
+    term::format::dim("↗".to_string())
 }
