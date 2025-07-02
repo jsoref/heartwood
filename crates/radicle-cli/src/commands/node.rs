@@ -1,9 +1,11 @@
 use std::ffi::OsString;
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::time;
 
 use anyhow::anyhow;
 
+use radicle::node::address::Store as AddressStore;
 use radicle::node::config::ConnectAddress;
 use radicle::node::routing::Store;
 use radicle::node::Handle as _;
@@ -35,7 +37,7 @@ Usage
     rad node stop [<option>...]
     rad node logs [-n <lines>]
     rad node debug [<option>...]
-    rad node connect <nid>@<addr> [<option>...]
+    rad node connect <nid>[@<addr>] [<option>...]
     rad node routing [--rid <rid>] [--nid <nid>] [--json] [<option>...]
     rad node inventory [--nid <nid>] [<option>...]
     rad node events [--timeout <secs>] [-n <count>] [<option>...]
@@ -75,9 +77,33 @@ pub struct Options {
     op: Operation,
 }
 
+/// Address used for the [`Operation::Connect`]
+pub enum Addr {
+    /// Fully-specified address of the form `<NID>@<Address>`
+    Peer(PeerAddr<NodeId, Address>),
+    /// Just the `NID`, to be used for address lookups.
+    Node(NodeId),
+}
+
+impl FromStr for Addr {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.contains("@") {
+            PeerAddr::from_str(s)
+                .map(Self::Peer)
+                .map_err(|e| anyhow!("expected <nid> or <nid>@<addr>: {e}"))
+        } else {
+            NodeId::from_str(s)
+                .map(Self::Node)
+                .map_err(|e| anyhow!("expected <nid> or <nid>@<addr>: {e}"))
+        }
+    }
+}
+
 pub enum Operation {
     Connect {
-        addr: PeerAddr<NodeId, Address>,
+        addr: Addr,
         timeout: time::Duration,
     },
     Config {
@@ -141,7 +167,7 @@ impl Args for Options {
         let mut nid: Option<NodeId> = None;
         let mut rid: Option<RepoId> = None;
         let mut json: bool = false;
-        let mut addr: Option<PeerAddr<NodeId, Address>> = None;
+        let mut addr: Option<Addr> = None;
         let mut lines: usize = 60;
         let mut count: usize = usize::MAX;
         let mut timeout = time::Duration::MAX;
@@ -224,7 +250,7 @@ impl Args for Options {
         let op = match op.unwrap_or_default() {
             OperationName::Connect => Operation::Connect {
                 addr: addr.ok_or_else(|| {
-                    anyhow!("an address of the form `<nid>@<host>:<port>` must be provided")
+                    anyhow!("an `<nid>` or an address of the form `<nid>@<host>:<port>` must be provided")
                 })?,
                 timeout,
             },
@@ -254,9 +280,18 @@ pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
     let mut node = Node::new(profile.socket());
 
     match options.op {
-        Operation::Connect { addr, timeout } => {
-            control::connect(&mut node, addr.id, addr.addr, timeout)?
-        }
+        Operation::Connect { addr, timeout } => match addr {
+            Addr::Peer(addr) => control::connect(&mut node, addr.id, addr.addr, timeout)?,
+            Addr::Node(nid) => {
+                let db = profile.database()?;
+                let addresses = db
+                    .addresses_of(&nid)?
+                    .into_iter()
+                    .map(|ka| ka.addr)
+                    .collect();
+                control::connect_many(&mut node, nid, addresses, timeout)?;
+            }
+        },
         Operation::Config { addresses } => {
             if addresses {
                 let cfg = node.config()?;

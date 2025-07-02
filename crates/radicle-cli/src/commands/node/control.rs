@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::ffi::OsString;
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
@@ -201,6 +202,46 @@ pub fn connect(
         Ok(ConnectResult::Connected) => spinner.finish(),
         Ok(ConnectResult::Disconnected { reason }) => spinner.error(reason),
         Err(err) => return Err(err.into()),
+    }
+    Ok(())
+}
+
+pub fn connect_many(
+    node: &mut Node,
+    nid: NodeId,
+    addrs: Vec<Address>,
+    timeout: time::Duration,
+) -> anyhow::Result<()> {
+    let mut spinner = term::spinner("Connecting...");
+    let mut errors = HashMap::new();
+    for addr in addrs {
+        spinner.message(format!(
+            "Connecting to {}@{addr}...",
+            term::format::node(&nid)
+        ));
+        match node.connect(
+            nid,
+            addr.clone(),
+            node::ConnectOptions {
+                persistent: true,
+                timeout,
+            },
+        ) {
+            Ok(ConnectResult::Connected) => {
+                spinner.finish();
+                return Ok(());
+            }
+            Ok(ConnectResult::Disconnected { reason }) => {
+                errors.insert(addr, reason);
+            }
+            Err(err) => {
+                errors.insert(addr, err.to_string());
+            }
+        }
+    }
+    spinner.failed();
+    for (addr, err) in errors {
+        term::error(format!("Failed to connect to {addr}: {err}"));
     }
     Ok(())
 }

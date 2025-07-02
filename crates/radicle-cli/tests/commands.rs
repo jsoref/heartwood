@@ -959,6 +959,49 @@ fn rad_node_connect() {
 }
 
 #[test]
+fn rad_node_connect_without_address() {
+    logger::init(log::Level::Debug);
+    let mut environment = Environment::new();
+    let mut alice = environment.node(Config::test(Alias::new("alice")));
+    let bob = environment.node(Config::test(Alias::new("bob")));
+    let working = tempfile::tempdir().unwrap();
+    let bob = bob.spawn();
+
+    alice
+        .db
+        .addresses_mut()
+        .insert(
+            &bob.id,
+            PROTOCOL_VERSION,
+            node::Features::SEED,
+            &Alias::new("bob"),
+            0,
+            &UserAgent::default(),
+            localtime::LocalTime::now().into(),
+            [node::KnownAddress::new(
+                node::Address::from(bob.addr),
+                node::address::Source::Imported,
+            )],
+        )
+        .unwrap();
+    let alice = alice.spawn();
+    alice
+        .rad(
+            "node",
+            &["connect", format!("{}", bob.id).as_str()],
+            working.path(),
+        )
+        .unwrap();
+
+    let sessions = alice.handle.sessions().unwrap();
+    let session = sessions.first().unwrap();
+
+    assert_eq!(session.nid, bob.id);
+    assert_eq!(session.addr, bob.addr.into());
+    assert!(session.state.is_connected());
+}
+
+#[test]
 fn rad_node() {
     let mut environment = Environment::new();
     let alice = environment.node(Config {
