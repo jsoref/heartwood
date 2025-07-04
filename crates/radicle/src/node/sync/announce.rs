@@ -1,8 +1,7 @@
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    ops::ControlFlow,
-    time,
-};
+use std::collections::{BTreeMap, BTreeSet};
+use std::fmt;
+use std::ops::ControlFlow;
+use std::time;
 
 use crate::node::NodeId;
 
@@ -394,6 +393,23 @@ pub enum AnnouncerError {
     Target(TargetError),
 }
 
+impl fmt::Display for AnnouncerError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AnnouncerError::AlreadySynced(AlreadySynced { preferred, synced }) => write!(
+                f,
+                "already synchronized with {synced} nodes ({preferred} preferred nodes)"
+            ),
+            AnnouncerError::NoSeeds => {
+                f.write_str("no more nodes are available for synchronizing with")
+            }
+            AnnouncerError::Target(target_error) => target_error.fmt(f),
+        }
+    }
+}
+
+impl std::error::Error for AnnouncerError {}
+
 impl From<AlreadySynced> for AnnouncerError {
     fn from(value: AlreadySynced) -> Self {
         Self::AlreadySynced(value)
@@ -402,7 +418,11 @@ impl From<AlreadySynced> for AnnouncerError {
 
 #[derive(Debug)]
 pub struct AlreadySynced {
+    /// The number of preferred nodes that are synchronized.
     preferred: usize,
+    /// Total number nodes that are synchronized.
+    ///
+    /// Note that this includes [`AlreadySynced::preferred`].
     synced: usize,
 }
 
