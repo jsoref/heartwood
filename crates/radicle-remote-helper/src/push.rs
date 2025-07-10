@@ -1,5 +1,6 @@
 #![allow(clippy::too_many_arguments)]
 
+mod canonical;
 mod error;
 
 use std::collections::HashMap;
@@ -19,7 +20,6 @@ use radicle::cob::patch;
 use radicle::cob::patch::cache::Patches as _;
 use radicle::crypto;
 use radicle::explorer::ExplorerResource;
-use radicle::git::canonical;
 use radicle::identity::{CanonicalRefs, Did};
 use radicle::node;
 use radicle::node::{Handle, NodeId};
@@ -31,7 +31,7 @@ use radicle::{git, rad};
 use radicle_cli as cli;
 use radicle_cli::terminal as term;
 
-use crate::{hint, read_line, warn, Options};
+use crate::{hint, read_line, Options};
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -45,9 +45,6 @@ pub enum Error {
     /// No public key is given
     #[error("no public key given as a remote namespace, perhaps you are attempting to push to restricted refs")]
     NoKey,
-    /// Head being pushed diverges from canonical head.
-    #[error("refusing to update branch to commit that is not a descendant of canonical head")]
-    HeadsDiverge(git::Oid, git::Oid),
     /// User tried to delete the canonical branch.
     #[error("refusing to delete default branch ref '{0}'")]
     DeleteForbidden(git::RefString),
@@ -121,6 +118,8 @@ pub enum Error {
     CanonicalRefs(#[from] radicle::identity::doc::CanonicalRefsError),
     #[error(transparent)]
     PushAction(#[from] error::PushAction),
+    #[error(transparent)]
+    Canonical(#[from] error::CanonicalUnrecoverable),
 }
 
 /// Push command.
@@ -224,7 +223,7 @@ impl PushAction {
                 let patch = git::Oid::from_str(oid)
                     .map_err(|err| error::PushAction::InvalidPatchId {
                         suffix: oid.to_string(),
-                        err,
+                        source: err,
                     })
                     .map(patch::PatchId::from)?;
                 Ok(Self::UpdatePatch { dst, patch })
@@ -348,46 +347,11 @@ pub fn run(
                         //
                         // Note that we *do* allow rolling back to a previous commit on the
                         // canonical branch.
-                        if let Some(mut canonical) = rules.canonical(dst.clone(), stored)? {
-                            if canonical.is_allowed(&me) {
-                                let head = *src;
-                                let converges = canonical.converges(&working, (&me, &head))?;
-
-                                // If `canonical` is empty then we're creating a new reference.
-                                // If we're the only delegate then we need to modify our vote.
-                                if converges || canonical.has_no_tips() || canonical.is_only(&me) {
-                                    canonical.modify_vote(me, head);
-                                }
-
-                                match canonical.quorum(&working) {
-                                    Ok((dst, canonical_oid)) => {
-                                        // Canonical head is an ancestor of head.
-                                        let is_ff = head == canonical_oid
-                                            || working
-                                                .graph_descendant_of(*head, *canonical_oid)?;
-
-                                        if !is_ff && !converges {
-                                            if hints {
-                                                hint(
-                                                    format!("you are attempting to push a commit that would cause \
-                                                    your upstream to diverge from the canonical reference {dst}"),
-                                                );
-                                                hint(
-                                                    "to integrate the remote changes, run `git pull --rebase` \
-                                                    and try again",
-                                                );
-                                            }
-                                            return Err(Error::HeadsDiverge(head, canonical_oid));
-                                        }
-                                        set_canonical_refs
-                                            .push((dst.clone().to_owned(), canonical_oid));
-                                    }
-                                    Err(canonical::QuorumError::Git(e)) => return Err(e.into()),
-                                    Err(e) => {
-                                        warn(e.to_string());
-                                        warn("it is recommended to find a commit to agree upon");
-                                    }
-                                }
+                        if let Some(canonical) = rules.canonical(dst.clone(), stored)? {
+                            let canonical = canonical::Canonical::new(me, *src, canonical);
+                            match canonical.quorum(&working) {
+                                Ok(quorum) => set_canonical_refs.push(quorum),
+                                Err(e) => canonical::io::handle_error(e, &dst, hints)?,
                             }
                         }
                         push(src, &dst, *force, &nid, &working, stored, patches, &signer)

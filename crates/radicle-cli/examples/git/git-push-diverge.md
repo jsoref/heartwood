@@ -45,7 +45,7 @@ integrate Bob's changes before pushing ours:
 $ git push rad
 hint: you are attempting to push a commit that would cause your upstream to diverge from the canonical reference refs/heads/master
 hint: to integrate the remote changes, run `git pull --rebase` and try again
-error: refusing to update branch to commit that is not a descendant of canonical head
+error: refusing to update canonical reference to commit that is not a descendant of current canonical head
 error: failed to push some refs to 'rad://z42hL2jL4XNk6K8oHQaSWfMgCL7ji/z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi'
 ```
 

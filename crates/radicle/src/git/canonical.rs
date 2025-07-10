@@ -2,6 +2,7 @@ pub mod rules;
 pub use rules::{MatchedRule, RawRule, Rules, ValidRule};
 
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 
 use raw::Repository;
 use thiserror::Error;
@@ -48,6 +49,70 @@ pub enum QuorumError {
     /// An error occurred from [`git2`].
     #[error(transparent)]
     Git(#[from] git2::Error),
+}
+
+#[derive(Debug, Error)]
+#[error("failed to check if {head} is an ancestor of {canonical} due to: {source}")]
+pub struct GraphDescendant {
+    head: Oid,
+    canonical: Oid,
+    source: raw::Error,
+}
+
+#[derive(Debug, Error)]
+#[error("the commit {commit} for {did} is missing from the repository {repo:?}")]
+pub struct MissingCommit {
+    repo: PathBuf,
+    did: Did,
+    commit: Oid,
+    source: raw::Error,
+}
+
+#[derive(Debug, Error)]
+#[error("could not determine whether the commit {commit} for {did} is part of the repository {repo:?} due to: {source}")]
+pub struct InvalidCommit {
+    repo: PathBuf,
+    did: Did,
+    commit: Oid,
+    source: raw::Error,
+}
+
+#[derive(Debug, Error)]
+pub enum ConvergesError {
+    #[error(transparent)]
+    GraphDescendant(#[from] GraphDescendant),
+    #[error(transparent)]
+    MissingCommit(#[from] MissingCommit),
+    #[error(transparent)]
+    InvalidCommit(#[from] InvalidCommit),
+}
+
+impl ConvergesError {
+    pub fn graph_descendant(head: Oid, canonical: Oid, source: raw::Error) -> Self {
+        Self::GraphDescendant(GraphDescendant {
+            head,
+            canonical,
+            source,
+        })
+    }
+
+    pub fn missing_commit(repo: PathBuf, did: Did, commit: Oid, err: raw::Error) -> Self {
+        Self::MissingCommit(MissingCommit {
+            repo,
+            did,
+            commit,
+            source: err,
+        })
+    }
+
+    pub fn invalid_commit(repo: PathBuf, did: Did, commit: Oid, err: raw::Error) -> Self {
+        Self::InvalidCommit(InvalidCommit {
+            repo,
+            did,
+            commit,
+            source: err,
+        })
+    }
 }
 
 impl<'a, 'b> Canonical<'a, 'b> {
@@ -124,14 +189,25 @@ impl<'a, 'b> Canonical<'a, 'b> {
     pub fn converges(
         &self,
         repo: &Repository,
-        candidate: (&Did, &Oid),
-    ) -> Result<bool, raw::Error> {
-        for tip in self
-            .tips
-            .iter()
-            .filter_map(|(did, tip)| (did != candidate.0).then_some(tip))
-        {
-            let (ahead, behind) = repo.graph_ahead_behind(**candidate.1, **tip)?;
+        (candidate, commit): (&Did, &Oid),
+    ) -> Result<bool, ConvergesError> {
+        let heads = {
+            let mut heads = self
+                .tips
+                .iter()
+                .filter_map(|(did, tip)| (did != candidate).then_some((did, tip)));
+            heads.try_fold(
+                Vec::with_capacity(heads.size_hint().0),
+                |mut heads, (did, head)| {
+                    heads.push(Self::ensure_commit(*did, *head, repo)?);
+                    Ok::<_, ConvergesError>(heads)
+                },
+            )?
+        };
+        for head in heads {
+            let (ahead, behind) = repo
+                .graph_ahead_behind(**commit, *head)
+                .map_err(|err| ConvergesError::graph_descendant(*commit, head, err))?;
             if ahead * behind == 0 {
                 return Ok(true);
             }
@@ -224,6 +300,21 @@ impl<'a, 'b> Canonical<'a, 'b> {
 
     fn threshold(&self) -> usize {
         (*self.rule.threshold()).into()
+    }
+
+    fn ensure_commit(from: Did, commit: Oid, working: &Repository) -> Result<Oid, ConvergesError> {
+        match working.find_commit(*commit).map(|_| commit) {
+            Ok(oid) => Ok(oid),
+            Err(err) if err.code() == raw::ErrorCode::NotFound => Err(
+                ConvergesError::missing_commit(working.path().to_path_buf(), from, commit, err),
+            ),
+            Err(err) => Err(ConvergesError::invalid_commit(
+                working.path().to_path_buf(),
+                from,
+                commit,
+                err,
+            )),
+        }
     }
 }
 
