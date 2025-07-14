@@ -26,7 +26,6 @@ fast-glob = { version = "0.3.2" }
 fastrand = { workspace = true }
 git2 = { workspace = true, features = ["vendored-libgit2"] }
 indexmap = { version = "2", features = ["serde"] }
-libc = { workspace = true }
 localtime = { workspace = true, features = ["serde"] }
 log = { workspace = true, features = ["std"] }
 multibase = { workspace = true }
@@ -45,6 +44,9 @@ sqlite = { workspace = true, features = ["bundled"] }
 tempfile = { workspace = true }
 thiserror = { workspace = true }
 unicode-normalization = { version = "0.1" }
+
+[target.'cfg(unix)'.dependencies]
+libc = { workspace = true }
 
 [dev-dependencies]
 emojis = "0.6"
