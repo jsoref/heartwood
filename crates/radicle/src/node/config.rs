@@ -148,7 +148,11 @@ impl Default for Limits {
 #[cfg_attr(
     feature = "schemars",
     derive(schemars::JsonSchema),
-    schemars(transparent)
+    schemars(transparent),
+    // serde's transparent and try_from/into will conflict, so we tell schemars
+    // to ignore them for its generation.
+    schemars(!try_from),
+    schemars(!into),
 )]
 pub struct FetchPackSizeLimit {
     #[cfg_attr(
