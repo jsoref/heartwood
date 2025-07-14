@@ -26,9 +26,9 @@ pub enum ReviewEdit {
     /// The latest version of editing a review.
     ///
     /// This allows editing the `summary`, `verdict`, `labels` of [`Patch`], and
-    /// introduces `embeds` to the review [`summary`].
+    /// introduces `embeds` to the review summary.
     ///
-    /// The `summary` of a [`Review`] is now an edit-history.
+    /// The `summary` of a [`super::Review`] is now an edit-history.
     #[serde(rename = "review.edit.v2")]
     V2(ReviewEditV2),
 }

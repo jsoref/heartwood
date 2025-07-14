@@ -20,7 +20,7 @@ use crate::cob::patch::{
 /// The encoding for a `patch::Review` that can be deserialized and migrated.
 ///
 /// To maintain backwards-compatibility, [`Review`] must implement:
-/// ```rust, no_run
+/// ```rust, ignore
 /// From<Review> for patch::Review
 /// ```
 #[derive(Deserialize)]
