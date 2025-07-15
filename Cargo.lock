@@ -2749,7 +2749,6 @@ dependencies = [
 name = "radicle-ssh"
 version = "0.9.0"
 dependencies = [
- "log",
  "thiserror 1.0.69",
  "winpipe",
  "zeroize",
