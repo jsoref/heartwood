@@ -1965,6 +1965,20 @@ impl<R: ReadRepository> store::Transaction<Patch, R> {
         )))
     }
 
+    /// React to a review.
+    pub fn review_react(
+        &mut self,
+        review: ReviewId,
+        reaction: Reaction,
+        active: bool,
+    ) -> Result<(), store::Error> {
+        self.push(Action::ReviewReact {
+            review,
+            reaction,
+            active,
+        })
+    }
+
     /// Redact a patch review.
     pub fn redact_review(&mut self, review: ReviewId) -> Result<(), store::Error> {
         self.push(Action::ReviewRedact { review })
@@ -2325,6 +2339,22 @@ where
     {
         self.transaction("Edit review", signer, |tx| {
             tx.review_edit(review, verdict, summary, labels, embeds)
+        })
+    }
+
+    /// React to a review.
+    pub fn review_react<G>(
+        &mut self,
+        review: ReviewId,
+        reaction: Reaction,
+        active: bool,
+        signer: &Device<G>,
+    ) -> Result<EntryId, Error>
+    where
+        G: crypto::signature::Signer<crypto::Signature>,
+    {
+        self.transaction("React to review", signer, |tx| {
+            tx.review_react(review, reaction, active)
         })
     }
 
