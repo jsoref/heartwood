@@ -59,6 +59,44 @@ impl ReviewEdit {
         }
     }
 
+    /// Get the summary of the [`ReviewEdit`].
+    ///
+    /// The summary was optional in the first version, so it may be `None`.
+    pub fn summary(&self) -> Option<&String> {
+        match self {
+            ReviewEdit::V1(ReviewEditV1 { summary, .. }) => summary.as_ref(),
+            ReviewEdit::V2(ReviewEditV2 { summary, .. }) => Some(summary),
+        }
+    }
+
+    /// Get the [`Verdict`] of the [`ReviewEdit`].
+    pub fn verdict(&self) -> Option<&Verdict> {
+        match self {
+            ReviewEdit::V1(ReviewEditV1 { verdict, .. }) => verdict.as_ref(),
+            ReviewEdit::V2(ReviewEditV2 { verdict, .. }) => verdict.as_ref(),
+        }
+    }
+
+    /// Get the list of [`Label`]s of the [`ReviewEdit`].
+    pub fn labels(&self) -> &[Label] {
+        match self {
+            ReviewEdit::V1(ReviewEditV1 { labels, .. }) => labels,
+            ReviewEdit::V2(ReviewEditV2 { labels, .. }) => labels,
+        }
+    }
+
+    /// Get the [`Embed`]s of the [`ReviewEdit`].
+    ///
+    /// [`Embed`]s were introduced in the second version of edits. For this
+    /// reason, an [`Option`] is returned instead of a [`Vec`] – this allows to
+    /// avoid an unnecessary clone of the [`Vec`] when it is present.
+    pub fn embeds(&self) -> Option<&Vec<Embed<Uri>>> {
+        match self {
+            ReviewEdit::V1(_) => None,
+            ReviewEdit::V2(ReviewEditV2 { embeds, .. }) => Some(embeds),
+        }
+    }
+
     /// Apply the action to the given [`Patch`].
     pub fn run(
         self,
