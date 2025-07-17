@@ -9,7 +9,7 @@ $ cd heartwood
 $ rad sync --fetch rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 1 potential seed(s).
 ✓ Target met: 1 seed(s)
-🌱 Fetched from z6MknSL…StBU8Vi
+🌱 Fetched from z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 ```
 
 One thing that can happen is that two delegates propose a revision at the same
@@ -31,7 +31,7 @@ revisions.
 $ rad sync --fetch rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 1 potential seed(s).
 ✓ Target met: 1 seed(s)
-🌱 Fetched from z6Mkt67…v4N1tRk
+🌱 Fetched from z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk
 $ rad id list
 ╭─────────────────────────────────────────────────────────────────────────────────╮
 │ ●   ID        Title               Author                     Status     Created │
@@ -66,7 +66,7 @@ accepted now.
 $ rad sync --fetch rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 1 potential seed(s).
 ✓ Target met: 1 seed(s)
-🌱 Fetched from z6MknSL…StBU8Vi
+🌱 Fetched from z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 ```
 ``` ~bob (fail)
 $ rad id accept 12d7300 -q

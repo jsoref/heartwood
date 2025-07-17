@@ -2,13 +2,13 @@ Eve knows about three seeds.
 
 ```
 $ rad node routing
-╭─────────────────────────────────────────────────────╮
-│ RID                                 NID             │
-├─────────────────────────────────────────────────────┤
-│ rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji   z6MknSL…StBU8Vi │
-│ rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji   z6MksFq…bS9wzpT │
-│ rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji   z6Mkt67…v4N1tRk │
-╰─────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────────────────────────────────╮
+│ RID                                 NID                                              │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│ rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji   z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi │
+│ rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji   z6MksFqXN3Yhqk8pTJdUGLwBTkRfQvwZXPqR2qMEhbS9wzpT │
+│ rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji   z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk │
+╰──────────────────────────────────────────────────────────────────────────────────────╯
 ```
 When she tries to clone, one of those will fail to fetch. But the clone command
 still returns successfully.
@@ -20,7 +20,7 @@ Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 3 potential s
 ✓ Target met: 1 seed(s)
 ✓ Creating checkout in ./heartwood..
 ✓ Remote alice@z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi added
-✓ Remote-tracking branch alice@z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi/master created for z6MknSL…StBU8Vi
+✓ Remote-tracking branch alice@z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi/master created for z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 ✓ Repository successfully cloned under [..]/heartwood/
 ╭────────────────────────────────────╮
 │ heartwood                          │

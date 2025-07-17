@@ -8,9 +8,9 @@ $ rad ls
 $ rad clone rad:z2ug5mwNKZB8KGpBDRTrWHAMbvHCu --seed z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi --timeout 1
 ✓ Seeding policy updated for rad:z2ug5mwNKZB8KGpBDRTrWHAMbvHCu with scope 'all'
 Fetching rad:z2ug5mwNKZB8KGpBDRTrWHAMbvHCu from the network, found 1 potential seed(s).
-✗ Target not met: could not fetch from [z6MknSL…StBU8Vi], and required 1 more seed(s)
+✗ Target not met: could not fetch from [z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi], and required 1 more seed(s)
 ! Warning: Failed to fetch from 1 seed(s).
-! Warning: z6MknSL…StBU8Vi: failed to perform fetch handshake
+! Warning: z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi: failed to perform fetch handshake
 ✗ Error: no seeds found for rad:z2ug5mwNKZB8KGpBDRTrWHAMbvHCu
 ```
 
@@ -31,7 +31,7 @@ that Alice has the repo after she announced her refs:
 $ rad sync rad:z2ug5mwNKZB8KGpBDRTrWHAMbvHCu --fetch
 Fetching rad:z2ug5mwNKZB8KGpBDRTrWHAMbvHCu from the network, found 1 potential seed(s).
 ✓ Target met: 1 seed(s)
-🌱 Fetched from z6MknSL…StBU8Vi
+🌱 Fetched from z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 $ rad ls --private --all
 ╭───────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ Name        RID                                 Visibility   Head      Description                        │

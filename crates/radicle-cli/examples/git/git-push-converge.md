@@ -16,16 +16,16 @@ responsibilities:
 $ rad sync --fetch
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 2 potential seed(s).
 ✓ Target met: 2 seed(s)
-🌱 Fetched from z6Mkux1…nVhib7Z
-🌱 Fetched from z6MknSL…StBU8Vi
+🌱 Fetched from z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z
+🌱 Fetched from z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 ```
 
 ``` ~eve
 $ rad sync --fetch
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 2 potential seed(s).
 ✓ Target met: 2 seed(s)
-🌱 Fetched from z6Mkt67…v4N1tRk
-🌱 Fetched from z6MknSL…StBU8Vi
+🌱 Fetched from z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk
+🌱 Fetched from z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 ```
 
 To demonstrate the divergence, Alice, Bob, and Eve will all create a new change,
@@ -63,13 +63,13 @@ $ rad remote add did:key:z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk --name
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 2 potential seed(s).
 ✓ Target met: 2 seed(s)
 ✓ Remote bob added
-✓ Remote-tracking branch bob/master created for z6Mkt67…v4N1tRk
+✓ Remote-tracking branch bob/master created for z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk
 $ rad remote add did:key:z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z --name eve
 ✓ Follow policy updated for z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z (eve)
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 2 potential seed(s).
 ✓ Target met: 2 seed(s)
 ✓ Remote eve added
-✓ Remote-tracking branch eve/master created for z6Mkux1…nVhib7Z
+✓ Remote-tracking branch eve/master created for z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z
 ```
 
 Alice does indeed have Bob and Eve's references, however, a new canonical
@@ -104,7 +104,7 @@ $ rad remote add did:key:z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi --name
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 2 potential seed(s).
 ✓ Target met: 2 seed(s)
 ✓ Remote alice added
-✓ Remote-tracking branch alice/master created for z6MknSL…StBU8Vi
+✓ Remote-tracking branch alice/master created for z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 $ git reset --hard alice/master
 HEAD is now at 0f9bd80 Merge remote-tracking branch 'eve/master'
 ```
@@ -130,7 +130,7 @@ $ rad remote add did:key:z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi --name
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 2 potential seed(s).
 ✓ Target met: 2 seed(s)
 ✓ Remote alice added
-✓ Remote-tracking branch alice/master created for z6MknSL…StBU8Vi
+✓ Remote-tracking branch alice/master created for z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 $ git reset --hard alice/master
 HEAD is now at 0f9bd80 Merge remote-tracking branch 'eve/master'
 ```

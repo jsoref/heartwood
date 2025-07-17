@@ -40,7 +40,7 @@ $ rad remote add z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi --name alice
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 1 potential seed(s).
 ✓ Target met: 1 seed(s)
 ✓ Remote alice added
-✓ Remote-tracking branch alice/master created for z6MknSL…StBU8Vi
+✓ Remote-tracking branch alice/master created for z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 ```
 
 Bob is able to fetch Alice's tag into his working copy, and they're fetched
@@ -76,7 +76,7 @@ update of the tag:
 $ rad sync -f
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 1 potential seed(s).
 ✓ Target met: 1 seed(s)
-🌱 Fetched from z6MknSL…StBU8Vi
+🌱 Fetched from z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 ```
 
 ``` ~bob (stderr)

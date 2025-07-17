@@ -14,7 +14,7 @@ Bob then syncs these changes and adds a new commit:
 $ rad sync --fetch
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 1 potential seed(s).
 ✓ Target met: 1 seed(s)
-🌱 Fetched from z6MknSL…StBU8Vi
+🌱 Fetched from z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 $ git commit -m "Third commit" --allow-empty -q
 $ git push rad
 $ git branch -arv
@@ -27,7 +27,7 @@ Alice merges these changes and pushes them, which updates the canonical head:
 ``` ~alice
 $ rad remote add did:key:z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk --name bob --fetch --no-sync
 ✓ Remote bob added
-✓ Remote-tracking branch bob/master created for z6Mkt67…v4N1tRk
+✓ Remote-tracking branch bob/master created for z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk
 $ git merge bob/master
 Updating f2de534..319a7dc
 Fast-forward

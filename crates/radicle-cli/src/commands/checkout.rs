@@ -178,7 +178,7 @@ pub fn setup_remote(
         term::success!(
             "Remote-tracking branch {} created for {}",
             term::format::tertiary(branch),
-            term::format::tertiary(term::format::node(remote_id))
+            term::format::tertiary(term::format::node_id_human(remote_id))
         );
     }
     Ok(remote_name)

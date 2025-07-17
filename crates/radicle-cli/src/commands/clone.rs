@@ -355,7 +355,7 @@ fn handle_fetch_error(id: RepoId, failure: &node::sync::fetch::TargetMissed) -> 
     for (node, reason) in failure.fetch_results().failed() {
         term::warning(format!(
             "{}: {}",
-            term::format::node(node),
+            term::format::node_id_human(node),
             term::format::yellow(reason),
         ))
     }

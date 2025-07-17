@@ -129,7 +129,7 @@ $ rad remote add z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi --name alice
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 1 potential seed(s).
 ✓ Target met: 1 seed(s)
 ✓ Remote alice added
-✓ Remote-tracking branch alice/master created for z6MknSL…StBU8Vi
+✓ Remote-tracking branch alice/master created for z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 $ git push rad master
 ```
 
@@ -139,7 +139,7 @@ $ rad remote add z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk --name bob
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 1 potential seed(s).
 ✓ Target met: 1 seed(s)
 ✓ Remote bob added
-✓ Remote-tracking branch bob/master created for z6Mkt67…v4N1tRk
+✓ Remote-tracking branch bob/master created for z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk
 $ rad id update --title "Add Bob" --delegate did:key:z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk --no-confirm -q
 27ab0d77a95581c59ca9d30e679ceb06a9f758db
 $ rad id update --title "Update canonical reference rules" --payload xyz.radicle.crefs rules '{ "refs/tags/*": { "threshold": 2, "allow": "delegates" }, "refs/tags/qa/*": { "threshold": 1, "allow": "delegates" } }' -q
@@ -154,7 +154,7 @@ editor instead.
 $ rad sync -f
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 1 potential seed(s).
 ✓ Target met: 1 seed(s)
-🌱 Fetched from z6MknSL…StBU8Vi
+🌱 Fetched from z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 $ rad id accept dace164ba43fa51802697ec28d0b1965a9d7808b -q
 ```
 

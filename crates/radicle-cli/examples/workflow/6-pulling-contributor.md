@@ -12,7 +12,7 @@ Then, we call `rad sync --fetch` to fetch from the maintainer:
 $ rad sync --fetch
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 1 potential seed(s).
 ✓ Target met: 1 seed(s)
-🌱 Fetched from z6MknSL…StBU8Vi
+🌱 Fetched from z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 ```
 
 Now let's checkout `master` and pull the maintainer's changes:

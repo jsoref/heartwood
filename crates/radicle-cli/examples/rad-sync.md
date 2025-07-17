@@ -57,8 +57,8 @@ We can also use the `--fetch` option to only fetch objects:
 $ rad sync --fetch
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 2 potential seed(s).
 ✓ Target met: 2 seed(s)
-🌱 Fetched from z6Mkux1…nVhib7Z
-🌱 Fetched from z6Mkt67…v4N1tRk
+🌱 Fetched from z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z
+🌱 Fetched from z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk
 ```
 
 Specifying both `--fetch` and `--announce` is equivalent to specifying none:
@@ -67,8 +67,8 @@ Specifying both `--fetch` and `--announce` is equivalent to specifying none:
 $ rad sync --fetch --announce
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 2 potential seed(s).
 ✓ Target met: 2 seed(s)
-🌱 Fetched from z6Mkux1…nVhib7Z
-🌱 Fetched from z6Mkt67…v4N1tRk
+🌱 Fetched from z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z
+🌱 Fetched from z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk
 ✓ Nothing to announce, already in sync with 2 seed(s) (see `rad sync status`)
 ```
 
@@ -78,7 +78,7 @@ It's also possible to use the `--seed` flag to only sync with a specific node:
 $ rad sync --fetch --seed z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 3 potential seed(s).
 ✓ Target met: 1 preferred seed(s).
-🌱 Fetched from z6Mkt67…v4N1tRk
+🌱 Fetched from z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk
 ```
 
 And the `--replicas` flag to sync with a number of nodes. First we'll
@@ -92,7 +92,7 @@ $ rad issue open --title "Test `rad sync --replicas`" --description "Check that 
 $ rad sync --replicas 1
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 2 potential seed(s).
 ✓ Target met: 1 seed(s)
-🌱 Fetched from z6Mkux1…nVhib7Z
+🌱 Fetched from z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z
 ✓ Synced with 1 seed(s)
 ```
 
@@ -118,10 +118,10 @@ Or when trying to fetch from an unknown seed, using `--seed`:
 ```
 $ rad sync --fetch rad:z39mP9rQAaGmERfUMPULfPUi473tY --seed z6MkjM3HpqNVV4ZsL5s3RAd8ThVG3VG98YsDCjHBNnGMq5o7
 Fetching rad:z39mP9rQAaGmERfUMPULfPUi473tY from the network, found 1 potential seed(s).
-✗ Target not met: could not fetch from [z6MkjM3…nGMq5o7], and required 1 more seed(s)
+✗ Target not met: could not fetch from [z6MkjM3HpqNVV4ZsL5s3RAd8ThVG3VG98YsDCjHBNnGMq5o7], and required 1 more seed(s)
 ✗ Error: Fetched from 0 preferred seed(s), could not reach 1 seed(s)
 ✗ Error: Could not replicate from 1 preferred seed(s)
-✗ Error: z6MkjM3…nGMq5o7: Could not connect. No addresses known.
+✗ Error: z6MkjM3HpqNVV4ZsL5s3RAd8ThVG3VG98YsDCjHBNnGMq5o7: Could not connect. No addresses known.
 ```
 
 Also note that you cannot sync an unseeded repo:

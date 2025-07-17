@@ -674,8 +674,8 @@ impl FetcherSpinner {
             term::format::secondary(self.preferred_seeds),
             term::format::secondary(progress.succeeded()),
             term::format::secondary(self.replicas.lower_bound()),
-            term::format::tertiary(term::format::node(node)),
-            term::format::tertiary(addr),
+            term::format::tertiary(term::format::node_id_human_compact(node)),
+            term::format::tertiary(term::format::addr_compact(addr)),
         ))
     }
 
@@ -691,8 +691,8 @@ impl FetcherSpinner {
             term::format::secondary(self.preferred_seeds),
             term::format::secondary(progress.succeeded()),
             term::format::secondary(self.replicas.lower_bound()),
-            term::format::tertiary(term::format::node(node)),
-            term::format::tertiary(addr),
+            term::format::tertiary(term::format::node_id_human_compact(node)),
+            term::format::tertiary(term::format::addr_compact(addr)),
         ))
     }
 
@@ -731,7 +731,7 @@ impl FetcherSpinner {
         let missing_preferred_seeds = missed
             .missed_nodes()
             .iter()
-            .map(|nid| term::format::node(nid).to_string())
+            .map(|nid| term::format::node_id_human(nid).to_string())
             .collect::<Vec<_>>();
         let required = missed.required_nodes();
         if !missing_preferred_seeds.is_empty() {
@@ -760,7 +760,7 @@ fn display_fetch_result(result: &sync::FetcherResult, verbose: bool) {
                 for (node, reason) in results.failed() {
                     term::warning(format!(
                         "{}: {}",
-                        term::format::node(node),
+                        term::format::node_id_human(node),
                         term::format::yellow(reason),
                     ))
                 }
@@ -784,7 +784,7 @@ fn display_fetch_result(result: &sync::FetcherResult, verbose: bool) {
             for (node, reason) in results.failed() {
                 term::error(format!(
                     "{}: {}",
-                    term::format::node(node),
+                    term::format::node_id_human(node),
                     term::format::negative(reason),
                 ))
             }
@@ -803,7 +803,7 @@ fn display_success<'a>(
     for (node, updates, _) in results {
         term::println(
             "🌱 Fetched from",
-            term::format::secondary(term::format::node(node)),
+            term::format::secondary(term::format::node_id_human(node)),
         );
         if verbose {
             let mut updates = updates
@@ -858,7 +858,7 @@ fn print_announcer_result(result: &sync::AnnouncerResult, verbose: bool) {
             if verbose {
                 print_synced(result.synced());
                 for node in timed_out {
-                    term::warning(format!("{} timed out", term::format::node(node)));
+                    term::warning(format!("{} timed out", term::format::node_id_human(node)));
                 }
             }
         }
@@ -873,7 +873,7 @@ fn print_announcer_result(result: &sync::AnnouncerResult, verbose: bool) {
 
 fn print_synced(synced: &BTreeMap<NodeId, sync::announce::SyncStatus>) {
     for (node, status) in synced.iter() {
-        let mut message = format!("🌱 Synced with {}", term::format::node(node));
+        let mut message = format!("🌱 Synced with {}", term::format::node_id_human(node));
 
         match status {
             sync::announce::SyncStatus::AlreadySynced => {

@@ -27,7 +27,7 @@ Fetching rad:zhbMU4DUXrzB8xT6qAJh6yZ7bFMK from the network, found 1 potential se
 ✓ Target met: 1 seed(s)
 ✓ Creating checkout in ./heartwood..
 ✓ Remote alice@z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi added
-✓ Remote-tracking branch alice@z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi/master created for z6MknSL…StBU8Vi
+✓ Remote-tracking branch alice@z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi/master created for z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 ✓ Repository successfully cloned under [..]/heartwood/
 ╭────────────────────────────────────╮
 │ heartwood                          │

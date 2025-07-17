@@ -189,7 +189,7 @@ pub fn connect(
 ) -> anyhow::Result<()> {
     let spinner = term::spinner(format!(
         "Connecting to {}@{addr}...",
-        term::format::node(&nid)
+        term::format::node_id_human_compact(&nid)
     ));
     match node.connect(
         nid,
@@ -217,7 +217,7 @@ pub fn connect_many(
     for addr in addrs {
         spinner.message(format!(
             "Connecting to {}@{addr}...",
-            term::format::node(&nid)
+            term::format::node_id_human_compact(&nid)
         ));
         match node.connect(
             nid,
@@ -353,7 +353,7 @@ pub fn sessions(node: &Node) -> Result<Option<term::Table<5, term::Label>>, node
     table.divider();
 
     for sess in sessions {
-        let nid = term::format::tertiary(term::format::node(&sess.nid)).into();
+        let nid = term::format::tertiary(term::format::node_id_human(&sess.nid)).into();
         let (addr, state, time) = match sess.state {
             node::State::Initial => (
                 term::Label::blank(),
@@ -361,17 +361,17 @@ pub fn sessions(node: &Node) -> Result<Option<term::Table<5, term::Label>>, node
                 term::Label::blank(),
             ),
             node::State::Attempted => (
-                sess.addr.to_string().into(),
+                term::format::addr_compact(&sess.addr).into(),
                 term::Label::from(state_attempted()),
                 term::Label::blank(),
             ),
             node::State::Connected { since, .. } => (
-                sess.addr.to_string().into(),
+                term::format::addr_compact(&sess.addr).into(),
                 term::Label::from(state_connected()),
                 term::format::dim(now - since).into(),
             ),
             node::State::Disconnected { since, .. } => (
-                sess.addr.to_string().into(),
+                term::format::addr_compact(&sess.addr).into(),
                 term::Label::from(state_disconnected()),
                 term::format::dim(now - since).into(),
             ),
