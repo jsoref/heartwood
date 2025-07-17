@@ -1,8 +1,11 @@
+mod logs;
+use logs::{LogRotatorFileSystem, Rotated};
+
 use std::collections::HashMap;
 use std::ffi::OsString;
-use std::fs::{File, OpenOptions};
-use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
-use std::{fs, io, path::Path, process, thread, time};
+use std::fs::File;
+use std::io::{BufRead, BufReader, Read, Seek, SeekFrom, Write};
+use std::{path::Path, process, thread, time};
 
 use anyhow::{anyhow, Context};
 use localtime::LocalTime;
@@ -17,10 +20,6 @@ use crate::terminal::Element as _;
 
 /// How long to wait for the node to start before returning an error.
 pub const NODE_START_TIMEOUT: time::Duration = time::Duration::from_secs(6);
-/// Node log file name.
-pub const NODE_LOG: &str = "node.log";
-/// Node log old file name, after rotation.
-pub const NODE_LOG_OLD: &str = "node.log.old";
 
 pub fn start(
     node: Node,
@@ -55,14 +54,19 @@ pub fn start(
     if !options.contains(&OsString::from("--force")) {
         options.push(OsString::from("--force"));
     }
+
+    let Rotated {
+        path: log_path,
+        log: log_file,
+    } = LogRotatorFileSystem::from_profile(profile).rotate()?;
+
     if daemon {
-        let log = log_rotate(profile)?;
         let child = process::Command::new(cmd)
             .args(options)
             .envs(envs)
             .stdin(process::Stdio::null())
-            .stdout(process::Stdio::from(log.try_clone()?))
-            .stderr(process::Stdio::from(log))
+            .stdout(process::Stdio::from(log_file.try_clone()?))
+            .stderr(process::Stdio::from(log_file))
             .spawn()
             .map_err(|e| anyhow!("failed to start node process {cmd:?}: {e}"))?;
         let pid = term::format::parens(term::format::dim(child.id()));
@@ -98,6 +102,10 @@ pub fn start(
             }
         }
     } else {
+        // Write a hint to the log file, but swallow any errors.
+        let mut log_file = log_file;
+        let _ = log_file.write_all(format!("radicle-node started in foreground, no futher log messages are written to '{}' (this file).\n", log_path.display()).as_bytes());
+
         let mut child = process::Command::new(cmd)
             .args(options)
             .envs(envs)
@@ -110,7 +118,7 @@ pub fn start(
     Ok(())
 }
 
-pub fn stop(node: Node) -> anyhow::Result<()> {
+pub fn stop(node: Node, profile: &Profile) {
     let mut spinner = term::spinner("Stopping node...");
     if node.shutdown().is_err() {
         spinner.error("node is not running");
@@ -118,7 +126,8 @@ pub fn stop(node: Node) -> anyhow::Result<()> {
         spinner.message("Node stopped");
         spinner.finish();
     }
-    Ok(())
+    let rotator = LogRotatorFileSystem::from_profile(profile);
+    rotator.remove().ok();
 }
 
 pub fn debug(node: &mut Node) -> anyhow::Result<()> {
@@ -392,22 +401,6 @@ pub fn config(node: &Node) -> anyhow::Result<()> {
     println!("{cfg}");
 
     Ok(())
-}
-
-fn log_rotate(profile: &Profile) -> io::Result<File> {
-    let base = profile.home.node();
-    if base.join(NODE_LOG).exists() {
-        // Let this fail, eg. if the file doesn't exist.
-        fs::remove_file(base.join(NODE_LOG_OLD)).ok();
-        fs::rename(base.join(NODE_LOG), base.join(NODE_LOG_OLD))?;
-    }
-
-    let log = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(base.join(NODE_LOG))?;
-
-    Ok(log)
 }
 
 fn state_label() -> term::Paint<String> {
