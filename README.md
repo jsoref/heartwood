@@ -43,15 +43,15 @@ Or visit our [download](https://radicle.xyz/download) page.
 You can install the Radicle stack from source, by running the following
 commands from inside this repository:
 
-    cargo install --path radicle-cli --force --locked --root ~/.radicle
-    cargo install --path radicle-node --force --locked --root ~/.radicle
-    cargo install --path radicle-remote-helper --force --locked --root ~/.radicle
+    cargo install --path crates/radicle-cli --force --locked --root ~/.radicle
+    cargo install --path crates/radicle-node --force --locked --root ~/.radicle
+    cargo install --path crates/radicle-remote-helper --force --locked --root ~/.radicle
 
 Or directly from our seed node:
 
     cargo install --force --locked --root ~/.radicle \
         --git https://seed.radicle.xyz/z3gqcJUoA1n9HaHKufZs5FCSGazv5.git \
-        radicle-cli radicle-node radicle-remote-helper
+        crates/radicle-cli crates/radicle-node crates/radicle-remote-helper
 
 ## Running
 
