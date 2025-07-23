@@ -122,9 +122,9 @@ impl Handle {
                             log::trace!(target: "worker", "Set HEAD to {}", head.new);
                         }
                     }
-                    Err(RepositoryError::Quorum(radicle::git::canonical::QuorumError::Git(e))) => {
-                        return Err(e.into())
-                    }
+                    Err(RepositoryError::Quorum(
+                        radicle::git::canonical::error::QuorumError::Git(e),
+                    )) => return Err(e.into()),
                     Err(RepositoryError::Quorum(e)) => {
                         log::warn!(target: "worker", "Fetch could not set HEAD: {e}")
                     }
@@ -406,7 +406,7 @@ fn set_canonical_refs(repo: &Repository, applied: &Applied) -> Result<(), error:
                 );
                 continue;
             }
-            Ok((refname, oid)) => {
+            Ok((refname, _, oid)) => {
                 if let Err(e) = repo.backend.reference(
                     refname.clone().as_str(),
                     *oid,

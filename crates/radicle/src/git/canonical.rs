@@ -1,14 +1,19 @@
+pub mod error;
+use error::*;
+
 pub mod rules;
+
+use nonempty::NonEmpty;
 pub use rules::{MatchedRule, RawRule, Rules, ValidRule};
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::fmt;
 
+use raw::ObjectType;
 use raw::Repository;
-use thiserror::Error;
 
 use crate::prelude::Did;
-use crate::storage::ReadRepository;
+use crate::storage::git;
 
 use super::raw;
 use super::{Oid, Qualified};
@@ -28,115 +33,70 @@ use super::{Oid, Qualified};
 pub struct Canonical<'a, 'b> {
     refname: Qualified<'a>,
     rule: &'b ValidRule,
-    tips: BTreeMap<Did, Oid>,
+    tips: BTreeMap<Did, (Oid, CanonicalObjectType)>,
 }
 
-/// Error that can occur when calculation the [`Canonical::quorum`].
-#[derive(Debug, Error)]
-pub enum QuorumError {
-    /// Could not determine a quorum [`Oid`], due to diverging tips.
-    #[error("could not determine commit for canonical reference '{refname}', found diverging commits {longest} and {head}, with base commit {base} and threshold {threshold}")]
-    Diverging {
-        refname: String,
-        threshold: usize,
-        base: Oid,
-        longest: Oid,
-        head: Oid,
-    },
-    /// Could not determine a base candidate from the given set of delegates.
-    #[error("could not determine commit for canonical reference '{refname}', no commit with at least {threshold} vote(s) found (threshold not met)")]
-    NoCandidates { refname: String, threshold: usize },
-    /// An error occurred from [`git2`].
-    #[error(transparent)]
-    Git(#[from] git2::Error),
+/// Supported Git object types for canonical computation.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CanonicalObjectType {
+    /// The Git object is a commit.
+    Commit,
+    /// The Git object is a tag.
+    Tag,
 }
 
-#[derive(Debug, Error)]
-#[error("failed to check if {head} is an ancestor of {canonical} due to: {source}")]
-pub struct GraphDescendant {
-    head: Oid,
-    canonical: Oid,
-    source: raw::Error,
-}
-
-#[derive(Debug, Error)]
-#[error("the commit {commit} for {did} is missing from the repository {repo:?}")]
-pub struct MissingCommit {
-    repo: PathBuf,
-    did: Did,
-    commit: Oid,
-    source: raw::Error,
-}
-
-#[derive(Debug, Error)]
-#[error("could not determine whether the commit {commit} for {did} is part of the repository {repo:?} due to: {source}")]
-pub struct InvalidCommit {
-    repo: PathBuf,
-    did: Did,
-    commit: Oid,
-    source: raw::Error,
-}
-
-#[derive(Debug, Error)]
-pub enum ConvergesError {
-    #[error(transparent)]
-    GraphDescendant(#[from] GraphDescendant),
-    #[error(transparent)]
-    MissingCommit(#[from] MissingCommit),
-    #[error(transparent)]
-    InvalidCommit(#[from] InvalidCommit),
-}
-
-impl ConvergesError {
-    pub fn graph_descendant(head: Oid, canonical: Oid, source: raw::Error) -> Self {
-        Self::GraphDescendant(GraphDescendant {
-            head,
-            canonical,
-            source,
-        })
+impl fmt::Display for CanonicalObjectType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            CanonicalObjectType::Commit => f.write_str("commit"),
+            CanonicalObjectType::Tag => f.write_str("tag"),
+        }
     }
+}
 
-    pub fn missing_commit(repo: PathBuf, did: Did, commit: Oid, err: raw::Error) -> Self {
-        Self::MissingCommit(MissingCommit {
-            repo,
-            did,
-            commit,
-            source: err,
-        })
-    }
-
-    pub fn invalid_commit(repo: PathBuf, did: Did, commit: Oid, err: raw::Error) -> Self {
-        Self::InvalidCommit(InvalidCommit {
-            repo,
-            did,
-            commit,
-            source: err,
-        })
+impl CanonicalObjectType {
+    /// Construct the [`CanonicalObjectType`] from a [`git2::ObjectType`].
+    pub fn new(kind: git::raw::ObjectType) -> Option<Self> {
+        match kind {
+            ObjectType::Commit => Some(Self::Commit),
+            ObjectType::Tag => Some(Self::Tag),
+            _ => None,
+        }
     }
 }
 
 impl<'a, 'b> Canonical<'a, 'b> {
     /// Construct the set of canonical tips given for the given `rule` and
     /// the reference `refname`.
-    pub fn new<S>(repo: &S, refname: Qualified<'a>, rule: &'b ValidRule) -> Result<Self, raw::Error>
-    where
-        S: ReadRepository,
-    {
+    pub fn new(
+        repo: &Repository,
+        refname: Qualified<'a>,
+        rule: &'b ValidRule,
+    ) -> Result<Self, CanonicalError> {
         let mut tips = BTreeMap::new();
         for delegate in rule.allowed().iter() {
-            match repo.reference_oid(delegate, &refname) {
-                Ok(tip) => {
-                    tips.insert(*delegate, tip);
-                }
+            let name = &refname.with_namespace(delegate.as_key().into());
+
+            let reference = match repo.find_reference(name) {
+                Ok(reference) => reference,
                 Err(e) if super::ext::is_not_found_err(&e) => {
                     log::warn!(
                         target: "radicle",
-                        "Missing `refs/namespaces/{}/{refname}` while calculating the canonical reference",
-                        delegate.as_key()
+                        "Missing `{name}` while calculating the canonical reference",
                     );
+                    continue;
                 }
-                Err(e) => return Err(e),
-            }
+                Err(e) => return Err(CanonicalError::find_reference(name, e)),
+            };
+
+            let Some(oid) = reference.target() else {
+                log::warn!(target: "radicle", "Missing target for reference `{name}`");
+                continue;
+            };
+
+            let kind = Self::find_object_for(delegate, oid.into(), repo)?;
+
+            tips.insert(*delegate, (oid.into(), kind));
         }
         Ok(Canonical {
             refname,
@@ -145,9 +105,31 @@ impl<'a, 'b> Canonical<'a, 'b> {
         })
     }
 
-    /// Return the set of [`Did`]s and their [`Oid`] tip.
-    pub fn tips(&self) -> impl Iterator<Item = (&Did, &Oid)> {
-        self.tips.iter()
+    pub fn find_object_for(
+        did: &Did,
+        oid: Oid,
+        repo: &raw::Repository,
+    ) -> Result<CanonicalObjectType, CanonicalError> {
+        match repo.find_object(*oid, None) {
+            Ok(object) => object
+                .kind()
+                .and_then(CanonicalObjectType::new)
+                .ok_or_else(|| {
+                    CanonicalError::invalid_object_type(
+                        repo.path().to_path_buf(),
+                        *did,
+                        oid,
+                        object.kind(),
+                    )
+                }),
+            Err(err) if super::ext::is_not_found_err(&err) => Err(CanonicalError::missing_object(
+                repo.path().to_path_buf(),
+                *did,
+                oid,
+                err,
+            )),
+            Err(err) => Err(CanonicalError::find_object(oid, err)),
+        }
     }
 
     /// Returns `true` if there were no tips found for any of the DIDs for
@@ -165,8 +147,8 @@ impl<'a, 'b> Canonical<'a, 'b> {
     /// In some cases, we allow the vote to be modified. For example, when the
     /// `did` is pushing a new commit, we may want to see if the new commit will
     /// reach a quorum.
-    pub fn modify_vote(&mut self, did: Did, new: Oid) {
-        self.tips.insert(did, new);
+    pub fn modify_vote(&mut self, did: Did, oid: Oid, kind: CanonicalObjectType) {
+        self.tips.insert(did, (oid, kind));
     }
 
     /// Check that the provided `did` is part of the set of allowed
@@ -191,28 +173,116 @@ impl<'a, 'b> Canonical<'a, 'b> {
         repo: &Repository,
         (candidate, commit): (&Did, &Oid),
     ) -> Result<bool, ConvergesError> {
+        /// Ensures [`Oid`]s are of the same object type
+        enum Objects {
+            Commits(NonEmpty<Oid>),
+            Tags(NonEmpty<Oid>),
+        }
+
+        impl Objects {
+            fn new(oid: Oid, kind: CanonicalObjectType) -> Self {
+                match kind {
+                    CanonicalObjectType::Commit => Self::Commits(NonEmpty::new(oid)),
+                    CanonicalObjectType::Tag => Self::Tags(NonEmpty::new(oid)),
+                }
+            }
+
+            fn insert(
+                mut self,
+                oid: Oid,
+                kind: CanonicalObjectType,
+            ) -> Result<Self, CanonicalObjectType> {
+                match self {
+                    Objects::Commits(ref mut commits) => match kind {
+                        CanonicalObjectType::Commit => {
+                            commits.push(oid);
+                            Ok(self)
+                        }
+                        CanonicalObjectType::Tag => Err(CanonicalObjectType::Tag),
+                    },
+                    Objects::Tags(ref mut tags) => match kind {
+                        CanonicalObjectType::Commit => {
+                            tags.push(oid);
+                            Ok(self)
+                        }
+                        CanonicalObjectType::Tag => Err(CanonicalObjectType::Commit),
+                    },
+                }
+            }
+        }
+
         let heads = {
-            let mut heads = self
+            let heads = self
                 .tips
                 .iter()
                 .filter_map(|(did, tip)| (did != candidate).then_some((did, tip)));
-            heads.try_fold(
-                Vec::with_capacity(heads.size_hint().0),
-                |mut heads, (did, head)| {
-                    heads.push(Self::ensure_commit(*did, *head, repo)?);
-                    Ok::<_, ConvergesError>(heads)
-                },
-            )?
+
+            let mut objects = None;
+
+            for (did, (oid, _)) in heads {
+                let kind = find_object_for(did, *oid, repo)?;
+                let oid = *oid;
+                match objects {
+                    None => objects = Some(Objects::new(oid, kind)),
+                    Some(objs) => {
+                        objects = Some(objs.insert(oid, kind).map_err(|expected| {
+                            ConvergesError::mismatched_object(
+                                repo.path().to_path_buf(),
+                                oid,
+                                kind,
+                                expected,
+                            )
+                        })?)
+                    }
+                }
+            }
+
+            objects
         };
-        for head in heads {
-            let (ahead, behind) = repo
-                .graph_ahead_behind(**commit, *head)
-                .map_err(|err| ConvergesError::graph_descendant(*commit, head, err))?;
-            if ahead * behind == 0 {
-                return Ok(true);
+
+        match heads {
+            None => Ok(true),
+            Some(Objects::Tags(_)) => Ok(true),
+            Some(Objects::Commits(heads)) => {
+                for head in heads {
+                    let (ahead, behind) = repo
+                        .graph_ahead_behind(**commit, *head)
+                        .map_err(|err| ConvergesError::graph_descendant(*commit, head, err))?;
+                    if ahead * behind == 0 {
+                        return Ok(true);
+                    }
+                }
+                Ok(false)
             }
         }
-        Ok(false)
+    }
+
+    fn quorum_tag(&self) -> Result<Oid, QuorumError> {
+        let voting =
+            TagVoting::from_targets(self.tips.values().filter_map(|(commit, kind)| {
+                (*kind == CanonicalObjectType::Tag).then_some(*commit)
+            }));
+        let mut votes = voting.votes();
+
+        // Keep tags which pass the threshold.
+        votes.votes_past_threshold(self.threshold());
+
+        if votes.number_of_candidates() > 1 {
+            return Err(QuorumError::DivergingTags {
+                refname: self.refname.to_string(),
+                threshold: self.threshold(),
+                candidates: votes.candidates().cloned().collect(),
+            });
+        }
+
+        let tag = votes
+            .pop_first_candidate()
+            .ok_or(QuorumError::NoCandidates {
+                refname: self.refname.to_string(),
+                threshold: self.threshold(),
+            })?;
+
+        Ok((*tag).into())
     }
 
     /// Computes the quorum or "canonical" tip based on the tips, of `Canonical`,
@@ -222,41 +292,36 @@ impl<'a, 'b> Canonical<'a, 'b> {
     ///
     /// Also returns an error if `heads` is empty or `threshold` cannot be
     /// satisified with the number of heads given.
-    pub fn quorum(self, repo: &raw::Repository) -> Result<(Qualified<'a>, Oid), QuorumError> {
-        let mut candidates = BTreeMap::<_, usize>::new();
-
-        // Build a list of candidate commits and count how many "votes" each of them has.
-        // Commits get a point for each direct vote, as well as for being part of the ancestry
-        // of a commit given to this function. Only commits given to the function are considered.
-        for (i, head) in self.tips.values().enumerate() {
-            // Add a direct vote for this head.
-            *candidates.entry(*head).or_default() += 1;
-
-            // Compare this head to all other heads ahead of it in the list.
-            for other in self.tips.values().skip(i + 1) {
-                // N.b. if heads are equal then skip it, otherwise it will end up as
-                // a double vote.
-                if *head == *other {
-                    continue;
-                }
-                let base = Oid::from(repo.merge_base(**head, **other)?);
-
-                if base == *other || base == *head {
-                    *candidates.entry(base).or_default() += 1;
-                }
+    fn quorum_commit(&self, repo: &raw::Repository) -> Result<Oid, QuorumError> {
+        let mut voting =
+            CommitVoting::from_targets(self.tips.values().filter_map(|(commit, kind)| {
+                (*kind == CanonicalObjectType::Commit).then_some(*commit)
+            }));
+        while let Some(targets) = voting.next_candidate() {
+            for (candidate, other) in targets {
+                let base = Oid::from(repo.merge_base(*candidate, *other)?);
+                voting.found_merge_base(MergeBase {
+                    candidate,
+                    other,
+                    base,
+                });
             }
         }
-        // Keep commits which pass the threshold.
-        candidates.retain(|_, votes| *votes >= self.threshold());
+        let mut votes = voting.votes();
 
-        let (mut longest, _) = candidates.pop_first().ok_or(QuorumError::NoCandidates {
-            refname: self.refname.to_string(),
-            threshold: self.threshold(),
-        })?;
+        // Keep commits which pass the threshold.
+        votes.votes_past_threshold(self.threshold());
+
+        let mut longest = votes
+            .pop_first_candidate()
+            .ok_or(QuorumError::NoCandidates {
+                refname: self.refname.to_string(),
+                threshold: self.threshold(),
+            })?;
 
         // Now that all scores are calculated, figure out what is the longest branch
         // that passes the threshold. In case of divergence, return an error.
-        for head in candidates.keys() {
+        for head in votes.candidates() {
             let base = repo.merge_base(**head, *longest)?;
 
             if base == *longest {
@@ -286,7 +351,7 @@ impl<'a, 'b> Canonical<'a, 'b> {
                 //            o (base)
                 //            |
                 //
-                return Err(QuorumError::Diverging {
+                return Err(QuorumError::DivergingCommits {
                     refname: self.refname.to_string(),
                     threshold: self.threshold(),
                     base: base.into(),
@@ -295,26 +360,205 @@ impl<'a, 'b> Canonical<'a, 'b> {
                 });
             }
         }
-        Ok((self.refname, (*longest).into()))
+
+        Ok((*longest).into())
+    }
+
+    /// Computes the quorum or "canonical" tip based on the tips, of `Canonical`,
+    /// and the threshold. This can be described as the latest commit that is
+    /// included in at least `threshold` histories. In case there are multiple tips
+    /// passing the threshold, and they are divergent, an error is returned.
+    ///
+    /// Also returns an error if `heads` is empty or `threshold` cannot be
+    /// satisified with the number of heads given.
+    pub fn quorum(
+        self,
+        repo: &raw::Repository,
+    ) -> Result<(Qualified<'a>, ObjectType, Oid), QuorumError> {
+        let (oid, kind) = match (self.quorum_commit(repo), self.quorum_tag()) {
+            (Ok(commit), Err(_)) => Ok((commit, ObjectType::Commit)),
+            (Err(_), Ok(tag)) => Ok((tag, ObjectType::Tag)),
+            (Ok(_), Ok(_)) => Err(QuorumError::DifferentTypes {
+                refname: self.refname.clone().to_string(),
+            }),
+            (Err(commit), Err(QuorumError::NoCandidates { .. })) => Err(commit),
+            (Err(QuorumError::NoCandidates { .. }), Err(tag)) => Err(tag),
+            (Err(err), _) => Err(err),
+        }?;
+
+        Ok((self.refname, kind, oid))
     }
 
     fn threshold(&self) -> usize {
         (*self.rule.threshold()).into()
     }
+}
 
-    fn ensure_commit(from: Did, commit: Oid, working: &Repository) -> Result<Oid, ConvergesError> {
-        match working.find_commit(*commit).map(|_| commit) {
-            Ok(oid) => Ok(oid),
-            Err(err) if err.code() == raw::ErrorCode::NotFound => Err(
-                ConvergesError::missing_commit(working.path().to_path_buf(), from, commit, err),
-            ),
-            Err(err) => Err(ConvergesError::invalid_commit(
-                working.path().to_path_buf(),
-                from,
-                commit,
-                err,
-            )),
+/// Keep track of [`Votes`] for quorums involving tag objects.
+struct TagVoting {
+    votes: Votes,
+}
+
+impl TagVoting {
+    fn from_targets(targets: impl Iterator<Item = Oid>) -> Self {
+        let votes = targets.fold(Votes::default(), |mut votes, oid| {
+            votes.vote(oid);
+            votes
+        });
+        Self { votes }
+    }
+
+    fn votes(self) -> Votes {
+        self.votes
+    }
+}
+
+/// Keep track of [`Votes`] for quorums involving commit objects.
+///
+/// Build a list of candidate commits and count how many "votes" each of them
+/// has. Commits get a point for each direct vote, as well as for being part of
+/// the ancestry of a commit given to this function.
+#[derive(Debug)]
+struct CommitVoting {
+    candidates: Vec<(Oid, Vec<Oid>)>,
+    votes: Votes,
+}
+
+impl CommitVoting {
+    /// Build the initial set voting.
+    fn from_targets(targets: impl Iterator<Item = Oid> + Clone) -> Self {
+        let ts = targets.clone();
+        let (candidates, votes) = targets.enumerate().fold(
+            (Vec::new(), Votes::default()),
+            |(mut candidates, mut votes), (i, oid)| {
+                candidates.push((oid, ts.clone().skip(i + 1).collect()));
+                votes.vote(oid);
+                (candidates, votes)
+            },
+        );
+        Self { candidates, votes }
+    }
+
+    /// Get the next candidate to be considered for ancestry votes.
+    ///
+    /// The first of each pair will be the candidate commit, which should be
+    /// compared to the other commit to see what their common merge base is. The
+    /// merge base is then recorded using [`MergeBase`] and is recorded using
+    /// [`CommitVoting::found_merge_base`].
+    fn next_candidate(&mut self) -> Option<impl Iterator<Item = (Oid, Oid)>> {
+        self.candidates
+            .pop()
+            .map(|(oid, others)| others.into_iter().map(move |other| (oid, other)))
+    }
+
+    /// Record a merge base, and add to the vote if necessary.
+    fn found_merge_base(
+        &mut self,
+        MergeBase {
+            candidate,
+            other,
+            base,
+        }: MergeBase,
+    ) {
+        // Avoid double counting the same commits
+        let is_same = candidate == other;
+        if !is_same && (base == candidate || base == other) {
+            self.votes.vote(base);
         }
+    }
+
+    /// Finish the voting process and get the [`Votes`] from the
+    /// [`CommitVoting`].
+    fn votes(self) -> Votes {
+        self.votes
+    }
+}
+
+/// Record a merge base between `candidate` and `other`.
+struct MergeBase {
+    /// The candidate commit for the merge base.
+    candidate: Oid,
+    /// The commit that is being compared against for the merge base.
+    other: Oid,
+    /// The computed merge base commit.
+    base: Oid,
+}
+
+/// Count the number of votes per [`Oid`].
+///
+/// Note that the count cannot exceed 255, since that is the maximum number the
+/// `threshold` value can be.
+#[derive(Debug, Default, PartialEq, Eq)]
+struct Votes {
+    inner: BTreeMap<Oid, u8>,
+}
+
+impl Votes {
+    /// Increase the vote count for `oid`.
+    ///
+    /// If `oid` does not exist in the set of [`Votes`] yet, then no vote will
+    /// be added.
+    #[inline]
+    fn vote(&mut self, oid: Oid) {
+        self.safe_inc(oid, 1);
+    }
+
+    /// Filter the candidates by the ones that have a number of votes that pass
+    /// the `threshold`.
+    #[inline]
+    fn votes_past_threshold(&mut self, threshold: usize) {
+        self.inner.retain(|_, votes| *votes as usize >= threshold);
+    }
+
+    /// Get the number of candidates this set of votes has.
+    #[inline]
+    fn number_of_candidates(&self) -> usize {
+        self.inner.len()
+    }
+
+    /// Get the set candidates.
+    #[inline]
+    fn candidates(&self) -> impl Iterator<Item = &Oid> {
+        self.inner.keys()
+    }
+
+    /// Pop off the first candidate from the set of votes.
+    #[inline]
+    fn pop_first_candidate(&mut self) -> Option<Oid> {
+        self.inner.pop_first().map(|(oid, _)| oid)
+    }
+
+    #[inline]
+    fn safe_inc(&mut self, oid: Oid, n: u8) {
+        let votes = self.inner.entry(oid).or_default();
+        *votes = votes.saturating_add(n);
+    }
+}
+
+fn find_object_for(
+    did: &Did,
+    oid: Oid,
+    repo: &raw::Repository,
+) -> Result<CanonicalObjectType, FindObjectError> {
+    match repo.find_object(*oid, None) {
+        Ok(object) => object
+            .kind()
+            .and_then(CanonicalObjectType::new)
+            .ok_or_else(|| {
+                FindObjectError::invalid_object_type(
+                    repo.path().to_path_buf(),
+                    *did,
+                    oid,
+                    object.kind(),
+                )
+            }),
+        Err(err) if super::ext::is_not_found_err(&err) => Err(FindObjectError::missing_object(
+            repo.path().to_path_buf(),
+            *did,
+            oid,
+            err,
+        )),
+        Err(err) => Err(FindObjectError::find_object(oid, err)),
     }
 }
 
@@ -334,13 +578,19 @@ mod tests {
         threshold: usize,
         repo: &git::raw::Repository,
     ) -> Result<Oid, QuorumError> {
-        let tips: BTreeMap<Did, Oid> = heads
+        let tips: BTreeMap<Did, (Oid, CanonicalObjectType)> = heads
             .iter()
             .enumerate()
             .map(|(i, head)| {
                 let signer = Device::mock_from_seed([(i + 1) as u8; 32]);
                 let did = Did::from(signer.public_key());
-                (did, (*head).into())
+                let kind = repo
+                    .find_object(*head, None)
+                    .unwrap()
+                    .kind()
+                    .and_then(CanonicalObjectType::new)
+                    .unwrap();
+                (did, ((*head).into(), kind))
             })
             .collect();
 
@@ -360,7 +610,7 @@ mod tests {
             rule: &rule,
         }
         .quorum(repo)
-        .map(|(_, oid)| oid)
+        .map(|(_, _, oid)| oid)
     }
 
     #[test]
@@ -395,6 +645,62 @@ mod tests {
                 assert!(heads.contains(&canonical));
             }
         }
+    }
+
+    #[test]
+    fn test_quorum_groups() {
+        let tmp = tempfile::tempdir().unwrap();
+        let (repo, c0) = fixtures::repository(tmp.path());
+        let c0: git::Oid = c0.into();
+        let c1 = fixtures::commit("C1", &[*c0], &repo);
+        let c2 = fixtures::commit("C2", &[*c0], &repo);
+
+        eprintln!("C0: {c0}");
+        eprintln!("C1: {c1}");
+        eprintln!("C2: {c2}");
+
+        assert_matches!(
+            quorum(&[*c1, *c2, *c1, *c2], 2, &repo),
+            Err(QuorumError::DivergingCommits { .. })
+        );
+
+        assert_matches!(
+            quorum(&[*c1, *c2], 1, &repo),
+            Err(QuorumError::DivergingCommits { .. })
+        );
+    }
+
+    #[test]
+    fn test_quorum_tag() {
+        let tmp = tempfile::tempdir().unwrap();
+        let (repo, c0) = fixtures::repository(tmp.path());
+        let c0: git::Oid = c0.into();
+        let c1 = fixtures::commit("C1", &[*c0], &repo);
+        let t1 = fixtures::tag("v1", "T1", *c1, &repo);
+        let t2 = fixtures::tag("v2", "T2", *c1, &repo);
+
+        eprintln!("C0: {c0}");
+        eprintln!("C1: {c1}");
+        eprintln!("T1: {t1}");
+        eprintln!("T2: {t2}");
+
+        assert_eq!(quorum(&[*t1], 1, &repo).unwrap(), t1);
+        assert_eq!(quorum(&[*t1, *t1], 2, &repo).unwrap(), t1);
+
+        assert_matches!(
+            quorum(&[*t1, *t2], 2, &repo),
+            Err(QuorumError::NoCandidates { .. })
+        );
+
+        assert_matches!(
+            quorum(&[*t1, *c1], 1, &repo),
+            Err(QuorumError::DifferentTypes { .. })
+        );
+
+        assert_matches!(
+            quorum(&[*t1, *t2], 1, &repo),
+            Err(QuorumError::DivergingTags { .. })
+        );
     }
 
     #[test]
@@ -447,15 +753,15 @@ mod tests {
         //  C0
         assert_matches!(
             quorum(&[*c1, *c2, *b2], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*c2, *b2], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*b2, *c2], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*c2, *b2], 2, &repo),
@@ -471,7 +777,7 @@ mod tests {
         assert_eq!(quorum(&[*b2, *c2, *c2], 2, &repo).unwrap(), c2);
         assert_matches!(
             quorum(&[*b2, *b2, *c2, *c2], 2, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
 
         // B2 C2 C3
@@ -500,7 +806,7 @@ mod tests {
         //   C0
         assert_matches!(
             quorum(&[*c2, *b2, *a1], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*c2, *b2, *a1], 2, &repo),
@@ -520,23 +826,23 @@ mod tests {
         assert_eq!(quorum(&[*c0, *c1, *c2, *b2, *a1], 4, &repo).unwrap(), c0,);
         assert_matches!(
             quorum(&[*a1, *a1, *c2, *c2, *c1], 2, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*a1, *a1, *c2, *c2, *c1], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*a1, *a1, *c2], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*b2, *b2, *c2, *c2], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*b2, *b2, *c2, *c2, *a1], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
 
         //    M2  M1
@@ -549,11 +855,11 @@ mod tests {
         assert_eq!(quorum(&[*m1], 1, &repo).unwrap(), m1);
         assert_matches!(
             quorum(&[*m1, *m2], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*m2, *m1], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*m1, *m2], 2, &repo),
@@ -561,11 +867,11 @@ mod tests {
         );
         assert_matches!(
             quorum(&[*m1, *m2, *c2], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*m1, *a1], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*m1, *a1], 2, &repo),
@@ -608,7 +914,7 @@ mod tests {
         //      C0
         assert_matches!(
             quorum(&[*m1, *m2], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*m1, *m2], 2, &repo),
@@ -624,7 +930,7 @@ mod tests {
         //      C0
         assert_matches!(
             quorum(&[*m1, *m3], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*m1, *m3], 2, &repo),
@@ -632,7 +938,7 @@ mod tests {
         );
         assert_matches!(
             quorum(&[*m3, *m1], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*m3, *m1], 2, &repo),
@@ -640,7 +946,7 @@ mod tests {
         );
         assert_matches!(
             quorum(&[*m3, *m2], 1, &repo),
-            Err(QuorumError::Diverging { .. })
+            Err(QuorumError::DivergingCommits { .. })
         );
         assert_matches!(
             quorum(&[*m3, *m2], 2, &repo),

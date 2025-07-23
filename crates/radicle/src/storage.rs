@@ -117,7 +117,7 @@ pub enum RepositoryError {
     #[error(transparent)]
     GitExt(#[from] git_ext::Error),
     #[error(transparent)]
-    Quorum(#[from] canonical::QuorumError),
+    Quorum(#[from] canonical::error::QuorumError),
     #[error(transparent)]
     Refs(#[from] refs::Error),
     #[error("missing canonical reference rule for default branch")]
@@ -126,6 +126,8 @@ pub enum RepositoryError {
     DefaultBranchRule(#[from] doc::DefaultBranchRuleError),
     #[error("failed to get canonical reference rules: {0}")]
     CanonicalRefs(#[from] doc::CanonicalRefsError),
+    #[error(transparent)]
+    Canonical(#[from] canonical::error::CanonicalError),
 }
 
 impl RepositoryError {
