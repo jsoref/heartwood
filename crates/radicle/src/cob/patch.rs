@@ -663,9 +663,9 @@ impl Patch {
             // The patch author can edit the patch and change its state.
             Action::Edit { .. } => Authorization::from(actor == author),
             Action::Lifecycle { state } => Authorization::from(match state {
-                Lifecycle::Open { .. } => actor == author,
-                Lifecycle::Draft { .. } => actor == author,
-                Lifecycle::Archived { .. } => actor == author,
+                Lifecycle::Open => actor == author,
+                Lifecycle::Draft => actor == author,
+                Lifecycle::Archived => actor == author,
             }),
             // Only delegates can carry out these actions.
             Action::Label { labels } => {

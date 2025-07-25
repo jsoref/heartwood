@@ -68,11 +68,7 @@ fn debug(profile: Option<&Profile>) -> anyhow::Result<()> {
     }));
 
     let debug = DebugInfo {
-        rad_exe: if let Ok(filename) = std::env::current_exe() {
-            Some(filename)
-        } else {
-            None
-        },
+        rad_exe: std::env::current_exe().ok(),
         rad_version: VERSION,
         radicle_node_version: stdout_of("radicle-node", &["--version"])
             .unwrap_or("<unknown>".into()),

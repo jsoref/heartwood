@@ -397,7 +397,7 @@ pub fn run(Options { op }: Options, ctx: impl term::Context) -> anyhow::Result<(
                     oid
                 }
             };
-            println!("{}", oid);
+            println!("{oid}");
         }
         Migrate => {
             let mut db = profile.cobs_db_mut()?;
@@ -501,7 +501,7 @@ pub fn run(Options { op }: Options, ctx: impl term::Context) -> anyhow::Result<(
                 }
             };
 
-            println!("{}", oid);
+            println!("{oid}");
         }
     }
     Ok(())
@@ -588,13 +588,13 @@ fn print_op_pretty(op: cob::Op<Vec<u8>>) -> anyhow::Result<()> {
         term::print(term::format::tertiary(format!("resource {oid}")));
     }
     for parent in op.parents {
-        term::print(format!("parent   {}", parent));
+        term::print(format!("parent   {parent}"));
     }
     for parent in op.related {
-        term::print(format!("rel      {}", parent));
+        term::print(format!("rel      {parent}"));
     }
     term::print(format!("author   {}", op.author));
-    term::print(format!("date     {}", time));
+    term::print(format!("date     {time}"));
     term::blank();
     for action in op.actions {
         let obj: serde_json::Value = serde_json::from_slice(&action)?;

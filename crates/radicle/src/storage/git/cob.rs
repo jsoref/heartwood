@@ -156,8 +156,7 @@ impl cob::object::Storage for Repository {
             (*entry).into(),
             true,
             &format!(
-                "Updating collaborative object '{}/{}' with new entry {}",
-                typename, object_id, entry,
+                "Updating collaborative object '{typename}/{object_id}' with new entry {entry}",
             ),
         )?;
 
@@ -433,8 +432,7 @@ impl<R: storage::WriteRepository> cob::object::Storage for DraftStore<'_, R> {
             (*entry).into(),
             true,
             &format!(
-                "Updating draft collaborative object '{}/{}' with new entry {}",
-                typename, object_id, entry,
+                "Updating draft collaborative object '{typename}/{object_id}' with new entry {entry}",
             ),
         )?;
 

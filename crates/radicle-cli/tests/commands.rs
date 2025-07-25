@@ -108,7 +108,7 @@ fn rad_cob_multiset() {
                 log::warn!(target: "test", "`jq` not found. Succeeding prematurely.");
                 return;
             }
-            Err(e) => panic!("while checking for jq: {}", e),
+            Err(e) => panic!("while checking for jq: {e}"),
             Ok(_) => {}
         }
     }
@@ -1713,7 +1713,7 @@ fn test_cob_deletion() {
         )
         .unwrap();
     let issue_id = issue.id();
-    log::debug!(target: "test", "Issue {} created", issue_id);
+    log::debug!(target: "test", "Issue {issue_id} created");
 
     bob.rad("clone", &[rid.to_string().as_str()], working.path())
         .unwrap();

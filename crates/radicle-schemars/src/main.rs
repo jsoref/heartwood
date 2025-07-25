@@ -51,7 +51,7 @@ impl Schema {
 
 fn main() {
     if let Err(e) = print_schema() {
-        eprintln!("{}", e);
+        eprintln!("{e}");
         std::process::exit(1);
     }
 }

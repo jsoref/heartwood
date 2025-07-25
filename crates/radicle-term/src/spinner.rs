@@ -180,7 +180,7 @@ pub fn spinner_to(
                         } => {
                             let spinner = DEFAULT_STYLE[*cursor];
 
-                            write!(animation, "\r{}{spinner} {message}", CLEAR_UNTIL_NEWLINE,).ok();
+                            write!(animation, "\r{CLEAR_UNTIL_NEWLINE}{spinner} {message}",).ok();
 
                             *cursor += 1;
                             *cursor %= DEFAULT_STYLE.len();

@@ -219,7 +219,7 @@ impl Storage {
         if self.contains(&rid)? {
             return Err(Error::Io(io::Error::new(
                 io::ErrorKind::AlreadyExists,
-                format!("refusing to create '{}.lock'", rid),
+                format!("refusing to create '{rid}.lock'"),
             ))
             .into());
         }
@@ -852,7 +852,7 @@ impl WriteRepository for Repository {
         self.raw()
             .reference(&branch_ref, *new, true, "set-local-branch (radicle)")?;
 
-        log::debug!(target: "storage", "Setting ref: {} -> {}", head_ref, branch_ref);
+        log::debug!(target: "storage", "Setting ref: {head_ref} -> {branch_ref}");
         self.raw()
             .reference_symbolic(&head_ref, &branch_ref, true, "set-head (radicle)")?;
 
@@ -1023,8 +1023,8 @@ mod tests {
         let mut refs = repo
             .references_of(signer.public_key())
             .unwrap()
-            .iter()
-            .map(|(r, _)| r.to_string())
+            .keys()
+            .map(|r| r.to_string())
             .collect::<Vec<_>>();
         refs.sort();
 

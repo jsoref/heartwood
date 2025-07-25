@@ -784,7 +784,6 @@ impl Session {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
-
 pub struct Seed {
     /// The Node ID.
     #[cfg_attr(

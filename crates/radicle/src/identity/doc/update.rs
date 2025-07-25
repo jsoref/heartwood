@@ -294,7 +294,7 @@ mod test {
         )
         .unwrap();
         let verified = super::verify(raw);
-        assert!(verified.is_ok(), "Unexpected error {:?}", verified);
+        assert!(verified.is_ok(), "Unexpected error {verified:?}");
     }
 
     #[test]

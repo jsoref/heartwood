@@ -347,7 +347,7 @@ impl<M: wire::Decode> wire::Decode for Frame<M> {
 
                 Ok(frame)
             }
-            Ok(StreamKind::Git { .. }) => {
+            Ok(StreamKind::Git) => {
                 let data = varint::payload::decode(buf)?;
                 Ok(Frame::git(stream, data))
             }

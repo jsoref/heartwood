@@ -252,7 +252,7 @@ where
 }
 
 fn io_other(err: impl std::error::Error + Send + Sync + 'static) -> io::Error {
-    io::Error::new(io::ErrorKind::Other, err)
+    io::Error::other(err)
 }
 
 #[derive(Debug, Error)]

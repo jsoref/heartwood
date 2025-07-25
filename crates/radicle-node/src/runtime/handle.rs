@@ -275,8 +275,8 @@ impl radicle::node::Handle for Handle {
         let query: Arc<QueryState> = Arc::new(move |state| {
             let sessions = state
                 .sessions()
-                .iter()
-                .map(|(_, s)| radicle::node::Session::from(s))
+                .values()
+                .map(radicle::node::Session::from)
                 .collect();
             sender.send(sessions).ok();
 

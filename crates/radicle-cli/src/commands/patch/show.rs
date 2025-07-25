@@ -10,7 +10,7 @@ use super::*;
 
 fn show_patch_diff(patch: &patch::Patch, stored: &Repository) -> anyhow::Result<()> {
     let (from, to) = patch.range()?;
-    let range = format!("{}..{}", from, to);
+    let range = format!("{from}..{to}");
 
     process::Command::new("git")
         .current_dir(stored.path())
@@ -42,7 +42,7 @@ pub fn run(
     };
 
     if debug {
-        println!("{:#?}", patch);
+        println!("{patch:#?}");
         return Ok(());
     }
     term::patch::show(&patch, patch_id, verbose, stored, workdir, profile)?;

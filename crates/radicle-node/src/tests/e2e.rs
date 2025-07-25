@@ -918,7 +918,7 @@ fn test_non_fastforward_sigrefs() {
     let old_bob = match up {
         RefUpdate::Created { oid, .. } => oid,
         RefUpdate::Skipped { oid, .. } => oid,
-        _ => panic!("rad/sigrefs should have been created or skipped: {:?}", up),
+        _ => panic!("rad/sigrefs should have been created or skipped: {up:?}"),
     };
     assert_eq!(bob_sigrefs, old_bob);
 
@@ -930,7 +930,7 @@ fn test_non_fastforward_sigrefs() {
             .unwrap()
             .reference_oid(&bob.id, &radicle::storage::refs::SIGREFS_BRANCH)
             .unwrap();
-        log::debug!(target: "test", "bob's old 'rad/sigrefs': {}", before);
+        log::debug!(target: "test", "bob's old 'rad/sigrefs': {before}");
     }
 
     // Now Eve disconnects from Bob so she doesn't fetch his update.
@@ -961,7 +961,7 @@ fn test_non_fastforward_sigrefs() {
         RefUpdate::Updated { new, .. } => new,
         // FIXME: Really it shouldn't be skipped but let's see what happens
         RefUpdate::Skipped { oid, .. } => oid,
-        _ => panic!("rad/sigrefs should have been updated {:?}", up),
+        _ => panic!("rad/sigrefs should have been updated {up:?}"),
     };
     assert_eq!(bob_sigrefs, new_bob);
 
@@ -973,7 +973,7 @@ fn test_non_fastforward_sigrefs() {
             .unwrap()
             .reference_oid(&bob.id, &radicle::storage::refs::SIGREFS_BRANCH)
             .unwrap();
-        log::debug!(target: "test", "bob's new 'rad/sigrefs': {}", after);
+        log::debug!(target: "test", "bob's new 'rad/sigrefs': {after}");
     }
 
     assert_matches!(
@@ -1542,7 +1542,6 @@ fn test_channel_reader_limit() {
     assert!(
         reason.contains("Failed to consume the pack sent by the remote")
             || reason.contains("exceeded number of allowed bytes"),
-        "actual: {}",
-        reason
+        "actual: {reason}"
     );
 }

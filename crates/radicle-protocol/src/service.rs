@@ -847,7 +847,7 @@ where
     }
 
     pub fn command(&mut self, cmd: Command) {
-        info!(target: "service", "Received command {:?}", cmd);
+        info!(target: "service", "Received command {cmd:?}");
 
         match cmd {
             Command::Connect(nid, addr, opts) => {
@@ -1396,7 +1396,7 @@ where
         let Some(session) = self.sessions.get_mut(&remote) else {
             // Since we sometimes disconnect the service eagerly, it's not unusual to get a second
             // disconnection event once the transport is dropped.
-            trace!(target: "service", "Redundant disconnection for {} ({})", remote, reason);
+            trace!(target: "service", "Redundant disconnection for {remote} ({reason})");
             return;
         };
         // In cases of connection conflicts, there may be disconnections of one of the two
@@ -1405,7 +1405,7 @@ where
             return;
         }
 
-        info!(target: "service", "Disconnected from {} ({})", remote, reason);
+        info!(target: "service", "Disconnected from {remote} ({reason})");
         self.emitter.emit(Event::PeerDisconnected {
             nid: remote,
             reason: reason.to_string(),
@@ -1836,7 +1836,7 @@ where
             //
             // This is not ideal, but until the wire protocol and service are unified, it's the simplest
             // solution to converge towards the same state.
-            session::State::Attempted { .. } | session::State::Initial => {
+            session::State::Attempted | session::State::Initial => {
                 debug!(target: "service", "Received unexpected message from connecting peer {}", peer.id);
                 debug!(target: "service", "Transitioning peer {} to 'connected' state", peer.id);
 
@@ -1978,7 +1978,7 @@ where
         if let Ok(result) = self.db.routing_mut().add_inventory([&rid], nid, time) {
             if let &[(_, InsertResult::SeedAdded)] = result.as_slice() {
                 self.emitter.emit(Event::SeedDiscovered { rid, nid });
-                info!(target: "service", "Routing table updated for {} with seed {nid}", rid);
+                info!(target: "service", "Routing table updated for {rid} with seed {nid}");
             }
         }
     }
@@ -2143,8 +2143,7 @@ where
             if refs.push(refs_at).is_err() {
                 warn!(
                     target: "service",
-                    "refs announcement limit ({}) exceeded, peers will see only some of your repository references",
-                    REF_REMOTE_LIMIT,
+                    "refs announcement limit ({REF_REMOTE_LIMIT}) exceeded, peers will see only some of your repository references",
                 );
                 break;
             }

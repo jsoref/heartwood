@@ -866,13 +866,10 @@ fn push_ref(
         [],
     )
     .map_err(|err| {
-        Error::Io(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            format!(
-                "failed to run `git push {url} {refspec}` in {:?}: {err}",
-                working.path()
-            ),
-        ))
+        Error::Io(std::io::Error::other(format!(
+            "failed to run `git push {url} {refspec}` in {:?}: {err}",
+            working.path()
+        )))
     })?;
 
     Ok(())

@@ -241,7 +241,7 @@ pub fn get_create_message(
 
 /// The message shown in the editor when editing a `Patch`.
 fn edit_display_message(title: &str, description: &str) -> String {
-    format!("{}\n\n{}\n{PATCH_MSG}", title, description)
+    format!("{title}\n\n{description}\n{PATCH_MSG}")
         .trim_start()
         .to_string()
 }

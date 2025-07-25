@@ -138,7 +138,7 @@ impl Runtime {
         let policy = config.seeding_policy.into();
 
         for (key, _) in &config.extra {
-            log::warn!(target: "node", "Unused or deprecated configuration attribute {:?}", key);
+            log::warn!(target: "node", "Unused or deprecated configuration attribute {key:?}");
         }
 
         log::info!(target: "node", "Opening policy database..");
@@ -158,7 +158,7 @@ impl Runtime {
         }
 
         log::info!(target: "node", "Default seeding policy set to '{}'", &policy);
-        log::info!(target: "node", "Initializing service ({:?})..", network);
+        log::info!(target: "node", "Initializing service ({network:?})..");
 
         let announcement = if let Some(ann) = fs::read(node_dir.join(node::NODE_ANNOUNCEMENT_FILE))
             .ok()

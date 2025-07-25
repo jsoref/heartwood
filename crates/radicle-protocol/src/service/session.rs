@@ -205,7 +205,7 @@ impl Session {
     }
 
     pub fn is_connecting(&self) -> bool {
-        matches!(self.state, State::Attempted { .. })
+        matches!(self.state, State::Attempted)
     }
 
     pub fn is_stable(&self) -> bool {

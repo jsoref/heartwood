@@ -741,7 +741,7 @@ impl FetcherSpinner {
                 required
             ));
         } else {
-            message.push_str(&format!("required {} more seed(s)", required));
+            message.push_str(&format!("required {required} more seed(s)"));
         }
         self.spinner.message(message);
         self.spinner.failed();

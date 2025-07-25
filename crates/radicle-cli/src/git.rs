@@ -388,10 +388,7 @@ pub fn commit_ssh_fingerprint(path: &Path, sha1: &str) -> Result<Option<String>,
         .output()?;
 
     if !output.status.success() {
-        return Err(io::Error::new(
-            io::ErrorKind::Other,
-            String::from_utf8_lossy(&output.stderr),
-        ));
+        return Err(io::Error::other(String::from_utf8_lossy(&output.stderr)));
     }
 
     let string = BufReader::new(output.stdout.as_slice())

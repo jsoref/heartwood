@@ -233,7 +233,7 @@ impl FetchState {
                 .collect::<Vec<_>>(),
             None => vec![],
         };
-        log::trace!(target: "fetch", "Received refs {:?}", refs);
+        log::trace!(target: "fetch", "Received refs {refs:?}");
         step.pre_validate(&refs)?;
 
         let wants_haves = step.wants_haves(&handle.repo, &refs)?;
@@ -318,7 +318,7 @@ impl FetchState {
             }
             None => {
                 let followed = handle.allowed();
-                log::trace!(target: "fetch", "Followed nodes {:?}", followed);
+                log::trace!(target: "fetch", "Followed nodes {followed:?}");
                 let special_refs = stage::SpecialRefs {
                     blocked: handle.blocked.clone(),
                     remote,

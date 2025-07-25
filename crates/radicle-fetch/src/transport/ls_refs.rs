@@ -46,8 +46,7 @@ where
     } = handshake;
 
     if protocol != &Protocol::V2 {
-        return Err(ls_refs::Error::Io(io::Error::new(
-            io::ErrorKind::Other,
+        return Err(ls_refs::Error::Io(io::Error::other(
             "expected protocol version 2",
         )));
     }

@@ -959,7 +959,7 @@ where
                         e.remove();
                     }
                     Peer::Connected { nid, .. } => {
-                        panic!("Wire::handover_transport: Unexpected handover of connected peer {} with id={id} (fd={fd})", nid);
+                        panic!("Wire::handover_transport: Unexpected handover of connected peer {nid} with id={id} (fd={fd})");
                     }
                 }
             }

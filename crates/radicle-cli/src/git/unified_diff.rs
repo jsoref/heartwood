@@ -202,9 +202,9 @@ impl Decode for Diff {
         r.read_to_string(&mut s)?;
 
         let d = git::raw::Diff::from_buffer(s.as_ref())
-            .map_err(|e| Error::syntax(format!("decoding unified diff: {}", e)))?;
-        let d = Diff::try_from(d)
-            .map_err(|e| Error::syntax(format!("decoding unified diff: {}", e)))?;
+            .map_err(|e| Error::syntax(format!("decoding unified diff: {e}")))?;
+        let d =
+            Diff::try_from(d).map_err(|e| Error::syntax(format!("decoding unified diff: {e}")))?;
 
         Ok(d)
     }

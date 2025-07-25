@@ -140,7 +140,7 @@ pub fn row(
     Ok([
         match state {
             patch::State::Open { .. } => term::format::positive("●").into(),
-            patch::State::Archived { .. } => term::format::yellow("●").into(),
+            patch::State::Archived => term::format::yellow("●").into(),
             patch::State::Draft => term::format::dim("●").into(),
             patch::State::Merged { .. } => term::format::primary("✔").into(),
         },

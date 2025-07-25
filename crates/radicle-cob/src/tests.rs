@@ -312,7 +312,7 @@ fn copy_to(
     object: ObjectId,
 ) -> Result<(), git2::Error> {
     let original = {
-        let name = format!("refs/rad/{}/cobs/{}/{}", from, typename, object);
+        let name = format!("refs/rad/{from}/cobs/{typename}/{object}");
         let r = repo.find_reference(&name)?;
         r.target().unwrap()
     };

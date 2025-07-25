@@ -396,8 +396,7 @@ pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
                     Err(errs) => {
                         term::error(format!("failed to verify delegates for {rid}"));
                         term::error(format!(
-                            "the threshold of {} delegates cannot be met..",
-                            threshold
+                            "the threshold of {threshold} delegates cannot be met.."
                         ));
                         for e in errs {
                             print_delegate_verification_error(&e);

@@ -171,8 +171,7 @@ pub fn authenticate(options: Options, profile: &Profile) -> anyhow::Result<()> {
     }
     for (key, _) in &profile.config.node.extra {
         term::warning(format!(
-            "unused or deprecated configuration attribute {:?}",
-            key
+            "unused or deprecated configuration attribute {key:?}"
         ));
     }
 

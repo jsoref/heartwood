@@ -417,8 +417,8 @@ impl Remote<Verified> {
         let ns = self.id.to_namespace();
         // Nb. the references in Refs are expected to be Qualified
         self.refs
-            .iter()
-            .map(|(name, _)| {
+            .keys()
+            .map(|name| {
                 let name = PatternString::from(ns.join(name));
                 Refspec {
                     src: name.clone(),

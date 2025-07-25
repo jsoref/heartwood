@@ -171,8 +171,7 @@ impl ReadLimiter {
         self.total_read = self.total_read.saturating_add(bytes);
         log::trace!(target: "worker", "limit {}, total bytes read: {}", self.limit, self.total_read);
         if self.limit.exceeded_by(self.total_read) {
-            Err(io::Error::new(
-                io::ErrorKind::Other,
+            Err(io::Error::other(
                 "sender has exceeded number of allowed bytes, aborting read",
             ))
         } else {

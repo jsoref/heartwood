@@ -745,7 +745,7 @@ mod test {
         let path = tmp.path().join("Home").join("Radicle");
         fs::create_dir_all(path.clone()).unwrap();
 
-        let last = tmp.path().components().last().unwrap();
+        let last = tmp.path().components().next_back().unwrap();
         let home = Home::new(
             tmp.path()
                 .join("..")

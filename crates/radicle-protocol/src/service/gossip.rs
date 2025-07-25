@@ -12,7 +12,7 @@ pub use store::{AnnouncementId, Error, RelayStatus, Store};
 
 /// This node's user agent string.
 pub static PROTOCOL_VERSION_STRING: LazyLock<UserAgent> = LazyLock::new(|| {
-    FromStr::from_str(format!("/radicle:{}/", PROTOCOL_VERSION).as_str())
+    FromStr::from_str(format!("/radicle:{PROTOCOL_VERSION}/").as_str())
         .expect("user agent is valid")
 });
 

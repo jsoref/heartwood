@@ -28,8 +28,7 @@ fn nodes_renamed_for_option(
         let old: Address = value.into();
         if let Some(new) = NODES_RENAMED.get(&old) {
             warnings.push(format!(
-                "Value of configuration option `{option}` at index {i} mentions node with address '{}', which has been renamed to '{}'. Please update your configuration.",
-                old, new
+                "Value of configuration option `{option}` at index {i} mentions node with address '{old}', which has been renamed to '{new}'. Please update your configuration."
             ));
         }
     }

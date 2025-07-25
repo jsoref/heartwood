@@ -350,7 +350,7 @@ pub mod patch {
     /// Format patch state.
     pub fn state(s: &State) -> term::Paint<String> {
         match s {
-            State::Draft { .. } => term::format::dim(s.to_string()),
+            State::Draft => term::format::dim(s.to_string()),
             State::Open { .. } => term::format::positive(s.to_string()),
             State::Archived => term::format::yellow(s.to_string()),
             State::Merged { .. } => term::format::secondary(s.to_string()),
@@ -366,10 +366,10 @@ pub mod identity {
     /// Format identity revision state.
     pub fn state(s: &State) -> term::Paint<String> {
         match s {
-            State::Active { .. } => term::format::tertiary(s.to_string()),
-            State::Accepted { .. } => term::format::positive(s.to_string()),
-            State::Rejected { .. } => term::format::negative(s.to_string()),
-            State::Stale { .. } => term::format::dim(s.to_string()),
+            State::Active => term::format::tertiary(s.to_string()),
+            State::Accepted => term::format::positive(s.to_string()),
+            State::Rejected => term::format::negative(s.to_string()),
+            State::Stale => term::format::dim(s.to_string()),
         }
     }
 }

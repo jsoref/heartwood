@@ -360,7 +360,7 @@ where
         if let Some((time, next)) = priority.or_else(|| self.inbox.next()) {
             let elapsed = (time - self.start_time).as_millis();
             if matches!(next.input, Input::Wake) {
-                trace!(target: "sim", "{:05} {}", elapsed, next);
+                trace!(target: "sim", "{elapsed:05} {next}");
             } else {
                 // TODO: This can be confusing, since this event may not actually be passed to
                 // the service. It would be best to only log the events that are being sent
@@ -477,8 +477,7 @@ where
                     // Drop message if nodes are partitioned.
                     info!(
                         target: "sim",
-                        "{} -> {} (DROPPED)",
-                         sender, receiver,
+                        "{sender} -> {receiver} (DROPPED)",
                     );
                     return;
                 }
@@ -497,8 +496,7 @@ where
                 for msg in &msgs {
                     info!(
                         target: "sim",
-                        "{:05} {} -> {} ({:?}) (+{})",
-                        elapsed, sender, receiver, msg, latency
+                        "{elapsed:05} {sender} -> {receiver} ({msg:?}) (+{latency})"
                     );
                 }
 
@@ -528,7 +526,7 @@ where
 
                 // Fail to connect if the nodes are partitioned.
                 if self.is_partitioned(node, remote) {
-                    log::info!(target: "sim", "{} -/-> {} (partitioned)", node, remote);
+                    log::info!(target: "sim", "{node} -/-> {remote} (partitioned)");
 
                     // Sometimes, the service gets a failure input, other times it just hangs.
                     if self.rng.borrow_mut().bool() {

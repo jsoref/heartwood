@@ -582,7 +582,7 @@ pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
                 })?
                 .context("No issue with the given ID exists")?;
             if debug {
-                println!("{:#?}", issue);
+                println!("{issue:#?}");
             } else {
                 term::issue::show(&issue, &id, format, &profile)?;
             }

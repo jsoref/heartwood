@@ -96,7 +96,7 @@ impl Handle {
                 validations,
             } => {
                 for fail in validations.iter() {
-                    log::error!(target: "worker", "Validation error: {}", fail);
+                    log::error!(target: "worker", "Validation error: {fail}");
                 }
                 Err(error::Fetch::Validation {
                     threshold,
@@ -109,7 +109,7 @@ impl Handle {
                 validations,
             } => {
                 for warn in validations {
-                    log::warn!(target: "worker", "Validation error: {}", warn);
+                    log::warn!(target: "worker", "Validation error: {warn}");
                 }
 
                 // N.b. We do not go through handle for this since the cloning handle
@@ -180,7 +180,7 @@ fn mv(tmp: tempfile::TempDir, storage: &Storage, rid: &RepoId) -> Result<(), err
         log::warn!(target: "worker", "Refusing to move cloned repository {rid} already exists");
         return Err(Error::new(
             ErrorKind::AlreadyExists,
-            format!("repository already exists {:?}", to),
+            format!("repository already exists {to:?}"),
         )
         .into());
     }
@@ -402,8 +402,7 @@ fn set_canonical_refs(repo: &Repository, applied: &Applied) -> Result<(), error:
             Err(err) => {
                 log::warn!(
                     target: "worker",
-                    "Failed to calculate canonical reference: {}",
-                    err,
+                    "Failed to calculate canonical reference: {err}",
                 );
                 continue;
             }
@@ -416,9 +415,7 @@ fn set_canonical_refs(repo: &Repository, applied: &Applied) -> Result<(), error:
                 ) {
                     log::warn!(
                         target: "worker",
-                        "Failed to set canonical reference {}->{}: {e}",
-                        refname,
-                        oid
+                        "Failed to set canonical reference {refname}->{oid}: {e}"
                     );
                 }
             }

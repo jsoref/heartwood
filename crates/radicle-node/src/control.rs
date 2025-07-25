@@ -56,7 +56,7 @@ where
                     }
                 });
             }
-            Err(e) => log::error!(target: "control", "Failed to accept incoming connection: {}", e),
+            Err(e) => log::error!(target: "control", "Failed to accept incoming connection: {e}"),
         }
     }
     log::debug!(target: "control", "Exiting control loop..");

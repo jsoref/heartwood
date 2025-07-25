@@ -341,7 +341,7 @@ impl SignedRefs<Verified> {
             Ok(oid) => Ok(Updated::Updated { oid: oid.into() }),
             Err(e) => match (e.class(), e.code()) {
                 (git2::ErrorClass::Object, git2::ErrorCode::Modified) => {
-                    log::warn!("Concurrent modification of refs: {:?}", e);
+                    log::warn!("Concurrent modification of refs: {e:?}");
 
                     Err(Error::Git(e))
                 }

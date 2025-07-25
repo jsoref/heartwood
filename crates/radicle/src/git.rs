@@ -744,10 +744,7 @@ where
         return Ok(String::from_utf8_lossy(out).into());
     }
 
-    Err(io::Error::new(
-        io::ErrorKind::Other,
-        String::from_utf8_lossy(&output.stderr),
-    ))
+    Err(io::Error::other(String::from_utf8_lossy(&output.stderr)))
 }
 
 /// Functions that call to the `git` CLI instead of `git2`.
