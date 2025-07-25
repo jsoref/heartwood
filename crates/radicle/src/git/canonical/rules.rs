@@ -1,3 +1,6 @@
+// Weird lint, see <https://github.com/rust-lang/rust-clippy/issues/14275>
+#![allow(clippy::doc_overindented_list_items)]
+
 //! Implementation of RIP-0004 Canonical References
 //!
 //! [`RawRules`] is intended to be deserialized and then validated into a set of

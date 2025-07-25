@@ -1,3 +1,6 @@
+// Weird lint, see <https://github.com/rust-lang/rust-clippy/issues/14275>
+#![allow(clippy::doc_overindented_list_items)]
+
 //! The Radicle fetch protocol can be split into two actions: `clone`
 //! and `pull`. Each of these actions will interact with the server in
 //! multiple stages, where each stage will perform a single roundtrip
