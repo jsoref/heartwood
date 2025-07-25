@@ -129,7 +129,7 @@ pub enum Error {
     Op(#[from] op::OpEncodingError),
     /// Action not authorized by the author
     #[error("{0} not authorized to apply {1:?}")]
-    NotAuthorized(ActorId, Action),
+    NotAuthorized(ActorId, Box<Action>),
     /// An illegal action.
     #[error("action is not allowed: {0}")]
     NotAllowed(EntryId),
@@ -783,7 +783,7 @@ impl Patch {
             Authorization::Allow => {
                 self.action(action, id, author, timestamp, concurrent, doc, repo)
             }
-            Authorization::Deny => Err(Error::NotAuthorized(author, action)),
+            Authorization::Deny => Err(Error::NotAuthorized(author, Box::new(action))),
             Authorization::Unknown => {
                 // In this case, since there is not enough information to determine
                 // whether the action is authorized or not, we simply ignore it.
@@ -1228,7 +1228,7 @@ impl store::Cob for Patch {
                     patch.action(action, op.id, op.author, op.timestamp, &[], &doc, repo)?;
                 }
                 Authorization::Deny => {
-                    return Err(Error::NotAuthorized(op.author, action));
+                    return Err(Error::NotAuthorized(op.author, Box::new(action)));
                 }
                 Authorization::Unknown => {
                     // Note that this shouldn't really happen since there's no concurrency in the
