@@ -393,7 +393,8 @@ fn sync_status(
             ),
             None => continue,
         };
-        let (alias, nid) = Author::new(&seed.nid, profile).labels();
+
+        let (alias, nid) = Author::new(&seed.nid, profile, options.verbose).labels();
 
         table.push([
             nid,
