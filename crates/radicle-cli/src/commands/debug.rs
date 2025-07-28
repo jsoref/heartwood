@@ -71,9 +71,9 @@ fn debug(profile: Option<&Profile>) -> anyhow::Result<()> {
         rad_exe: std::env::current_exe().ok(),
         rad_version: VERSION,
         radicle_node_version: stdout_of("radicle-node", &["--version"])
-            .unwrap_or("<unknown>".into()),
+            .unwrap_or("radicle-node <unknown>".into()),
         git_remote_rad_version: stdout_of("git-remote-rad", &["--version"])
-            .unwrap_or("<unknown>".into()),
+            .unwrap_or("git-remote-rad <unknown>".into()),
         git_version: stdout_of("git", &["--version"]).unwrap_or("<unknown>".into()),
         ssh_version: stderr_of("ssh", &["-V"]).unwrap_or("<unknown>".into()),
         git_head: GIT_HEAD,
