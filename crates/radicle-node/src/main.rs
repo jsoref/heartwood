@@ -131,6 +131,14 @@ fn execute() -> anyhow::Result<()> {
 }
 
 fn main() {
+    // If `RUST_BACKTRACE` does not have a value, then we set it to capture
+    // backtraces for better debugging, otherwise we keep the environments
+    // value.
+    const RUST_BACKTRACE: &str = "RUST_BACKTRACE";
+    if std::env::var_os(RUST_BACKTRACE).is_none() {
+        std::env::set_var(RUST_BACKTRACE, "1");
+    }
+
     if let Err(err) = execute() {
         if log::log_enabled!(target: "node", log::Level::Error) {
             log::error!(target: "node", "Fatal: {err:#}");
