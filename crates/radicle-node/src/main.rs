@@ -140,11 +140,7 @@ fn main() {
     }
 
     if let Err(err) = execute() {
-        if log::log_enabled!(target: "node", log::Level::Error) {
-            log::error!(target: "node", "Fatal: {err:#}");
-        } else {
-            eprintln!("Error: {err:#}");
-        }
+        log::error!(target: "node", "{err:#}");
         process::exit(1);
     }
 }
