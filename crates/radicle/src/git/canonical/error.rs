@@ -7,6 +7,8 @@ use crate::{git::raw, git::Oid, prelude::Did};
 use super::CanonicalObjectType;
 
 /// Error that can occur when calculation the [`Canonical::quorum`].
+///
+/// [`Canonical::quorum`]: super::Canonical
 #[derive(Debug, Error)]
 pub enum QuorumError {
     /// Could not determine a quorum [`Oid`], due to diverging tips.
