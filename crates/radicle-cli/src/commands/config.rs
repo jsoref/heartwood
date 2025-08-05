@@ -185,24 +185,12 @@ pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
                 path.display()
             );
         }
-        Operation::Edit => {
-            let config = std::fs::read_to_string(&path)?;
-
-            match term::editor::Editor::new("Edit configuration", term::editor::Editor::HELP)
-                .editor(term::editor::default_editor_command().as_ref())
-                .extension(".json")
-                .initial(&config)
-                .edit()?
-            {
-                Some(edited) => {
-                    std::fs::write(&path, edited)?;
-                    term::success!("Successfully made changes to the configuration at {path:?}");
-                }
-                None => {
-                    term::info!("No changes were made to the configuration at {path:?}")
-                }
+        Operation::Edit => match term::editor::Editor::new(&path)?.extension("json").edit()? {
+            Some(_) => {
+                term::success!("Successfully made changes to the configuration at {path:?}")
             }
-        }
+            None => term::info!("No changes were made to the configuration at {path:?}"),
+        },
     }
 
     Ok(())

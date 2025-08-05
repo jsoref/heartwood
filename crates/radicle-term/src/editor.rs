@@ -1,69 +1,197 @@
-use std::env;
 use std::ffi::OsString;
-use std::path::Path;
-
-use inquire::InquireError;
-use thiserror::Error;
+use std::io::IsTerminal;
+use std::io::Write;
+use std::path::{Path, PathBuf};
+use std::process;
+use std::{env, fs, io};
 
 /// Allows for text input in the configured editor.
-pub struct Editor<'a>(pub inquire::Editor<'a>);
+pub struct Editor {
+    path: PathBuf,
+    truncate: bool,
+    cleanup: bool,
+}
 
-#[derive(Debug, Error)]
-#[error(transparent)]
-pub struct Error(#[from] InquireError);
+impl Default for Editor {
+    fn default() -> Self {
+        Self::comment()
+    }
+}
 
-impl<'a> Editor<'a> {
-    pub const HELP: &'a str = "(e) to edit. (enter) to save and exit. (esc) to cancel and quit.";
+impl Drop for Editor {
+    fn drop(&mut self) {
+        if self.cleanup {
+            fs::remove_file(&self.path).ok();
+        }
+    }
+}
 
-    /// Create a new editor for editing a comment.
+impl Editor {
+    /// Create a new editor.
+    pub fn new(path: impl AsRef<Path>) -> io::Result<Self> {
+        let path = path.as_ref();
+        if path.try_exists()? {
+            let meta = fs::metadata(path)?;
+            if !meta.is_file() {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "must be used to edit a file",
+                ));
+            }
+        }
+        Ok(Self {
+            path: path.to_path_buf(),
+            truncate: false,
+            cleanup: false,
+        })
+    }
+
     pub fn comment() -> Self {
-        Self::new("Enter comment.", Self::HELP)
+        const COMMENT_FILE: &str = "RAD_COMMENT";
+
+        let path = env::temp_dir().join(COMMENT_FILE);
+
+        Self {
+            path,
+            truncate: true,
+            cleanup: true,
+        }
+    }
+
+    /// Set the file extension.
+    pub fn extension(mut self, ext: &str) -> Self {
+        let ext = ext.trim_start_matches('.');
+
+        self.path.set_extension(ext);
+        self
+    }
+
+    /// Truncate the file to length 0 when opening
+    pub fn truncate(mut self, truncate: bool) -> Self {
+        self.truncate = truncate;
+        self
+    }
+
+    /// Clean up the file after the [`Editor`] is dropped.
+    pub fn cleanup(mut self, cleanup: bool) -> Self {
+        self.cleanup = cleanup;
+        self
+    }
+
+    /// Initialize the file with the provided `content`, as long as the file
+    /// does not already contain anything.
+    #[allow(clippy::byte_char_slices)]
+    pub fn initial(self, content: impl AsRef<[u8]>) -> io::Result<Self> {
+        let content = content.as_ref();
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(self.truncate)
+            .open(&self.path)?;
+
+        if file.metadata()?.len() == 0 {
+            file.write_all(content)?;
+            if !content.ends_with(&[b'\n']) {
+                file.write_all(b"\n")?;
+            }
+            file.flush()?;
+        }
+        Ok(self)
     }
 
     /// Open the editor and return the edited text.
     ///
     /// If the text hasn't changed from the initial contents of the editor,
     /// return `None`.
-    pub fn edit(self) -> Result<Option<String>, Error> {
-        match self.0.prompt() {
-            Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => Ok(None),
-            Err(e) => Err(Error::from(e)),
-            Ok(s) => Ok(Some(s)),
+    pub fn edit(&mut self) -> io::Result<Option<String>> {
+        let Some(cmd) = self::default_editor() else {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "editor not configured: the `EDITOR` environment variable is not set",
+            ));
+        };
+        let Some(parts) = shlex::split(cmd.to_string_lossy().as_ref()) else {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!("invalid editor command {cmd:?}"),
+            ));
+        };
+        let Some((program, args)) = parts.split_first() else {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!("invalid editor command {cmd:?}"),
+            ));
+        };
+
+        let stdout: process::Stdio = {
+            #[cfg(unix)]
+            {
+                use std::os::fd::{AsRawFd as _, FromRawFd as _};
+
+                // We duplicate the stderr file descriptor to pass it to the child process, otherwise, if
+                // we simply pass the `RawFd` of our stderr, `Command` will close our stderr when the
+                // child exits.
+
+                let stderr = io::stderr().as_raw_fd();
+                unsafe { process::Stdio::from_raw_fd(libc::dup(stderr)) }
+            }
+            #[cfg(not(unix))]
+            {
+                // No duplication of the file handle for stderr on Windows.
+                // This might not always work, but is better than not being able to build for
+                // Windows.
+                io::stderr().into()
+            }
+        };
+
+        let stdin = if io::stdin().is_terminal() {
+            process::Stdio::inherit()
+        } else if cfg!(unix) {
+            // If standard input is not a terminal device, the editor won't work correctly.
+            // In that case, we use the terminal device, eg. `/dev/tty` as standard input.
+            let tty = fs::OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open("/dev/tty")?;
+            process::Stdio::from(tty)
+        } else {
+            return Err(io::Error::new(
+                io::ErrorKind::Unsupported,
+                format!("standard input is not a terminal, refusing to execute editor {cmd:?}"),
+            ));
+        };
+
+        process::Command::new(program)
+            .stdout(stdout)
+            .stderr(process::Stdio::inherit())
+            .stdin(stdin)
+            .args(args)
+            .arg(&self.path)
+            .spawn()
+            .map_err(|e| {
+                io::Error::new(
+                    e.kind(),
+                    format!("failed to spawn editor command {cmd:?}: {e}"),
+                )
+            })?
+            .wait()
+            .map_err(|e| {
+                io::Error::new(
+                    e.kind(),
+                    format!("editor command {cmd:?} didn't spawn: {e}"),
+                )
+            })?;
+
+        let text = fs::read_to_string(&self.path)?;
+        if text.trim().is_empty() {
+            return Ok(None);
         }
-    }
-}
-
-impl<'a> Editor<'a> {
-    /// Create a new editor.
-    pub fn new(message: &'a str, help_message: &'a str) -> Self {
-        Self(inquire::Editor::new(message).with_help_message(help_message))
-    }
-
-    /// Set the file extension.
-    pub fn extension(self, ext: &'a str) -> Self {
-        debug_assert!(
-            ext.starts_with('.'),
-            "File extension should start with a dot."
-        );
-        Self(self.0.with_file_extension(ext))
-    }
-
-    /// Initialize the file with the provided `content`, as long as the file
-    /// does not already contain anything.
-    pub fn initial(self, content: &'a str) -> Self {
-        Self(self.0.with_predefined_text(content))
-    }
-
-    pub fn editor(self, editor: Option<&'a OsString>) -> Self {
-        match editor {
-            Some(editor_command) => Self(self.0.with_editor_command(editor_command)),
-            None => self,
-        }
+        Ok(Some(text))
     }
 }
 
 /// Get the default editor command.
-pub fn default_editor_command() -> Option<OsString> {
+fn default_editor() -> Option<OsString> {
     // First check the standard environment variables.
     if let Ok(visual) = env::var("VISUAL") {
         if !visual.is_empty() {

@@ -22,9 +22,11 @@ unicode-display-width = "0.3.0"
 unicode-segmentation = "1.7.1"
 zeroize = { workspace = true }
 git2 = { workspace = true, features = ["vendored-libgit2"], optional = true }
+shlex = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
 crossbeam-channel = { workspace = true }
+libc = { workspace = true }
 radicle-signals = { workspace = true }
 
 [dev-dependencies]
