@@ -39,7 +39,6 @@ radicle-fetch = { workspace = true }
 radicle-git-ext = { workspace = true, features = ["serde"] }
 radicle-protocol = { workspace = true }
 radicle-signals = { workspace = true }
-radicle-systemd = { workspace = true, optional = true }
 sqlite = { workspace = true, features = ["bundled"] }
 scrypt = { version = "0.11.0", default-features = false }
 serde = { workspace = true, features = ["derive"] }
@@ -48,6 +47,9 @@ snapbox = { workspace = true, optional = true }
 socket2 = "0.5.7"
 tempfile = { workspace = true }
 thiserror = { workspace = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+radicle-systemd = { workspace = true, optional = true }
 
 [dev-dependencies]
 qcheck = { workspace = true }

@@ -93,10 +93,15 @@ fn execute() -> anyhow::Result<()> {
     let level = options.log.unwrap_or(config.node.log);
 
     let logger = {
-        let journal = if cfg!(all(feature = "systemd", target_family = "unix")) {
-            radicle_systemd::journal::logger::<&str, &str, _>("radicle-node".to_string(), [])?
-        } else {
-            None
+        let journal = {
+            #[cfg(all(feature = "systemd", target_os = "linux"))]
+            {
+                radicle_systemd::journal::logger::<&str, &str, _>("radicle-node".to_string(), [])?
+            }
+            #[cfg(not(all(feature = "systemd", target_os = "linux")))]
+            {
+                None
+            }
         };
 
         if let Some(logger) = journal {
