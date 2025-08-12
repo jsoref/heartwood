@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `git-remote-rad` now correctly reports the default branch to Git by listing
   the symbolic reference `HEAD`.
 - `rad status` learned a new option `--only nid` for printing the Node ID.
+- `rad issue` now uses `clap` to parse its command-line arguments.
+  This affects error reporting as well as help output.
 
 ## Fixed Bugs
 

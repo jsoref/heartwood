@@ -10,33 +10,62 @@ pub const HELP: Help = Help {
     usage: "Usage: rad help [--help]",
 };
 
-const COMMANDS: &[Help] = &[
-    crate::commands::auth::HELP,
-    crate::commands::block::HELP,
-    crate::commands::checkout::HELP,
-    crate::commands::clone::HELP,
-    crate::commands::config::HELP,
-    crate::commands::fork::HELP,
-    crate::commands::help::HELP,
-    crate::commands::id::HELP,
-    crate::commands::init::HELP,
-    crate::commands::inbox::HELP,
-    crate::commands::inspect::HELP,
-    crate::commands::issue::HELP,
-    crate::commands::ls::HELP,
-    crate::commands::node::HELP,
-    crate::commands::patch::HELP,
-    crate::commands::path::HELP,
-    crate::commands::clean::HELP,
-    crate::commands::rad_self::HELP,
-    crate::commands::seed::HELP,
-    crate::commands::follow::HELP,
-    crate::commands::unblock::HELP,
-    crate::commands::unfollow::HELP,
-    crate::commands::unseed::HELP,
-    crate::commands::remote::HELP,
-    crate::commands::stats::HELP,
-    crate::commands::sync::HELP,
+enum CommandItem {
+    Lexopt(Help),
+    Clap {
+        name: &'static str,
+        about: &'static str,
+    },
+}
+
+impl CommandItem {
+    fn name(&self) -> &str {
+        match self {
+            CommandItem::Lexopt(help) => help.name,
+            CommandItem::Clap { name, .. } => name,
+        }
+    }
+
+    fn description(&self) -> &str {
+        match self {
+            CommandItem::Lexopt(help) => help.description,
+            CommandItem::Clap {
+                about: description, ..
+            } => description,
+        }
+    }
+}
+
+const COMMANDS: &[CommandItem] = &[
+    CommandItem::Lexopt(crate::commands::auth::HELP),
+    CommandItem::Lexopt(crate::commands::block::HELP),
+    CommandItem::Lexopt(crate::commands::checkout::HELP),
+    CommandItem::Lexopt(crate::commands::clone::HELP),
+    CommandItem::Lexopt(crate::commands::config::HELP),
+    CommandItem::Lexopt(crate::commands::fork::HELP),
+    CommandItem::Lexopt(crate::commands::help::HELP),
+    CommandItem::Lexopt(crate::commands::id::HELP),
+    CommandItem::Lexopt(crate::commands::init::HELP),
+    CommandItem::Lexopt(crate::commands::inbox::HELP),
+    CommandItem::Lexopt(crate::commands::inspect::HELP),
+    CommandItem::Clap {
+        name: "issue",
+        about: crate::commands::issue::ABOUT,
+    },
+    CommandItem::Lexopt(crate::commands::ls::HELP),
+    CommandItem::Lexopt(crate::commands::node::HELP),
+    CommandItem::Lexopt(crate::commands::patch::HELP),
+    CommandItem::Lexopt(crate::commands::path::HELP),
+    CommandItem::Lexopt(crate::commands::clean::HELP),
+    CommandItem::Lexopt(crate::commands::rad_self::HELP),
+    CommandItem::Lexopt(crate::commands::seed::HELP),
+    CommandItem::Lexopt(crate::commands::follow::HELP),
+    CommandItem::Lexopt(crate::commands::unblock::HELP),
+    CommandItem::Lexopt(crate::commands::unfollow::HELP),
+    CommandItem::Lexopt(crate::commands::unseed::HELP),
+    CommandItem::Lexopt(crate::commands::remote::HELP),
+    CommandItem::Lexopt(crate::commands::stats::HELP),
+    CommandItem::Lexopt(crate::commands::sync::HELP),
 ];
 
 #[derive(Default)]
@@ -79,8 +108,8 @@ pub fn run(_options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
     for help in COMMANDS {
         term::info!(
             "\t{} {}",
-            term::format::bold(format!("{:-12}", help.name)),
-            term::format::dim(help.description)
+            term::format::bold(format!("{:-12}", help.name())),
+            term::format::dim(help.description())
         );
     }
     term::blank();
