@@ -260,7 +260,7 @@ where
             Ok(Some(result))
         }
         Err(err) => {
-            spinner.error("Sync failed: {err}");
+            spinner.error(format!("Sync failed: {err}"));
             Err(err.into())
         }
     }
