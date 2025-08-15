@@ -27,7 +27,7 @@ use radicle::node;
 use radicle::node::address;
 use radicle::node::address::Store as _;
 use radicle::node::address::{AddressBook, AddressType, KnownAddress};
-use radicle::node::config::PeerConfig;
+use radicle::node::config::{PeerConfig, RateLimit};
 use radicle::node::device::Device;
 use radicle::node::refs::Store as _;
 use radicle::node::routing::Store as _;
@@ -845,7 +845,7 @@ where
             if let Err(err) = self
                 .db
                 .gossip_mut()
-                .prune((now - self.config.limits.gossip_max_age).into())
+                .prune((now - LocalDuration::from(self.config.limits.gossip_max_age)).into())
             {
                 error!(target: "service", "Error pruning gossip entries: {err}");
             }
@@ -1302,7 +1302,7 @@ where
             return true;
         }
         // Check for inbound connection limit.
-        if self.sessions.inbound().count() >= self.config.limits.connection.inbound {
+        if self.sessions.inbound().count() >= self.config.limits.connection.inbound.into() {
             return false;
         }
         match self.db.addresses().is_ip_banned(ip) {
@@ -1315,13 +1315,9 @@ where
             Err(e) => error!(target: "service", "Error querying ban status for {ip}: {e}"),
         }
         let host: HostName = ip.into();
+        let tokens = RateLimit::from(self.config.limits.rate.inbound.clone());
 
-        if self.limiter.limit(
-            host.clone(),
-            None,
-            &self.config.limits.rate.inbound,
-            self.clock,
-        ) {
+        if self.limiter.limit(host.clone(), None, &tokens, self.clock) {
             trace!(target: "service", "Rate limiting inbound connection from {host}..");
             return false;
         }
@@ -1824,13 +1820,13 @@ where
         };
         peer.last_active = self.clock;
 
-        let limit = match peer.link {
-            Link::Outbound => &self.config.limits.rate.outbound,
-            Link::Inbound => &self.config.limits.rate.inbound,
+        let limit: RateLimit = match peer.link {
+            Link::Outbound => self.config.limits.rate.outbound.clone().into(),
+            Link::Inbound => self.config.limits.rate.inbound.clone().into(),
         };
         if self
             .limiter
-            .limit(peer.addr.clone().into(), Some(remote), limit, self.clock)
+            .limit(peer.addr.clone().into(), Some(remote), &limit, self.clock)
         {
             debug!(target: "service", "Rate limiting message from {remote} ({})", peer.addr);
             return Ok(());
@@ -2260,7 +2256,7 @@ where
         if self.sessions.contains_key(&nid) {
             return Err(ConnectError::SessionExists { nid });
         }
-        if self.sessions.outbound().count() >= self.config.limits.connection.outbound {
+        if self.sessions.outbound().count() >= self.config.limits.connection.outbound.into() {
             return Err(ConnectError::LimitReached { nid, addr });
         }
         let persistent = self.config.is_persistent(&nid);
@@ -2432,14 +2428,14 @@ where
 
     fn prune_routing_entries(&mut self, now: &LocalTime) -> Result<(), routing::Error> {
         let count = self.db.routing().len()?;
-        if count <= self.config.limits.routing_max_size {
+        if count <= self.config.limits.routing_max_size.into() {
             return Ok(());
         }
 
-        let delta = count - self.config.limits.routing_max_size;
+        let delta = count - usize::from(self.config.limits.routing_max_size);
         let nid = self.node_id();
         self.db.routing_mut().prune(
-            (*now - self.config.limits.routing_max_age).into(),
+            (*now - LocalDuration::from(self.config.limits.routing_max_age)).into(),
             Some(delta),
             &nid,
         )?;

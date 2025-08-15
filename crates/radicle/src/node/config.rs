@@ -120,70 +120,33 @@ impl Network {
 }
 
 /// Configuration parameters defining attributes of minima and maxima.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default, rename_all = "camelCase")]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct Limits {
     /// Number of routing table entries before we start pruning.
-    #[serde(default = "defaults::limit_routing_max_size")]
-    pub routing_max_size: usize,
+    pub routing_max_size: LimitRoutingMaxSize,
 
     /// How long to keep a routing table entry before being pruned.
-    #[serde(
-        default = "defaults::limit_routing_max_age",
-        with = "crate::serde_ext::localtime::duration"
-    )]
-    #[cfg_attr(
-        feature = "schemars",
-        schemars(with = "crate::schemars_ext::localtime::LocalDuration")
-    )]
-    pub routing_max_age: LocalDuration,
+    pub routing_max_age: LimitRoutingMaxAge,
 
     /// How long to keep a gossip message entry before pruning it.
-    #[serde(
-        default = "defaults::limit_gossip_max_age",
-        with = "crate::serde_ext::localtime::duration"
-    )]
-    #[cfg_attr(
-        feature = "schemars",
-        schemars(with = "crate::schemars_ext::localtime::LocalDuration")
-    )]
-    pub gossip_max_age: LocalDuration,
+    pub gossip_max_age: LimitGossipMaxAge,
 
     /// Maximum number of concurrent fetches per peer connection.
-    #[serde(default = "defaults::limit_fetch_concurrency")]
-    pub fetch_concurrency: usize,
+    pub fetch_concurrency: LimitFetchConcurrency,
 
     /// Maximum number of open files.
-    #[serde(default = "defaults::limit_max_open_files")]
-    pub max_open_files: usize,
+    pub max_open_files: LimitMaxOpenFiles,
 
     /// Rate limitter settings.
-    #[serde(default)]
     pub rate: RateLimits,
 
     /// Connection limits.
-    #[serde(default)]
     pub connection: ConnectionLimits,
 
     /// Channel limits.
-    #[serde(default)]
     pub fetch_pack_receive: FetchPackSizeLimit,
-}
-
-impl Default for Limits {
-    fn default() -> Self {
-        Self {
-            routing_max_size: defaults::limit_routing_max_size(),
-            routing_max_age: defaults::limit_routing_max_age(),
-            gossip_max_age: defaults::limit_gossip_max_age(),
-            fetch_concurrency: defaults::limit_fetch_concurrency(),
-            max_open_files: defaults::limit_max_open_files(),
-            rate: RateLimits::default(),
-            connection: ConnectionLimits::default(),
-            fetch_pack_receive: FetchPackSizeLimit::default(),
-        }
-    }
 }
 
 /// Limiter for byte streams.
@@ -277,30 +240,20 @@ impl Default for FetchPackSizeLimit {
 }
 
 /// Connection limits.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default, rename_all = "camelCase")]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct ConnectionLimits {
     /// Max inbound connections.
-    #[serde(default = "defaults::limit_connections_inbound")]
-    pub inbound: usize,
+    pub inbound: LimitConnectionsInbound,
 
     /// Max outbound connections. Note that this can be higher than the *target* number.
-    #[serde(default = "defaults::limit_connections_outbound")]
-    pub outbound: usize,
-}
-
-impl Default for ConnectionLimits {
-    fn default() -> Self {
-        Self {
-            inbound: defaults::limit_connections_inbound(),
-            outbound: defaults::limit_connections_outbound(),
-        }
-    }
+    pub outbound: LimitConnectionsOutbound,
 }
 
 /// Rate limts for a single connection.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Display)]
+#[display("RateLimit(fill_rate={fill_rate}, capacity={capacity})")]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct RateLimit {
@@ -309,24 +262,13 @@ pub struct RateLimit {
 }
 
 /// Rate limits for inbound and outbound connections.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct RateLimits {
-    #[serde(default = "defaults::limit_rate_inbound")]
-    pub inbound: RateLimit,
+    pub inbound: LimitRateInbound,
 
-    #[serde(default = "defaults::limit_rate_outbound")]
-    pub outbound: RateLimit,
-}
-
-impl Default for RateLimits {
-    fn default() -> Self {
-        Self {
-            inbound: defaults::limit_rate_inbound(),
-            outbound: defaults::limit_rate_outbound(),
-        }
-    }
+    pub outbound: LimitRateOutbound,
 }
 
 /// Full address used to connect to a remote node.
@@ -388,20 +330,15 @@ impl Deref for ConnectAddress {
 }
 
 /// Peer configuration.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase", tag = "type")]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub enum PeerConfig {
     /// Static peer set. Connect to the configured peers and maintain the connections.
     Static,
     /// Dynamic peer set.
+    #[default]
     Dynamic,
-}
-
-impl Default for PeerConfig {
-    fn default() -> Self {
-        Self::Dynamic
-    }
 }
 
 /// Relay configuration.
@@ -505,13 +442,8 @@ pub struct Config {
     #[serde(default)]
     pub network: Network,
     /// Log level.
-    #[serde(default = "defaults::log")]
-    #[serde(with = "crate::serde_ext::string")]
-    #[cfg_attr(
-        feature = "schemars",
-        schemars(with = "crate::schemars_ext::log::Level")
-    )]
-    pub log: log::Level,
+    #[serde(default)]
+    pub log: LogLevel,
     /// Whether or not our node should relay messages.
     #[serde(default, deserialize_with = "crate::serde_ext::ok_or_default")]
     pub relay: Relay,
@@ -519,8 +451,8 @@ pub struct Config {
     #[serde(default)]
     pub limits: Limits,
     /// Number of worker threads to spawn.
-    #[serde(default = "defaults::workers")]
-    pub workers: usize,
+    #[serde(default)]
+    pub workers: Workers,
     /// Default seeding policy.
     #[serde(default)]
     pub seeding_policy: DefaultSeedingPolicy,
@@ -549,8 +481,8 @@ impl Config {
             onion: None,
             relay: Relay::default(),
             limits: Limits::default(),
-            workers: defaults::workers(),
-            log: defaults::log(),
+            workers: Workers::default(),
+            log: LogLevel::default(),
             seeding_policy: DefaultSeedingPolicy::default(),
             extra: json::Map::default(),
         }
@@ -587,71 +519,128 @@ impl Config {
     }
 }
 
-/// Defaults as functions, for serde.
-mod defaults {
-    /// Default number of workers to spawn.
-    #[inline]
-    pub const fn workers() -> usize {
-        8
-    }
+#[derive(Clone, Copy, Debug, Display, Deserialize, Serialize, From)]
+#[serde(transparent)]
+#[display("{0}")]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct LogLevel(
+    #[serde(with = "crate::serde_ext::string")]
+    #[cfg_attr(
+        feature = "schemars",
+        schemars(with = "crate::schemars_ext::log::Level")
+    )]
+    log::Level,
+);
 
-    /// Log level.
-    #[inline]
-    pub const fn log() -> log::Level {
-        log::Level::Info
-    }
-
-    #[inline]
-    pub const fn limit_connections_inbound() -> usize {
-        128
-    }
-
-    #[inline]
-    pub const fn limit_connections_outbound() -> usize {
-        16
-    }
-
-    #[inline]
-    pub const fn limit_routing_max_size() -> usize {
-        1000
-    }
-
-    #[inline]
-    pub const fn limit_routing_max_age() -> localtime::LocalDuration {
-        localtime::LocalDuration::from_mins(7 * 24 * 60) // One week
-    }
-
-    #[inline]
-    pub const fn limit_gossip_max_age() -> localtime::LocalDuration {
-        localtime::LocalDuration::from_mins(2 * 7 * 24 * 60) // Two weeks
-    }
-
-    #[inline]
-    pub const fn limit_fetch_concurrency() -> usize {
-        1
-    }
-
-    #[inline]
-    pub const fn limit_max_open_files() -> usize {
-        4096
-    }
-
-    #[inline]
-    pub const fn limit_rate_inbound() -> super::RateLimit {
-        super::RateLimit {
-            fill_rate: 5.0,
-            capacity: 1024,
-        }
-    }
-
-    #[inline]
-    pub const fn limit_rate_outbound() -> super::RateLimit {
-        super::RateLimit {
-            fill_rate: 10.0,
-            capacity: 2048,
-        }
+impl Default for LogLevel {
+    fn default() -> Self {
+        Self(log::Level::Info)
     }
 }
+
+impl From<LogLevel> for log::Level {
+    fn from(value: LogLevel) -> Self {
+        value.0
+    }
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[serde(transparent)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct LimitRoutingMaxAge(
+    #[serde(with = "crate::serde_ext::localtime::duration")]
+    #[cfg_attr(
+        feature = "schemars",
+        schemars(with = "crate::schemars_ext::localtime::LocalDuration")
+    )]
+    localtime::LocalDuration,
+);
+
+impl Default for LimitRoutingMaxAge {
+    fn default() -> Self {
+        Self(localtime::LocalDuration::from_mins(7 * 24 * 60)) // One week
+    }
+}
+
+impl From<LimitRoutingMaxAge> for LocalDuration {
+    fn from(value: LimitRoutingMaxAge) -> Self {
+        value.0
+    }
+}
+
+impl From<LocalDuration> for LimitRoutingMaxAge {
+    fn from(value: LocalDuration) -> Self {
+        Self(value)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[serde(transparent)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct LimitGossipMaxAge(
+    #[serde(with = "crate::serde_ext::localtime::duration")]
+    #[cfg_attr(
+        feature = "schemars",
+        schemars(with = "crate::schemars_ext::localtime::LocalDuration")
+    )]
+    localtime::LocalDuration,
+);
+
+impl Default for LimitGossipMaxAge {
+    fn default() -> Self {
+        Self(localtime::LocalDuration::from_mins(2 * 7 * 24 * 60)) // Two weeks
+    }
+}
+
+impl From<LimitGossipMaxAge> for LocalDuration {
+    fn from(value: LimitGossipMaxAge) -> Self {
+        value.0
+    }
+}
+
+macro_rules! wrapper {
+    ($name:ident, $type:ty, $default:expr $(, $derive:ty)*) => {
+        #[derive(Clone, Debug, Deserialize, Display, Serialize, From $(, $derive)*)]
+        #[display("{0}")]
+        #[serde(transparent)]
+        #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+        pub struct $name($type);
+
+        impl Default for $name {
+            fn default() -> Self {
+                Self($default)
+            }
+        }
+
+        impl From<$name> for $type {
+            fn from(value: $name) -> Self {
+                value.0
+            }
+        }
+    };
+}
+wrapper!(Workers, usize, 8, Copy);
+wrapper!(LimitConnectionsInbound, usize, 128, Copy);
+wrapper!(LimitConnectionsOutbound, usize, 16, Copy);
+wrapper!(LimitRoutingMaxSize, usize, 1000, Copy);
+wrapper!(LimitFetchConcurrency, usize, 1, Copy);
+wrapper!(
+    LimitRateInbound,
+    RateLimit,
+    RateLimit {
+        fill_rate: 5.0,
+        capacity: 1024,
+    }
+);
+wrapper!(LimitMaxOpenFiles, usize, 4096, Copy);
+wrapper!(
+    LimitRateOutbound,
+    RateLimit,
+    RateLimit {
+        fill_rate: 10.0,
+        capacity: 2048,
+    }
+);
 
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
@@ -671,10 +660,10 @@ mod test {
         }
         ))
         .unwrap();
-        assert_eq!(config.limits.connection.inbound, 1337);
+        assert_eq!(config.limits.connection.inbound.0, 1337);
         assert_eq!(
-            config.limits.connection.outbound,
-            super::defaults::limit_connections_outbound()
+            config.limits.connection.outbound.0,
+            super::LimitConnectionsOutbound::default().0,
         );
 
         let config: Config = serde_json::from_value(json!({
@@ -688,9 +677,9 @@ mod test {
         ))
         .unwrap();
         assert_eq!(
-            config.limits.connection.inbound,
-            super::defaults::limit_connections_inbound()
+            config.limits.connection.inbound.0,
+            super::LimitConnectionsInbound::default().0,
         );
-        assert_eq!(config.limits.connection.outbound, 1337);
+        assert_eq!(config.limits.connection.outbound.0, 1337);
     }
 }

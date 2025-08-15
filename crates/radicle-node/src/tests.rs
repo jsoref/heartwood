@@ -308,8 +308,8 @@ fn test_inventory_pruning() {
         // All zero
         Test {
             limits: Limits {
-                routing_max_size: 0,
-                routing_max_age: LocalDuration::from_secs(0),
+                routing_max_size: 0.into(),
+                routing_max_age: LocalDuration::from_secs(0).into(),
                 ..Limits::default()
             },
             peer_projects: vec![10; 5],
@@ -319,8 +319,8 @@ fn test_inventory_pruning() {
         // All entries are too young to expire.
         Test {
             limits: Limits {
-                routing_max_size: 0,
-                routing_max_age: LocalDuration::from_mins(7 * 24 * 60),
+                routing_max_size: 0.into(),
+                routing_max_age: LimitRoutingMaxAge::from(LocalDuration::from_mins(7 * 24 * 60)),
                 ..Limits::default()
             },
             peer_projects: vec![10; 5],
@@ -330,8 +330,8 @@ fn test_inventory_pruning() {
         // All entries remain because the table is unconstrained.
         Test {
             limits: Limits {
-                routing_max_size: 50,
-                routing_max_age: LocalDuration::from_mins(0),
+                routing_max_size: 50.into(),
+                routing_max_age: LocalDuration::from_mins(0).into(),
                 ..Limits::default()
             },
             peer_projects: vec![10; 5],
@@ -341,8 +341,8 @@ fn test_inventory_pruning() {
         // Some entries are pruned because the table is constrained.
         Test {
             limits: Limits {
-                routing_max_size: 25,
-                routing_max_age: LocalDuration::from_mins(7 * 24 * 60),
+                routing_max_size: 25.into(),
+                routing_max_age: LocalDuration::from_mins(7 * 24 * 60).into(),
                 ..Limits::default()
             },
             peer_projects: vec![10; 5],

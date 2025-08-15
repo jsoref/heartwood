@@ -36,11 +36,13 @@ pub(crate) mod config {
                     inbound: RateLimit {
                         fill_rate: 1.0,
                         capacity: usize::MAX,
-                    },
+                    }
+                    .into(),
                     outbound: RateLimit {
                         fill_rate: 1.0,
                         capacity: usize::MAX,
-                    },
+                    }
+                    .into(),
                 },
                 ..Limits::default()
             },

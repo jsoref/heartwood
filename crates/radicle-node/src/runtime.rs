@@ -245,7 +245,7 @@ impl Runtime {
             cobs_cache,
             db,
             worker::Config {
-                capacity: config.workers,
+                capacity: config.workers.into(),
                 storage: storage.clone(),
                 fetch,
                 policy,

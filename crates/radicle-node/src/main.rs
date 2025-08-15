@@ -90,7 +90,7 @@ fn execute() -> anyhow::Result<()> {
     let config = options.config.unwrap_or_else(|| home.config());
     let mut config = profile::Config::load(&config)?;
 
-    let level = options.log.unwrap_or(config.node.log);
+    let level = options.log.unwrap_or_else(|| config.node.log.into());
 
     let logger = {
         let journal = {
@@ -135,7 +135,7 @@ fn execute() -> anyhow::Result<()> {
         config.node.listen.clone()
     };
 
-    if let Err(e) = radicle::io::set_file_limit(config.node.limits.max_open_files) {
+    if let Err(e) = radicle::io::set_file_limit::<usize>(config.node.limits.max_open_files.into()) {
         log::warn!(target: "node", "Unable to set process open file limit: {e}");
     }
 

@@ -226,7 +226,7 @@ impl Session {
 
     pub fn is_at_capacity(&self) -> bool {
         if let State::Connected { fetching, .. } = &self.state {
-            if fetching.len() >= self.limits.fetch_concurrency {
+            if fetching.len() >= self.limits.fetch_concurrency.into() {
                 return true;
             }
         }

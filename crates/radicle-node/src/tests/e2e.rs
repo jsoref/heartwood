@@ -679,7 +679,7 @@ fn test_concurrent_fetches() {
     let repos = scale.max(4);
     let limits = Limits {
         // Have one fetch be queued.
-        fetch_concurrency: repos - 1,
+        fetch_concurrency: (repos - 1).into(),
         ..Limits::default()
     };
     let mut bob_repos = HashSet::new();
