@@ -29,6 +29,13 @@ enum Command {
 }
 
 fn main() {
+    human_panic::setup_panic!(human_panic::Metadata::new(
+        env!("CARGO_PKG_NAME"),
+        env!("CARGO_PKG_VERSION")
+    )
+    .homepage(env!("CARGO_PKG_HOMEPAGE"))
+    .support("Open a support request at https://radicle.zulipchat.com/ or file an issue via Radicle itself, or e-mail to team@radicle.xyz"));
+
     if let Some(lvl) = radicle::logger::env_level() {
         let logger = Box::new(radicle::logger::Logger::new(lvl));
         log::set_boxed_logger(logger).expect("no other logger should have been set already");

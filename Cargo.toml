@@ -29,6 +29,7 @@ crossbeam-channel = "0.5.6"
 cyphernet = "0.5.2"
 fastrand = { version = "2.0.0", default-features = false }
 git2 = { version = "0.19.0", default-features = false }
+human-panic = "2"
 lexopt = "0.3.0"
 libc = "0.2.137"
 localtime = "1.2.0"
