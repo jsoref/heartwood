@@ -371,6 +371,10 @@ impl Iterator for NoCacheIter<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         self.inner.next()
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
+    }
 }
 
 impl<R> Issues for Cache<super::Issues<'_, R>, cache::NoCache>
@@ -448,6 +452,10 @@ impl Iterator for IssuesIter<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         let row = self.inner.next()?;
         Some(row.map_err(Error::from).and_then(IssuesIter::parse_row))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
     }
 }
 
