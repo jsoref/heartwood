@@ -734,30 +734,33 @@ where
         None => None,
     };
 
-    let mut all = Vec::new();
-    let issues = cache.list()?;
-    for result in issues {
-        let (id, issue) = match result {
-            Ok((id, issue)) => (id, issue),
-            Err(e) => {
-                // Skip issues that failed to load.
-                log::error!(target: "cli", "Issue load error: {e}");
-                continue;
-            }
-        };
+    let mut all = cache
+        .list()?
+        .filter_map(|result| {
+            let (id, issue) = match result {
+                Ok((id, issue)) => (id, issue),
+                Err(e) => {
+                    // Skip issues that failed to load.
+                    log::error!(target: "cli", "Issue load error: {e}");
+                    return None;
+                }
+            };
 
-        if let Some(a) = assignee {
-            if !issue.assignees().any(|v| v == &Did::from(a)) {
-                continue;
+            if let Some(a) = assignee {
+                if !issue.assignees().any(|v| v == &Did::from(a)) {
+                    return None;
+                }
             }
-        }
-        if let Some(s) = state {
-            if s != issue.state() {
-                continue;
+
+            if let Some(s) = state {
+                if s != issue.state() {
+                    return None;
+                }
             }
-        }
-        all.push((id, issue))
-    }
+
+            Some((id, issue))
+        })
+        .collect::<Vec<_>>();
 
     all.sort_by(|(id1, i1), (id2, i2)| {
         let by_timestamp = i2.timestamp().cmp(&i1.timestamp());
