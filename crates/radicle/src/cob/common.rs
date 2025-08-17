@@ -64,7 +64,7 @@ impl Author {
 
 impl Display for Author {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.id)
+        self.id.fmt(f)
     }
 }
 
@@ -210,7 +210,7 @@ impl FromStr for Label {
 
 impl Display for Label {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
+        self.0.fmt(f)
     }
 }
 
