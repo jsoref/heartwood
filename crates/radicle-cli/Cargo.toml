@@ -16,6 +16,7 @@ path = "src/main.rs"
 [dependencies]
 anyhow = "1"
 chrono = { workspace = true, features = ["clock", "std"] }
+clap = { version = "4.5.44", features = ["derive"] }
 dunce = { workspace = true }
 git-ref-format = { version = "0.3.0", features = ["macro"] }
 human-panic.workspace = true
