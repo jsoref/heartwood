@@ -68,7 +68,7 @@ impl Args for Options {
                     public = true;
                 }
                 Long("verbose") | Short('v') => verbose = true,
-                _ => return Err(anyhow::anyhow!(arg.unexpected())),
+                _ => anyhow::bail!(arg.unexpected()),
             }
         }
 

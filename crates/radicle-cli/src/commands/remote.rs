@@ -152,7 +152,7 @@ impl Args for Options {
 
                     name = Some(val);
                 }
-                _ => return Err(anyhow::anyhow!(arg.unexpected())),
+                _ => anyhow::bail!(arg.unexpected()),
             }
         }
 

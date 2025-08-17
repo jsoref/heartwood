@@ -66,10 +66,7 @@ pub fn format(arg: lexopt::Arg) -> OsString {
 
 pub fn finish(unparsed: Vec<OsString>) -> anyhow::Result<()> {
     if let Some(arg) = unparsed.first() {
-        return Err(anyhow::anyhow!(
-            "unexpected argument `{}`",
-            arg.to_string_lossy()
-        ));
+        anyhow::bail!("unexpected argument `{}`", arg.to_string_lossy())
     }
     Ok(())
 }

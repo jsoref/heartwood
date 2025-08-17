@@ -79,7 +79,7 @@ fn parse_args() -> anyhow::Result<Command> {
                     command = Some(Command::Other(args))
                 }
             }
-            _ => return Err(anyhow::anyhow!(arg.unexpected())),
+            _ => anyhow::bail!(arg.unexpected()),
         }
     }
     if let Some(Command::Version { json: j }) = &mut command {

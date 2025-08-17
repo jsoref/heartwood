@@ -159,7 +159,7 @@ impl Args for Options {
                 Value(val) if path.is_none() => {
                     path = Some(val.into());
                 }
-                _ => return Err(anyhow::anyhow!(arg.unexpected())),
+                _ => anyhow::bail!(arg.unexpected()),
             }
         }
 

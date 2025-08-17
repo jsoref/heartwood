@@ -727,7 +727,7 @@ impl Args for Options {
                     let val = string(&val);
                     patch_id = Some(Rev::from(val));
                 }
-                _ => return Err(anyhow::anyhow!(arg.unexpected())),
+                _ => anyhow::bail!(arg.unexpected()),
             }
         }
 

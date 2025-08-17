@@ -65,7 +65,7 @@ impl Args for Options {
 
                     commits.push(rev);
                 }
-                _ => return Err(anyhow::anyhow!(arg.unexpected())),
+                _ => anyhow::bail!(arg.unexpected()),
             }
         }
 

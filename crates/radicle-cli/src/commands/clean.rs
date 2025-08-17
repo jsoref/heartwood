@@ -55,7 +55,7 @@ impl Args for Options {
                 Value(val) if id.is_none() => {
                     id = Some(term::args::rid(&val)?);
                 }
-                _ => return Err(anyhow::anyhow!(arg.unexpected())),
+                _ => anyhow::bail!(arg.unexpected()),
             }
         }
 

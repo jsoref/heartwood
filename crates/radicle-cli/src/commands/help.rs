@@ -49,7 +49,7 @@ impl Args for Options {
         let mut parser = lexopt::Parser::from_args(args);
 
         if let Some(arg) = parser.next()? {
-            return Err(anyhow::anyhow!(arg.unexpected()));
+            anyhow::bail!(arg.unexpected());
         }
         Err(Error::HelpManual { name: "rad" }.into())
     }

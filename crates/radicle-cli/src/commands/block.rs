@@ -61,12 +61,12 @@ impl Args for Options {
                     } else if let Ok(nid) = args::nid(&val) {
                         target = Some(Target::Node(nid));
                     } else {
-                        return Err(anyhow::anyhow!(
+                        anyhow::bail!(
                             "invalid repository or node specified, see `rad block --help`"
-                        ));
+                        )
                     }
                 }
-                _ => return Err(anyhow::anyhow!(arg.unexpected())),
+                _ => anyhow::bail!(arg.unexpected()),
             }
         }
 

@@ -43,7 +43,7 @@ impl Args for Options {
                 Value(val) if rid.is_none() => {
                     rid = Some(args::rid(&val)?);
                 }
-                _ => return Err(anyhow::anyhow!(arg.unexpected())),
+                _ => anyhow::bail!(arg.unexpected()),
             }
         }
 

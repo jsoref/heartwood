@@ -140,7 +140,7 @@ impl Args for Options {
                     let id = term::args::number(&val)? as NotificationId;
                     ids.push(id);
                 }
-                _ => return Err(anyhow::anyhow!(arg.unexpected())),
+                _ => anyhow::bail!(arg.unexpected()),
             }
         }
         let mode = if ids.is_empty() {

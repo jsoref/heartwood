@@ -52,9 +52,9 @@ pub fn signer(profile: &Profile) -> anyhow::Result<BoxedDevice> {
     let passphrase = match passphrase(validator) {
         Ok(p) => p,
         Err(inquire::InquireError::NotTTY) => {
-            return Err(anyhow::anyhow!(
+            anyhow::bail!(
                 "running in non-interactive mode, please set `{RAD_PASSPHRASE}` to unseal your key",
-            ));
+            )
         }
         Err(e) => return Err(e.into()),
     };

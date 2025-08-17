@@ -120,7 +120,7 @@ impl Args for Options {
                             .context("Supplied argument is not a valid path")?;
                     }
                 }
-                _ => return Err(anyhow::anyhow!(arg.unexpected())),
+                _ => anyhow::bail!(arg.unexpected()),
             }
         }
 
