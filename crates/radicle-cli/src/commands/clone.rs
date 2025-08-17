@@ -244,7 +244,7 @@ impl Checkout {
         let proj = doc
             .project()
             .map_err(|err| CheckoutFailure::Payload { rid, err })?;
-        let path = directory.unwrap_or(Path::new(proj.name()).to_path_buf());
+        let path = directory.unwrap_or_else(|| PathBuf::from(proj.name()));
         // N.b. fail if the path exists and is not empty
         if path.exists() {
             if path.read_dir().map_or(true, |mut dir| dir.next().is_some()) {
