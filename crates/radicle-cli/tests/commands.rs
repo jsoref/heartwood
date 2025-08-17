@@ -87,6 +87,11 @@ fn program_reports_version(program: &str) -> bool {
 }
 
 #[test]
+fn rad_help() {
+    Environment::alice(["rad-help"]);
+}
+
+#[test]
 fn rad_auth() {
     test("examples/rad-auth.md", Path::new("."), None, []).unwrap();
 }
