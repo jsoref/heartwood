@@ -185,19 +185,21 @@ impl Runtime {
         if config.connect.is_empty() && stores.addresses().is_empty()? {
             log::info!(target: "node", "Address book is empty. Adding bootstrap nodes..");
 
-            for (alias, version, addr) in config.network.bootstrap() {
-                let (id, addr) = addr.into();
+            for (alias, version, addrs) in config.network.bootstrap() {
+                for addr in addrs {
+                    let (id, addr) = addr.into();
 
-                stores.addresses_mut().insert(
-                    &id,
-                    version,
-                    radicle::node::Features::SEED,
-                    &alias,
-                    0,
-                    &UserAgent::default(),
-                    clock.into(),
-                    [node::KnownAddress::new(addr, address::Source::Bootstrap)],
-                )?;
+                    stores.addresses_mut().insert(
+                        &id,
+                        version,
+                        radicle::node::Features::SEED,
+                        &alias,
+                        0,
+                        &UserAgent::default(),
+                        clock.into(),
+                        [node::KnownAddress::new(addr, address::Source::Bootstrap)],
+                    )?;
+                }
             }
             log::info!(target: "node", "{} nodes added to address book", stores.addresses().len()?);
         }

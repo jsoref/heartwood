@@ -20,27 +20,60 @@ pub const DEFAULT_WORKERS: usize = 8;
 
 /// Configured public seeds.
 pub mod seeds {
-    use std::str::FromStr;
+    use std::{
+        net::{Ipv4Addr, Ipv6Addr},
+        str::FromStr,
+        sync::LazyLock,
+    };
 
-    use super::{ConnectAddress, PeerAddr};
-    use std::sync::LazyLock;
+    use cyphernet::addr::{tor::OnionAddrV3, HostName, NetAddr};
+
+    use super::{ConnectAddress, NodeId, PeerAddr};
+
+    /// A helper to generate many connect addresses for a node, using port 8776.
+    fn to_connect_addresses(id: NodeId, hostnames: Vec<HostName>) -> Vec<ConnectAddress> {
+        hostnames
+            .into_iter()
+            .map(|hostname| PeerAddr::new(id, NetAddr::new(hostname, 8776).into()).into())
+            .collect()
+    }
 
     /// A public Radicle seed node for the community.
-    pub static RADICLE_NODE_BOOTSTRAP_IRIS: LazyLock<ConnectAddress> = LazyLock::new(|| {
-        // SAFETY: `ConnectAddress` is known at compile time.
-        #[allow(clippy::unwrap_used)]
-        PeerAddr::from_str("z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776")
-            .unwrap()
-            .into()
+    pub static RADICLE_NODE_BOOTSTRAP_IRIS: LazyLock<Vec<ConnectAddress>> = LazyLock::new(|| {
+        to_connect_addresses(
+            #[allow(clippy::unwrap_used)] // Value is manually verified.
+            NodeId::from_str("z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7").unwrap(),
+            vec![
+                HostName::Dns("iris.radicle.xyz".to_owned()),
+                Ipv6Addr::new(0x2a01, 0x4f9, 0xc010, 0xdfaa, 0, 0, 0, 1).into(),
+                Ipv4Addr::new(95, 217, 156, 6).into(),
+                #[allow(clippy::unwrap_used)] // Value is manually verified.
+                OnionAddrV3::from_str(
+                    "irisradizskwweumpydlj4oammoshkxxjur3ztcmo7cou5emc6s5lfid.onion",
+                )
+                .unwrap()
+                .into(),
+            ],
+        )
     });
 
     /// A public Radicle seed node for the community.
-    pub static RADICLE_NODE_BOOTSTRAP_ROSA: LazyLock<ConnectAddress> = LazyLock::new(|| {
-        // SAFETY: `ConnectAddress` is known at compile time.
-        #[allow(clippy::unwrap_used)]
-        PeerAddr::from_str("z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo@rosa.radicle.xyz:8776")
-            .unwrap()
-            .into()
+    pub static RADICLE_NODE_BOOTSTRAP_ROSA: LazyLock<Vec<ConnectAddress>> = LazyLock::new(|| {
+        to_connect_addresses(
+            #[allow(clippy::unwrap_used)] // Value is manually verified.
+            NodeId::from_str("z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo").unwrap(),
+            vec![
+                HostName::Dns("rosa.radicle.xyz".to_owned()),
+                Ipv6Addr::new(0x2a01, 0x4ff, 0xf0, 0xabd3, 0, 0, 0, 1).into(),
+                Ipv4Addr::new(5, 161, 85, 124).into(),
+                #[allow(clippy::unwrap_used)] // Value is manually verified.
+                OnionAddrV3::from_str(
+                    "rosarad5bxgdlgjnzzjygnsxrwxmoaj4vn7xinlstwglxvyt64jlnhyd.onion",
+                )
+                .unwrap()
+                .into(),
+            ],
+        )
     });
 }
 
@@ -56,7 +89,7 @@ pub enum Network {
 
 impl Network {
     /// Bootstrap nodes for this network.
-    pub fn bootstrap(&self) -> Vec<(Alias, ProtocolVersion, ConnectAddress)> {
+    pub fn bootstrap(&self) -> Vec<(Alias, ProtocolVersion, Vec<ConnectAddress>)> {
         match self {
             Self::Main => [
                 (
@@ -79,10 +112,11 @@ impl Network {
     /// Public seeds for this network.
     pub fn public_seeds(&self) -> Vec<ConnectAddress> {
         match self {
-            Self::Main => vec![
-                seeds::RADICLE_NODE_BOOTSTRAP_IRIS.clone(),
-                seeds::RADICLE_NODE_BOOTSTRAP_ROSA.clone(),
-            ],
+            Self::Main => {
+                let mut result = seeds::RADICLE_NODE_BOOTSTRAP_IRIS.clone();
+                result.extend(seeds::RADICLE_NODE_BOOTSTRAP_ROSA.clone());
+                result
+            }
             Self::Test => vec![],
         }
     }
