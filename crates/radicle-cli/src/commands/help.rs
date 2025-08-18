@@ -3,8 +3,6 @@ use std::ffi::OsString;
 use crate::terminal as term;
 use crate::terminal::args::{Args, Error, Help};
 
-use super::*;
-
 pub const HELP: Help = Help {
     name: "help",
     description: "CLI help",
@@ -13,32 +11,32 @@ pub const HELP: Help = Help {
 };
 
 const COMMANDS: &[Help] = &[
-    rad_auth::HELP,
-    rad_block::HELP,
-    rad_checkout::HELP,
-    rad_clone::HELP,
-    rad_config::HELP,
-    rad_fork::HELP,
-    rad_help::HELP,
-    rad_id::HELP,
-    rad_init::HELP,
-    rad_inbox::HELP,
-    rad_inspect::HELP,
-    rad_issue::HELP,
-    rad_ls::HELP,
-    rad_node::HELP,
-    rad_patch::HELP,
-    rad_path::HELP,
-    rad_clean::HELP,
-    rad_self::HELP,
-    rad_seed::HELP,
-    rad_follow::HELP,
-    rad_unblock::HELP,
-    rad_unfollow::HELP,
-    rad_unseed::HELP,
-    rad_remote::HELP,
-    rad_stats::HELP,
-    rad_sync::HELP,
+    crate::commands::auth::HELP,
+    crate::commands::block::HELP,
+    crate::commands::checkout::HELP,
+    crate::commands::clone::HELP,
+    crate::commands::config::HELP,
+    crate::commands::fork::HELP,
+    crate::commands::help::HELP,
+    crate::commands::id::HELP,
+    crate::commands::init::HELP,
+    crate::commands::inbox::HELP,
+    crate::commands::inspect::HELP,
+    crate::commands::issue::HELP,
+    crate::commands::ls::HELP,
+    crate::commands::node::HELP,
+    crate::commands::patch::HELP,
+    crate::commands::path::HELP,
+    crate::commands::clean::HELP,
+    crate::commands::rad_self::HELP,
+    crate::commands::seed::HELP,
+    crate::commands::follow::HELP,
+    crate::commands::unblock::HELP,
+    crate::commands::unfollow::HELP,
+    crate::commands::unseed::HELP,
+    crate::commands::remote::HELP,
+    crate::commands::stats::HELP,
+    crate::commands::sync::HELP,
 ];
 
 #[derive(Default)]

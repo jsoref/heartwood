@@ -1,4 +1,3 @@
-#[path = "review/builder.rs"]
 mod builder;
 
 use anyhow::{anyhow, Context};

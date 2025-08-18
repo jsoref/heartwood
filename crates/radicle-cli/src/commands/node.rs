@@ -16,13 +16,10 @@ use crate::terminal as term;
 use crate::terminal::args::{Args, Error, Help};
 use crate::terminal::Element as _;
 
-#[path = "node/commands.rs"]
 mod commands;
-#[path = "node/control.rs"]
 pub mod control;
-#[path = "node/events.rs"]
 mod events;
-#[path = "node/routing.rs"]
+mod logs;
 pub mod routing;
 
 pub const HELP: Help = Help {

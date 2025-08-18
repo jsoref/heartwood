@@ -448,7 +448,7 @@ fn sync(
     // Connect to preferred seeds in case we aren't connected.
     for seed in config.preferred_seeds.iter() {
         if !sessions.iter().any(|s| s.nid == seed.id) {
-            commands::rad_node::control::connect(
+            commands::node::control::connect(
                 node,
                 seed.id,
                 seed.addr.clone(),

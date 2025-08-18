@@ -1,36 +1,19 @@
-#[path = "patch/archive.rs"]
 mod archive;
-#[path = "patch/assign.rs"]
 mod assign;
-#[path = "patch/cache.rs"]
 mod cache;
-#[path = "patch/checkout.rs"]
 mod checkout;
-#[path = "patch/comment.rs"]
 mod comment;
-#[path = "patch/delete.rs"]
 mod delete;
-#[path = "patch/diff.rs"]
 mod diff;
-#[path = "patch/edit.rs"]
 mod edit;
-#[path = "patch/label.rs"]
 mod label;
-#[path = "patch/list.rs"]
 mod list;
-#[path = "patch/react.rs"]
 mod react;
-#[path = "patch/ready.rs"]
 mod ready;
-#[path = "patch/redact.rs"]
 mod redact;
-#[path = "patch/resolve.rs"]
 mod resolve;
-#[path = "patch/review.rs"]
 mod review;
-#[path = "patch/show.rs"]
 mod show;
-#[path = "patch/update.rs"]
 mod update;
 
 use std::collections::BTreeSet;

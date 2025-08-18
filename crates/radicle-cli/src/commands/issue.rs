@@ -1,4 +1,3 @@
-#[path = "issue/cache.rs"]
 mod cache;
 
 use std::collections::BTreeSet;

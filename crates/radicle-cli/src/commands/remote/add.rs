@@ -6,9 +6,9 @@ use radicle::prelude::*;
 use radicle::Profile;
 use radicle_crypto::PublicKey;
 
-use crate::commands::rad_checkout as checkout;
-use crate::commands::rad_follow as follow;
-use crate::commands::rad_sync as sync;
+use crate::commands::checkout;
+use crate::commands::follow;
+use crate::commands::sync;
 use crate::node::SyncSettings;
 use crate::project::SetupRemote;
 

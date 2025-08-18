@@ -11,7 +11,7 @@ use radicle::node::Handle;
 use radicle::{prelude::*, Node};
 use radicle_term::Element as _;
 
-use crate::commands::rad_sync as sync;
+use crate::commands::sync;
 use crate::node::SyncSettings;
 use crate::terminal as term;
 use crate::terminal::args::{Args, Error, Help};

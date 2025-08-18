@@ -100,7 +100,7 @@ fn print_help() -> anyhow::Result<()> {
     println!("{DESCRIPTION}");
     println!();
 
-    rad_help::run(Default::default(), term::DefaultContext)
+    help::run(Default::default(), term::DefaultContext)
 }
 
 fn run(command: Command) -> Result<(), Option<anyhow::Error>> {
@@ -136,148 +136,82 @@ fn run(command: Command) -> Result<(), Option<anyhow::Error>> {
 fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyhow::Error>> {
     match exe {
         "auth" => {
-            term::run_command_args::<rad_auth::Options, _>(
-                rad_auth::HELP,
-                rad_auth::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<auth::Options, _>(auth::HELP, auth::run, args.to_vec());
         }
         "block" => {
-            term::run_command_args::<rad_block::Options, _>(
-                rad_block::HELP,
-                rad_block::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<block::Options, _>(block::HELP, block::run, args.to_vec());
         }
         "checkout" => {
-            term::run_command_args::<rad_checkout::Options, _>(
-                rad_checkout::HELP,
-                rad_checkout::run,
+            term::run_command_args::<checkout::Options, _>(
+                checkout::HELP,
+                checkout::run,
                 args.to_vec(),
             );
         }
         "clone" => {
-            term::run_command_args::<rad_clone::Options, _>(
-                rad_clone::HELP,
-                rad_clone::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<clone::Options, _>(clone::HELP, clone::run, args.to_vec());
         }
         "cob" => {
-            term::run_command_args::<rad_cob::Options, _>(
-                rad_cob::HELP,
-                rad_cob::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<cob::Options, _>(cob::HELP, cob::run, args.to_vec());
         }
         "config" => {
-            term::run_command_args::<rad_config::Options, _>(
-                rad_config::HELP,
-                rad_config::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<config::Options, _>(config::HELP, config::run, args.to_vec());
         }
         "diff" => {
-            term::run_command_args::<rad_diff::Options, _>(
-                rad_diff::HELP,
-                rad_diff::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<diff::Options, _>(diff::HELP, diff::run, args.to_vec());
         }
         "debug" => {
-            term::run_command_args::<rad_debug::Options, _>(
-                rad_debug::HELP,
-                rad_debug::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<debug::Options, _>(debug::HELP, debug::run, args.to_vec());
         }
         "follow" => {
-            term::run_command_args::<rad_follow::Options, _>(
-                rad_follow::HELP,
-                rad_follow::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<follow::Options, _>(follow::HELP, follow::run, args.to_vec());
         }
         "fork" => {
-            term::run_command_args::<rad_fork::Options, _>(
-                rad_fork::HELP,
-                rad_fork::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<fork::Options, _>(fork::HELP, fork::run, args.to_vec());
         }
         "help" => {
-            term::run_command_args::<rad_help::Options, _>(
-                rad_help::HELP,
-                rad_help::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<help::Options, _>(help::HELP, help::run, args.to_vec());
         }
         "id" => {
-            term::run_command_args::<rad_id::Options, _>(rad_id::HELP, rad_id::run, args.to_vec());
+            term::run_command_args::<id::Options, _>(id::HELP, id::run, args.to_vec());
         }
-        "inbox" => term::run_command_args::<rad_inbox::Options, _>(
-            rad_inbox::HELP,
-            rad_inbox::run,
-            args.to_vec(),
-        ),
+        "inbox" => {
+            term::run_command_args::<inbox::Options, _>(inbox::HELP, inbox::run, args.to_vec())
+        }
         "init" => {
-            term::run_command_args::<rad_init::Options, _>(
-                rad_init::HELP,
-                rad_init::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<init::Options, _>(init::HELP, init::run, args.to_vec());
         }
         "inspect" => {
-            term::run_command_args::<rad_inspect::Options, _>(
-                rad_inspect::HELP,
-                rad_inspect::run,
+            term::run_command_args::<inspect::Options, _>(
+                inspect::HELP,
+                inspect::run,
                 args.to_vec(),
             );
         }
         "issue" => {
-            term::run_command_args::<rad_issue::Options, _>(
-                rad_issue::HELP,
-                rad_issue::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<issue::Options, _>(issue::HELP, issue::run, args.to_vec());
         }
         "ls" => {
-            term::run_command_args::<rad_ls::Options, _>(rad_ls::HELP, rad_ls::run, args.to_vec());
+            term::run_command_args::<ls::Options, _>(ls::HELP, ls::run, args.to_vec());
         }
         "node" => {
-            term::run_command_args::<rad_node::Options, _>(
-                rad_node::HELP,
-                rad_node::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<node::Options, _>(node::HELP, node::run, args.to_vec());
         }
         "patch" => {
-            term::run_command_args::<rad_patch::Options, _>(
-                rad_patch::HELP,
-                rad_patch::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<patch::Options, _>(patch::HELP, patch::run, args.to_vec());
         }
         "path" => {
-            term::run_command_args::<rad_path::Options, _>(
-                rad_path::HELP,
-                rad_path::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<path::Options, _>(path::HELP, path::run, args.to_vec());
         }
         "publish" => {
-            term::run_command_args::<rad_publish::Options, _>(
-                rad_publish::HELP,
-                rad_publish::run,
+            term::run_command_args::<publish::Options, _>(
+                publish::HELP,
+                publish::run,
                 args.to_vec(),
             );
         }
         "clean" => {
-            term::run_command_args::<rad_clean::Options, _>(
-                rad_clean::HELP,
-                rad_clean::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<clean::Options, _>(clean::HELP, clean::run, args.to_vec());
         }
         "self" => {
             term::run_command_args::<rad_self::Options, _>(
@@ -287,55 +221,37 @@ fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyhow::Error>> 
             );
         }
         "sync" => {
-            term::run_command_args::<rad_sync::Options, _>(
-                rad_sync::HELP,
-                rad_sync::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<sync::Options, _>(sync::HELP, sync::run, args.to_vec());
         }
         "seed" => {
-            term::run_command_args::<rad_seed::Options, _>(
-                rad_seed::HELP,
-                rad_seed::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<seed::Options, _>(seed::HELP, seed::run, args.to_vec());
         }
         "unblock" => {
-            term::run_command_args::<rad_unblock::Options, _>(
-                rad_unblock::HELP,
-                rad_unblock::run,
+            term::run_command_args::<unblock::Options, _>(
+                unblock::HELP,
+                unblock::run,
                 args.to_vec(),
             );
         }
         "unfollow" => {
-            term::run_command_args::<rad_unfollow::Options, _>(
-                rad_unfollow::HELP,
-                rad_unfollow::run,
+            term::run_command_args::<unfollow::Options, _>(
+                unfollow::HELP,
+                unfollow::run,
                 args.to_vec(),
             );
         }
         "unseed" => {
-            term::run_command_args::<rad_unseed::Options, _>(
-                rad_unseed::HELP,
-                rad_unseed::run,
-                args.to_vec(),
-            );
+            term::run_command_args::<unseed::Options, _>(unseed::HELP, unseed::run, args.to_vec());
         }
-        "remote" => term::run_command_args::<rad_remote::Options, _>(
-            rad_remote::HELP,
-            rad_remote::run,
-            args.to_vec(),
-        ),
-        "stats" => term::run_command_args::<rad_stats::Options, _>(
-            rad_stats::HELP,
-            rad_stats::run,
-            args.to_vec(),
-        ),
-        "watch" => term::run_command_args::<rad_watch::Options, _>(
-            rad_watch::HELP,
-            rad_watch::run,
-            args.to_vec(),
-        ),
+        "remote" => {
+            term::run_command_args::<remote::Options, _>(remote::HELP, remote::run, args.to_vec())
+        }
+        "stats" => {
+            term::run_command_args::<stats::Options, _>(stats::HELP, stats::run, args.to_vec())
+        }
+        "watch" => {
+            term::run_command_args::<watch::Options, _>(watch::HELP, watch::run, args.to_vec())
+        }
         other => {
             let exe = format!("{NAME}-{exe}");
             let status = process::Command::new(exe).args(args).status();

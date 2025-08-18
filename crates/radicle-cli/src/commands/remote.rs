@@ -1,9 +1,7 @@
 //! Remote Command implementation
-#[path = "remote/add.rs"]
+
 pub mod add;
-#[path = "remote/list.rs"]
 pub mod list;
-#[path = "remote/rm.rs"]
 pub mod rm;
 
 use std::ffi::OsString;

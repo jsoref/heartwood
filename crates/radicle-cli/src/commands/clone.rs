@@ -21,8 +21,8 @@ use radicle::storage;
 use radicle::storage::RemoteId;
 use radicle::storage::{HasRepoId, RepositoryError};
 
-use crate::commands::rad_checkout as checkout;
-use crate::commands::rad_sync as sync;
+use crate::commands::checkout;
+use crate::commands::sync;
 use crate::node::SyncSettings;
 use crate::project;
 use crate::terminal as term;

@@ -1,6 +1,3 @@
-mod logs;
-use logs::{LogRotatorFileSystem, Rotated};
-
 use std::collections::HashMap;
 use std::ffi::OsString;
 use std::fs::File;
@@ -16,6 +13,7 @@ use radicle::profile::env::RAD_PASSPHRASE;
 use radicle::Node;
 use radicle::{profile, Profile};
 
+use crate::commands::node::logs::{LogRotatorFileSystem, Rotated};
 use crate::terminal as term;
 use crate::terminal::Element as _;
 
