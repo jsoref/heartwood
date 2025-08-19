@@ -169,7 +169,7 @@ impl Worker {
                     stream_w,
                     timeout,
                 )
-                .map(|_| ())
+                .map(drop)
                 .map_err(UploadError::UploadPack);
                 log::debug!(target: "worker", "Upload process on stream {stream} exited with result {result:?}");
 
