@@ -32,7 +32,7 @@ Usage
     rad inbox [<option>...]
     rad inbox list [<option>...]
     rad inbox show <id> [<option>...]
-    rad inbox clear [<option>...]
+    rad inbox clear <id...> [<option>...]
 
     By default, this command lists all items in your inbox.
     If your working directory is a Radicle repository, it only shows item
@@ -42,7 +42,8 @@ Usage
     the `list` command) and displays the information related to that
     notification. This will mark the notification as read.
 
-    The `rad inbox clear` command will delete all notifications in the inbox.
+    The `rad inbox clear` command will delete all notifications by their passed id
+    or all notifications if no ids were passed.
 
 Options
 
