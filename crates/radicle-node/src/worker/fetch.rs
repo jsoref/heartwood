@@ -18,7 +18,7 @@ use radicle::storage::{
 use radicle::{cob, git, node, Storage};
 use radicle_fetch::git::refs::Applied;
 use radicle_fetch::{Allowed, BlockList, FetchLimit};
-pub use radicle_protocol::worker::fetch::FetchResult;
+pub use radicle_protocol::worker::fetch::{FetchResult, UpdatedCanonicalRefs};
 
 use super::channels::ChannelsFlush;
 
@@ -128,9 +128,13 @@ impl Handle {
                     Err(e) => return Err(e.into()),
                 }
 
-                if let Err(e) = set_canonical_refs(&repo, &applied) {
-                    log::warn!(target: "worker", "Failed to set canonical references: {e}");
-                }
+                let canonical = match set_canonical_refs(&repo, &applied) {
+                    Ok(updates) => updates.unwrap_or_default(),
+                    Err(e) => {
+                        log::warn!(target: "worker", "Failed to set canonical references: {e}");
+                        UpdatedCanonicalRefs::default()
+                    }
+                };
 
                 // Notifications are only posted for pulls, not clones.
                 if let Some(mut store) = notifs {
@@ -147,6 +151,7 @@ impl Handle {
 
                 Ok(FetchResult {
                     updated: applied.updated,
+                    canonical,
                     namespaces: remotes.into_iter().collect(),
                     doc: repo.identity_doc()?,
                     clone,
@@ -356,17 +361,21 @@ where
     Ok(())
 }
 
-fn set_canonical_refs(repo: &Repository, applied: &Applied) -> Result<(), error::Canonical> {
+fn set_canonical_refs(
+    repo: &Repository,
+    applied: &Applied,
+) -> Result<Option<UpdatedCanonicalRefs>, error::Canonical> {
     let identity = repo.identity()?;
     let rules = match identity
         .canonical_refs()?
         .map(|crefs| crefs.rules().clone())
         .filter(|rules| !rules.is_empty())
     {
-        None => return Ok(()),
+        None => return Ok(None),
         Some(rules) => rules,
     };
 
+    let mut updated_refs = UpdatedCanonicalRefs::default();
     for update in applied.updated.iter() {
         let name = match update {
             RefUpdate::Updated { name, .. } | RefUpdate::Created { name, .. } => name,
@@ -421,9 +430,11 @@ fn set_canonical_refs(repo: &Repository, applied: &Applied) -> Result<(), error:
                         target: "worker",
                         "Failed to set canonical reference {refname}->{oid}: {e}"
                     );
+                } else {
+                    updated_refs.updated(refname, oid);
                 }
             }
         }
     }
-    Ok(())
+    Ok(Some(updated_refs))
 }

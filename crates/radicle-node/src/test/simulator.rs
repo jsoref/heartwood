@@ -663,6 +663,7 @@ where
                                 remote,
                                 Rc::new(Ok(fetch::FetchResult {
                                     updated: vec![],
+                                    canonical: fetch::UpdatedCanonicalRefs::default(),
                                     namespaces: HashSet::new(),
                                     clone: true,
                                     doc: arbitrary::gen(1),

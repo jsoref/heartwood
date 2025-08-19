@@ -9,7 +9,7 @@ use std::time;
 
 use crossbeam_channel as chan;
 
-use crate::git::Oid;
+use crate::git::{Oid, Qualified};
 use crate::node;
 use crate::prelude::*;
 use crate::storage::{refs, RefUpdate};
@@ -21,6 +21,7 @@ pub const MAX_PENDING_EVENTS: usize = 8192;
 ///
 /// The node emits events of this type to its control socket for other
 /// programs to consume.
+#[non_exhaustive]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum Event {
@@ -122,6 +123,15 @@ pub enum Event {
     },
     /// The node has uploaded a Git pack file to another node.
     UploadPack(upload_pack::UploadPack),
+    /// A canonical reference was updated after a fetch.
+    CanonicalRefUpdated {
+        /// The repository the canonical reference was updated for.
+        rid: RepoId,
+        /// The reference name of the canonical reference update.
+        refname: Qualified<'static>,
+        /// The new target of the reference, after the update.
+        target: Oid,
+    },
 }
 
 impl From<upload_pack::UploadPack> for Event {
@@ -212,6 +222,20 @@ impl<T: Clone> Emitter<T> {
             .lock()
             .unwrap()
             .retain(|s| s.try_send(event.clone()).is_ok());
+    }
+
+    /// Emit a batch of events to subscribers and drop those who can't receive
+    /// them.
+    /// N.b. subscribers are also dropped if their channel is full.
+    pub fn emit_all(&self, events: Vec<T>) {
+        // SAFETY: We deliberately propagate panics from other threads holding the lock.
+        #[allow(clippy::unwrap_used)]
+        self.subscribers.lock().unwrap().retain(|s| {
+            events
+                .clone()
+                .into_iter()
+                .all(|event| s.try_send(event).is_ok())
+        });
     }
 
     /// Subscribe to events stream.

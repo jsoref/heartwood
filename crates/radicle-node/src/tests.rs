@@ -1589,6 +1589,7 @@ fn test_queued_fetch_from_ann_same_rid() {
                 name: refname.clone(),
                 oid,
             }],
+            canonical: fetch::UpdatedCanonicalRefs::default(),
             namespaces: [carol.id()].into_iter().collect(),
             clone: false,
             doc: arbitrary::gen(1),
