@@ -92,12 +92,14 @@ impl Worker {
         }
     }
 
-    fn process(&mut self, task: Task) {
-        let Task {
+    fn process(
+        &mut self,
+        Task {
             fetch,
             channels,
             stream,
-        } = task;
+        }: Task,
+    ) {
         let remote = fetch.remote();
         let channels = channels::ChannelsFlush::new(self.handle.clone(), channels, remote, stream);
         let result = self._process(fetch, stream, channels, self.notifications.clone());
