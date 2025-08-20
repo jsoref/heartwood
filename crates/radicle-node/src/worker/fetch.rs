@@ -1,3 +1,5 @@
+use radicle::identity::doc::CanonicalRefsError;
+use radicle::identity::CanonicalRefs;
 pub(crate) use radicle_protocol::worker::fetch::error;
 
 use std::collections::BTreeSet;
@@ -367,14 +369,16 @@ fn set_canonical_refs(
     applied: &Applied,
 ) -> Result<Option<UpdatedCanonicalRefs>, error::Canonical> {
     let identity = repo.identity()?;
-    let rules = match identity
-        .canonical_refs()?
-        .map(|crefs| crefs.rules().clone())
-        .filter(|rules| !rules.is_empty())
-    {
-        None => return Ok(None),
-        Some(rules) => rules,
-    };
+    // TODO(finto): it's unfortunate that we may end up computing the default
+    // branch again after `set_head` is called after the fetch. This is due to
+    // the storage capabilities being leaked to this part of the code base.
+    let rules = identity
+        .canonical_refs_or_default(|| {
+            let rule = identity.doc().default_branch_rule()?;
+            Ok::<_, CanonicalRefsError>(CanonicalRefs::from_iter([rule]))
+        })?
+        .rules()
+        .clone();
 
     let mut updated_refs = UpdatedCanonicalRefs::default();
     let refnames = applied
@@ -389,6 +393,7 @@ fn set_canonical_refs(
             _ => None,
         })
         .collect::<BTreeSet<_>>();
+
     for name in refnames {
         let canonical = match rules.canonical(name.clone(), repo) {
             Some(canonical) => canonical,
