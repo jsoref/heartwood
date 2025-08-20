@@ -190,33 +190,47 @@ mod tests {
         let n = gen::<u8>(1).clamp(1, 10);
         let mut entries = Vec::with_capacity(n.into());
 
+        let mut parent = None;
         for _ in 0..n {
-            // Number of actions in this bop
+            // Number of actions in this op
             let m = gen::<u8>(1).clamp(1, 3);
-            let contents = NonEmpty::collect((0..m).map(|_| {
-                json::to_vec(&json!({
-                    "test": arbitrary::alphanumeric(1),
-                }))
-                .unwrap()
-            }))
-            .unwrap();
-            let entry = repo
-                .store(
-                    None,
-                    vec![],
-                    signer,
-                    cob::change::Template {
-                        type_name: typename(),
-                        tips: vec![],
-                        message: "Test Op Stream".to_string(),
-                        embeds: vec![],
-                        contents,
-                    },
-                )
-                .unwrap();
+            let contents = create_contents((0..m).map(|_| arbitrary::alphanumeric(1)));
+            let entry = create_entry(repo, signer, contents, parent);
+            parent = Some(entry.id);
             entries.push(entry);
         }
         entries
+    }
+
+    fn create_contents(values: impl Iterator<Item = String>) -> NonEmpty<Vec<u8>> {
+        NonEmpty::collect(values.map(|value| {
+            json::to_vec(&json!({
+                "test": value,
+            }))
+            .unwrap()
+        }))
+        .unwrap()
+    }
+
+    fn create_entry(
+        repo: &git2::Repository,
+        signer: &MockSigner,
+        contents: NonEmpty<Vec<u8>>,
+        parent: Option<Oid>,
+    ) -> cob::Entry {
+        repo.store(
+            None,
+            parent.into_iter().collect(),
+            signer,
+            cob::change::Template {
+                type_name: typename(),
+                tips: vec![],
+                message: "Test Op Stream".to_string(),
+                embeds: vec![],
+                contents,
+            },
+        )
+        .unwrap()
     }
 
     /// all === from(root)
@@ -309,7 +323,7 @@ mod tests {
                 .cloned()
                 .collect::<BTreeSet<_>>(),
             from_until_s,
-            "from: {from_s:?}\nuntil: {until_s:?}"
+            "\nfrom_until: {from_until_s:?}\nfrom: {from_s:?}\nuntil: {until_s:?}"
         )
     }
 
@@ -378,5 +392,63 @@ mod tests {
         };
         let stream = Stream::<json::Value>::new(&repo, history, typename());
         prop_from_until(&stream, from, until)
+    }
+
+    #[test]
+    fn test_regression_from_until() {
+        let tmp = tempfile::tempdir().unwrap();
+        let (repo, _) = test::fixtures::repository(tmp.path());
+        let signer = MockSigner::default();
+        // Set up 3 entries that make up the COB history
+        let op1 = create_entry(
+            &repo,
+            &signer,
+            create_contents(std::iter::once("hello".to_string())),
+            None,
+        );
+        let op2 = create_entry(
+            &repo,
+            &signer,
+            create_contents(std::iter::once("radicle".to_string())),
+            Some(op1.id),
+        );
+        let op3 = create_entry(
+            &repo,
+            &signer,
+            create_contents(std::iter::once("world".to_string())),
+            Some(op2.id),
+        );
+
+        // The history spans from the 1st op to the last
+        let history = CobRange {
+            root: op1.id,
+            until: op3.id.into(),
+        };
+        let stream = Stream::<json::Value>::new(&repo, history, typename());
+        eprintln!("Op 1: {}", op1.id);
+        eprintln!("Op 2: {}", op2.id);
+        eprintln!("Op 3: {}", op3.id);
+
+        // "since" the root operation should include all operations
+        assert_eq!(
+            stream
+                .since(op1.id)
+                .unwrap()
+                .map(|op| op.unwrap().id)
+                .collect::<BTreeSet<_>>(),
+            [op1.id, op2.id, op3.id]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+        // "until" the second operation should only include up to the second operation
+        assert_eq!(
+            stream
+                .until(op2.id)
+                .unwrap()
+                .map(|op| op.unwrap().id)
+                .collect::<BTreeSet<_>>(),
+            [op1.id, op2.id].into_iter().collect::<BTreeSet<_>>()
+        );
+        prop_from_until(&stream, op1.id, op2.id);
     }
 }
