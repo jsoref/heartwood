@@ -1,5 +1,6 @@
 pub(crate) use radicle_protocol::worker::fetch::error;
 
+use std::collections::BTreeSet;
 use std::str::FromStr;
 
 use localtime::LocalTime;
@@ -376,25 +377,19 @@ fn set_canonical_refs(
     };
 
     let mut updated_refs = UpdatedCanonicalRefs::default();
-    for update in applied.updated.iter() {
-        let name = match update {
-            RefUpdate::Updated { name, .. } | RefUpdate::Created { name, .. } => name,
-            _ => {
-                log::trace!(target: "worker", "Skipping update {update}");
-                continue;
+    let refnames = applied
+        .updated
+        .iter()
+        .filter_map(|update| match update {
+            RefUpdate::Updated { name, .. } | RefUpdate::Created { name, .. } => {
+                let name = name.clone().into_qualified()?;
+                let name = name.to_namespaced()?;
+                Some(name.strip_namespace())
             }
-        };
-        let Some(name) = name.clone().into_qualified() else {
-            log::warn!(target: "worker", "Skipping update for canonical reference '{name}' because it is not qualified.");
-            continue;
-        };
-        let Some(name) = name.to_namespaced() else {
-            log::warn!(target: "worker", "Skipping update for canonical reference '{name}' because it is not namespaced.");
-            continue;
-        };
-
-        let name = name.strip_namespace();
-
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    for name in refnames {
         let canonical = match rules.canonical(name.clone(), repo) {
             Some(canonical) => canonical,
             None => continue,
