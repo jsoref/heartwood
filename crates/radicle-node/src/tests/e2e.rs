@@ -1504,3 +1504,43 @@ fn test_channel_reader_limit() {
         "actual: {reason}"
     );
 }
+
+#[test]
+fn test_fetch_emits_canonical_ref_update() {
+    let tmp = tempfile::tempdir().unwrap();
+    let scale = config::scale();
+    let mut alice = Node::init(tmp.path(), config::relay("alice"));
+    let bob = Node::init(tmp.path(), config::relay("bob"));
+
+    let (repo, _) = fixtures::repository(tmp.path());
+    fixtures::populate(&repo, scale.max(3));
+
+    let rid = alice.project_from("acme", "", &repo);
+
+    let mut alice = alice.spawn();
+    let mut bob = bob.spawn();
+    let bob_events = bob.handle.events();
+
+    bob.handle.seed(rid, Scope::All).unwrap();
+    alice.connect(&bob);
+
+    let result = bob.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap();
+    assert!(result.is_success());
+
+    let default_branch: git::Qualified = {
+        let repo = alice.storage.repository(rid).unwrap();
+        let proj = repo.project().unwrap();
+        git::lit::refs_heads(proj.default_branch()).into()
+    };
+    alice.commit_to(rid, &default_branch);
+
+    bob_events
+        .wait(
+            |e| {
+                matches!(e, Event::CanonicalRefUpdated { refname, .. } if *refname == default_branch)
+                    .then_some(())
+            },
+            time::Duration::from_secs(9 * scale as u64),
+        )
+        .unwrap();
+}

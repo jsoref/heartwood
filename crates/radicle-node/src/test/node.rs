@@ -352,6 +352,72 @@ impl<G: Signer<Signature> + cyphernet::Ecdh> NodeHandle<G> {
             .unwrap()
             .id()
     }
+
+    /// Perform a commit to `refname` by generating a blob of random data to a
+    /// random path in a new tree.
+    ///
+    /// If the reference does not exist, a new one will be created with the new
+    /// commit as its target.
+    ///
+    /// If the reference already exists, then its target is used as the parent
+    /// of the new commit, and the reference will be updated.
+    ///
+    /// The `rad/sigrefs` are then updated to reflect the new change.
+    pub fn commit_to(&self, rid: RepoId, refname: impl AsRef<git::RefStr>) {
+        use radicle::test::arbitrary;
+
+        let refname = refname.as_ref();
+        let repo = self.storage.repository(rid).unwrap();
+        let raw = &repo.backend;
+
+        let info = self.storage.info();
+        let author = git::raw::Signature::now(&info.name(), &info.email()).unwrap();
+
+        let tree = {
+            let mut tb = raw.treebuilder(None).unwrap();
+            let blob = raw.blob(&arbitrary::vec::<u8>(100)).unwrap();
+            tb.insert(
+                arbitrary::alphanumeric(10),
+                blob,
+                git::raw::FileMode::Blob.into(),
+            )
+            .unwrap();
+            let oid = tb.write().unwrap();
+            raw.find_tree(oid).unwrap()
+        };
+        let parent = {
+            let target = raw
+                .find_reference(refname.as_str())
+                .ok()
+                .and_then(|r| r.target());
+            target.and_then(|oid| raw.find_commit(oid).ok())
+        };
+        match parent {
+            None => repo
+                .backend
+                .commit(
+                    Some(refname.as_str()),
+                    &author,
+                    &author,
+                    "New commit",
+                    &tree,
+                    &[],
+                )
+                .unwrap(),
+            Some(parent) => repo
+                .backend
+                .commit(
+                    Some(refname.as_str()),
+                    &author,
+                    &author,
+                    "New commit",
+                    &tree,
+                    &[&parent],
+                )
+                .unwrap(),
+        };
+        repo.sign_refs(&self.signer).unwrap();
+    }
 }
 
 impl Node<MockSigner> {
