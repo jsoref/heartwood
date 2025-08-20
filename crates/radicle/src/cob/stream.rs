@@ -173,11 +173,11 @@ mod tests {
     use nonempty::NonEmpty;
     use serde_json as json;
 
-    use crate::cob;
     use crate::cob::change::Storage as _;
     use crate::crypto::test::signer::MockSigner;
     use crate::test::arbitrary;
     use crate::test::arbitrary::gen;
+    use crate::{cob, test};
 
     use super::*;
 
@@ -316,7 +316,7 @@ mod tests {
     #[test]
     fn test_all_from() {
         let tmp = tempfile::tempdir().unwrap();
-        let repo = git2::Repository::init(tmp.path()).unwrap();
+        let (repo, _) = test::fixtures::repository(tmp.path());
         let signer = MockSigner::default();
         let ops = gen_ops(&repo, &signer);
         let history = CobRange {
@@ -330,7 +330,7 @@ mod tests {
     #[test]
     fn test_all_until() {
         let tmp = tempfile::tempdir().unwrap();
-        let repo = git2::Repository::init(tmp.path()).unwrap();
+        let (repo, _) = test::fixtures::repository(tmp.path());
         let signer = MockSigner::default();
         let ops = gen_ops(&repo, &signer);
         let tip = ops.last().unwrap().id;
@@ -345,7 +345,7 @@ mod tests {
     #[test]
     fn test_all_from_until() {
         let tmp = tempfile::tempdir().unwrap();
-        let repo = git2::Repository::init(tmp.path()).unwrap();
+        let (repo, _) = test::fixtures::repository(tmp.path());
         let signer = MockSigner::default();
         let ops = gen_ops(&repo, &signer);
         let tip = ops.last().unwrap().id;
@@ -360,7 +360,7 @@ mod tests {
     #[test]
     fn test_from_until() {
         let tmp = tempfile::tempdir().unwrap();
-        let repo = git2::Repository::init(tmp.path()).unwrap();
+        let (repo, _) = test::fixtures::repository(tmp.path());
         let signer = MockSigner::default();
         let ops = gen_ops(&repo, &signer);
         let history = CobRange {
