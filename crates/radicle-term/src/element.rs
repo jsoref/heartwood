@@ -183,13 +183,23 @@ impl Line {
     }
 
     /// Return a line with a single space between the given labels.
+    // TODO: Make this impl trivial once [`Iterator::intersperse`] is stable.
     pub fn spaced(items: impl IntoIterator<Item = Label>) -> Self {
-        let mut line = Self::default();
-        for item in items.into_iter() {
-            // Don't create spaces around empty labels.
-            if item.is_blank() {
-                continue;
-            }
+        let iter = items.into_iter();
+
+        let mut line = Self {
+            items: Vec::with_capacity({
+                let (min, max) = iter.size_hint();
+                let likely = max.unwrap_or(min);
+
+                // Technically (likely + (likely - 1)), but we push the last space before
+                // we pop it again, so we need that additional space anyways.
+                likely * 2
+            }),
+        };
+
+        // Don't create spaces around empty labels.
+        for item in iter.filter(|i| !i.is_blank()) {
             line.push(item);
             line.push(Label::space());
         }
