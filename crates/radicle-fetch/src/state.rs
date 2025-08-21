@@ -136,10 +136,7 @@ impl FetchResult {
     }
 
     pub fn is_success(&self) -> bool {
-        match self {
-            Self::Success { .. } => true,
-            Self::Failed { .. } => false,
-        }
+        std::matches!(self, Self::Success { .. })
     }
 }
 
