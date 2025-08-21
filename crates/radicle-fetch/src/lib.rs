@@ -9,7 +9,6 @@ mod refs;
 mod stage;
 mod state;
 
-use std::io;
 use std::time::Instant;
 
 use gix_protocol::handshake;
@@ -28,11 +27,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("failed to perform fetch handshake")]
-    Handshake {
-        #[source]
-        err: io::Error,
-    },
+    #[error("failed to perform fetch handshake: {0}")]
+    Handshake(#[from] Box<handshake::Error>),
     #[error("failed to load `rad/id`")]
     Identity {
         #[source]
@@ -128,8 +124,11 @@ fn perform_handshake<S>(handle: &mut Handle<S>) -> Result<handshake::Outcome, Er
 where
     S: transport::ConnectionStream,
 {
-    handle.transport.handshake().map_err(|err| {
+    let result = handle.transport.handshake();
+
+    if let Err(err) = &result {
         log::warn!(target: "fetch", "Failed to perform handshake: {err}");
-        Error::Handshake { err }
-    })
+    }
+
+    Ok(result?)
 }

@@ -83,8 +83,6 @@ impl<S> Handle<S> {
 }
 
 pub mod error {
-    use std::io;
-
     use radicle::node::policy;
     use radicle::prelude::RepoId;
     use radicle::{git, storage};
@@ -92,8 +90,6 @@ pub mod error {
 
     #[derive(Debug, Error)]
     pub enum Init {
-        #[error(transparent)]
-        Io(#[from] io::Error),
         #[error(transparent)]
         Tracking(#[from] policy::config::Error),
     }

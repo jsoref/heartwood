@@ -27,16 +27,13 @@ use crate::git::repository;
 pub trait ConnectionStream {
     type Read: io::Read;
     type Write: io::Write + SignalEof;
-    type Error: std::error::Error + Send + Sync + 'static;
 
-    fn open(&mut self) -> Result<(&mut Self::Read, &mut Self::Write), Self::Error>;
+    fn open(&mut self) -> (&mut Self::Read, &mut Self::Write);
 }
 
 /// The ability to signal EOF to the server side so that it can stop
 /// serving for this fetch request.
 pub trait SignalEof {
-    type Error: std::error::Error + Send + Sync + 'static;
-
     /// Since the git protocol is tunneled over an existing
     /// connection, we can't signal the end of the protocol via the
     /// usual means, which is to close the connection. Git also
@@ -48,7 +45,7 @@ pub trait SignalEof {
     /// the git protocol. This message can then be processed by the
     /// remote worker to end the protocol. We use the special "eof"
     /// control message for this.
-    fn eof(&mut self) -> Result<(), Self::Error>;
+    fn eof(&mut self) -> io::Result<()>;
 }
 
 /// Configuration for running a Git `handshake`, `ls-refs`, or
@@ -57,6 +54,20 @@ pub struct Transport<S> {
     git_dir: PathBuf,
     repo: BString,
     stream: S,
+}
+
+#[derive(Error, Debug)]
+pub enum Error {
+    #[error("gix ls-refs error: {0}")]
+    LsRefs(#[from] gix_protocol::ls_refs::Error),
+    #[error("gix fetch error: {0}")]
+    Fetch(#[from] gix_protocol::fetch::Error),
+    #[error("empty or no packfile received")]
+    Empty,
+    #[error("wanted object not found: {0}")]
+    NotFound(Oid),
+    #[error("gix pack index error: {0}")]
+    PackIndex(#[from] gix_pack::index::init::Error),
 }
 
 impl<S> Transport<S>
@@ -79,16 +90,16 @@ where
     }
 
     /// Perform the handshake with the server side.
-    pub(crate) fn handshake(&mut self) -> io::Result<handshake::Outcome> {
+    pub(crate) fn handshake(&mut self) -> Result<handshake::Outcome, Box<handshake::Error>> {
         log::trace!(target: "fetch", "Performing handshake for {}", self.repo);
-        let (read, write) = self.stream.open().map_err(io_other)?;
+        let (read, write) = self.stream.open();
         gix_protocol::fetch::handshake(
             &mut Connection::new(read, write, self.repo.clone()),
             |_| Ok(None),
             vec![],
             &mut progress::Discard,
         )
-        .map_err(io_other)
+        .map_err(Box::new)
     }
 
     /// Perform ls-refs with the server side.
@@ -96,11 +107,11 @@ where
         &mut self,
         mut prefixes: Vec<BString>,
         handshake: &handshake::Outcome,
-    ) -> io::Result<Vec<handshake::Ref>> {
+    ) -> Result<Vec<handshake::Ref>, Error> {
         prefixes.sort();
         prefixes.dedup();
-        let (read, write) = self.stream.open().map_err(io_other)?;
-        ls_refs::run(
+        let (read, write) = self.stream.open();
+        Ok(ls_refs::run(
             ls_refs::Config {
                 prefixes,
                 repo: self.repo.clone(),
@@ -108,8 +119,7 @@ where
             handshake,
             Connection::new(read, write, self.repo.clone()),
             &mut progress::Discard,
-        )
-        .map_err(io_other)
+        )?)
     }
 
     /// Perform the fetch with the server side.
@@ -118,7 +128,7 @@ where
         wants_haves: WantsHaves,
         interrupt: Arc<AtomicBool>,
         handshake: &handshake::Outcome,
-    ) -> io::Result<Option<Keepfile>> {
+    ) -> Result<Option<Keepfile>, Error> {
         log::trace!(
             target: "fetch",
             "Running fetch wants={:?}, haves={:?}",
@@ -126,7 +136,7 @@ where
             wants_haves.haves
         );
         let out = {
-            let (read, write) = self.stream.open().map_err(io_other)?;
+            let (read, write) = self.stream.open();
             fetch::run(
                 wants_haves.clone(),
                 fetch::PackWriter {
@@ -136,17 +146,11 @@ where
                 handshake,
                 Connection::new(read, write, self.repo.clone()),
                 &mut progress::Discard,
-            )
-            .map_err(io_other)?
+            )?
         };
         let pack_path = out
             .pack
-            .ok_or_else(|| {
-                io::Error::new(
-                    io::ErrorKind::UnexpectedEof,
-                    "empty or no packfile received",
-                )
-            })?
+            .ok_or(Error::Empty)?
             .index_path
             .expect("written packfile must have a path");
 
@@ -157,13 +161,10 @@ where
         {
             use gix_pack::index::File;
 
-            let idx = File::at(pack_path, gix_hash::Kind::Sha1).map_err(io_other)?;
+            let idx = File::at(pack_path, gix_hash::Kind::Sha1)?;
             for oid in wants_haves.wants {
                 if idx.lookup(oid::to_object_id(oid)).is_none() {
-                    return Err(io::Error::new(
-                        io::ErrorKind::NotFound,
-                        format!("wanted {oid} not found in pack"),
-                    ));
+                    return Err(Error::NotFound(oid));
                 }
             }
         }
@@ -174,8 +175,8 @@ where
     /// Signal to the server side that we are done sending ls-refs and
     /// fetch commands.
     pub(crate) fn done(&mut self) -> io::Result<()> {
-        let (_, w) = self.stream.open().map_err(io_other)?;
-        w.eof().map_err(io_other)
+        let (_, w) = self.stream.open();
+        w.eof()
     }
 }
 
@@ -249,10 +250,6 @@ where
     fn supported_protocol_versions(&self) -> &[Protocol] {
         &[Protocol::V2]
     }
-}
-
-fn io_other(err: impl std::error::Error + Send + Sync + 'static) -> io::Error {
-    io::Error::other(err)
 }
 
 #[derive(Debug, Error)]

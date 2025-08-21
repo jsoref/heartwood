@@ -1,4 +1,3 @@
-use std::convert::Infallible;
 use std::io::{Read, Write};
 use std::ops::Deref;
 use std::{fmt, io, time};
@@ -75,10 +74,9 @@ impl ChannelsFlush {
 impl radicle_fetch::transport::ConnectionStream for ChannelsFlush {
     type Read = ChannelReader;
     type Write = ChannelFlushWriter;
-    type Error = Infallible;
 
-    fn open(&mut self) -> Result<(&mut Self::Read, &mut Self::Write), Self::Error> {
-        Ok((&mut self.receiver, &mut self.sender))
+    fn open(&mut self) -> (&mut Self::Read, &mut Self::Write) {
+        (&mut self.receiver, &mut self.sender)
     }
 }
 
@@ -260,8 +258,6 @@ pub struct ChannelFlushWriter<T = Vec<u8>> {
 }
 
 impl radicle_fetch::transport::SignalEof for ChannelFlushWriter<Vec<u8>> {
-    type Error = io::Error;
-
     fn eof(&mut self) -> io::Result<()> {
         self.writer.send(ChannelEvent::Eof)?;
         self.flush()

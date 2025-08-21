@@ -30,24 +30,22 @@ pub const DEFAULT_FETCH_SPECIAL_REFS_LIMIT: u64 = 1024 * 1024 * 5;
 pub const DEFAULT_FETCH_DATA_REFS_LIMIT: u64 = 1024 * 1024 * 1024 * 5;
 
 pub mod error {
-    use std::io;
-
     use radicle::git::Oid;
     use radicle::prelude::PublicKey;
     use thiserror::Error;
 
-    use crate::{git, git::repository, handle, sigrefs, stage};
+    use crate::{git, git::repository, handle, sigrefs, stage, transport};
 
     #[derive(Debug, Error)]
     pub enum Step {
-        #[error(transparent)]
-        Io(#[from] io::Error),
         #[error(transparent)]
         Layout(#[from] stage::error::Layout),
         #[error(transparent)]
         Prepare(#[from] stage::error::Prepare),
         #[error(transparent)]
         WantsHaves(#[from] stage::error::WantsHaves),
+        #[error(transparent)]
+        Transport(#[from] transport::Error),
     }
 
     #[derive(Debug, Error)]
@@ -62,8 +60,6 @@ pub mod error {
             current: Oid,
             received: Oid,
         },
-        #[error(transparent)]
-        Io(#[from] io::Error),
         #[error("canonical 'refs/rad/id' is missing")]
         MissingRadId,
         #[error(transparent)]

@@ -22,8 +22,8 @@ pub mod error {
 
     #[derive(Debug, Error)]
     pub enum PackWriter {
-        #[error(transparent)]
-        Io(#[from] io::Error),
+        #[error("i/o error opening store: {0}")]
+        StoreOpen(#[from] io::Error),
         #[error(transparent)]
         Write(#[from] gix_pack::bundle::write::Error),
     }
@@ -61,11 +61,10 @@ impl PackWriter {
             use_multi_pack_index: true,
             current_dir: Some(self.git_dir.clone()),
         };
-        let thickener = Arc::new(gix_odb::Store::at_opts(
-            self.git_dir.join("objects"),
-            &mut [].into_iter(),
-            odb_opts,
-        )?);
+        let thickener = Arc::new(
+            gix_odb::Store::at_opts(self.git_dir.join("objects"), &mut [].into_iter(), odb_opts)
+                .map_err(error::PackWriter::StoreOpen)?,
+        );
         let thickener = thickener.to_handle_arc();
         Ok(pack::Bundle::write_to_directory(
             pack,
