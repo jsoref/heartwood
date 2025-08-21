@@ -77,10 +77,9 @@ impl<'a> VStack<'a> {
         I: IntoIterator<Item = Box<dyn Element>>,
     {
         let mut vstack = self;
-
-        for child in children.into_iter() {
-            vstack = vstack.child(child);
-        }
+        vstack
+            .rows
+            .extend(children.into_iter().map(|e| Row::Element(Box::new(e))));
         vstack
     }
 
