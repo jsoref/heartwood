@@ -1,9 +1,13 @@
 pub mod handle;
 pub mod thread;
 
-use std::os::unix::net::UnixListener;
 use std::path::PathBuf;
 use std::{fs, io, net};
+
+#[cfg(unix)]
+use std::os::unix::net::UnixListener as Listener;
+#[cfg(windows)]
+use winpipe::WinListener as Listener;
 
 use crossbeam_channel as chan;
 use cyphernet::Ecdh;
@@ -99,9 +103,9 @@ impl From<service::Error> for Error {
 /// Wraps a [`UnixListener`] but tracks its origin.
 pub enum ControlSocket {
     /// The listener was created by binding to it.
-    Bound(UnixListener, PathBuf),
+    Bound(Listener, PathBuf),
     /// The listener was received via socket activation.
-    Received(UnixListener),
+    Received(Listener),
 }
 
 /// Holds join handles to the client threads, as well as a client handle.
@@ -316,7 +320,7 @@ impl Runtime {
     }
 
     #[cfg(all(feature = "systemd", target_os = "linux"))]
-    fn receive_listener() -> Option<UnixListener> {
+    fn receive_listener() -> Option<Listener> {
         use std::os::fd::FromRawFd;
         match radicle_systemd::listen::fd("control") {
             Ok(Some(fd)) => {
@@ -330,7 +334,7 @@ impl Runtime {
                 Some(unsafe {
                     // SAFETY: We take ownership of this FD from systemd,
                     // which guarantees that it is open.
-                    UnixListener::from_raw_fd(fd)
+                    Listener::from_raw_fd(fd)
                 })
             }
             Ok(None) => None,
@@ -351,7 +355,7 @@ impl Runtime {
         }
 
         log::info!(target: "node", "Binding control socket {}..", &path.display());
-        match UnixListener::bind(&path) {
+        match Listener::bind(&path) {
             Ok(sock) => Ok(ControlSocket::Bound(sock, path)),
             Err(err) if err.kind() == io::ErrorKind::AddrInUse => Err(Error::AlreadyRunning(path)),
             Err(err) => Err(err.into()),
