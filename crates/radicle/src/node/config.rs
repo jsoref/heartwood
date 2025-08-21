@@ -496,7 +496,7 @@ impl Config {
     }
 
     pub fn peers(&self) -> impl Iterator<Item = NodeId> + '_ {
-        self.connect.iter().cloned().map(|p| p.id)
+        self.connect.iter().map(|p| p.0.id)
     }
 
     pub fn is_persistent(&self, id: &NodeId) -> bool {
