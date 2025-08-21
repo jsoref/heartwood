@@ -72,15 +72,13 @@ impl<'a> VStack<'a> {
     }
 
     /// Add multiple elements to the stack.
-    pub fn children<I>(self, children: I) -> Self
+    pub fn children<I>(mut self, children: I) -> Self
     where
         I: IntoIterator<Item = Box<dyn Element>>,
     {
-        let mut vstack = self;
-        vstack
-            .rows
+        self.rows
             .extend(children.into_iter().map(|e| Row::Element(Box::new(e))));
-        vstack
+        self
     }
 
     /// Merge with another `VStack`.
