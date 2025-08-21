@@ -394,4 +394,18 @@ mod test {
         let line = Line::new("❤️");
         assert_eq!(line.width(), 2, "{line}");
     }
+
+    #[test]
+    fn test_spaced() {
+        let line = Line::spaced(["banana", "peach", "apple"].into_iter().map(Label::new));
+
+        let iterated: Vec<_> = line.into_iter().collect();
+        assert_eq!(
+            iterated
+                .into_iter()
+                .map(|l| l.to_string())
+                .collect::<Vec<_>>(),
+            ["banana", " ", "peach", " ", "apple"]
+        );
+    }
 }
