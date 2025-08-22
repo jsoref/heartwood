@@ -327,9 +327,15 @@ impl WantsHaves {
     }
 }
 
-fn agent_name() -> io::Result<String> {
-    Ok(format!(
-        "git/{}",
-        radicle::git::version().map_err(io_other)?
-    ))
+fn agent_name() -> String {
+    let version = match radicle::git::version() {
+        Ok(version) => version,
+        Err(err) => {
+            use radicle::git::VERSION_REQUIRED;
+            log::warn!(target: "fetch", "The git version could not be determined: {err}");
+            log::warn!(target: "fetch", "Pretending that we are on git version {VERSION_REQUIRED}.");
+            VERSION_REQUIRED
+        }
+    };
+    format!("git/{version}")
 }

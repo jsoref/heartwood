@@ -60,7 +60,7 @@ where
                 arg.push_str(prefix);
                 args.push(arg)
             }
-            features.push(("agent", Some(Cow::Owned(agent_name()?))));
+            features.push(("agent", Some(Cow::Owned(agent_name()))));
             Ok(gix_protocol::ls_refs::Action::Continue)
         },
         progress,

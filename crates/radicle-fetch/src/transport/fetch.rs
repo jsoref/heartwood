@@ -174,7 +174,7 @@ where
         keepfile: None,
     };
     let mut negotiate = Negotiate { wants_haves };
-    let agent = agent_name().map_err(Error::ReadRemainingBytes)?;
+    let agent = agent_name();
 
     let mut pack_out = None;
     let mut handshake = handshake.clone();
