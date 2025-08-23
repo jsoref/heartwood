@@ -15,13 +15,13 @@ use radicle::node::events::{Event, Events};
 use radicle::node::policy;
 use radicle::node::{Config, NodeId};
 use radicle::node::{ConnectOptions, ConnectResult, Seeds};
-use reactor::poller::popol::PopolWaker;
 use serde_json::json;
 use thiserror::Error;
 
 use crate::identity::RepoId;
 use crate::node::{Alias, Command, FetchResult};
 use crate::profile::Home;
+use crate::reactor;
 use crate::runtime::Emitter;
 use crate::service;
 use crate::service::{CommandError, QueryState};
@@ -70,7 +70,7 @@ impl<T> From<chan::SendError<T>> for Error {
 
 pub struct Handle {
     pub(crate) home: Home,
-    pub(crate) controller: reactor::Controller<wire::Control, PopolWaker>,
+    pub(crate) controller: reactor::Controller,
 
     /// Whether a shutdown was initiated or not. Prevents attempting to shutdown twice.
     shutdown: Arc<AtomicBool>,
@@ -103,11 +103,7 @@ impl Clone for Handle {
 }
 
 impl Handle {
-    pub fn new(
-        home: Home,
-        controller: reactor::Controller<wire::Control, PopolWaker>,
-        emitter: Emitter<Event>,
-    ) -> Self {
+    pub fn new(home: Home, controller: reactor::Controller, emitter: Emitter<Event>) -> Self {
         Self {
             home,
             controller,
