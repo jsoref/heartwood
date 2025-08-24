@@ -18,6 +18,10 @@ Environment=RUST_LOG=info
 KillMode=process
 Restart=always
 RestartSec=3
+# Basic hardening options. For more please refer to `systemd-analyze security`.
+PrivateTmp=true
+ProtectHome=true
+MemoryDenyWriteExecute=true
 
 [Install]
 WantedBy=default.target

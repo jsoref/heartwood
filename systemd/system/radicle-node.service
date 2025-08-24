@@ -25,6 +25,11 @@ Environment=RAD_HOME=/home/seed/.radicle RUST_BACKTRACE=1 RUST_LOG=info
 KillMode=process
 Restart=always
 RestartSec=3
+# Basic hardening options. For more please refer to `systemd-analyze security`.
+PrivateTmp=true
+ProtectSystem=strict
+NoNewPrivileges=true
+MemoryDenyWriteExecute=true
 
 [Install]
 WantedBy=multi-user.target
