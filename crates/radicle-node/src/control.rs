@@ -98,16 +98,24 @@ where
 ///
 /// As of winpipe 0.1.1, [`WinStream::try_clone`] is actually infallible.
 #[cfg(windows)]
-fn command<E, H>(mut stream: Stream, handle: H) -> Result<(), (CommandError, Stream)>
+fn command<E, H>(stream: Stream, handle: H) -> Result<(), (CommandError, Stream)>
 where
     H: Handle<Error = runtime::HandleError> + 'static,
     H::Sessions: serde::Serialize,
     CommandResult<E>: From<H::Event>,
     E: serde::Serialize,
 {
-    let mut clone = stream.try_clone().map_err(|e| (e.into(), stream))?;
-    let reader = BufReader::new(&mut clone);
-    let writer = LineWriter::new(&mut stream);
+    let mut reader = match stream.try_clone() {
+        Ok(reader) => reader,
+        Err(err) => return Err((err.into(), stream)),
+    };
+    let reader = BufReader::new(&mut reader);
+
+    let mut writer = match stream.try_clone() {
+        Ok(writer) => writer,
+        Err(err) => return Err((err.into(), stream)),
+    };
+    let writer = LineWriter::new(&mut writer);
 
     command_internal(reader, writer, handle).map_err(|e| (e, stream))
 }
