@@ -308,13 +308,13 @@ mod tests {
         });
 
         for rid in &rids {
-            let stream = loop {
+            let mut stream = loop {
                 if let Ok(stream) = Stream::connect(&socket) {
                     break stream;
                 }
             };
             writeln!(
-                &stream,
+                &mut stream,
                 "{}",
                 json::to_string(&Command::AnnounceRefs {
                     rid: rid.to_owned()
