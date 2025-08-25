@@ -12,7 +12,7 @@ while [ $# -gt 0 ]; do
         exit 1
       fi
       shift
-      from=$(echo "$1" | sed 's/^v//')
+      from=$(echo "$1" | sed 's/^releases\///')
       break
       ;;
     *)
@@ -23,13 +23,18 @@ while [ $# -gt 0 ]; do
 done
 
 # Current/latest tag.
-current=$(git describe --tags --match='v*' --abbrev=0)
-version=$(echo "$current" | sed 's/^v//')
+version="$(build/version)"
+current="releases/${version}"
+
+if ! git rev-parse --verify "$current^{tag}" >/dev/null 2>&1; then
+  echo "error: tag '$current' not found" >&2
+  exit 1
+fi
 
 if [ -z "$from" ]; then
   previous="$(git describe --abbrev=0 HEAD^)"
 else
-  previous="v$from"
+  previous="releases/$from"
 fi
 
 if ! git rev-parse --verify "$previous^{tag}" >/dev/null 2>&1; then
