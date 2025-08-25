@@ -100,7 +100,7 @@ impl From<service::Error> for Error {
     }
 }
 
-/// Wraps a [`UnixListener`] but tracks its origin.
+/// Wraps a [`Listener`] but tracks its origin.
 pub enum ControlSocket {
     /// The listener was created by binding to it.
     Bound(Listener, PathBuf),
