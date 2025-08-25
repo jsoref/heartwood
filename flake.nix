@@ -173,17 +173,45 @@
             settings.rust.check.cargoDeps = pkgs.rustPlatform.importCargoLock {lockFile = ./Cargo.lock;};
             hooks = {
               alejandra.enable = true;
-              rustfmt.enable = true;
+              rustfmt = {
+                enable = true;
+                fail_fast = true;
+                packageOverrides.rustfmt = rustup.toolchain;
+              };
               cargo-check = {
                 enable = true;
-                stages = ["pre-push"];
+                name = "cargo check";
+                after = ["rustfmt"];
+                fail_fast = true;
+              };
+              cargo-doc = let
+                # We wrap `cargo` in order to set an environment variable that
+                # gives us a non-zero exit on warning.
+                command =
+                  pkgs.writeShellScript
+                  "cargo"
+                  "RUSTDOCFLAGS='--deny warnings' ${lib.getExe' rustup.toolchain "cargo"} $@";
+              in {
+                enable = true;
+                name = "cargo doc";
+                after = ["rustfmt"];
+                fail_fast = true;
+                entry = "${command} doc --workspace --all-features --no-deps";
+                files = "\\.rs$";
+                pass_filenames = false;
               };
               clippy = {
                 enable = true;
-                stages = ["pre-push"];
-                settings.denyWarnings = true;
-                packageOverrides.cargo = rustup.toolchain;
-                packageOverrides.clippy = rustup.toolchain;
+                name = "cargo clippy";
+                stages = ["pre-push"]; # Only pre-push, because it takes a while.
+                settings = {
+                  allFeatures = true;
+                  denyWarnings = true;
+                };
+                packageOverrides = {
+                  cargo = rustup.toolchain;
+                  clippy = rustup.toolchain;
+                };
               };
               shellcheck.enable = true;
             };
