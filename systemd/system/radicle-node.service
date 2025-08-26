@@ -1,16 +1,13 @@
-# Example systemd unit file for `radicle-node`.
+# Example systemd system service unit configuration file for `radicle-node`.
 #
-# When running radicle-node on a server, it should be run as a separate user.
+# When running radicle-node for just one user, e.g. on a laptop,
+# it should be run as a user service, see `../user/*.service`.
 #
-# Copy this file into /etc/systemd/system and set the User/Group parameters
-# under [Service] appropriately, as well as the `RAD_HOME` environment variable.
+# For more information on how to install and configure this service,
+# please read:
 #
-# If your Radicle key is passphrase-protected, you will have to set the
-# `RAD_PASSPHRASE` environment variable to the passphrase supplied during
-# `rad auth`, eg.
-#
-#   [Service]
-#   Environment=RAD_PASSPHRASE=snickerdoodle
+# https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html
+# https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html
 #
 [Unit]
 Description=Radicle Node
@@ -18,10 +15,7 @@ After=network.target network-online.target
 Requires=network-online.target
 
 [Service]
-User=seed
-Group=seed
 ExecStart=/usr/local/bin/radicle-node --listen 0.0.0.0:8776 --force
-Environment=RAD_HOME=/home/seed/.radicle RUST_BACKTRACE=1 RUST_LOG=info
 KillMode=process
 Restart=always
 RestartSec=3
@@ -30,6 +24,20 @@ PrivateTmp=true
 ProtectSystem=strict
 NoNewPrivileges=true
 MemoryDenyWriteExecute=true
+
+# If your Radicle key is passphrase-protected, you will have to set the
+# `RAD_PASSPHRASE` environment variable to the passphrase supplied during
+# `rad auth`.
+#Environment=RAD_PASSPHRASE=snickerdoodle
+
+# Basic hardening options. For more, please refer to `systemd-analyze security`.
+PrivateTmp=true
+ProtectSystem=strict
+NoNewPrivileges=true
+MemoryDenyWriteExecute=true
+
+User=seed
+Group=seed
 
 [Install]
 WantedBy=multi-user.target
