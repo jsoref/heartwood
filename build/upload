@@ -7,7 +7,7 @@ SSH_KEY="$(rad path)/keys/radicle"
 
 main() {
   version="$(build/version)"
-  nid="$(rad self --nid)"
+  nid="$(rad self --did | cut -d: -f3-)"
   rad_url="$(rad . | sed s/rad:/rad:\\/\\//)"
   rad_remote="$rad_url/$nid"
 

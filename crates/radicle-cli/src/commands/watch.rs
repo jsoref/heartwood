@@ -26,7 +26,7 @@ Options
 
         --repo      <rid>       The repository to watch (default: `rad .`)
         --node      <nid>       The namespace under which this reference exists
-                                (default: `rad self --nid`)
+                                (default: NID of the profile)
     -r, --ref       <ref>       The fully-qualified Git reference (branch, tag, etc.) to watch,
                                 eg. 'refs/heads/master'
     -t, --target    <oid>       The target OID (commit hash) that when reached,

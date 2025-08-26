@@ -115,7 +115,7 @@ For example, to connect to a community node, you can run:
 
 The argument given to *connect* is called a node _address_. It is composed of
 a Node ID (NID), followed by an *@* symbol, and the _host_ name and _port_.
-You can display your NID with *rad self --nid*.
+You can display your NID with *rad node status*.
 
 To make these connections permanent, such that they are always tried on
 startup, add the addresses to your configuration file at
