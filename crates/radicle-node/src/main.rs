@@ -11,6 +11,16 @@ use radicle_node::{Runtime, VERSION};
 #[cfg(unix)]
 use radicle_signals as signals;
 
+/// The log level to use before reading any other value
+/// from configuration.
+///
+/// Note that this is different from the default value
+/// of the command line argument `--log`, as it is valid
+/// *even before that argument is parsed*.
+/// It ensures that we log the errors parsing the
+/// command line arguments, such as `--log`.
+const LOG_LEVEL_DEFAULT: &log::Level = &log::Level::Warn;
+
 pub const HELP_MSG: &str = r#"
 Usage
 
@@ -88,32 +98,27 @@ impl Options {
 fn execute() -> anyhow::Result<()> {
     let home = profile::home()?;
     let options = Options::from_env()?;
+
+    // Up to now, the active log level was `LOG_LEVEL_DEFAULT`.
+    // The first thing we do after reading command line options is
+    // to set the log level, as this influences logging during
+    // configuration loading.
+    if let Some(level) = options.log {
+        log::set_max_level(level.to_level_filter());
+    }
+
     let config = options.config.unwrap_or_else(|| home.config());
     let mut config = profile::Config::load(&config)?;
 
-    let level = options.log.unwrap_or_else(|| config.node.log.into());
-
-    let logger = {
-        let journal = {
-            #[cfg(all(feature = "systemd", target_os = "linux"))]
-            {
-                radicle_systemd::journal::logger::<&str, &str, _>("radicle-node".to_string(), [])?
-            }
-            #[cfg(not(all(feature = "systemd", target_os = "linux")))]
-            {
-                None
-            }
-        };
-
-        if let Some(logger) = journal {
-            logger
-        } else {
-            Box::new(radicle::logger::Logger::new(level))
-        }
-    };
-
-    log::set_boxed_logger(logger).expect("no other logger should have been set already");
-    log::set_max_level(level.to_level_filter());
+    if options.log.is_none() {
+        log::set_max_level(log::Level::from(config.node.log).to_level_filter());
+    } else {
+        // It might seem counter-intuitive at first, as there
+        // always is a log level in the configuration, but the command
+        // line argument has precedence, and if it is present, the
+        // log level has been already set above. Thus, we have nothing
+        // to do in this case.
+    }
 
     log::info!(target: "node", "Starting node..");
     log::info!(target: "node", "Version {} ({})", env!("RADICLE_VERSION"), env!("GIT_HEAD"));
@@ -163,6 +168,53 @@ fn execute() -> anyhow::Result<()> {
     Ok(())
 }
 
+fn initialize_logging() {
+    let level = *LOG_LEVEL_DEFAULT;
+
+    //  - We are compiling conditionally, so cannot depend
+    //    on the concrete type of the logger(s).
+    //  - We are dealing with `Option`, so we need `Box: Sized`.
+    //  - We want to provide a `Box` to `log::set_boxed_logger`.
+    //  - We also want to keep around any errors along the way.
+    type Logger = Box<dyn log::Log>;
+    type Error = Box<dyn std::error::Error>;
+
+    let journal: Result<Option<Logger>, Error> = {
+        #[cfg(all(feature = "systemd", target_os = "linux"))]
+        {
+            use thiserror::Error;
+
+            #[derive(Error, Debug)]
+            #[error("Error connecting to systemd journal: {0}")]
+            struct JournalError(std::io::Error);
+
+            radicle_systemd::journal::logger::<&str, &str, _>("radicle-node".to_string(), [])
+                .map_err(|err| Box::new(JournalError(err)) as Error)
+        }
+        #[cfg(not(all(feature = "systemd", target_os = "linux")))]
+        {
+            // This is constant, and `rustc` will hopefully use it to
+            // optimize away the `match` below.
+            Ok(None)
+        }
+    };
+
+    let (logger, err) = match journal {
+        Ok(Some(logger)) => (logger, None),
+        otherwise => (
+            Box::new(radicle::logger::Logger::new(level)) as Logger,
+            otherwise.err(),
+        ),
+    };
+
+    log::set_boxed_logger(logger).expect("no other logger should have been set already");
+    log::set_max_level(level.to_level_filter());
+
+    if let Some(err) = err {
+        log::warn!(target: "node", "Error initializing logger (fell back to default): {err}");
+    }
+}
+
 fn main() {
     // If `RUST_BACKTRACE` does not have a value, then we set it to capture
     // backtraces for better debugging, otherwise we keep the environments
@@ -171,6 +223,8 @@ fn main() {
     if std::env::var_os(RUST_BACKTRACE).is_none() {
         std::env::set_var(RUST_BACKTRACE, "1");
     }
+
+    initialize_logging();
 
     if let Err(err) = execute() {
         log::error!(target: "node", "{err:#}");
