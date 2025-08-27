@@ -180,6 +180,15 @@ impl<T: Clone, const N: usize> BoundedVec<T, N> {
     }
 }
 
+impl<T, const N: usize> IntoIterator for BoundedVec<T, N> {
+    type Item = T;
+    type IntoIter = std::vec::IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.v.into_iter()
+    }
+}
+
 impl<T, const N: usize> ops::Deref for BoundedVec<T, N> {
     type Target = [T];
 
