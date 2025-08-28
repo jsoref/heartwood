@@ -1,21 +1,21 @@
 # CONTRIBUTING
 
-Contributions are very welcome. 
+Contributions are very welcome.
 
 ## Contributing Issues
 
-Contributing issues are an excellent way to ensure your problem will 
-eventually get looked at. 
+Contributing issues are an excellent way to ensure your problem will
+eventually get looked at.
 
 If creating an issue, please make sure to include:
-- actual behaviour you're observing, 
+- actual behaviour you're observing,
 - the behaviour you were expecting instead,
 - steps to reproduce your issue,
 - the output of `rad debug`,
 - the contents of the log files referred to by that output.
 
 
-## Contributing Code 
+## Contributing Code
 
 When contributing code, please follow these
 simple guidelines.
@@ -179,6 +179,25 @@ for the reader:
     // user creates a new repository while the node is stopped.
     for rid in self.storage.inventory()? {
         ...
+
+### Referring to radicle.xyz in Code
+
+While <https://radicle.xyz> is the main website of the project, and also the domain
+associated with COBs implemented in this repo, we strive to write code that is as
+independent as reasonably possible from this particular domain name. For example, it
+should not be used for default configuration values, or if it is, there should be a
+way to override.
+
+This makes it easier to re-package Radicle for distribution under a different domain
+or fork it altogether. It also tends to produce better, more flexible, code.
+
+In tests, instead use names that are compliant with RFC 2606, e.g.
+"radicle.example.com".
+
+Note that as of 2025-08, there are still a few mentions of "radicle.xyz" in the
+codebase (mostly tests or user hints, fallback for configuration), and some of them
+are not easy to remove. However, this is in no way a justification to add more
+references.
 
 ### Proposing changes
 
