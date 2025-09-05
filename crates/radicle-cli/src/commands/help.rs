@@ -94,7 +94,10 @@ const COMMANDS: &[CommandItem] = &[
         name: "node",
         about: crate::commands::node::ABOUT,
     },
-    CommandItem::Lexopt(crate::commands::patch::HELP),
+    CommandItem::Clap {
+        name: "patch",
+        about: crate::commands::patch::ABOUT,
+    },
     CommandItem::Clap {
         name: "path",
         about: crate::commands::path::ABOUT,

@@ -5,6 +5,7 @@ use radicle::git;
 use radicle::storage::git::Repository;
 
 use crate::terminal as term;
+use crate::terminal::Error;
 
 use super::*;
 

@@ -21,24 +21,33 @@ Markdown supported.
 "#;
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum Operation {
-    Delete,
-    Review {
-        by_hunk: bool,
-        unified: usize,
-        hunk: Option<usize>,
-        verdict: Option<Verdict>,
-    },
+pub(super) struct ReviewOptions {
+    pub(super) by_hunk: bool,
+    pub(super) unified: usize,
+    pub(super) hunk: Option<usize>,
+    pub(super) verdict: Option<Verdict>,
 }
 
-impl Default for Operation {
+impl Default for ReviewOptions {
     fn default() -> Self {
-        Self::Review {
+        Self {
             by_hunk: false,
             unified: 3,
             hunk: None,
             verdict: None,
         }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub(super) enum Operation {
+    Delete,
+    Review(ReviewOptions),
+}
+
+impl Default for Operation {
+    fn default() -> Self {
+        Operation::Review(ReviewOptions::default())
     }
 }
 
@@ -77,12 +86,12 @@ pub fn run(
 
     let patch_id_pretty = term::format::tertiary(term::format::cob(&patch_id));
     match options.op {
-        Operation::Review {
-            verdict,
+        Operation::Review(ReviewOptions {
             by_hunk,
             unified,
             hunk,
-        } if by_hunk => {
+            verdict,
+        }) if by_hunk => {
             crate::warning::obsolete("rad patch review --patch");
             let mut opts = git::raw::DiffOptions::new();
             opts.patience(true)
@@ -94,7 +103,7 @@ pub fn run(
                 .verdict(verdict)
                 .run(revision, &mut opts, &signer)?;
         }
-        Operation::Review { verdict, .. } => {
+        Operation::Review(ReviewOptions { verdict, .. }) => {
             let message = options.message.get(REVIEW_HELP_MSG)?;
             let message = message.replace(REVIEW_HELP_MSG.trim(), "");
             let message = if message.is_empty() {
