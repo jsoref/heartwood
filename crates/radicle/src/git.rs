@@ -597,7 +597,16 @@ pub fn configure_repository(repo: &git2::Repository) -> Result<(), git2::Error> 
 ///   fetch = +refs/heads/*:refs/remotes/<name>/*
 ///   fetch = +refs/tags/*:refs/remotes/<name>/tags/*
 ///   tagOpt = --no-tags
+///   pruneTags = false
 /// ```
+///
+/// Because of the `+refs/tags/*:…` refspec, set:
+///  1. `pruneTags = false` to ensure that `git` does not delete tags because
+///     the remote does not have them. Tags for a Radicle repository are
+///     synthesised by canonical refs and thus, the `rad` remote will handle
+///     fetching them.
+///  2. `tagOpt = --no-tags` to ensure that tags are not fetched and stored
+///     under `refs/tags`, again, because these are fetched by the `rad` remote.
 pub fn configure_remote<'r>(
     repo: &'r git2::Repository,
     name: &str,
@@ -613,11 +622,9 @@ pub fn configure_remote<'r>(
     let tags = format!("+refs/tags/*:refs/remotes/{name}/tags/*");
     repo.remote_add_fetch(name, &tags)?;
 
-    // Because of the above, if we don't set `--no-tags` then the tags will be
-    // fetched into `refs/tags` as well. We don't want to do this *unless* it's
-    // the `rad` remote, which will have the canonical tags
     if name != (*rad::REMOTE_NAME).as_str() {
         let mut config = repo.config()?;
+        config.set_bool(&format!("remote.{name}.pruneTags"), false)?;
         config.set_str(&format!("remote.{name}.tagOpt"), "--no-tags")?;
     }
 
