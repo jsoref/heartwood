@@ -81,10 +81,9 @@ pub fn untracked<'a>(
 }
 
 pub fn print_tracked<'a>(tracked: impl Iterator<Item = &'a Tracked>) {
-    let mut table = Table::default();
-    for Tracked { direction, name } in tracked {
+    Table::from_iter(tracked.into_iter().flat_map(|Tracked { direction, name }| {
         let Some(direction) = direction else {
-            continue;
+            return None;
         };
 
         let (dir, url) = match direction {
@@ -95,25 +94,24 @@ pub fn print_tracked<'a>(tracked: impl Iterator<Item = &'a Tracked>) {
             term::format::dim("(canonical upstream)".to_string()).italic(),
             |namespace| term::format::tertiary(namespace.to_string()),
         );
-        table.push([
+        Some([
             term::format::bold(name.clone()),
             description,
             term::format::parens(term::format::secondary(dir.to_owned())),
-        ]);
-    }
-    table.print();
+        ])
+    }))
+    .print();
 }
 
 pub fn print_untracked<'a>(untracked: impl Iterator<Item = &'a Untracked>) {
-    let mut t = Table::default();
-    for Untracked { remote, alias } in untracked {
-        t.push([
+    Table::from_iter(untracked.into_iter().map(|Untracked { remote, alias }| {
+        [
             match alias {
                 None => term::format::secondary("n/a".to_string()),
                 Some(alias) => term::format::secondary(alias.to_string()),
             },
             term::format::highlight(Did::from(remote).to_string()),
-        ])
-    }
-    t.print();
+        ]
+    }))
+    .print();
 }
