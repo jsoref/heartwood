@@ -14,6 +14,8 @@ use term::Element as _;
 use crate::terminal as term;
 use crate::terminal::patch as common;
 
+use itertools::Itertools as _;
+
 /// List patches.
 pub fn run(
     filter: Option<&patch::Status>,
@@ -79,13 +81,14 @@ pub fn run(
         is_me.then(by_rev_time).then(by_id)
     });
 
-    let mut errors = Vec::new();
-    for (id, patch) in &mut all {
-        match row(id, patch, repository, profile) {
-            Ok(r) => table.push(r),
-            Err(e) => errors.push((patch.title(), id, e.to_string())),
-        }
-    }
+    let (rows, errors): (Vec<_>, Vec<_>) = all
+        .iter()
+        .map(|(id, patch)| {
+            row(id, patch, repository, profile).map_err(|e| (patch.title(), id, e.to_string()))
+        })
+        .partition_result();
+
+    table.extend(rows);
     table.print();
 
     if !errors.is_empty() {
