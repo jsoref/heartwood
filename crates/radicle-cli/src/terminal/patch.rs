@@ -306,18 +306,20 @@ pub fn get_update_message(
 
 /// List the given commits in a table.
 pub fn list_commits(commits: &[git::raw::Commit]) -> anyhow::Result<()> {
-    let mut table = term::Table::default();
+    commits
+        .iter()
+        .map(|commit| {
+            let message = commit
+                .summary_bytes()
+                .unwrap_or_else(|| commit.message_bytes());
 
-    for commit in commits {
-        let message = commit
-            .summary_bytes()
-            .unwrap_or_else(|| commit.message_bytes());
-        table.push([
-            term::format::secondary(term::format::oid(commit.id()).into()),
-            term::format::italic(String::from_utf8_lossy(message).to_string()),
-        ]);
-    }
-    table.print();
+            [
+                term::format::secondary(term::format::oid(commit.id()).into()),
+                term::format::italic(String::from_utf8_lossy(message).to_string()),
+            ]
+        })
+        .collect::<term::Table<2, _>>()
+        .print();
 
     Ok(())
 }
