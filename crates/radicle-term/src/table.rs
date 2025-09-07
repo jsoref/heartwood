@@ -191,12 +191,6 @@ impl<const W: usize, T: Cell> Table<W, T> {
         self.rows.push(Row::Header(row));
     }
 
-    pub fn extend(&mut self, rows: impl IntoIterator<Item = [T; W]>) {
-        for row in rows.into_iter() {
-            self.push(row);
-        }
-    }
-
     pub fn is_empty(&self) -> bool {
         !self.rows.iter().any(|r| matches!(r, Row::Data { .. }))
     }
@@ -222,6 +216,20 @@ impl<const W: usize, T: Cell> Table<W, T> {
             rows += 2;
         }
         Size::new(cols, rows).constrain(c)
+    }
+}
+
+impl<const W: usize, T: Cell> Extend<[T; W]> for Table<W, T> {
+    fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = [T; W]>,
+    {
+        self.rows.extend(iter.into_iter().map(|row| {
+            for (i, cell) in row.iter().enumerate() {
+                self.widths[i] = self.widths[i].max(cell.width());
+            }
+            Row::Data(row)
+        }));
     }
 }
 
