@@ -182,6 +182,11 @@ impl<const W: usize, T: Cell> Table<W, T> {
         }
     }
 
+    pub fn with_opts(mut self, opts: TableOptions) -> Self {
+        self.opts = opts;
+        self
+    }
+
     pub fn size(&self, parent: Constraint) -> Size {
         self.outer(parent)
     }
