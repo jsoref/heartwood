@@ -375,7 +375,7 @@ pub fn sessions(node: &Node) -> Result<Option<term::Table<5, term::Label>>, node
     ]);
     table.divider();
 
-    for sess in sessions {
+    table.extend(sessions.into_iter().map(|sess| {
         let nid = term::format::tertiary(term::format::node_id_human(&sess.nid)).into();
         let (addr, state, time) = match sess.state {
             node::State::Initial => (
@@ -403,8 +403,10 @@ pub fn sessions(node: &Node) -> Result<Option<term::Table<5, term::Label>>, node
             node::Link::Inbound => term::Label::from(link_direction_inbound()),
             node::Link::Outbound => term::Label::from(link_direction_outbound()),
         };
-        table.push([nid, addr, state, direction, time]);
-    }
+
+        [nid, addr, state, direction, time]
+    }));
+
     Ok(Some(table))
 }
 
