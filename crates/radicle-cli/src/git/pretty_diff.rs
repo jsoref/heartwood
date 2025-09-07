@@ -444,75 +444,83 @@ impl ToPretty for Hunk<Modification> {
         if let Ok(header) = HunkHeader::from_bytes(self.header.as_bytes()) {
             vstack.push(header.pretty(hi, &(), repo));
         }
-        for line in &self.lines {
-            match line {
-                Modification::Addition(a) => {
-                    table.push([
-                        term::Label::space()
-                            .pad(5)
-                            .bg(theme.color("positive"))
-                            .to_line()
-                            .filled(theme.color("positive")),
-                        term::label(a.line_no.to_string())
-                            .pad(5)
-                            .fg(theme.color("positive.light"))
-                            .to_line()
-                            .filled(theme.color("positive")),
-                        term::label(" + ")
-                            .fg(theme.color("positive.light"))
-                            .to_line()
-                            .filled(theme.color("positive.dark")),
-                        line.pretty(hi, blobs, repo)
-                            .filled(theme.color("positive.dark")),
-                        term::Line::blank().filled(term::Color::default()),
-                    ]);
-                }
-                Modification::Deletion(a) => {
-                    table.push([
-                        term::label(a.line_no.to_string())
-                            .pad(5)
-                            .fg(theme.color("negative.light"))
-                            .to_line()
-                            .filled(theme.color("negative")),
-                        term::Label::space()
-                            .pad(5)
-                            .fg(theme.color("dim"))
-                            .to_line()
-                            .filled(theme.color("negative")),
-                        term::label(" - ")
-                            .fg(theme.color("negative.light"))
-                            .to_line()
-                            .filled(theme.color("negative.dark")),
-                        line.pretty(hi, blobs, repo)
-                            .filled(theme.color("negative.dark")),
-                        term::Line::blank().filled(term::Color::default()),
-                    ]);
-                }
-                Modification::Context {
-                    line_no_old,
-                    line_no_new,
-                    ..
-                } => {
-                    table.push([
-                        term::label(line_no_old.to_string())
-                            .pad(5)
-                            .fg(theme.color("dim"))
-                            .to_line()
-                            .filled(theme.color("faint")),
-                        term::label(line_no_new.to_string())
-                            .pad(5)
-                            .fg(theme.color("dim"))
-                            .to_line()
-                            .filled(theme.color("faint")),
-                        term::label("   ").to_line().filled(term::Color::default()),
-                        line.pretty(hi, blobs, repo).filled(term::Color::default()),
-                        term::Line::blank().filled(term::Color::default()),
-                    ]);
-                }
-            }
-        }
+
+        table.extend(
+            self.lines
+                .iter()
+                .map(|line| line_to_table_row(hi, blobs, repo, &theme, line)),
+        );
+
         vstack.push(table);
         vstack
+    }
+}
+
+fn line_to_table_row<R: Repo>(
+    hi: &mut Highlighter,
+    blobs: &Blobs<Vec<radicle_term::Line>>,
+    repo: &R,
+    theme: &Theme,
+    line: &Modification,
+) -> [radicle_term::Filled<radicle_term::Line>; 5] {
+    match line {
+        Modification::Addition(a) => [
+            term::Label::space()
+                .pad(5)
+                .bg(theme.color("positive"))
+                .to_line()
+                .filled(theme.color("positive")),
+            term::label(a.line_no.to_string())
+                .pad(5)
+                .fg(theme.color("positive.light"))
+                .to_line()
+                .filled(theme.color("positive")),
+            term::label(" + ")
+                .fg(theme.color("positive.light"))
+                .to_line()
+                .filled(theme.color("positive.dark")),
+            line.pretty(hi, blobs, repo)
+                .filled(theme.color("positive.dark")),
+            term::Line::blank().filled(term::Color::default()),
+        ],
+        Modification::Deletion(a) => [
+            term::label(a.line_no.to_string())
+                .pad(5)
+                .fg(theme.color("negative.light"))
+                .to_line()
+                .filled(theme.color("negative")),
+            term::Label::space()
+                .pad(5)
+                .fg(theme.color("dim"))
+                .to_line()
+                .filled(theme.color("negative")),
+            term::label(" - ")
+                .fg(theme.color("negative.light"))
+                .to_line()
+                .filled(theme.color("negative.dark")),
+            line.pretty(hi, blobs, repo)
+                .filled(theme.color("negative.dark")),
+            term::Line::blank().filled(term::Color::default()),
+        ],
+        Modification::Context {
+            line_no_old,
+            line_no_new,
+            ..
+        } => [
+            term::label(line_no_old.to_string())
+                .pad(5)
+                .fg(theme.color("dim"))
+                .to_line()
+                .filled(theme.color("faint")),
+            term::label(line_no_new.to_string())
+                .pad(5)
+                .fg(theme.color("dim"))
+                .to_line()
+                .filled(theme.color("faint")),
+            term::label("   ").to_line().filled(term::Color::default()),
+            line.pretty(hi, blobs, repo).filled(term::Color::default()),
+            term::Line::blank().filled(term::Color::default()),
+        ],
     }
 }
 
