@@ -782,7 +782,7 @@ where
     ]);
     table.divider();
 
-    for (id, issue) in all {
+    table.extend(all.into_iter().map(|(id, issue)| {
         let assigned: String = issue
             .assignees()
             .map(|did| {
@@ -799,32 +799,44 @@ where
         let author = issue.author().id;
         let (alias, did) = Author::new(&author, profile, false).labels();
 
-        table.push([
-            match issue.state() {
-                State::Open => term::format::positive("●").into(),
-                State::Closed { .. } => term::format::negative("●").into(),
-            },
-            term::format::tertiary(term::format::cob(&id))
-                .to_owned()
-                .into(),
-            term::format::default(issue.title().to_owned()).into(),
-            alias.into(),
-            did.into(),
-            term::format::secondary(labels.join(", ")).into(),
-            if assigned.is_empty() {
-                term::format::dim(String::default()).into()
-            } else {
-                term::format::primary(assigned.to_string()).dim().into()
-            },
-            term::format::timestamp(issue.timestamp())
-                .dim()
-                .italic()
-                .into(),
-        ]);
-    }
+        mk_issue_row(id, issue, assigned, labels, alias, did)
+    }));
+
     table.print();
 
     Ok(())
+}
+
+fn mk_issue_row(
+    id: cob::ObjectId,
+    issue: issue::Issue,
+    assigned: String,
+    labels: Vec<String>,
+    alias: radicle_term::Label,
+    did: radicle_term::Label,
+) -> [radicle_term::Line; 8] {
+    [
+        match issue.state() {
+            State::Open => term::format::positive("●").into(),
+            State::Closed { .. } => term::format::negative("●").into(),
+        },
+        term::format::tertiary(term::format::cob(&id))
+            .to_owned()
+            .into(),
+        term::format::default(issue.title().to_owned()).into(),
+        alias.into(),
+        did.into(),
+        term::format::secondary(labels.join(", ")).into(),
+        if assigned.is_empty() {
+            term::format::dim(String::default()).into()
+        } else {
+            term::format::primary(assigned.to_string()).dim().into()
+        },
+        term::format::timestamp(issue.timestamp())
+            .dim()
+            .italic()
+            .into(),
+    ]
 }
 
 fn open<R, G>(
