@@ -264,10 +264,6 @@ fn list_repo<'a, R: ReadStorage>(
 where
     <R as ReadStorage>::Repository: cob::Store<Namespace = NodeId>,
 {
-    let mut table = term::Table::new(term::TableOptions {
-        spacing: 3,
-        ..term::TableOptions::default()
-    });
     let repo = storage.repository(rid)?;
     let (_, head) = repo.head()?;
     let doc = repo.identity_doc()?;
@@ -281,8 +277,11 @@ where
         notifs.reverse();
     }
 
-    for n in notifs {
-        let n: Notification = n?;
+    let table = notifs.into_iter().flat_map(|n| {
+        let n: Notification = match n {
+            Err(e) => return Some(Err(anyhow::Error::from(e))),
+            Ok(n) => n,
+        };
 
         let seen = if n.status.is_read() {
             term::Label::blank()
@@ -305,26 +304,33 @@ where
             state,
             name,
         } = match &n.kind {
-            NotificationKind::Branch { name } => NotificationRow::branch(name, head, &n, &repo)?,
+            NotificationKind::Branch { name } => match NotificationRow::branch(name, head, &n, &repo) {
+                Err(e) => return Some(Err(e)),
+                Ok(b) => b,
+            },
             NotificationKind::Cob { typed_id } => {
                 match NotificationRow::cob(typed_id, &n, &issues, &patches, &repo) {
                     Ok(Some(row)) => row,
-                    Ok(None) => continue,
+                    Ok(None) => return None,
                     Err(e) => {
                         log::error!(target: "cli", "Error loading notification for {typed_id}: {e}");
-                        continue;
+                        return None
                     }
                 }
             }
             NotificationKind::Unknown { refname } => {
                 if show_unknown {
-                    NotificationRow::unknown(refname, &n, &repo)?
+                    match NotificationRow::unknown(refname, &n, &repo) {
+                        Err(e) => return Some(Err(e)),
+                        Ok(u) => u,
+                    }
                 } else {
-                    continue;
+                    return None
                 }
             }
         };
-        table.push([
+
+        Some(Ok([
             notification_id,
             seen,
             name.into(),
@@ -333,8 +339,12 @@ where
             state.into(),
             author,
             timestamp,
-        ]);
-    }
+        ]))
+    }).collect::<Result<term::Table<8, _>, anyhow::Error>>()?
+    .with_opts(term::TableOptions {
+        spacing: 3,
+        ..term::TableOptions::default()
+    });
 
     if table.is_empty() {
         Ok(None)
