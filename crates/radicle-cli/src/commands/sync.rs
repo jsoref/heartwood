@@ -360,7 +360,7 @@ fn sync_status(
 
     sort_seeds_by(local_nid, &mut seeds, &aliases, &options.sort_by);
 
-    for seed in seeds {
+    let seeds = seeds.into_iter().flat_map(|seed| {
         let (status, head, time) = match seed.sync {
             Some(SyncStatus::Synced {
                 at: SyncedAt { oid, timestamp },
@@ -391,19 +391,21 @@ fn sync_status(
                 term::paint(String::new()),
                 term::paint(String::new()),
             ),
-            None => continue,
+            None => return None,
         };
 
         let (alias, nid) = Author::new(&seed.nid, profile, options.verbose).labels();
 
-        table.push([
+        Some([
             nid,
             alias,
             status.into(),
             term::format::secondary(head).into(),
             time.dim().italic().into(),
-        ]);
-    }
+        ])
+    });
+
+    table.extend(seeds);
     table.print();
 
     if profile.hints() {
