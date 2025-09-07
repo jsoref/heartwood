@@ -78,6 +78,19 @@ impl<const W: usize, T> Default for Table<W, T> {
     }
 }
 
+impl<const W: usize, T: Cell> FromIterator<[T; W]> for Table<W, T> {
+    fn from_iter<I: IntoIterator<Item = [T; W]>>(iter: I) -> Self {
+        let mut table = Self::default();
+        table.rows.extend(iter.into_iter().map(|row| {
+            for (i, cell) in row.iter().enumerate() {
+                table.widths[i] = table.widths[i].max(cell.width());
+            }
+            Row::Data(row)
+        }));
+        table
+    }
+}
+
 impl<const W: usize, T: Cell + fmt::Debug + Send + Sync> Element for Table<W, T>
 where
     T::Padded: Into<Line>,
