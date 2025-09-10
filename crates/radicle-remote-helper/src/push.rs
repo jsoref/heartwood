@@ -930,16 +930,16 @@ fn sync(
     profile: &Profile,
 ) -> Result<(), cli::node::SyncError> {
     let progress = if io::stderr().is_terminal() {
-        cli::node::SyncWriter::Stderr(io::stderr())
+        term::PaintTarget::Stderr
     } else {
-        cli::node::SyncWriter::Sink
+        term::PaintTarget::Hidden
     };
     let result = cli::node::announce(
         repo,
         cli::node::SyncSettings::default().with_profile(profile),
         cli::node::SyncReporting {
             progress,
-            completion: cli::node::SyncWriter::Stderr(io::stderr()),
+            completion: term::PaintTarget::Stderr,
             debug: opts.sync_debug,
         },
         &mut node,
