@@ -46,6 +46,26 @@ pub static CONFIG: LazyLock<RenderConfig> = LazyLock::new(|| RenderConfig {
     ..RenderConfig::default_colored()
 });
 
+/// Target for paint operations.
+///
+/// This tells a [`Spinner`] object where to paint to.
+#[derive(Clone)]
+pub enum PaintTarget {
+    Stdout,
+    Stderr,
+    Hidden,
+}
+
+impl PaintTarget {
+    pub fn writer(&self) -> Box<dyn io::Write> {
+        match self {
+            PaintTarget::Stdout => Box::new(io::stdout()),
+            PaintTarget::Stderr => Box::new(io::stderr()),
+            PaintTarget::Hidden => Box::new(io::sink()),
+        }
+    }
+}
+
 #[macro_export]
 macro_rules! info {
     ($writer:expr; $($arg:tt)*) => ({
