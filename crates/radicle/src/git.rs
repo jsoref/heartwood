@@ -756,23 +756,24 @@ pub fn head_refname(repo: &git2::Repository) -> Result<Option<String>, git2::Err
     }
 }
 
-/// Execute a git command by spawning a child process.
-pub fn run<P, S, K, V>(
-    repo: P,
+/// Execute a `git` command by spawning a child process and collect its output.
+/// If `working` is [`Some`], the command is run as if `git` was started in
+/// `working` instead of the current working directory, by prepending
+/// `-C <working>` to the command line.
+pub fn run<S>(
+    working: Option<&std::path::Path>,
     args: impl IntoIterator<Item = S>,
-    envs: impl IntoIterator<Item = (K, V)>,
 ) -> io::Result<std::process::Output>
 where
-    P: AsRef<Path>,
     S: AsRef<std::ffi::OsStr>,
-    K: AsRef<std::ffi::OsStr>,
-    V: AsRef<std::ffi::OsStr>,
 {
-    Command::new("git")
-        .current_dir(repo)
-        .envs(envs)
-        .args(args)
-        .output()
+    let mut cmd = Command::new("git");
+
+    if let Some(working) = working {
+        cmd.arg("-C").arg(dunce::canonicalize(working)?);
+    }
+
+    cmd.args(args).output()
 }
 
 /// Functions that call to the `git` CLI instead of `git2`.
@@ -789,7 +790,7 @@ pub mod process {
     /// `oids` are the set of [`Oid`]s that are being fetched from the
     /// `storage`.
     pub fn fetch_local<R>(
-        working: &Path,
+        working: Option<&Path>,
         storage: &R,
         oids: impl IntoIterator<Item = Oid>,
         verbosity: Verbosity,
@@ -797,16 +798,15 @@ pub mod process {
     where
         R: ReadRepository,
     {
-        let mut fetch = vec![
+        let mut args = vec![
             "fetch".to_string(),
             // Avoid writing fetch head since we're only fetching objects
             "--no-write-fetch-head".to_string(),
         ];
-        fetch.extend(verbosity.into_flag());
-        fetch.push(url::File::new(storage.path()).to_string());
-        fetch.extend(oids.into_iter().map(|oid| oid.to_string()));
-        // N.b. `.` is used since we're fetching within the working copy
-        run::<_, _, &str, &str>(working, fetch, [])
+        args.extend(verbosity.into_flag());
+        args.push(url::File::new(storage.path()).to_string());
+        args.extend(oids.into_iter().map(|oid| oid.to_string()));
+        run(working, args)
     }
 }
 

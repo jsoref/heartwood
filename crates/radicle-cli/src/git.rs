@@ -137,7 +137,7 @@ pub fn git<S: AsRef<std::ffi::OsStr>>(
     repo: &std::path::Path,
     args: impl IntoIterator<Item = S>,
 ) -> anyhow::Result<std::process::Output> {
-    let output = radicle::git::run::<_, _, &str, &str>(repo, args, [])?;
+    let output = radicle::git::run(Some(repo), args)?;
 
     if !output.status.success() {
         anyhow::bail!(

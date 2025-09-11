@@ -1,5 +1,4 @@
 use std::io;
-use std::path::Path;
 use std::str::FromStr;
 
 use thiserror::Error;
@@ -28,7 +27,6 @@ pub enum Error {
 /// Run a git fetch command.
 pub fn run<R: ReadRepository>(
     mut refs: Vec<(git::Oid, git::RefString)>,
-    working: &Path,
     stored: R,
     stdin: &io::Stdin,
     verbosity: Verbosity,
@@ -53,6 +51,9 @@ pub fn run<R: ReadRepository>(
 
     // Verify them and prepare the final refspecs.
     let oids = refs.into_iter().map(|(oid, _)| oid);
+
+    // Rely on the environment variable `GIT_DIR` pointing at the repository.
+    let working = None;
 
     // N.b. we shell out to `git`, avoiding using `git2`. This is to
     // avoid an issue where somewhere within the fetch there is an

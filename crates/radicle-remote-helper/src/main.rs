@@ -243,14 +243,7 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
                 let oid = git::Oid::from_str(oid)?;
                 let refstr = git::RefString::try_from(*refstr)?;
 
-                // N.b. `working` is the `.git` folder and `fetch::run`
-                // requires the working directory.
-                let working = dunce::canonicalize(working.map_err(|_| Error::NoGitDir)?)?;
-                let working = working.parent().ok_or_else(|| Error::NoWorkingCopy {
-                    path: working.clone(),
-                })?;
-
-                return fetch::run(vec![(oid, refstr)], working, stored, &stdin, opts.verbosity)
+                return fetch::run(vec![(oid, refstr)], stored, &stdin, opts.verbosity)
                     .map_err(Error::from);
             }
             ["push", refspec] => {

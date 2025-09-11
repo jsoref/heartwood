@@ -125,14 +125,26 @@ fn find_patch_commit<'a>(
     working: &'a git::raw::Repository,
 ) -> anyhow::Result<git::raw::Commit<'a>> {
     let head = *revision.head();
-    let workdir = working
-        .workdir()
-        .ok_or(anyhow::anyhow!("repository is a bare git repository "))?;
 
     match working.find_commit(head) {
         Ok(commit) => Ok(commit),
         Err(e) if git::ext::is_not_found_err(&e) => {
-            git::process::fetch_local(workdir, stored, [head.into()], git::Verbosity::default())?;
+            let output = git::process::fetch_local(
+                Some(working.path()),
+                stored,
+                [head.into()],
+                git::Verbosity::default(),
+            )?;
+
+            if !output.status.success() {
+                anyhow::bail!(
+                    "`git fetch` exited with status {}, stderr and stdout follow:\n{}\n{}\n",
+                    output.status,
+                    String::from_utf8_lossy(&output.stderr),
+                    String::from_utf8_lossy(&output.stdout)
+                );
+            }
+
             working.find_commit(head).map_err(|e| e.into())
         }
         Err(e) => Err(e.into()),

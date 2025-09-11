@@ -1,6 +1,6 @@
 #![allow(clippy::let_unit_value)]
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
@@ -32,10 +32,6 @@ pub static PATCHES_REFNAME: LazyLock<git::RefString> =
 
 #[derive(Error, Debug)]
 pub enum InitError {
-    #[error(
-        "the Git repository found at {path:?} is a bare repository, expected a working directory"
-    )]
-    BareRepository { path: PathBuf },
     #[error("doc: {0}")]
     Doc(#[from] DocError),
     #[error("repository: {0}")]
@@ -115,23 +111,22 @@ where
     git::configure_repository(repo)?;
     git::configure_remote(repo, &REMOTE_NAME, url, &url.clone().with_namespace(*pk))?;
     let branch = git::Qualified::from(git::fmt::lit::refs_heads(default_branch));
-    // Pushes to default branch to the namespace of the `signer`
-    let pushspec = git::Refspec {
-        src: branch.clone(),
-        dst: branch.with_namespace(git::Component::from(pk)),
-        force: false,
-    };
-    git::run::<_, _, &str, &str>(
-        repo.workdir().ok_or(InitError::BareRepository {
-            path: repo.path().to_path_buf(),
-        })?,
-        [
-            "push",
-            &format!("{}", dunce::canonicalize(stored.path())?.display()),
-            &pushspec.to_string(),
-        ],
-        [],
-    )?;
+
+    {
+        // Push branch to storage.
+        let stored = dunce::canonicalize(stored.path())?.display().to_string();
+
+        // Pushes to default branch to the namespace of the `signer`.
+        let pushspec = git::Refspec {
+            src: branch.clone(),
+            dst: branch.with_namespace(git::Component::from(pk)),
+            force: false,
+        }
+        .to_string();
+
+        git::run(Some(repo.path()), ["push".to_string(), stored, pushspec])?;
+    }
+
     // N.b. we need to create the remote branch for the default branch
     let rad_remote =
         git::Qualified::from(git::lit::refs_remotes(&*REMOTE_COMPONENT)).join(default_branch);
@@ -231,12 +226,14 @@ where
 
 #[derive(Error, Debug)]
 pub enum CheckoutError {
-    #[error(
-        "the Git repository found at {path:?} is a bare repository, expected a working directory"
-    )]
-    BareRepository { path: PathBuf },
-    #[error("failed to fetch to working copy")]
-    Fetch(#[source] std::io::Error),
+    #[error("failed to fetch to working copy: {0}")]
+    FetchIo(#[source] std::io::Error),
+    #[error("internal fetch failed with exit status {status}, stderr and stdout follow:\n{stderr}\n{stdout}")]
+    FetchGit {
+        status: std::process::ExitStatus,
+        stderr: String,
+        stdout: String,
+    },
     #[error("git: {0}")]
     Git(#[from] git2::Error),
     #[error("payload: {0}")]
@@ -277,33 +274,35 @@ pub fn checkout<P: AsRef<Path>, S: storage::ReadStorage>(
         &url,
         &url.clone().with_namespace(*remote),
     )?;
-    let fetchspec = git::Refspec {
-        src: git::refspec::pattern!("refs/heads/*"),
-        dst: git::Qualified::from(git::lit::refs_remotes(&*REMOTE_NAME))
-            .to_pattern(git::refspec::STAR)
-            .into_patternstring(),
-        force: false,
-    };
-    let stored = storage.repository(proj)?;
-    let workdir = repo.workdir().ok_or(CheckoutError::BareRepository {
-        path: repo.path().to_path_buf(),
-    })?;
 
-    git::run::<_, _, &str, &str>(
-        workdir,
-        [
-            "fetch",
-            &format!(
-                "{}",
-                dunce::canonicalize(stored.path())
-                    .map_err(CheckoutError::Fetch)?
-                    .display()
-            ),
-            &fetchspec.to_string(),
-        ],
-        [],
-    )
-    .map_err(CheckoutError::Fetch)?;
+    {
+        // Fetch remote head to working copy.
+
+        let fetchspec = git::Refspec {
+            src: git::refspec::pattern!("refs/heads/*"),
+            dst: git::Qualified::from(git::lit::refs_remotes(&*REMOTE_NAME))
+                .to_pattern(git::refspec::STAR)
+                .into_patternstring(),
+            force: false,
+        }
+        .to_string();
+
+        let stored = dunce::canonicalize(storage.repository(proj)?.path())
+            .map_err(CheckoutError::FetchIo)?
+            .display()
+            .to_string();
+
+        let output = git::run(Some(repo.path()), ["fetch", &stored, &fetchspec])
+            .map_err(CheckoutError::FetchIo)?;
+
+        if !output.status.success() {
+            return Err(CheckoutError::FetchGit {
+                status: output.status,
+                stdout: String::from_utf8_lossy(&output.stdout).to_string(),
+                stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+            });
+        }
+    }
 
     {
         // Setup default branch.
