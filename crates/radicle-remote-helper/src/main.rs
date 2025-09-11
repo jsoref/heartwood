@@ -7,6 +7,14 @@
 //! Usage of standard streams:
 //!  - Standard Error ([`eprintln`]) is used for communicating with the user.
 //!  - Standard Output ([`println`]) is used for communicating with Git tooling.
+//!
+//! This process assumes that the environment variable `GIT_DIR` is set
+//! appropriately (to the repository being pushed from or fetched to), as
+//! mentioned in the documentation on Git remote helpers.
+//!
+//! For example, the following two mechanisms rely on `GIT_DIR` being set:
+//!  - [`git::raw::Repository::open_from_env`] to open the repository
+//!  - [`radicle::git::run`] (with [`None`] as first argument) to invoke `git`
 
 mod fetch;
 mod list;
@@ -89,12 +97,6 @@ pub enum Error {
     /// I/O error.
     #[error("i/o error: {0}")]
     Io(#[from] io::Error),
-    /// The `GIT_DIR` env var is not set.
-    #[error("the `GIT_DIR` environment variable is not set")]
-    NoGitDir,
-    /// No parent of `GIT_DIR` was found.
-    #[error("expected parent of .git but found {path:?}")]
-    NoWorkingCopy { path: PathBuf },
     /// Git error.
     #[error("git: {0}")]
     Git(#[from] git::raw::Error),
@@ -185,13 +187,14 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
         }
     };
 
+    // Assume the default remote if there was no remote.
+    let remote = remote.unwrap_or_else(|| (*radicle::rad::REMOTE_NAME).clone());
+
     let stored = profile.storage.repository_mut(url.repo)?;
     if stored.is_empty()? {
         return Err(Error::RepositoryNotFound(stored.path().to_path_buf()));
     }
 
-    // `GIT_DIR` is set by Git tooling, if we're in a working copy.
-    let working = env::var("GIT_DIR").map(PathBuf::from);
     // Whether we should output debug logs.
     let debug = radicle::profile::env::debug();
 
@@ -243,25 +246,23 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
                 let oid = git::Oid::from_str(oid)?;
                 let refstr = git::RefString::try_from(*refstr)?;
 
-                return fetch::run(vec![(oid, refstr)], stored, &stdin, opts.verbosity)
-                    .map_err(Error::from);
+                return Ok(fetch::run(
+                    vec![(oid, refstr)],
+                    stored,
+                    &stdin,
+                    opts.verbosity,
+                )?);
             }
             ["push", refspec] => {
-                // We have to be in a working copy to push.
-                let working = working.map_err(|_| Error::NoGitDir)?;
-
-                return push::run(
+                return Ok(push::run(
                     vec![refspec.to_string()],
-                    &working,
-                    // N.b. assume the default remote if there was no remote
-                    remote.unwrap_or((*radicle::rad::REMOTE_NAME).clone()),
+                    remote,
                     url,
                     &stored,
                     &profile,
                     &stdin,
                     opts,
-                )
-                .map_err(Error::from);
+                )?);
             }
             ["list"] => {
                 list::for_fetch(&url, &profile, &stored)?;

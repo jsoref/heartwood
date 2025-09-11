@@ -5,7 +5,6 @@ mod error;
 
 use std::collections::HashMap;
 use std::io::IsTerminal;
-use std::path::Path;
 use std::process::ExitStatus;
 use std::str::FromStr;
 use std::{assert_eq, io};
@@ -247,7 +246,6 @@ impl PushAction {
 /// Run a git push command.
 pub fn run(
     mut specs: Vec<String>,
-    working: &Path,
     remote: git::RefString,
     url: Url,
     stored: &storage::git::Repository,
@@ -292,7 +290,9 @@ pub fn run(
     let canonical_ref = git::refs::branch(project.default_branch());
     let mut set_canonical_refs: Vec<(git::Qualified, git::canonical::Object)> =
         Vec::with_capacity(specs.len());
-    let working = git::raw::Repository::open(working)?;
+
+    // Rely on the environment variable `GIT_DIR`.
+    let working = git::raw::Repository::open_from_env()?;
 
     // For each refspec, push a ref or delete a ref.
     for spec in specs {
