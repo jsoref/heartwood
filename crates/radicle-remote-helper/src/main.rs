@@ -29,7 +29,7 @@ use radicle_cli::git::Rev;
 use radicle_cli::terminal as cli;
 
 pub const VERSION: Version = Version {
-    name: "git-remote-rad",
+    name: env!("CARGO_BIN_NAME"),
     commit: env!("GIT_HEAD"),
     version: env!("RADICLE_VERSION"),
     timestamp: env!("SOURCE_DATE_EPOCH"),
@@ -201,7 +201,7 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
 
     if let Err(e) = radicle::io::set_file_limit(4096) {
         if debug {
-            eprintln!("git-remote-rad: unable to set open file limit: {e}");
+            eprintln!("{}: unable to set open file limit: {e}", VERSION.name);
         }
     }
 
@@ -209,7 +209,7 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
         let tokens = read_line(&stdin, &mut line)?;
 
         if debug {
-            eprintln!("git-remote-rad: {:?}", &tokens);
+            eprintln!("{}: {}", VERSION.name, &tokens.join(" "));
         }
 
         match tokens.as_slice() {
