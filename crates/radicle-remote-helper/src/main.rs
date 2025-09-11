@@ -236,10 +236,7 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
                 push_option(args, &mut opts)?;
                 println!("ok");
             }
-            ["option", "progress", ..] => {
-                println!("unsupported");
-            }
-            ["option", ..] => {
+            ["option", "progress", ..] | ["option", ..] => {
                 println!("unsupported");
             }
             ["fetch", oid, refstr] => {
@@ -302,22 +299,21 @@ fn push_option(args: &[&str], opts: &mut Options) -> Result<(), Error> {
         _ => {
             let args = args.join(" ");
 
-            if let Some((key, val)) = args.split_once('=') {
-                match key {
-                    "patch.message" => {
-                        opts.message.append(val);
-                    }
-                    "patch.base" => {
-                        let base =
-                            cli::args::rev(&val.into()).map_err(|e| Error::Base(e.into()))?;
-                        opts.base = Some(base);
-                    }
-                    other => {
-                        return Err(Error::UnsupportedPushOption(other.to_owned()));
-                    }
+            let (key, val) = args
+                .split_once('=')
+                .ok_or_else(|| Error::UnsupportedPushOption(args.to_owned()))?;
+
+            match key {
+                "patch.message" => {
+                    opts.message.append(val);
                 }
-            } else {
-                return Err(Error::UnsupportedPushOption(args.to_owned()));
+                "patch.base" => {
+                    let base = cli::args::rev(&val.into()).map_err(|e| Error::Base(e.into()))?;
+                    opts.base = Some(base);
+                }
+                other => {
+                    return Err(Error::UnsupportedPushOption(other.to_owned()));
+                }
             }
         }
     }
