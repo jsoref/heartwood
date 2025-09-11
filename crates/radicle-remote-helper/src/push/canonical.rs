@@ -27,7 +27,7 @@ where
 
     /// Calculates the quorum of the [`git::canonical::Canonical`] provided.
     ///
-    /// In some cases, it ensures that the [`head`] is attempting to converge
+    /// In some cases, it ensures that the head commit is attempting to converge
     /// with the set of commits of the other [`Did`]s.
     ///
     /// If a quorum is found, then it is also ensured that the new [`head`] is a
@@ -40,8 +40,6 @@ where
     /// copy, and that checks that any two commits are related in the graph.
     ///
     /// Ensures that the new head and the canonical commit do not diverge.
-    ///
-    /// [`head`]: crate::push::canonical::Canonical::head
     pub fn quorum(self) -> Result<(git::Qualified<'a>, canonical::Object), QuorumError> {
         self.canonical
             .quorum()
