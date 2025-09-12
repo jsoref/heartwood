@@ -95,11 +95,28 @@ where
 
 /// Creates a regular repository at the given path with a couple of commits.
 pub fn repository<P: AsRef<Path>>(path: P) -> (git2::Repository, git2::Oid) {
-    let repo = git2::Repository::init_opts(
+    let (repo, oid) = repository_with(
         path,
         git2::RepositoryInitOptions::new().external_template(false),
+    );
+    repo.checkout_head(None).unwrap();
+    (repo, oid)
+}
+
+pub fn bare_repository<P: AsRef<Path>>(path: P) -> (git2::Repository, git2::Oid) {
+    repository_with(
+        path,
+        git2::RepositoryInitOptions::new()
+            .external_template(false)
+            .bare(true),
     )
-    .unwrap();
+}
+
+fn repository_with<P: AsRef<Path>>(
+    path: P,
+    opts: &mut git2::RepositoryInitOptions,
+) -> (git2::Repository, git2::Oid) {
+    let repo = git2::Repository::init_opts(path, opts).unwrap();
 
     {
         let mut config = repo.config().unwrap();
@@ -124,7 +141,6 @@ pub fn repository<P: AsRef<Path>>(path: P) -> (git2::Repository, git2::Oid) {
         commit.id()
     };
     repo.set_head("refs/heads/master").unwrap();
-    repo.checkout_head(None).unwrap();
 
     drop(tree);
     drop(head);

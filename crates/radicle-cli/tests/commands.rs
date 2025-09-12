@@ -177,6 +177,15 @@ fn rad_init() {
 }
 
 #[test]
+fn rad_init_bare() {
+    let mut env = Environment::new();
+    let alice = env.profile("alice");
+    radicle::test::fixtures::bare_repository(env.work(&alice).as_path());
+    env.tests(["git/git-is-bare-repository", "rad-init"], &alice)
+        .unwrap();
+}
+
+#[test]
 fn rad_init_existing() {
     let mut environment = Environment::new();
     let mut profile = environment.node("alice");
@@ -185,6 +194,28 @@ fn rad_init_existing() {
 
     test(
         "examples/rad-init-existing.md",
+        working.path(),
+        Some(&profile.home),
+        [(
+            "URL",
+            git::url::File::new(profile.storage.path())
+                .rid(rid)
+                .to_string()
+                .as_str(),
+        )],
+    )
+    .unwrap();
+}
+
+#[test]
+fn rad_init_existing_bare() {
+    let mut environment = Environment::new();
+    let mut profile = environment.node("alice");
+    let working = tempfile::tempdir().unwrap();
+    let rid = profile.project("heartwood", "Radicle Heartwood Protocol & Stack");
+
+    test(
+        "examples/rad-init-existing-bare.md",
         working.path(),
         Some(&profile.home),
         [(
