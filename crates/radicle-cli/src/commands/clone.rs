@@ -46,6 +46,7 @@ Usage
 
 Options
 
+        --bare              Make a bare repository
         --scope <scope>     Follow scope: `followed` or `all` (default: all)
     -s, --seed <nid>        Clone from this seed (may be specified multiple times)
         --timeout <secs>    Timeout for fetching repository (default: 9)
@@ -64,6 +65,7 @@ pub struct Options {
     scope: Scope,
     /// Sync settings.
     sync: SyncSettings,
+    bare: bool,
 }
 
 impl Args for Options {
@@ -75,6 +77,7 @@ impl Args for Options {
         let mut scope = Scope::All;
         let mut sync = SyncSettings::default();
         let mut directory = None;
+        let mut bare = false;
 
         while let Some(arg) = parser.next()? {
             match arg {
@@ -98,6 +101,9 @@ impl Args for Options {
                 Long("no-confirm") => {
                     // We keep this flag here for consistency though it doesn't have any effect,
                     // since the command is fully non-interactive.
+                }
+                Long("bare") => {
+                    bare = true;
                 }
                 Long("help") | Short('h') => {
                     return Err(Error::Help.into());
@@ -125,6 +131,7 @@ impl Args for Options {
                 directory,
                 scope,
                 sync,
+                bare,
             },
             vec![],
         ))
@@ -153,6 +160,7 @@ pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
         options.sync.with_profile(&profile),
         &mut node,
         &profile,
+        options.bare,
     )?
     .print_or_success()
     .ok_or_else(|| anyhow::anyhow!("failed to clone {}", options.id))?;
@@ -163,7 +171,11 @@ pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
         .filter(|id| id != profile.id())
         .collect::<Vec<_>>();
     let default_branch = proj.default_branch().clone();
-    let path = working.workdir().unwrap(); // SAFETY: The working copy is not bare.
+    let path = if !options.bare {
+        working.workdir().unwrap()
+    } else {
+        working.path()
+    };
 
     // Configure repository and setup tracking for repository delegates.
     radicle::git::configure_repository(&working)?;
@@ -229,6 +241,7 @@ struct Checkout {
     repository: storage::git::Repository,
     doc: Doc,
     project: Project,
+    bare: bool,
 }
 
 impl Checkout {
@@ -236,6 +249,7 @@ impl Checkout {
         repository: storage::git::Repository,
         profile: &Profile,
         directory: Option<PathBuf>,
+        bare: bool,
     ) -> Result<Self, CheckoutFailure> {
         let rid = repository.rid();
         let doc = repository
@@ -257,6 +271,7 @@ impl Checkout {
             repository,
             doc: doc.doc,
             project: proj,
+            bare,
         })
     }
 
@@ -274,7 +289,7 @@ impl Checkout {
             "Creating checkout in ./{}..",
             term::format::tertiary(destination.display())
         ));
-        match rad::checkout(self.id, &self.remote, self.path, storage, false) {
+        match rad::checkout(self.id, &self.remote, self.path, storage, self.bare) {
             Err(err) => {
                 spinner.message(format!(
                     "Failed to checkout in ./{}",
@@ -303,6 +318,7 @@ fn clone(
     settings: SyncSettings,
     node: &mut Node,
     profile: &Profile,
+    bare: bool,
 ) -> Result<CloneResult, CloneError> {
     // Seed repository.
     if node.seed(id, scope)? {
@@ -322,7 +338,7 @@ fn clone(
                 node::sync::FetcherResult::TargetReached(_) => {
                     profile.storage.repository(id).map_or_else(
                         |err| Ok(CloneResult::RepositoryMissing { rid: id, err }),
-                        |repository| Ok(perform_checkout(repository, profile, directory)?),
+                        |repository| Ok(perform_checkout(repository, profile, directory, bare)?),
                     )
                 }
                 node::sync::FetcherResult::TargetError(failure) => {
@@ -330,7 +346,7 @@ fn clone(
                 }
             }
         }
-        Ok(repository) => Ok(perform_checkout(repository, profile, directory)?),
+        Ok(repository) => Ok(perform_checkout(repository, profile, directory, bare)?),
     }
 }
 
@@ -338,8 +354,9 @@ fn perform_checkout(
     repository: storage::git::Repository,
     profile: &Profile,
     directory: Option<PathBuf>,
+    bare: bool,
 ) -> Result<CloneResult, rad::CheckoutError> {
-    Checkout::new(repository, profile, directory).map_or_else(
+    Checkout::new(repository, profile, directory, bare).map_or_else(
         |failure| Ok(CloneResult::Failure(failure)),
         |checkout| checkout.run(&profile.storage),
     )

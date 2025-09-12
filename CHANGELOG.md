@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## New Features
 
+- `rad clone` now supports the flag `--bare` which works analoguously to 
+  `git clone --bare`.
+
+## Fixed Bugs
+
+## 1.4.0
+
+## Release Highlights
+
+## Deprecations
+
+## New Features
+
 - `rad cob log` now supports the arguments `--from` and `--to` which can be used
   to range over particular operations on a COB.
 
