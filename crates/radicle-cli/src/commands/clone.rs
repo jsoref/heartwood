@@ -274,7 +274,7 @@ impl Checkout {
             "Creating checkout in ./{}..",
             term::format::tertiary(destination.display())
         ));
-        match rad::checkout(self.id, &self.remote, self.path, storage) {
+        match rad::checkout(self.id, &self.remote, self.path, storage, false) {
             Err(err) => {
                 spinner.message(format!(
                     "Failed to checkout in ./{}",

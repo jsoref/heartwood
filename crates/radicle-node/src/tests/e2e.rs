@@ -562,6 +562,7 @@ fn test_clone() {
         alice.signer.public_key(),
         tmp.path().join("clone"),
         &alice.storage,
+        false,
     )
     .unwrap();
 

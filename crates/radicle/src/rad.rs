@@ -251,6 +251,7 @@ pub fn checkout<P: AsRef<Path>, S: storage::ReadStorage>(
     remote: &RemoteId,
     path: P,
     storage: &S,
+    bare: bool,
 ) -> Result<git2::Repository, CheckoutError> {
     // TODO: Decide on whether we can use `clone_local`
     // TODO: Look into sharing object databases.
@@ -260,7 +261,8 @@ pub fn checkout<P: AsRef<Path>, S: storage::ReadStorage>(
     let mut opts = git2::RepositoryInitOptions::new();
     opts.no_reinit(true)
         .external_template(false)
-        .description(project.description());
+        .description(project.description())
+        .bare(bare);
 
     let repo = git2::Repository::init_opts(path.as_ref(), &opts)?;
     let url = git::Url::from(proj);
@@ -318,7 +320,9 @@ pub fn checkout<P: AsRef<Path>, S: storage::ReadStorage>(
             .expect("checkout: default branch name is valid UTF-8");
 
         repo.set_head(branch_ref)?;
-        repo.checkout_head(None)?;
+        if !bare {
+            repo.checkout_head(None)?;
+        }
 
         // Setup remote tracking for default branch.
         git::set_upstream(&repo, &*REMOTE_NAME, project.default_branch(), branch_ref)?;
@@ -549,7 +553,7 @@ mod tests {
 
         // Bob forks it and creates a checkout.
         fork(id, &bob, &storage).unwrap();
-        checkout(id, bob_id, tempdir.path().join("copy"), &storage).unwrap();
+        checkout(id, bob_id, tempdir.path().join("copy"), &storage, false).unwrap();
 
         let bob_remote = storage.repository(id).unwrap().remote(bob_id).unwrap();
 
@@ -584,7 +588,7 @@ mod tests {
         .unwrap();
         git::set_upstream(&original, "rad", "master", "refs/heads/master").unwrap();
 
-        let copy = checkout(id, remote_id, tempdir.path().join("copy"), &storage).unwrap();
+        let copy = checkout(id, remote_id, tempdir.path().join("copy"), &storage, false).unwrap();
 
         assert_eq!(
             copy.head().unwrap().target(),

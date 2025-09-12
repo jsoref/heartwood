@@ -98,7 +98,7 @@ fn execute(options: Options, profile: &Profile) -> anyhow::Result<PathBuf> {
     }
 
     let mut spinner = term::spinner("Performing checkout...");
-    let repo = match radicle::rad::checkout(options.id, &remote, path.clone(), &storage) {
+    let repo = match radicle::rad::checkout(options.id, &remote, path.clone(), &storage, false) {
         Ok(repo) => repo,
         Err(err) => {
             spinner.failed();

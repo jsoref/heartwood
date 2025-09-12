@@ -570,6 +570,7 @@ mod tests {
                 bob.public_key(),
                 tmp.path().join("working"),
                 &storage,
+                false,
             )
             .unwrap();
 
