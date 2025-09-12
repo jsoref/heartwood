@@ -20,7 +20,12 @@ rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji
 
 And initialize this working copy as that existing repository:
 ```
-$ rad init --existing rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji
+$ rad init --setup-signing --existing rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji
+
+Configuring radicle signing key SHA256:UIedaL6Cxm6OUErh9GQUzzglSk7VpQlVTI1TAFB/HWA...
+
+✓ Signing configured in [..]/heartwood/.git/config
+✓ Created .gitsigners file
 ✓ Initialized existing repository rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji in [..]/heartwood/..
 ```
 

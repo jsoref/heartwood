@@ -20,9 +20,17 @@ rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji
 
 And initialize this working copy as that existing repository:
 ```
-$ rad init --existing rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji
+$ rad init --setup-signing --existing rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji
+
+Configuring radicle signing key SHA256:UIedaL6Cxm6OUErh9GQUzzglSk7VpQlVTI1TAFB/HWA...
+
+✓ Signing configured in [..]/heartwood/config
+! Not writing .gitsigners file.
 ✓ Initialized existing repository rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji in [..]/heartwood/..
 ```
+
+The warning about not writing `.gitsigners` is expected, as this requires a
+working directory, which a bare repository does not have.
 
 We can confirm that the working copy is initialized:
 ```

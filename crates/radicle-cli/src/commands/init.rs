@@ -403,6 +403,11 @@ pub fn init_existing(
         )?;
     }
 
+    if options.setup_signing {
+        // Setup radicle signing key.
+        self::setup_signing(profile.id(), &working, options.interactive)?;
+    }
+
     term::success!(
         "Initialized existing repository {} in {}..",
         term::format::tertiary(rid),
@@ -633,11 +638,13 @@ pub fn setup_signing(
     repo: &git::Repository,
     interactive: Interactive,
 ) -> anyhow::Result<()> {
-    let repo = repo
-        .workdir()
-        .ok_or(anyhow!("cannot setup signing in bare repository"))?;
+    const SIGNERS: &str = ".gitsigners";
+
+    let path = repo.path();
+    let config = path.join("config");
+
     let key = ssh::fmt::fingerprint(node_id);
-    let yes = if !git::is_signing_configured(repo)? {
+    let yes = if !git::is_signing_configured(path)? {
         term::headline(format!(
             "Configuring radicle signing key {}...",
             term::format::tertiary(key)
@@ -645,14 +652,25 @@ pub fn setup_signing(
         true
     } else if interactive.yes() {
         term::confirm(format!(
-            "Configure radicle signing key {} in local checkout?",
+            "Configure radicle signing key {} in {}?",
             term::format::tertiary(key),
+            term::format::tertiary(config.display()),
         ))
     } else {
         true
     };
 
-    if yes {
+    if !yes {
+        return Ok(());
+    }
+
+    git::configure_signing(path, node_id)?;
+    term::success!(
+        "Signing configured in {}",
+        term::format::tertiary(config.display())
+    );
+
+    if let Some(repo) = repo.workdir() {
         match git::write_gitsigners(repo, [node_id]) {
             Ok(file) => {
                 git::ignore(repo, file.as_path())?;
@@ -661,11 +679,11 @@ pub fn setup_signing(
             }
             Err(err) if err.kind() == std::io::ErrorKind::AlreadyExists => {
                 let ssh_key = ssh::fmt::key(node_id);
-                let gitsigners = term::format::tertiary(".gitsigners");
+                let gitsigners = term::format::tertiary(SIGNERS);
                 term::success!("Found existing {} file", gitsigners);
 
                 let ssh_keys =
-                    git::read_gitsigners(repo).context("error reading .gitsigners file")?;
+                    git::read_gitsigners(repo).context(format!("error reading {SIGNERS} file"))?;
 
                 if ssh_keys.contains(&ssh_key) {
                     term::success!("Signing key is already in {gitsigners} file");
@@ -677,13 +695,10 @@ pub fn setup_signing(
                 return Err(err.into());
             }
         }
-        git::configure_signing(repo, node_id)?;
-
-        term::success!(
-            "Signing configured in {}",
-            term::format::tertiary(".git/config")
-        );
+    } else {
+        term::notice!("Not writing {SIGNERS} file.")
     }
+
     Ok(())
 }
 
