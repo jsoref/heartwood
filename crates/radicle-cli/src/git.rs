@@ -351,28 +351,6 @@ pub fn parse_remote(refspec: &str) -> Option<(NodeId, &str)> {
         .and_then(|(peer, r)| NodeId::from_str(peer).ok().map(|p| (p, r)))
 }
 
-pub fn view_diff(
-    repo: &git2::Repository,
-    left: &git2::Oid,
-    right: &git2::Oid,
-) -> anyhow::Result<()> {
-    // TODO(erikli): Replace with repo.diff()
-    let workdir = repo
-        .workdir()
-        .ok_or_else(|| anyhow!("Could not get workdir current repository."))?;
-
-    let left = format!("{:.7}", left.to_string());
-    let right = format!("{:.7}", right.to_string());
-
-    let mut git = Command::new("git")
-        .current_dir(workdir)
-        .args(["diff", &left, &right])
-        .spawn()?;
-    git.wait()?;
-
-    Ok(())
-}
-
 pub fn add_tag(
     repo: &git2::Repository,
     message: &str,
