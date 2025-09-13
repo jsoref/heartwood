@@ -246,7 +246,7 @@ impl PushAction {
 /// Run a git push command.
 pub fn run(
     mut specs: Vec<String>,
-    remote: git::RefString,
+    remote: Option<git::RefString>,
     url: Url,
     stored: &storage::git::Repository,
     profile: &Profile,
@@ -477,7 +477,7 @@ pub fn run(
 /// Open a new patch.
 fn patch_open<G>(
     src: &git::Oid,
-    upstream: &git::RefString,
+    upstream: &Option<git::RefString>,
     nid: &NodeId,
     working: &git::raw::Repository,
     stored: &storage::git::Repository,
@@ -564,17 +564,20 @@ where
                 "Create reference for patch head",
             )?;
 
-            // Setup current branch so that pushing updates the patch.
-            if let Some(branch) = rad::setup_patch_upstream(&patch, head, working, upstream, false)?
-            {
-                if let Some(name) = branch.name()? {
-                    if profile.hints() {
-                        // Remove the remote portion of the name, i.e.
-                        // rad/patches/deadbeef -> patches/deadbeef
-                        let name = name.split('/').skip(1).collect::<Vec<_>>().join("/");
-                        hint(format!(
-                            "to update, run `git push` or `git push rad -f HEAD:{name}`"
-                        ));
+            if let Some(upstream) = upstream {
+                // Setup current branch so that pushing updates the patch.
+                if let Some(branch) =
+                    rad::setup_patch_upstream(&patch, head, working, upstream, false)?
+                {
+                    if let Some(name) = branch.name()? {
+                        if profile.hints() {
+                            // Remove the remote portion of the name, i.e.
+                            // rad/patches/deadbeef -> patches/deadbeef
+                            let name = name.split('/').skip(1).collect::<Vec<_>>().join("/");
+                            hint(format!(
+                                "to update, run `git push` or `git push rad -f HEAD:{name}`"
+                            ));
+                        }
                     }
                 }
             }

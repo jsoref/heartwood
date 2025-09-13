@@ -187,9 +187,6 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
         }
     };
 
-    // Assume the default remote if there was no remote.
-    let remote = remote.unwrap_or_else(|| (*radicle::rad::REMOTE_NAME).clone());
-
     let stored = profile.storage.repository_mut(url.repo)?;
     if stored.is_empty()? {
         return Err(Error::RepositoryNotFound(stored.path().to_path_buf()));
