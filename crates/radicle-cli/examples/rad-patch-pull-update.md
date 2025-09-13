@@ -112,6 +112,7 @@ $ rad patch show 55b9721
 │ ↑ updated to f91e056da05b2d9a58af1160c76245bc3debf7a8 (cad2666) now │
 ╰─────────────────────────────────────────────────────────────────────╯
 $ git ls-remote rad
+f2de534b5e81d7c6e2dcaf58c3dd91573c0a0354	HEAD
 f2de534b5e81d7c6e2dcaf58c3dd91573c0a0354	refs/heads/master
 cad2666a8a2250e4dee175ed5044be2c251ff08b	refs/heads/patches/55b9721ed7f6bfec38f43729e9b6631c5dc812fb
 ```

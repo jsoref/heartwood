@@ -22,6 +22,7 @@ $ git branch -r
 $ git pull
 Already up to date.
 $ git branch -r
+  rad/HEAD -> rad/master
   rad/master
   rad/patches/5e2dedcc5d515fcbc1cca483d3376609fe889bfb
 ```

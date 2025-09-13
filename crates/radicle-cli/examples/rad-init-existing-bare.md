@@ -40,7 +40,7 @@ $ git remote show rad
 * remote rad
   Fetch URL: rad://z42hL2jL4XNk6K8oHQaSWfMgCL7ji
   Push  URL: rad://z42hL2jL4XNk6K8oHQaSWfMgCL7ji/z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
-  HEAD branch: (unknown)
+  HEAD branch: master
   Remote branch:
     master new (next fetch will store in remotes/rad)
   Local ref configured for 'git push':

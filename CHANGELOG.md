@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `rad clone` now supports the flag `--bare` which works analoguously to 
   `git clone --bare`.
 - `rad init --setup-signing` now works on bare repositories.
+- `git-remote-rad` now correctly reports the default branch to Git by listing
+  the symbolic reference `HEAD`.
 
 ## Fixed Bugs
 

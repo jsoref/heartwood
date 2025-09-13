@@ -35,6 +35,7 @@ pushing to their `rad` remote -- but they won't sync to the network just yet:
 $ git commit -m "Alice's commit" --allow-empty -q
 $ git push rad -o no-sync
 $ git ls-remote rad
+f2de534b5e81d7c6e2dcaf58c3dd91573c0a0354	HEAD
 f2de534b5e81d7c6e2dcaf58c3dd91573c0a0354	refs/heads/master
 ```
 
@@ -43,6 +44,7 @@ $ git add README
 $ git commit -m "Bob's commit" -q
 $ git push rad -o no-sync
 $ git ls-remote rad
+f2de534b5e81d7c6e2dcaf58c3dd91573c0a0354	HEAD
 f2de534b5e81d7c6e2dcaf58c3dd91573c0a0354	refs/heads/master
 ```
 
@@ -51,6 +53,7 @@ $ git add README
 $ git commit -m "Eve's commit" -q
 $ git push rad -o no-sync
 $ git ls-remote rad
+f2de534b5e81d7c6e2dcaf58c3dd91573c0a0354	HEAD
 f2de534b5e81d7c6e2dcaf58c3dd91573c0a0354	refs/heads/master
 ```
 

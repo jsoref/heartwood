@@ -46,8 +46,15 @@ pub fn for_fetch<R: ReadRepository + cob::Store<Namespace = NodeId> + 'static>(
             println!("{oid} {name}");
         }
     } else {
-        // Listing canonical refs.
-        // We skip over `refs/rad/*`, since those are not meant to be fetched into a working copy.
+        // List the symbolic reference `HEAD`, which is interpreted by
+        // Git clients to determine the default branch.
+        match stored.head() {
+            Ok((target, _)) => println!("@{target} HEAD"),
+            Err(err) => eprintln!("remote: error resolving HEAD: {err}"),
+        }
+
+        // List canonical references.
+        // Skip over `refs/rad/*`, since those are not meant to be fetched into a working copy.
         for glob in [
             git::refspec::pattern!("refs/heads/*"),
             git::refspec::pattern!("refs/tags/*"),
@@ -56,8 +63,10 @@ pub fn for_fetch<R: ReadRepository + cob::Store<Namespace = NodeId> + 'static>(
                 println!("{oid} {name}");
             }
         }
-        // List the patch refs, but don't abort if there's an error, as this would break
-        // all fetch behavior. Instead, just output an error to the user.
+
+        // List the patch refs, but do not abort if there is an error,
+        // as this would break all fetch behavior.
+        // Instead, just output an error to the user.
         if let Err(e) = patch_refs(profile, stored) {
             eprintln!("remote: error listing patch refs: {e}");
         }
