@@ -5,7 +5,7 @@ mod error;
 
 use std::collections::HashMap;
 use std::io::IsTerminal;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::ExitStatus;
 use std::str::FromStr;
 use std::{assert_eq, io};
@@ -36,10 +36,6 @@ use crate::{hint, read_line, Options, Verbosity};
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error(
-        "the Git repository found at {path:?} is a bare repository, expected a working directory"
-    )]
-    BareRepository { path: PathBuf },
     /// Public key doesn't match the remote namespace we're pushing to.
     #[error("cannot push to remote namespace owned by {0}")]
     KeyMismatch(Did),
