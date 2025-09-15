@@ -49,6 +49,8 @@ pub static CONFIG: LazyLock<RenderConfig> = LazyLock::new(|| RenderConfig {
 /// Target for paint operations.
 ///
 /// This tells a [`Spinner`] object where to paint to.
+///
+/// [`Spinner`]: crate::Spinner
 #[derive(Clone)]
 pub enum PaintTarget {
     Stdout,

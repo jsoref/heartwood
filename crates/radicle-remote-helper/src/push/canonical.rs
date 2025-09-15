@@ -30,9 +30,9 @@ where
     /// In some cases, it ensures that the head commit is attempting to converge
     /// with the set of commits of the other [`Did`]s.
     ///
-    /// If a quorum is found, then it is also ensured that the new [`head`] is a
-    /// descendant of the current canonical commit, otherwise the commits are
-    /// considered diverging.
+    /// If a quorum is found, then it is also ensured that the new head commit
+    /// is a descendant of the current canonical commit, otherwise the commits
+    /// are considered diverging.
     ///
     /// # Errors
     ///
