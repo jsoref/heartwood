@@ -16,6 +16,7 @@ plan:
       export CARGO_HOME=/workspace/deps
       export HOME=/root
       export PATH="/root/.cargo/bin:$PATH"
+      export RUSTDOCFLAGS='-D warnings'
 
       cargo doc --workspace --no-deps
 

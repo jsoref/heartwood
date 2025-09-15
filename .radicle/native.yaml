@@ -1,4 +1,6 @@
 shell: |
+  export RUSTDOCFLAGS='-D warnings'
+
   cargo --version
   rustc --version
 
