@@ -815,7 +815,7 @@ fn rad_node() {
 
 #[test]
 fn rad_patch() {
-    Environment::alice(["rad-init", "rad-issue", "rad-patch"]);
+    Environment::alice(["rad-init", "rad-patch"]);
 }
 
 #[test]
