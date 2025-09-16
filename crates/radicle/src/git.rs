@@ -78,6 +78,18 @@ impl Verbosity {
 
         Some(FLAG_PREFIX.to_string() + &flag.repeat(repetitions))
     }
+
+    /// Clamps verbosity to a range, as some commands only accept a specific
+    /// number of repetitions.
+    fn clamp(self, min: i8, max: i8) -> Self {
+        Self(self.0.clamp(min, max))
+    }
+
+    /// Clamps verbosity to at most `-v` or `-q`, as some commands do not accept
+    /// repetitions.
+    pub fn clamp_one(self) -> Self {
+        self.clamp(-1, 1)
+    }
 }
 
 impl From<i8> for Verbosity {
@@ -783,13 +795,13 @@ pub mod process {
 
     use crate::storage::ReadRepository;
 
-    use super::{run, url, Oid, Verbosity};
+    use super::{run, Oid, Verbosity};
 
-    /// Perform a local fetch, i.e. `file://<storage path>`.
+    /// Perform a local fetch, from storage using `git fetch-pack`.
     ///
     /// `oids` are the set of [`Oid`]s that are being fetched from the
     /// `storage`.
-    pub fn fetch_local<R>(
+    pub fn fetch_pack<R>(
         working: Option<&Path>,
         storage: &R,
         oids: impl IntoIterator<Item = Oid>,
@@ -798,13 +810,9 @@ pub mod process {
     where
         R: ReadRepository,
     {
-        let mut args = vec![
-            "fetch".to_string(),
-            // Avoid writing fetch head since we're only fetching objects
-            "--no-write-fetch-head".to_string(),
-        ];
-        args.extend(verbosity.into_flag());
-        args.push(url::File::new(storage.path()).to_string());
+        let mut args = vec!["fetch-pack".to_string()];
+        args.extend(verbosity.clamp_one().into_flag());
+        args.push(dunce::canonicalize(storage.path())?.display().to_string());
         args.extend(oids.into_iter().map(|oid| oid.to_string()));
         run(working, args)
     }

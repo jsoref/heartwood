@@ -64,7 +64,7 @@ pub fn run<R: ReadRepository>(
     // used in the working copy, this will always result in the object
     // missing. This seems to only be an issue with `libgit2`/`git2`
     // and not `git` itself.
-    git::process::fetch_local(working, &stored, oids, verbosity.into())?;
+    git::process::fetch_pack(working, &stored, oids, verbosity.into())?;
 
     // Nb. An empty line means we're done.
     println!();
