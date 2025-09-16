@@ -1,5 +1,5 @@
-use std::io;
 use std::str::FromStr;
+use std::{io, process::ExitStatus};
 
 use thiserror::Error;
 
@@ -21,7 +21,15 @@ pub enum Error {
     InvalidRef(#[from] radicle::git::fmt::Error),
     /// Git error.
     #[error("git: {0}")]
-    Git(#[from] git::raw::Error),
+    InvalidOid(#[source] git::raw::Error),
+
+    /// Error fetching pack from storage to working copy.
+    #[error("`git fetch-pack` failed with exit status {status}, stderr and stdout follow:\n{stderr}\n{stdout}")]
+    FetchPackFailed {
+        status: ExitStatus,
+        stderr: String,
+        stdout: String,
+    },
 }
 
 /// Run a git fetch command.
@@ -37,7 +45,7 @@ pub fn run<R: ReadRepository>(
         let tokens = read_line(stdin, &mut line)?;
         match tokens.as_slice() {
             ["fetch", oid, refstr] => {
-                let oid = git::Oid::from_str(oid)?;
+                let oid = git::Oid::from_str(oid).map_err(Error::InvalidOid)?;
                 let refstr = git::RefString::try_from(*refstr)?;
 
                 refs.push((oid, refstr));
@@ -64,7 +72,15 @@ pub fn run<R: ReadRepository>(
     // used in the working copy, this will always result in the object
     // missing. This seems to only be an issue with `libgit2`/`git2`
     // and not `git` itself.
-    git::process::fetch_pack(working, &stored, oids, verbosity.into())?;
+    let output = git::process::fetch_pack(working, &stored, oids, verbosity.into())?;
+
+    if !output.status.success() {
+        return Err(Error::FetchPackFailed {
+            stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+            stdout: String::from_utf8_lossy(&output.stdout).to_string(),
+            status: output.status,
+        });
+    }
 
     // Nb. An empty line means we're done.
     println!();
