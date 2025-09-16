@@ -1987,7 +1987,7 @@ where
         if let Ok(result) = self.db.routing_mut().add_inventory([&rid], nid, time) {
             if let &[(_, InsertResult::SeedAdded)] = result.as_slice() {
                 self.emitter.emit(Event::SeedDiscovered { rid, nid });
-                info!(target: "service", "Routing table updated for {rid} with seed {nid}");
+                debug!(target: "service", "Routing table updated for {rid} with seed {nid}");
             }
         }
     }
@@ -2106,7 +2106,7 @@ where
         {
             match result {
                 InsertResult::SeedAdded => {
-                    info!(target: "service", "Routing table updated for {rid} with seed {from}");
+                    debug!(target: "service", "Routing table updated for {rid} with seed {from}");
                     self.emitter.emit(Event::SeedDiscovered { rid, nid: from });
 
                     if self
