@@ -121,10 +121,9 @@ pub enum Error {
     #[error(transparent)]
     FindObjects(#[from] git::canonical::error::FindObjectsError),
 
-    /// Errors for "internal" pushes, i.e., pushes that this process
-    /// initiates between the working copy and storage.
-    #[error("internal push failed with exit status {status}, stderr and stdout follow:\n{stderr}\n{stdout}")]
-    InternalPushFailed {
+    /// Error sending pack from the working copy to storage.
+    #[error("`git send-pack` failed with exit status {status}, stderr and stdout follow:\n{stderr}\n{stdout}")]
+    SendPackFailed {
         status: ExitStatus,
         stderr: String,
         stdout: String,
@@ -883,27 +882,17 @@ fn push_ref(
     stored: &git::raw::Repository,
     verbosity: Verbosity,
 ) -> Result<(), Error> {
-    let url = git::url::File::new(stored.path()).to_string();
+    let path = dunce::canonicalize(stored.path())?.display().to_string();
     // Nb. The *force* indicator (`+`) is processed by Git tooling before we even reach this code.
     // This happens during the `list for-push` phase.
     let refspec = git::Refspec { src, dst, force };
 
-    let mut args = vec![
-        "push".to_string(),
-        // This push is "internal" from the point of view of the user.
-        // If they want to run a pre-push hook, then they would configure
-        // this on their remote, and the hook would run before we get here.
-        // However, the context of this invocation of `git push` is
-        // the same repository, so if the user has configured a pre-push
-        // hook it would run twice, which is not what we want, so set this
-        // option.
-        "--no-verify".to_string(),
-    ];
+    let mut args = vec!["send-pack".to_string()];
 
     let verbosity: git::Verbosity = verbosity.into();
     args.extend(verbosity.into_flag());
 
-    args.extend([url.to_string(), refspec.to_string()]);
+    args.extend([path.to_string(), refspec.to_string()]);
 
     // Rely on the environment variable `GIT_DIR`.
     let working = None;
@@ -911,7 +900,7 @@ fn push_ref(
     let output = radicle::git::run(working, args)?;
 
     if !output.status.success() {
-        return Err(Error::InternalPushFailed {
+        return Err(Error::SendPackFailed {
             stderr: String::from_utf8_lossy(&output.stderr).to_string(),
             stdout: String::from_utf8_lossy(&output.stdout).to_string(),
             status: output.status,
