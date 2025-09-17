@@ -1,3 +1,8 @@
+``` (stderr)
+$ rad diff
+! Deprecated: The command/option `rad diff` is deprecated and will be removed. Please use `git diff` instead.
+```
+
 Exploring `rad diff`.
 
 ``` ./main.c

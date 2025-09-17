@@ -82,6 +82,8 @@ impl Args for Options {
 }
 
 pub fn run(options: Options, _ctx: impl term::Context) -> anyhow::Result<()> {
+    crate::warning::deprecated("rad diff", "git diff");
+
     let repo = rad::repo()?;
     let oids = options
         .commits
