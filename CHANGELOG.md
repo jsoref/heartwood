@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Deprecations
 
+- The option `rad self --nid` was deprecated in favor of `rad status --only nid`
 ## New Features
 
 - `rad clone` now supports the flag `--bare` which works analoguously to

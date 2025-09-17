@@ -100,9 +100,7 @@ pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
             term::print(profile.config.alias());
         }
         Show::NodeId => {
-            term::warning(
-                "The option `--nid` is deprecated, please use `rad node status --only nid` instead.",
-            );
+            crate::warning::deprecated("rad self --nid", "rad node status --only nid");
             term::print(
                 Node::new(profile.socket())
                     .nid()
