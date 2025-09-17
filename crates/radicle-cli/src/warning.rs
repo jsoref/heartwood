@@ -44,3 +44,12 @@ pub(crate) fn nodes_renamed(config: &Config) -> Vec<String> {
     ));
     warnings
 }
+
+/// Prints a deprecation warning to standard error.
+pub(crate) fn deprecated(old: impl std::fmt::Display, new: impl std::fmt::Display) {
+    eprintln!(
+        "{} {} The command/option `{old}` is deprecated and will be removed. Please use `{new}` instead.",
+        radicle_term::PREFIX_WARNING,
+        radicle_term::Paint::yellow("Deprecated:").bold(),
+    );
+}
