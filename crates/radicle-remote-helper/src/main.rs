@@ -153,6 +153,35 @@ impl FromStr for Verbosity {
     }
 }
 
+/// Branch creation options when creating a patch.
+#[derive(Debug, Default, Clone)]
+pub enum Branch {
+    /// Don't create a new branch.
+    #[default]
+    None,
+    /// Create a branch with the same name as the upstream branch (i.e. `patches/<patch id>`).
+    MirrorUpstream,
+    /// Create a branch with the provided name.
+    Provided(git::RefString),
+}
+
+impl Branch {
+    /// Return the branch name to be used for the local branch when creating a
+    /// patch.
+    pub fn to_branch_name(self, object: &radicle::patch::PatchId) -> Option<git::Qualified> {
+        match self {
+            Self::None => None,
+            Self::MirrorUpstream => Some(git::refs::patch(object)),
+            Self::Provided(name) => match name.clone().into_qualified() {
+                None => Some(git::fmt::lit::refs_heads(&name).into()),
+                // Ensure that if the reference is already qualified we do not
+                // add `refs/heads`
+                Some(name) => Some(name),
+            },
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct Options {
     /// Don't sync after push.
@@ -167,6 +196,8 @@ pub struct Options {
     base: Option<git::Oid>,
     /// Patch message.
     message: cli::patch::Message,
+    /// Create a branch and set its upstream when opening a patch.
+    branch: Branch,
     verbosity: Verbosity,
 }
 
@@ -289,6 +320,7 @@ fn push_option(args: &[&str], opts: &mut Options) -> Result<(), Error> {
         ["sync.debug"] => opts.sync_debug = true,
         ["no-sync"] => opts.no_sync = true,
         ["patch.draft"] => opts.draft = true,
+        ["patch.branch"] => opts.branch = Branch::MirrorUpstream,
         _ => {
             let args = args.join(" ");
 
@@ -315,6 +347,7 @@ fn push_option(args: &[&str], opts: &mut Options) -> Result<(), Error> {
 
                     opts.base = Some(git::Oid::from(commit.id()));
                 }
+                "patch.branch" => opts.branch = Branch::Provided(git::RefString::try_from(val)?),
                 other => {
                     return Err(Error::UnsupportedPushOption(other.to_owned()));
                 }

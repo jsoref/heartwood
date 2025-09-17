@@ -217,6 +217,11 @@ The full list of options follows:
 *patch.draft*::
   Open the patch as a _draft_. Turned off by default.
 
+*patch.branch[=<name>]*::
+  Create a branch when opening a patch. Turned off by default.
+  If a custom *name* is provided, this name is used. Otherwise
+  the branch name defaults to *patches/<patch id>*.
+
 *patch.message*=_<message>_::
   To prevent the editor from opening, you can specify the patch message via this
   option. Multiple *patch.message* options are concatenated with a blank line

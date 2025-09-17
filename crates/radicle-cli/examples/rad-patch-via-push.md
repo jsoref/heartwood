@@ -239,6 +239,90 @@ $ rad patch show 9580891
 ╰────────────────────────────────────────────────────╯
 ```
 
+## Detached HEAD
+
+In some cases, we may be creating patches from a detached HEAD state, but we
+still want to have a tracking branch. We can do this using the `patch.branch`
+option.
+
+```
+$ git commit --allow-empty -m "Going into detached HEAD"
+[feature/2 831e838] Going into detached HEAD
+```
+
+``` (stderr)
+$ git checkout 831e838
+Note: switching to '831e838'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 831e838 Going into detached HEAD
+$ git push rad HEAD:refs/patches -o patch.branch
+✓ Patch e0fd879ac0a7d3ddcf3b440d8db656f5d7cebea3 opened
+✓ Branch patches/e0fd879ac0a7d3ddcf3b440d8db656f5d7cebea3 created
+hint: to update, run `git push rad patches/e0fd879ac0a7d3ddcf3b440d8db656f5d7cebea3`
+To rad://z42hL2jL4XNk6K8oHQaSWfMgCL7ji/z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
+ * [new reference]   HEAD -> refs/patches
+```
+
+The default name used for the branch is `patches/<patch id>`. So let's checkout
+the branch and push a new revision:
+
+``` (stderr)
+$ git checkout patches/e0fd879ac0a7d3ddcf3b440d8db656f5d7cebea3
+Switched to branch 'patches/e0fd879ac0a7d3ddcf3b440d8db656f5d7cebea3'
+$ git commit --allow-empty -m "Pushing new revision"
+$ git push rad
+✓ Patch e0fd879 updated to revision 943cbd9769e855d5e4eba419e68374c5141a2785
+To compare against your previous revision e0fd879, run:
+
+   git range-diff [..] [..] [..]
+
+To rad://z42hL2jL4XNk6K8oHQaSWfMgCL7ji/z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
+   831e838..d0ff2a1  patches/e0fd879ac0a7d3ddcf3b440d8db656f5d7cebea3 -> patches/e0fd879ac0a7d3ddcf3b440d8db656f5d7cebea3
+```
+
+However, we also allow you to name the branch yourself:
+
+``` (stderr)
+$ git checkout 831e838 -q
+$ git push rad HEAD:refs/patches -o patch.branch='feature/3'
+✓ Patch e0fd879ac0a7d3ddcf3b440d8db656f5d7cebea3 opened
+✓ Branch feature/3 created
+hint: to update, run `git push rad feature/3`
+To rad://z42hL2jL4XNk6K8oHQaSWfMgCL7ji/z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
+ * [new reference]   HEAD -> refs/patches
+```
+
+Let's checkout this branch and also push a new revision:
+
+``` (stderr)
+$ git checkout feature/3
+Switched to branch 'feature/3'
+$ git commit --allow-empty -m "Pushing new revision"
+$ git push rad
+✓ Patch e0fd879 updated to revision 943cbd9769e855d5e4eba419e68374c5141a2785
+To compare against your previous revision e0fd879, run:
+
+   git range-diff [..] [..] [..]
+
+To rad://z42hL2jL4XNk6K8oHQaSWfMgCL7ji/z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
+   831e838..d0ff2a1  feature/3 -> patches/e0fd879ac0a7d3ddcf3b440d8db656f5d7cebea3
+```
+
 ## Empty patch
 
 If we try to open a patch without making any changes to our base branch (`master`),

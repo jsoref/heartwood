@@ -564,17 +564,52 @@ where
             )?;
 
             if let Some(upstream) = upstream {
+                if let Some(local_branch) = opts.branch.to_branch_name(&patch) {
+                    fn strip_refs_heads(qualified: git::Qualified) -> git::RefString {
+                        let (_refs, _heads, x, xs) = qualified.non_empty_components();
+                        std::iter::once(x).chain(xs).collect()
+                    }
+
+                    working.reference(
+                        &local_branch,
+                        *head,
+                        true,
+                        "Create local branch for patch",
+                    )?;
+
+                    let remote_branch = git::refs::workdir::patch_upstream(&patch);
+                    let remote_branch = working.reference(
+                        &remote_branch,
+                        *head,
+                        true,
+                        "Create remote tracking branch for patch",
+                    )?;
+                    debug_assert!(remote_branch.is_remote());
+
+                    let local_branch = strip_refs_heads(local_branch);
+                    let upstream_branch = git::refs::patch(&patch);
+                    git::set_upstream(working, upstream, &local_branch, &upstream_branch)?;
+
+                    eprintln!(
+                        "{} Branch {} created",
+                        term::PREFIX_SUCCESS,
+                        term::format::tertiary(&local_branch),
+                    );
+                    hint(format!(
+                        "to update, run `git push {upstream} {local_branch}`"
+                    ));
+                }
                 // Setup current branch so that pushing updates the patch.
-                if let Some(branch) =
+                else if let Some(branch) =
                     rad::setup_patch_upstream(&patch, head, working, upstream, false)?
                 {
                     if let Some(name) = branch.name()? {
                         if profile.hints() {
                             // Remove the remote portion of the name, i.e.
                             // rad/patches/deadbeef -> patches/deadbeef
-                            let name = name.split('/').skip(1).collect::<Vec<_>>().join("/");
+                            let name = name.split_once('/').unwrap_or_default().1;
                             hint(format!(
-                                "to update, run `git push` or `git push rad -f HEAD:{name}`"
+                                "to update, run `git push` or `git push {upstream} -f HEAD:{name}`"
                             ));
                         }
                     }
