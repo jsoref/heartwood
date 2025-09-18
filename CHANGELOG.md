@@ -146,14 +146,63 @@ confusing.
 
 ## Release Highlights
 
-## Deprecations
+### systemd service hardening
 
-## New Features
+Running `radicle-node` as systemd service using our service files, will now run the service with some hardening options enabled.
+This work includes some trivial sandboxing options in the provided service files and lead users to `systemd-analyze security`.
 
-- `rad cob log` now supports the arguments `--from` and `--to` which can be used
-  to range over particular operations on a COB.
+While being a trivial change and far from a secure service it is an improvement and may push downstream packagers and / or users to add even a bit of sandboxing.
+
+### Path to Windows
+
+We continued working on Windows support for Radicle and made some progress on the node implementation.
+As `std::os::unix` is obviously not available on Windows, we resorted to using the `winpipe` crate.
+This crate implements a very similar API to `std::os::unix` but for named pipes.
+The node has learned how to use named pipes when for the control socket when on Windows architecture.
+
+### Bootstrapping Improvements
+
+When you start a fresh node, it'll need to have at least one seed that it can bootstrap from.
+We do this by using `iris.radicle.xyz` and `rosa.radicle.xyz` as bootstrap nodes.
+With this release, a node can now connect to them when DNS is not available or a connection via Tor is desired.
+
+### Improvements to `rad cob log`
+
+The rad cob log command learned two new options, `--from` and `--to`.
+These take a commit SHA that correspond to a COB operation,
+and allows you to limit the log to start from or end the log at those operations, respectively.
+
+### Improvements to rad sync
+
+We now use a more suitable symbol in rad sync status for the status:
+
+✗ Hint:
+   ? … Status:
+       ✓ … in sync          ✗ … out of sync
+       ! … not announced    • … unknown
+
+This aligns closer with the rad node status output. As well as this,
+the Tip column was renamed to SigRefs, since the term Tip was too ambiguous.
+
+The internal logic of rad sync --announce was improved by writing more tests and finding edge cases to fix.
+Included in these improvements is changing the target behavior.
+Before, the announcements would attempt to reach the preferred seeds target and the replication factor.
+Now, it tries to reach the preferred seeds and falls back to the replication factor.
+
+### Human Oriented Panics
+
+The `rad` CLI now prints a more human-friendly message when it encounters a panic.
+
+### Notable Crate Changes
+
+- Introduce a new module that provides an API for iterating over a COB's operations, given a range of commits
+- Remove `anyhow` from `radicle-term` and `radicle-node`
+- BREAKING: Removed `radicle::node::DEFAULT_SOCKET_NAME`, use `radicle::profile::Home::socket` instead
+- BREAKING: Add a node event for canonical reference updates
 
 ## Fixed Bugs
+
+- Fix panic when reading from SQLite database fails
 
 ## 1.3.1 - 2025-09-04
 
