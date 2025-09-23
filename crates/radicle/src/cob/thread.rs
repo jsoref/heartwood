@@ -532,9 +532,6 @@ pub fn edit<L>(
     body: String,
     embeds: Vec<Embed<Uri>>,
 ) -> Result<(), Error> {
-    if body.is_empty() {
-        return Err(Error::Edit(id));
-    }
     debug_assert!(!thread.timeline.contains(&id));
     thread.timeline.push(id);
 
