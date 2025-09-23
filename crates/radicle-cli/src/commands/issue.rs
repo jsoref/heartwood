@@ -908,7 +908,7 @@ where
 
     // Editing via the editor.
     let Some((title, description)) = term::issue::get_title_description(
-        title.and(Title::new(issue.title()).ok()),
+        title.or_else(|| Title::new(issue.title()).ok()),
         Some(description.unwrap_or(issue.description().to_owned())),
     )?
     else {
