@@ -43,7 +43,7 @@ impl Deref for Timestamp {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq, Eq)]
 pub enum TitleError {
     #[error("empty title")]
     EmptyTitle,
@@ -70,11 +70,14 @@ impl Title {
     /// characters
     pub fn new(title: &str) -> Result<Self, TitleError> {
         if title.contains('\n') || title.contains('\r') {
-            Err(TitleError::InvalidTitle)
-        } else if title.is_empty() {
+            return Err(TitleError::InvalidTitle);
+        }
+
+        let title = title.trim();
+        if title.is_empty() {
             Err(TitleError::EmptyTitle)
         } else {
-            Ok(Self(title.trim().to_string()))
+            Ok(Self(title.into()))
         }
     }
 }
@@ -492,6 +495,16 @@ mod test {
     use std::collections::BTreeSet;
 
     use super::*;
+
+    #[test]
+    fn test_title() {
+        assert_eq!(Title::new(""), Err(TitleError::EmptyTitle));
+        assert_eq!(Title::new(" "), Err(TitleError::EmptyTitle));
+        assert_eq!(Title::new("\t"), Err(TitleError::EmptyTitle));
+        assert_eq!(Title::new("foo\nbar"), Err(TitleError::InvalidTitle));
+        assert_eq!(Title::new("foobar\n"), Err(TitleError::InvalidTitle));
+        assert_eq!(Title::new(" valid title ").unwrap().0, "valid title");
+    }
 
     #[test]
     fn test_color() {
