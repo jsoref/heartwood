@@ -83,18 +83,19 @@ impl Message {
             placeholder.push_str(title.as_ref());
             placeholder.push('\n');
         }
-        if let Some(description) = description {
+        if let Some(description) = description
+            .as_deref()
+            .map(str::trim)
+            .filter(|description| !description.is_empty())
+        {
             placeholder.push('\n');
-            placeholder.push_str(description.trim());
+            placeholder.push_str(description);
             placeholder.push('\n');
         }
         placeholder.push_str(help);
 
         let output = Self::Edit.get(&placeholder)?;
-        let (title, description) = match output.split_once("\n\n") {
-            Some((x, y)) => (x, y),
-            None => (output.as_str(), ""),
-        };
+        let (title, description) = output.split_once("\n\n").unwrap_or((output.as_str(), ""));
 
         let Ok(title) = Title::new(title) else {
             return Ok(None);
