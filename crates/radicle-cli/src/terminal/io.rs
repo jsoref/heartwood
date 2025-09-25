@@ -45,9 +45,15 @@ impl inquire::validator::StringValidator for PassphraseValidator {
 /// Get the signer. First we try getting it from ssh-agent, otherwise we prompt the user,
 /// if we're connected to a TTY.
 pub fn signer(profile: &Profile) -> anyhow::Result<BoxedDevice> {
-    if let Ok(signer) = profile.signer() {
-        return Ok(signer);
+    match profile.signer() {
+        Ok(signer) => return Ok(signer),
+        Err(err) if !err.prompt_for_passphrase() => return Err(anyhow!(err)),
+        Err(_) => {
+            // The error returned is potentially recoverable by prompting
+            // the user for the correct passphrase.
+        }
     }
+
     let validator = PassphraseValidator::new(profile.keystore.clone());
     let passphrase = match passphrase(validator)? {
         Some(p) => p,

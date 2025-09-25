@@ -172,14 +172,8 @@ pub enum Error {
     Routing(#[from] node::routing::Error),
     #[error(transparent)]
     Keystore(#[from] keystore::Error),
-    #[error(transparent)]
-    MemorySigner(#[from] keystore::MemorySignerError),
     #[error("no radicle profile found at path '{0}'")]
     NotFound(PathBuf),
-    #[error("error connecting to ssh-agent: {0}")]
-    Agent(#[from] crate::crypto::ssh::agent::Error),
-    #[error("radicle key `{0}` is not registered; run `rad auth` to register it with ssh-agent")]
-    KeyNotRegistered(PublicKey),
     #[error(transparent)]
     PolicyStore(#[from] node::policy::store::Error),
     #[error(transparent)]
@@ -192,6 +186,37 @@ pub enum Error {
     CobsCache(#[from] cob::cache::Error),
     #[error(transparent)]
     Storage(#[from] storage::Error),
+}
+
+#[derive(Debug, Error)]
+pub enum SignerError {
+    #[error(transparent)]
+    MemorySigner(#[from] keystore::MemorySignerError),
+
+    #[error(transparent)]
+    Agent(#[from] crate::crypto::ssh::agent::Error),
+
+    #[error("radicle key `{0}` is not registered; run `rad auth` to register it with ssh-agent")]
+    KeyNotRegistered(PublicKey),
+
+    #[error(transparent)]
+    Keystore(#[from] keystore::Error),
+
+    #[error("error connecting to ssh-agent: {source}")]
+    AgentConnection {
+        source: crate::crypto::ssh::agent::Error,
+    },
+}
+
+impl SignerError {
+    /// Some signer errors are potentially recoverable by prompting the user
+    /// for a password.
+    pub fn prompt_for_passphrase(&self) -> bool {
+        matches!(
+            self,
+            Self::AgentConnection { .. } | Self::KeyNotRegistered(_)
+        )
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -296,7 +321,7 @@ impl Profile {
         Did::from(self.public_key)
     }
 
-    pub fn signer(&self) -> Result<BoxedDevice, Error> {
+    pub fn signer(&self) -> Result<BoxedDevice, SignerError> {
         if !self.keystore.is_encrypted()? {
             let signer = keystore::MemorySigner::load(&self.keystore, None)?;
             return Ok(Device::from(signer).boxed());
@@ -307,16 +332,12 @@ impl Profile {
             return Ok(Device::from(signer).boxed());
         }
 
-        match Agent::connect() {
-            Ok(agent) => {
-                let signer = agent.signer(self.public_key);
-                if signer.is_ready()? {
-                    Ok(Device::from(signer).boxed())
-                } else {
-                    Err(Error::KeyNotRegistered(self.public_key))
-                }
-            }
-            Err(err) => Err(err.into()),
+        let agent = Agent::connect().map_err(|source| SignerError::AgentConnection { source })?;
+        let signer = agent.signer(self.public_key);
+        if signer.is_ready()? {
+            Ok(Device::from(signer).boxed())
+        } else {
+            Err(SignerError::KeyNotRegistered(self.public_key))
         }
     }
 

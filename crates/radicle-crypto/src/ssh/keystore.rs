@@ -183,6 +183,8 @@ pub enum MemorySignerError {
     NotFound(PathBuf),
     #[error("invalid passphrase")]
     InvalidPassphrase,
+    #[error("secret and public keys in '{path}' do not match")]
+    KeyMismatch { path: PathBuf },
 }
 
 /// An in-memory signer that keeps its secret key internally
@@ -271,6 +273,12 @@ impl MemorySigner {
                 }
             })?
             .ok_or_else(|| MemorySignerError::NotFound(keystore.path().to_path_buf()))?;
+
+        secret
+            .validate_public_key(&public)
+            .map_err(|_| MemorySignerError::KeyMismatch {
+                path: keystore.path().to_path_buf(),
+            })?;
 
         Ok(Self { public, secret })
     }

@@ -74,6 +74,9 @@ pub enum Error {
     /// Profile error.
     #[error(transparent)]
     Profile(#[from] radicle::profile::Error),
+    /// Signer error.
+    #[error(transparent)]
+    Signer(#[from] radicle::profile::SignerError),
     /// Parse error for object IDs.
     #[error(transparent)]
     ParseObjectId(#[from] ParseObjectId),

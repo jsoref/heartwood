@@ -1,6 +1,6 @@
 use std::path::Path;
 use std::str::FromStr;
-use std::{net, thread, time};
+use std::{fs, net, thread, time};
 
 use radicle::cob;
 use radicle::git;
@@ -53,6 +53,20 @@ pub(crate) fn test<'a>(
 #[test]
 fn rad_auth() {
     test("examples/rad-auth.md", Path::new("."), None, []).unwrap();
+}
+
+#[test]
+fn rad_key_mismatch() {
+    let mut environment = Environment::new();
+    let alice = environment.profile("alice");
+    environment.repository(&alice);
+
+    environment.test("rad-init", &alice).unwrap();
+
+    // Replace the public key with one that does not match the secret key anymore.
+    fs::write(alice.home.path().join("keys").join("radicle.pub"), "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE6Ul/D+P0I/Hl1JVOWGS8Z589us9FqKQXWv8OMOpKCh snakeoil\n").unwrap();
+
+    environment.test("rad-key-mismatch", &alice).unwrap();
 }
 
 #[test]
