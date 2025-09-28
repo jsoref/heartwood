@@ -45,7 +45,6 @@ struct CliArgs {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    #[command(about = radicle_cli::commands::issue::ABOUT)]
     Issue(issue::Args),
 }
 

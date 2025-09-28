@@ -18,7 +18,7 @@ pub enum Assigned {
 }
 
 #[derive(Parser, Debug)]
-#[command(disable_version_flag = true)]
+#[command(about = super::ABOUT, disable_version_flag = true)]
 pub struct Args {
     #[command(subcommand)]
     pub(crate) command: Option<Command>,
