@@ -1,4 +1,5 @@
-use std::ffi::OsString;
+mod args;
+
 use std::path::Path;
 
 use localtime::LocalDuration;
@@ -13,22 +14,9 @@ use radicle_term::Element;
 use serde::Serialize;
 
 use crate::terminal as term;
-use crate::terminal::args::{Args, Error, Help};
 
-pub const HELP: Help = Help {
-    name: "stats",
-    description: "Displays aggregated repository and node metrics",
-    version: env!("RADICLE_VERSION"),
-    usage: r#"
-Usage
-
-    rad stats [<option>...]
-
-Options
-
-    --help       Print help
-"#,
-};
+pub use args::Args;
+pub(crate) use args::ABOUT;
 
 #[derive(Default, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -65,30 +53,7 @@ struct Stats {
     nodes: NodeStats,
 }
 
-#[derive(Default, Debug, Eq, PartialEq)]
-pub struct Options {}
-
-impl Args for Options {
-    fn from_args(args: Vec<OsString>) -> anyhow::Result<(Self, Vec<OsString>)> {
-        use lexopt::prelude::*;
-
-        let mut parser = lexopt::Parser::from_args(args);
-
-        #[allow(clippy::never_loop)]
-        while let Some(arg) = parser.next()? {
-            match arg {
-                Long("help") | Short('h') => {
-                    return Err(Error::Help.into());
-                }
-                _ => anyhow::bail!(arg.unexpected()),
-            }
-        }
-
-        Ok((Options {}, vec![]))
-    }
-}
-
-pub fn run(_options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
+pub fn run(_args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
     let profile = ctx.profile()?;
     let storage = &profile.storage;
     let mut stats = Stats::default();

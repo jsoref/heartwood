@@ -46,6 +46,7 @@ struct CliArgs {
 #[derive(Subcommand, Debug)]
 enum Commands {
     Issue(issue::Args),
+    Stats(stats::Args),
 }
 
 #[derive(Debug)]
@@ -167,7 +168,7 @@ fn run(command: Command) -> Result<(), Option<anyhow::Error>> {
 /// arguments again. This needs to be done for each migrated command
 /// individually, otherwise `clap` would fail to parse on an non-migrated and
 /// therefore unknown command.
-fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyhow::Error>> {
+pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyhow::Error>> {
     match exe {
         "auth" => {
             term::run_command_args::<auth::Options, _>(auth::HELP, auth::run, args.to_vec());
@@ -283,7 +284,9 @@ fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyhow::Error>> 
             term::run_command_args::<remote::Options, _>(remote::HELP, remote::run, args.to_vec())
         }
         "stats" => {
-            term::run_command_args::<stats::Options, _>(stats::HELP, stats::run, args.to_vec())
+            if let Some(Commands::Stats(args)) = CliArgs::parse().command {
+                term::run_command_fn(stats::run, args);
+            }
         }
         "watch" => {
             term::run_command_args::<watch::Options, _>(watch::HELP, watch::run, args.to_vec())
