@@ -67,7 +67,10 @@ const COMMANDS: &[CommandItem] = &[
     CommandItem::Lexopt(crate::commands::seed::HELP),
     CommandItem::Lexopt(crate::commands::follow::HELP),
     CommandItem::Lexopt(crate::commands::unblock::HELP),
-    CommandItem::Lexopt(crate::commands::unfollow::HELP),
+    CommandItem::Clap {
+        name: "unfollow",
+        about: crate::commands::unfollow::ABOUT,
+    },
     CommandItem::Clap {
         name: "unseed",
         about: crate::commands::unseed::ABOUT,

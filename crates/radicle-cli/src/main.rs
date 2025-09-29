@@ -49,6 +49,7 @@ enum Commands {
     Issue(issue::Args),
     Path(path::Args),
     Stats(stats::Args),
+    Unfollow(unfollow::Args),
     Unseed(unseed::Args),
 }
 
@@ -278,11 +279,9 @@ pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyho
             );
         }
         "unfollow" => {
-            term::run_command_args::<unfollow::Options, _>(
-                unfollow::HELP,
-                unfollow::run,
-                args.to_vec(),
-            );
+            if let Some(Commands::Unfollow(args)) = CliArgs::parse().command {
+                term::run_command_fn(unfollow::run, args);
+            }
         }
         "unseed" => {
             if let Some(Commands::Unseed(args)) = CliArgs::parse().command {
