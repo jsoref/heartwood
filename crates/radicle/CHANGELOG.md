@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `radicle::node::Handle::announce_refs_for` now allows specifying for which
   namespaces changes should be announced. A corresponding enum variant
   `radicle::node::Command::AnnounceRefsFor` is added.
+- `radicle::node::Handle::seeds_for` now allows specifying for which
+  namespaces sync status should be reported. A corresponding enum variant
+  `radicle::node::Command::SeedsFor` is added.
 
 ### Changed
 
@@ -19,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `radicle::node::Handle::announce_refs` is deprecated in favor of
   `radicle::node::Handle::announce_refs_for`.
+- `radicle::node::Handle::seeds` is deprecated in favor of
+  `radicle::node::Handle::seeds_for`.
 
 ### Removed
 

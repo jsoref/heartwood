@@ -883,8 +883,21 @@ pub trait Handle: Clone + Sync + Send {
     ) -> Result<ConnectResult, Self::Error>;
     /// Disconnect from a peer.
     fn disconnect(&mut self, node: NodeId) -> Result<(), Self::Error>;
-    /// Lookup the seeds of a given repository in the routing table.
-    fn seeds(&mut self, id: RepoId) -> Result<Seeds, Self::Error>;
+
+    /// Look up the seeds of a given repository in the routing table.
+    #[deprecated(note = "use `seeds_for` instead")]
+    fn seeds(&mut self, id: RepoId) -> Result<Seeds, Self::Error> {
+        self.seeds_for(id, [self.nid()?])
+    }
+
+    /// Look up the seeds of a given repository in the routing table
+    /// and report sync status for `namespaces`.
+    fn seeds_for(
+        &mut self,
+        id: RepoId,
+        namespaces: impl IntoIterator<Item = PublicKey>,
+    ) -> Result<Seeds, Self::Error>;
+
     /// Fetch a repository from the network.
     fn fetch(
         &mut self,
@@ -1137,9 +1150,19 @@ impl Handle for Node {
         Ok(())
     }
 
-    fn seeds(&mut self, rid: RepoId) -> Result<Seeds, Error> {
+    fn seeds_for(
+        &mut self,
+        rid: RepoId,
+        namespaces: impl IntoIterator<Item = PublicKey>,
+    ) -> Result<Seeds, Error> {
         let seeds = self
-            .call::<Seeds>(Command::Seeds { rid }, DEFAULT_TIMEOUT)?
+            .call::<Seeds>(
+                Command::SeedsFor {
+                    rid,
+                    namespaces: HashSet::from_iter(namespaces),
+                },
+                DEFAULT_TIMEOUT,
+            )?
             .next()
             .ok_or(Error::EmptyResponse)??;
 

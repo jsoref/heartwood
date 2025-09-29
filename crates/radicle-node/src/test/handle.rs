@@ -55,7 +55,11 @@ impl radicle::node::Handle for Handle {
         unimplemented!();
     }
 
-    fn seeds(&mut self, _id: RepoId) -> Result<Seeds, Self::Error> {
+    fn seeds_for(
+        &mut self,
+        _id: RepoId,
+        _namespaces: impl IntoIterator<Item = PublicKey>,
+    ) -> Result<Seeds, Self::Error> {
         unimplemented!();
     }
 

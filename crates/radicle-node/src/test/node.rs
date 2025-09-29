@@ -200,7 +200,7 @@ impl<G: Signer<Signature> + cyphernet::Ecdh> NodeHandle<G> {
         log::debug!(target: "test", "Waiting for {} to be in sync with {nid} for {rid}", self.id);
 
         loop {
-            let seeds = self.handle.seeds(*rid).unwrap();
+            let seeds = self.handle.seeds_for(*rid, [self.id]).unwrap();
             if seeds.iter().any(|s| s.nid == *nid && s.is_synced()) {
                 break;
             }

@@ -252,8 +252,9 @@ pub enum Command {
     Config(chan::Sender<Config>),
     /// Get the node's listen addresses.
     ListenAddrs(chan::Sender<Vec<std::net::SocketAddr>>),
-    /// Lookup seeds for the given repository in the routing table.
-    Seeds(RepoId, chan::Sender<Seeds>),
+    /// Lookup seeds for the given repository in the routing table, and report
+    /// sync status for given namespaces.
+    Seeds(RepoId, HashSet<PublicKey>, chan::Sender<Seeds>),
     /// Fetch the given repository from the network.
     Fetch(RepoId, NodeId, time::Duration, chan::Sender<FetchResult>),
     /// Seed the given repository.
@@ -278,7 +279,7 @@ impl fmt::Debug for Command {
             Self::Disconnect(id) => write!(f, "Disconnect({id})"),
             Self::Config(_) => write!(f, "Config"),
             Self::ListenAddrs(_) => write!(f, "ListenAddrs"),
-            Self::Seeds(id, _) => write!(f, "Seeds({id})"),
+            Self::Seeds(id, _, _) => write!(f, "Seeds({id})"),
             Self::Fetch(id, node, _, _) => write!(f, "Fetch({id}, {node})"),
             Self::Seed(id, scope, _) => write!(f, "Seed({id}, {scope})"),
             Self::Unseed(id, _) => write!(f, "Unseed({id})"),
@@ -880,7 +881,7 @@ where
             Command::ListenAddrs(resp) => {
                 resp.send(self.listening.clone()).ok();
             }
-            Command::Seeds(rid, resp) => match self.seeds(&rid) {
+            Command::Seeds(rid, namespaces, resp) => match self.seeds(&rid, namespaces) {
                 Ok(seeds) => {
                     let (connected, disconnected) = seeds.partition();
                     debug!(
@@ -2280,14 +2281,19 @@ where
         Ok(())
     }
 
-    fn seeds(&self, rid: &RepoId) -> Result<Seeds, Error> {
+    fn seeds(&self, rid: &RepoId, namespaces: HashSet<PublicKey>) -> Result<Seeds, Error> {
         let mut seeds = Seeds::new(self.rng.clone());
 
-        // First build a list from peers that have synced our own refs, if any.
-        // This step is skipped if we don't have the repository yet, or don't have
-        // our own refs.
+        // First, build a list of peers that have synced refs for `namespaces`, if any.
+        // This step is skipped:
+        //  1. For the repository (and thus all `namespaces`), if it not exist in storage.
+        //  2. For each `namespace` in `namespaces`, which does not exist in storage.
         if let Ok(repo) = self.storage.repository(*rid) {
-            if let Ok(local) = RefsAt::new(&repo, self.node_id()) {
+            for namespace in namespaces.iter() {
+                let Ok(local) = RefsAt::new(&repo, *namespace) else {
+                    continue;
+                };
+
                 for seed in self.db.seeds().seeds_for(rid)? {
                     let seed = seed?;
                     let state = self.sessions.get(&seed.nid).map(|s| s.state.clone());
@@ -2310,7 +2316,7 @@ where
         // These peers have announced that they seed the repository via an inventory
         // announcement, but we haven't received any ref announcements from them.
         for nid in self.db.routing().get(rid)? {
-            if nid == self.node_id() {
+            if namespaces.contains(&nid) {
                 continue;
             }
             if seeds.contains(&nid) {
@@ -2528,7 +2534,7 @@ where
             if self.storage.contains(&rid)? {
                 continue;
             }
-            match self.seeds(&rid) {
+            match self.seeds(&rid, [self.node_id()].into()) {
                 Ok(seeds) => {
                     if let Some(connected) = NonEmpty::from_vec(seeds.connected().collect()) {
                         for seed in connected {

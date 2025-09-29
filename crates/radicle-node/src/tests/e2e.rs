@@ -183,7 +183,7 @@ fn test_replication() {
     let updated = alice.handle.seed(acme, Scope::All).unwrap();
     assert!(updated);
 
-    let seeds = alice.handle.seeds(acme).unwrap();
+    let seeds = alice.handle.seeds_for(acme, None).unwrap();
     assert!(seeds.is_connected(&bob.id));
 
     let result = alice.handle.fetch(acme, bob.id, DEFAULT_TIMEOUT).unwrap();
@@ -549,7 +549,7 @@ fn test_clone() {
     transport::local::register(alice.storage.clone());
 
     let _ = alice.handle.seed(acme, Scope::All).unwrap();
-    let seeds = alice.handle.seeds(acme).unwrap();
+    let seeds = alice.handle.seeds_for(acme, None).unwrap();
     assert!(seeds.is_connected(&bob.id));
 
     let result = alice.handle.fetch(acme, bob.id, DEFAULT_TIMEOUT).unwrap();

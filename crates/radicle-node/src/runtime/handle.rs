@@ -202,9 +202,17 @@ impl radicle::node::Handle for Handle {
             .map_err(Error::from)
     }
 
-    fn seeds(&mut self, id: RepoId) -> Result<Seeds, Self::Error> {
+    fn seeds_for(
+        &mut self,
+        id: RepoId,
+        namespaces: impl IntoIterator<Item = PublicKey>,
+    ) -> Result<Seeds, Self::Error> {
         let (sender, receiver) = chan::bounded(1);
-        self.command(service::Command::Seeds(id, sender))?;
+        self.command(service::Command::Seeds(
+            id,
+            HashSet::from_iter(namespaces),
+            sender,
+        ))?;
         receiver.recv().map_err(Error::from)
     }
 

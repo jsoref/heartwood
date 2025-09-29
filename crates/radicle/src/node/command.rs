@@ -77,9 +77,26 @@ pub enum Command {
         nid: NodeId,
     },
 
-    /// Lookup seeds for the given repository in the routing table.
+    /// Look up seeds for the given repository in the routing table.
     #[serde(rename_all = "camelCase")]
+    #[deprecated(note = "use `SeedsFor` instead")]
     Seeds { rid: RepoId },
+
+    /// Look up seeds for the given repository in the routing table and
+    /// report sync status for the given namespaces.
+    #[serde(rename_all = "camelCase")]
+    SeedsFor {
+        /// The ID of the repository for which seeds should be looked up
+        /// in the routing table.
+        rid: RepoId,
+
+        /// The namespaces for which references should be announced.
+        #[cfg_attr(
+            feature = "schemars",
+            schemars(with = "HashSet<crate::schemars_ext::crypto::PublicKey>")
+        )]
+        namespaces: HashSet<PublicKey>,
+    },
 
     /// Get the current peer sessions.
     Sessions,

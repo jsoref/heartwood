@@ -172,8 +172,14 @@ where
 
             CommandResult::Okay(addrs).to_writer(writer)?;
         }
+        #[allow(deprecated)]
         Command::Seeds { rid } => {
             let seeds = handle.seeds(rid)?;
+
+            CommandResult::Okay(seeds).to_writer(writer)?;
+        }
+        Command::SeedsFor { rid, namespaces } => {
+            let seeds = handle.seeds_for(rid, namespaces)?;
 
             CommandResult::Okay(seeds).to_writer(writer)?;
         }
