@@ -1378,7 +1378,7 @@ fn test_background_foreground_fetch() {
         Title::new("Concurrent fetches").unwrap(),
         "Concurrent fetches are harshing my vibes",
     );
-    bob.handle.announce_refs(rid).unwrap();
+    bob.handle.announce_refs_for(rid, [bob.id]).unwrap();
     alice_events
         .wait(
             |e| matches!(e, Event::RefsAnnounced { .. }).then_some(()),
@@ -1427,7 +1427,7 @@ fn test_catchup_on_refs_announcements() {
 
     log::debug!(target: "test", "Bob creating his issue..");
     bob.issue(acme, Title::new("Bob's issue").unwrap(), "[..]");
-    bob.handle.announce_refs(acme).unwrap();
+    bob.handle.announce_refs_for(acme, [bob.id]).unwrap();
 
     log::debug!(target: "test", "Waiting for seed to fetch Bob's refs from Bob..");
     seed.has_remote_of(&acme, &bob.id); // Seed fetches Bob's refs.

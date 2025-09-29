@@ -405,6 +405,12 @@ impl RefsAt {
     }
 }
 
+impl std::fmt::Display for RefsAt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} @ {}", self.remote, self.at)
+    }
+}
+
 /// Verified [`SignedRefs`] that keeps track of their content address
 /// [`Oid`].
 #[derive(Debug, Clone, PartialEq, Eq)]

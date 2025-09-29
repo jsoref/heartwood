@@ -238,8 +238,8 @@ pub type QueryState = dyn Fn(&dyn ServiceState) -> Result<(), CommandError> + Se
 
 /// Commands sent to the service by the operator.
 pub enum Command {
-    /// Announce repository references for given repository to peers.
-    AnnounceRefs(RepoId, chan::Sender<RefsAt>),
+    /// Announce repository references for given repository and namespaces to peers.
+    AnnounceRefs(RepoId, HashSet<PublicKey>, chan::Sender<RefsAt>),
     /// Announce local repositories to peers.
     AnnounceInventory,
     /// Add repository to local inventory.
@@ -271,7 +271,7 @@ pub enum Command {
 impl fmt::Debug for Command {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::AnnounceRefs(id, _) => write!(f, "AnnounceRefs({id})"),
+            Self::AnnounceRefs(id, _, _) => write!(f, "AnnounceRefs({id})"),
             Self::AnnounceInventory => write!(f, "AnnounceInventory"),
             Self::AddInventory(rid, _) => write!(f, "AddInventory({rid})"),
             Self::Connect(id, addr, opts) => write!(f, "Connect({id}, {addr}, {opts:?})"),
@@ -930,7 +930,7 @@ where
                     .expect("Service::command: error unfollowing node");
                 resp.send(updated).ok();
             }
-            Command::AnnounceRefs(id, resp) => {
+            Command::AnnounceRefs(id, namespaces, resp) => {
                 let doc = match self.storage.get(id) {
                     Ok(Some(doc)) => doc,
                     Ok(None) => {
@@ -943,14 +943,12 @@ where
                     }
                 };
 
-                match self.announce_own_refs(id, doc) {
-                    Ok(refs) => match refs.as_slice() {
-                        &[refs] => {
-                            resp.send(refs).ok();
+                match self.announce_own_refs(id, doc, namespaces) {
+                    Ok((refs, _timestamp)) => {
+                        for r in refs {
+                            resp.send(r).ok();
                         }
-                        // SAFETY: Since we passed in one NID, we should get exactly one item back.
-                        [..] => panic!("Service::command: unexpected refs returned"),
-                    },
+                    }
                     Err(err) => {
                         error!(target: "service", "Error announcing refs: {err}");
                     }
@@ -1226,7 +1224,7 @@ where
                 } else {
                     // Finally, announce the refs. This is useful for nodes to know what we've synced,
                     // beyond just knowing that we have added an item to our inventory.
-                    if let Err(e) = self.announce_refs(rid, doc.into(), namespaces) {
+                    if let Err(e) = self.announce_refs(rid, doc.into(), namespaces, false) {
                         error!(target: "service", "Failed to announce new refs: {e}");
                     }
                 }
@@ -2167,16 +2165,21 @@ where
     }
 
     /// Announce our own refs for the given repo.
-    fn announce_own_refs(&mut self, rid: RepoId, doc: Doc) -> Result<Vec<RefsAt>, Error> {
-        let (refs, timestamp) = self.announce_refs(rid, doc, [self.node_id()])?;
+    fn announce_own_refs(
+        &mut self,
+        rid: RepoId,
+        doc: Doc,
+        namespaces: impl IntoIterator<Item = NodeId>,
+    ) -> Result<(Vec<RefsAt>, Timestamp), Error> {
+        let (refs, timestamp) = self.announce_refs(rid, doc, namespaces, true)?;
 
         // Update refs database with our signed refs branches.
         // This isn't strictly necessary for now, as we only use the database for fetches, and
         // we don't fetch our own refs that are announced, but it's for good measure.
-        if let &[r] = refs.as_slice() {
+        for r in refs.iter() {
             self.emitter.emit(Event::LocalRefsAnnounced {
                 rid,
-                refs: r,
+                refs: *r,
                 timestamp,
             });
             if let Err(e) = self.database_mut().refs_mut().set(
@@ -2193,7 +2196,7 @@ where
                 );
             }
         }
-        Ok(refs)
+        Ok((refs, timestamp))
     }
 
     /// Announce local refs for given repo.
@@ -2202,6 +2205,7 @@ where
         rid: RepoId,
         doc: Doc,
         remotes: impl IntoIterator<Item = NodeId>,
+        own: bool,
     ) -> Result<(Vec<RefsAt>, Timestamp), Error> {
         let (ann, refs) = self.refs_announcement_for(rid, remotes)?;
         let timestamp = ann.timestamp();
@@ -2209,18 +2213,13 @@ where
 
         // Update our sync status for our own refs. This is useful for determining if refs were
         // updated while the node was stopped.
-        if let Some(refs) = refs.iter().find(|r| r.remote == ann.node) {
+        for r in refs.iter().filter(|r| own || r.remote == ann.node) {
             info!(
                 target: "service",
-                "Announcing own refs for {rid} to peers ({}) (t={timestamp})..",
-                refs.at
+                "Announcing refs {rid}/{r} to peers (t={timestamp})..",
             );
             // Update our local node's sync status to mark the refs as announced.
-            if let Err(e) = self
-                .db
-                .seeds_mut()
-                .synced(&rid, &ann.node, refs.at, timestamp)
-            {
+            if let Err(e) = self.db.seeds_mut().synced(&rid, &ann.node, r.at, timestamp) {
                 error!(target: "service", "Error updating sync status for local node: {e}");
             } else {
                 debug!(target: "service", "Saved local sync status for {rid}..");

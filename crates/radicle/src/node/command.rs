@@ -1,12 +1,19 @@
 //! Commands sent to the node via the control socket, and auxiliary types, as
 //! well as their results (responses on the socket).
 
+// There are derives on an enum with a deprecated variant
+// in this module, see [`Command::AnnounceRefs`] and also
+// <https://github.com/rust-lang/rust/issues/92313>.
+#![allow(deprecated)]
+
+use std::collections::HashSet;
 use std::io;
 use std::time;
 
 use serde::{Deserialize, Serialize};
 use serde_json as json;
 
+use crate::crypto::PublicKey;
 use crate::identity::RepoId;
 
 use super::events::Event;
@@ -22,7 +29,23 @@ pub const DEFAULT_TIMEOUT: time::Duration = time::Duration::from_secs(30);
 pub enum Command {
     /// Announce repository references for given repository to peers.
     #[serde(rename_all = "camelCase")]
+    #[deprecated(note = "use `AnnounceRefsFor` instead")]
     AnnounceRefs { rid: RepoId },
+
+    /// Announce repository references for given repository
+    /// and namespaces to peers.
+    #[serde(rename_all = "camelCase")]
+    AnnounceRefsFor {
+        /// The ID of the repository for which references should be announced.
+        rid: RepoId,
+
+        /// The namespaces for which references should be announced.
+        #[cfg_attr(
+            feature = "schemars",
+            schemars(with = "HashSet<crate::schemars_ext::crypto::PublicKey>")
+        )]
+        namespaces: HashSet<PublicKey>,
+    },
 
     /// Announce local repositories to peers.
     #[serde(rename_all = "camelCase")]

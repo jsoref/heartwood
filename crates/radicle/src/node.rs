@@ -901,8 +901,22 @@ pub trait Handle: Clone + Sync + Send {
     fn unseed(&mut self, id: RepoId) -> Result<bool, Self::Error>;
     /// Unfollow the given peer.
     fn unfollow(&mut self, id: NodeId) -> Result<bool, Self::Error>;
-    /// Notify the service that a project has been updated, and announce local refs.
-    fn announce_refs(&mut self, id: RepoId) -> Result<RefsAt, Self::Error>;
+
+    /// Notify the service that a repository has been updated, and references
+    /// should be announced over the network.
+    #[deprecated(note = "use `announce_refs_for` instead")]
+    fn announce_refs(&mut self, id: RepoId) -> Result<RefsAt, Self::Error> {
+        self.announce_refs_for(id, [self.nid()?])
+    }
+
+    /// Notify the service that a repository has been updated, and references
+    /// for the given `namespaces` should be announced over the network.
+    fn announce_refs_for(
+        &mut self,
+        id: RepoId,
+        namespaces: impl IntoIterator<Item = PublicKey>,
+    ) -> Result<RefsAt, Self::Error>;
+
     /// Announce local inventory.
     fn announce_inventory(&mut self) -> Result<(), Self::Error>;
     /// Notify the service that our inventory was updated with the given repository.
@@ -1004,12 +1018,13 @@ impl Node {
     pub fn announce(
         &mut self,
         rid: RepoId,
+        namespaces: impl IntoIterator<Item = PublicKey>,
         timeout: time::Duration,
         mut announcer: sync::Announcer,
         mut report: impl FnMut(&NodeId, sync::announce::Progress),
     ) -> Result<sync::AnnouncerResult, Error> {
         let mut events = self.subscribe(timeout)?;
-        let refs = self.announce_refs(rid)?;
+        let refs = self.announce_refs_for(rid, namespaces)?;
 
         let started = time::Instant::now();
 
@@ -1180,9 +1195,19 @@ impl Handle for Node {
         Ok(response.updated)
     }
 
-    fn announce_refs(&mut self, rid: RepoId) -> Result<RefsAt, Error> {
+    fn announce_refs_for(
+        &mut self,
+        rid: RepoId,
+        namespaces: impl IntoIterator<Item = PublicKey>,
+    ) -> Result<RefsAt, Error> {
         let refs: RefsAt = self
-            .call(Command::AnnounceRefs { rid }, DEFAULT_TIMEOUT)?
+            .call(
+                Command::AnnounceRefsFor {
+                    rid,
+                    namespaces: HashSet::from_iter(namespaces),
+                },
+                DEFAULT_TIMEOUT,
+            )?
             .next()
             .ok_or(Error::EmptyResponse)??;
 

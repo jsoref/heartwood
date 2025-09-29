@@ -199,18 +199,24 @@ where
         reporting.completion.clone(),
     );
 
-    match node.announce(rid, settings.timeout, announcer, |node, progress| {
-        spinner.message(format!(
-            "Synced with {}, {} of {} preferred seeds, and {} of at least {} replica(s).",
-            term::format::node_id_human_compact(node),
-            term::format::secondary(progress.preferred()),
-            term::format::secondary(n_preferred_seeds),
-            term::format::secondary(progress.synced()),
-            // N.b. the number of replicas could exceed the target if we're
-            // waiting for preferred seeds
-            term::format::secondary(min_replicas.max(progress.synced())),
-        ));
-    }) {
+    match node.announce(
+        rid,
+        [profile.did().into()],
+        settings.timeout,
+        announcer,
+        |node, progress| {
+            spinner.message(format!(
+                "Synced with {}, {} of {} preferred seeds, and {} of at least {} replica(s).",
+                term::format::node_id_human_compact(node),
+                term::format::secondary(progress.preferred()),
+                term::format::secondary(n_preferred_seeds),
+                term::format::secondary(progress.synced()),
+                // N.b. the number of replicas could exceed the target if we're
+                // waiting for preferred seeds
+                term::format::secondary(min_replicas.max(progress.synced())),
+            ));
+        },
+    ) {
         Ok(result) => {
             spinner.message(format!(
                 "Synced with {} seed(s)",

@@ -3,6 +3,7 @@ use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use std::time;
 
+use radicle::crypto::PublicKey;
 use radicle::git;
 use radicle::storage::refs::RefsAt;
 
@@ -14,7 +15,7 @@ use radicle::node::NodeId;
 
 #[derive(Default, Clone)]
 pub struct Handle {
-    pub updates: Arc<Mutex<Vec<RepoId>>>,
+    pub updates: Arc<Mutex<Vec<(RepoId, PublicKey)>>>,
     pub seeding: Arc<Mutex<HashSet<RepoId>>>,
     pub following: Arc<Mutex<HashSet<NodeId>>>,
 }
@@ -91,8 +92,15 @@ impl radicle::node::Handle for Handle {
         Ok(self.following.lock().unwrap().remove(&id))
     }
 
-    fn announce_refs(&mut self, id: RepoId) -> Result<RefsAt, Self::Error> {
-        self.updates.lock().unwrap().push(id);
+    fn announce_refs_for(
+        &mut self,
+        id: RepoId,
+        namespaces: impl IntoIterator<Item = PublicKey>,
+    ) -> Result<RefsAt, Self::Error> {
+        self.updates
+            .lock()
+            .unwrap()
+            .extend(namespaces.into_iter().map(|ns| (id, ns)));
 
         Ok(RefsAt {
             remote: self.nid()?,

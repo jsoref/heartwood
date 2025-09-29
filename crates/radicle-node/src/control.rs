@@ -219,8 +219,14 @@ where
                 return Err(CommandError::Runtime(e));
             }
         },
+        #[allow(deprecated)]
         Command::AnnounceRefs { rid } => {
             let refs = handle.announce_refs(rid)?;
+
+            CommandResult::Okay(refs).to_writer(writer)?;
+        }
+        Command::AnnounceRefsFor { rid, namespaces } => {
+            let refs = handle.announce_refs_for(rid, namespaces)?;
 
             CommandResult::Okay(refs).to_writer(writer)?;
         }
@@ -308,6 +314,7 @@ mod tests {
         let socket = tmp.path().join("alice.sock");
         let rids = test::arbitrary::set::<RepoId>(1..3);
         let listener = Listener::bind(&socket).unwrap();
+        let nid = handle.nid().unwrap();
 
         thread::spawn({
             let handle = handle.clone();
@@ -324,8 +331,9 @@ mod tests {
             writeln!(
                 &mut stream,
                 "{}",
-                json::to_string(&Command::AnnounceRefs {
-                    rid: rid.to_owned()
+                json::to_string(&Command::AnnounceRefsFor {
+                    rid: rid.to_owned(),
+                    namespaces: [nid].into(),
                 })
                 .unwrap()
             )
@@ -345,7 +353,7 @@ mod tests {
         }
 
         for rid in &rids {
-            assert!(handle.updates.lock().unwrap().contains(rid));
+            assert!(handle.updates.lock().unwrap().contains(&(*rid, nid)));
         }
     }
 

@@ -9,10 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `radicle::node::Handle::announce_refs_for` now allows specifying for which
+  namespaces changes should be announced. A corresponding enum variant
+  `radicle::node::Command::AnnounceRefsFor` is added.
 
 ### Changed
 
 ### Deprecated
+
+- `radicle::node::Handle::announce_refs` is deprecated in favor of
+  `radicle::node::Handle::announce_refs_for`.
 
 ### Removed
 

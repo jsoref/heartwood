@@ -1772,7 +1772,7 @@ fn test_cob_replication() {
     // announcement, otherwise Alice will consider it stale.
     thread::sleep(time::Duration::from_millis(3));
 
-    bob.handle.announce_refs(rid).unwrap();
+    bob.handle.announce_refs_for(rid, [bob.id]).unwrap();
 
     // Wait for Alice to fetch the issue refs.
     events

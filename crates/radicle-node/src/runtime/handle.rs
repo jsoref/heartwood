@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::net;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -9,6 +10,7 @@ use std::os::unix::net::UnixStream as Stream;
 use winpipe::WinStream as Stream;
 
 use crossbeam_channel as chan;
+use radicle::crypto::PublicKey;
 use radicle::node::events::{Event, Events};
 use radicle::node::policy;
 use radicle::node::{Config, NodeId};
@@ -253,9 +255,17 @@ impl radicle::node::Handle for Handle {
         receiver.recv().map_err(Error::from)
     }
 
-    fn announce_refs(&mut self, id: RepoId) -> Result<RefsAt, Error> {
+    fn announce_refs_for(
+        &mut self,
+        id: RepoId,
+        namespaces: impl IntoIterator<Item = PublicKey>,
+    ) -> Result<RefsAt, Error> {
         let (sender, receiver) = chan::bounded(1);
-        self.command(service::Command::AnnounceRefs(id, sender))?;
+        self.command(service::Command::AnnounceRefs(
+            id,
+            HashSet::from_iter(namespaces),
+            sender,
+        ))?;
         receiver.recv().map_err(Error::from)
     }
 
