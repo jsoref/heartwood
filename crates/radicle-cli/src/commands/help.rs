@@ -52,7 +52,10 @@ const COMMANDS: &[CommandItem] = &[
         name: "debug",
         about: crate::commands::debug::ABOUT,
     },
-    CommandItem::Lexopt(crate::commands::fork::HELP),
+    CommandItem::Clap {
+        name: "fork",
+        about: crate::commands::fork::ABOUT,
+    },
     CommandItem::Lexopt(crate::commands::help::HELP),
     CommandItem::Lexopt(crate::commands::id::HELP),
     CommandItem::Lexopt(crate::commands::init::HELP),
