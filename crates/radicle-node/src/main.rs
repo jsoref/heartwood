@@ -338,7 +338,8 @@ fn initialize_logging(options: &LogOptions) -> Result<(), Box<dyn std::error::Er
                     return Err(Box::new(JournalError::NotConnected));
                 }
 
-                logger::<&str, &str, _>("radicle-node".to_string(), []).map_err(Box::new)?
+                const SYSLOG_IDENTIFIER: &str = "radicle-node";
+                logger::<&str, &str, _>(SYSLOG_IDENTIFIER.to_string(), []).map_err(Box::new)?
             }
             Logger::Radicle => Box::new(radicle::logger::Logger::new(level)),
         }
