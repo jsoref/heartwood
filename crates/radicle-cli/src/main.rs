@@ -47,6 +47,7 @@ struct CliArgs {
 enum Commands {
     Block(block::Args),
     Clean(clean::Args),
+    Debug(debug::Args),
     Issue(issue::Args),
     Path(path::Args),
     Stats(stats::Args),
@@ -203,7 +204,9 @@ pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyho
             term::run_command_args::<diff::Options, _>(diff::HELP, diff::run, args.to_vec());
         }
         "debug" => {
-            term::run_command_args::<debug::Options, _>(debug::HELP, debug::run, args.to_vec());
+            if let Some(Commands::Debug(args)) = CliArgs::parse().command {
+                term::run_command_fn(debug::run, args);
+            }
         }
         "follow" => {
             term::run_command_args::<follow::Options, _>(follow::HELP, follow::run, args.to_vec());
