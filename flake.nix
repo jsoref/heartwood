@@ -73,7 +73,10 @@
         ]
         ||
         # Default filter from crane (allow .rs files)
-        (rustup.craneLib.filterCargoSources path type);
+        (rustup.craneLib.filterCargoSources path type)
+        ||
+        # *.txt files might be included with `include_str!`
+        (builtins.isList (builtins.match ''/?crates/(.*/.*\.txt)'' path));
 
       src = lib.cleanSourceWith {
         src = ./.;
