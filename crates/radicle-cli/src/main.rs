@@ -52,6 +52,7 @@ enum Commands {
     Fork(fork::Args),
     Issue(issue::Args),
     Path(path::Args),
+    Publish(publish::Args),
     Stats(stats::Args),
     Unfollow(unfollow::Args),
     Unseed(unseed::Args),
@@ -259,11 +260,9 @@ pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyho
             }
         }
         "publish" => {
-            term::run_command_args::<publish::Options, _>(
-                publish::HELP,
-                publish::run,
-                args.to_vec(),
-            );
+            if let Some(Commands::Publish(args)) = CliArgs::parse().command {
+                term::run_command_fn(publish::run, args);
+            }
         }
         "clean" => {
             if let Some(Commands::Clean(args)) = CliArgs::parse().command {
