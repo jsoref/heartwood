@@ -692,8 +692,11 @@ where
 
     let base = patch_base(head, &opts, stored)?;
 
-    // Don't update patch if it already has a revision matching this commit.
-    if patch.revisions().any(|(_, r)| r.head() == *head) {
+    // Don't update patch if it already has a matching revision.
+    if patch
+        .revisions()
+        .any(|(_, r)| r.head() == *head && *r.base() == base)
+    {
         return Ok(None);
     }
 
