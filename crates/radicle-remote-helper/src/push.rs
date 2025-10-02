@@ -476,9 +476,69 @@ pub fn run(
     Ok(())
 }
 
+fn patch_base(
+    head: &git::Oid,
+    opts: &Options,
+    stored: &storage::git::Repository,
+) -> Result<git::Oid, Error> {
+    Ok(if let Some(base) = opts.base {
+        base
+    } else {
+        // Computation of the canonical head is required only if the user
+        // did not specify a base explicitly. This allows the user to
+        // continue updating patches even while the canonical head cannot
+        // be computed, e.g. while they wait for their fellow delegates
+        // to converge and sync.
+        let (_, target) = stored.canonical_head()?;
+        stored.merge_base(&target, head)?
+    })
+}
+
+/// Before opening or updating patches, we want to evaluate the merge base of the
+/// patch and the default branch. In order to do that, the respective heads must
+/// be present in the same Git repository.
+///
+/// Unfortunately, we don't have an easy way to transfer the objects without
+/// creating a reference (be it in storage or working copy).
+///
+/// We choose to push a temporary reference to storage, which gets deleted on
+/// [`Drop::drop`].
+struct TempPatchRef<'a> {
+    stored: &'a storage::git::Repository,
+    reference: git::Namespaced<'a>,
+}
+
+impl<'a> TempPatchRef<'a> {
+    fn new(stored: &'a storage::git::Repository, head: &git::Oid, nid: &NodeId) -> Self {
+        let reference = git::refs::storage::staging::patch(nid, *head);
+        Self { stored, reference }
+    }
+
+    fn push(&self, src: &git::Oid, verbosity: Verbosity) -> Result<(), Error> {
+        push_ref(src, &self.reference, false, self.stored.raw(), verbosity)
+    }
+}
+
+impl<'a> Drop for TempPatchRef<'a> {
+    fn drop(&mut self) {
+        if let Err(err) = self
+            .stored
+            .raw()
+            .find_reference(&self.reference)
+            .and_then(|mut r| r.delete())
+        {
+            eprintln!(
+                "{} Failed to delete temporary reference {} in storage: {err}",
+                term::PREFIX_WARNING,
+                term::format::tertiary(&self.reference),
+            );
+        }
+    }
+}
+
 /// Open a new patch.
 fn patch_open<G>(
-    src: &git::Oid,
+    head: &git::Oid,
     upstream: &Option<git::RefString>,
     nid: &NodeId,
     working: &git::raw::Repository,
@@ -494,29 +554,16 @@ fn patch_open<G>(
 where
     G: crypto::signature::Signer<crypto::Signature>,
 {
-    let head = *src;
-    let dst = git::refs::storage::staging::patch(nid, head);
+    let temp = TempPatchRef::new(stored, head, nid);
+    temp.push(head, opts.verbosity)?;
+    let base = patch_base(head, &opts, stored)?;
 
-    // Before creating the patch, we must push the associated git objects to storage.
-    // Unfortunately, we don't have an easy way to transfer the missing objects without
-    // creating a temporary reference on the remote. The temporary reference is deleted
-    // once the patch is open, or in case of error.
-    //
-    // In case the reference is not properly deleted, the next attempt to open a patch should
-    // not fail, since the reference will already exist with the correct OID.
-    push_ref(src, &dst, false, stored.raw(), opts.verbosity)?;
-
-    let (_, target) = stored.canonical_head()?;
-    let base = if let Some(base) = opts.base {
-        base
-    } else {
-        stored.merge_base(&target, &head)?
-    };
-    if base == head {
+    if base == *head {
         return Err(Error::EmptyPatch);
     }
+
     let (title, description) =
-        term::patch::get_create_message(opts.message, &stored.backend, &base, &head)?;
+        term::patch::get_create_message(opts.message, &stored.backend, &base, head)?;
 
     let patch = if opts.draft {
         patches.draft(
@@ -524,7 +571,7 @@ where
             &description,
             patch::MergeTarget::default(),
             base,
-            head,
+            *head,
             &[],
             signer,
         )
@@ -534,109 +581,92 @@ where
             &description,
             patch::MergeTarget::default(),
             base,
-            head,
+            *head,
             &[],
             signer,
         )
+    }?;
+
+    let action = if patch.is_draft() {
+        "drafted"
+    } else {
+        "opened"
     };
-    let result = match patch {
-        Ok(patch) => {
-            let action = if patch.is_draft() {
-                "drafted"
-            } else {
-                "opened"
-            };
-            let patch = patch.id;
+    let patch = patch.id;
+
+    eprintln!(
+        "{} Patch {} {action}",
+        term::PREFIX_SUCCESS,
+        term::format::tertiary(patch),
+    );
+
+    // Create long-lived patch head reference, now that we know the Patch ID.
+    //
+    //  refs/namespaces/<nid>/refs/heads/patches/<patch-id>
+    //
+    let refname = git::refs::patch(&patch).with_namespace(nid.into());
+    let _ = stored.raw().reference(
+        refname.as_str(),
+        **head,
+        true,
+        "Create reference for patch head",
+    )?;
+
+    if let Some(upstream) = upstream {
+        if let Some(local_branch) = opts.branch.to_branch_name(&patch) {
+            fn strip_refs_heads(qualified: git::Qualified) -> git::RefString {
+                let (_refs, _heads, x, xs) = qualified.non_empty_components();
+                std::iter::once(x).chain(xs).collect()
+            }
+
+            working.reference(&local_branch, **head, true, "Create local branch for patch")?;
+
+            let remote_branch = git::refs::workdir::patch_upstream(&patch);
+            let remote_branch = working.reference(
+                &remote_branch,
+                **head,
+                true,
+                "Create remote tracking branch for patch",
+            )?;
+            debug_assert!(remote_branch.is_remote());
+
+            let local_branch = strip_refs_heads(local_branch);
+            let upstream_branch = git::refs::patch(&patch);
+            git::set_upstream(working, upstream, &local_branch, &upstream_branch)?;
 
             eprintln!(
-                "{} Patch {} {action}",
+                "{} Branch {} created",
                 term::PREFIX_SUCCESS,
-                term::format::tertiary(patch),
+                term::format::tertiary(&local_branch),
             );
-
-            // Create long-lived patch head reference, now that we know the Patch ID.
-            //
-            //  refs/namespaces/<nid>/refs/heads/patches/<patch-id>
-            //
-            let refname = git::refs::patch(&patch).with_namespace(nid.into());
-            let _ = stored.raw().reference(
-                refname.as_str(),
-                *head,
-                true,
-                "Create reference for patch head",
-            )?;
-
-            if let Some(upstream) = upstream {
-                if let Some(local_branch) = opts.branch.to_branch_name(&patch) {
-                    fn strip_refs_heads(qualified: git::Qualified) -> git::RefString {
-                        let (_refs, _heads, x, xs) = qualified.non_empty_components();
-                        std::iter::once(x).chain(xs).collect()
-                    }
-
-                    working.reference(
-                        &local_branch,
-                        *head,
-                        true,
-                        "Create local branch for patch",
-                    )?;
-
-                    let remote_branch = git::refs::workdir::patch_upstream(&patch);
-                    let remote_branch = working.reference(
-                        &remote_branch,
-                        *head,
-                        true,
-                        "Create remote tracking branch for patch",
-                    )?;
-                    debug_assert!(remote_branch.is_remote());
-
-                    let local_branch = strip_refs_heads(local_branch);
-                    let upstream_branch = git::refs::patch(&patch);
-                    git::set_upstream(working, upstream, &local_branch, &upstream_branch)?;
-
-                    eprintln!(
-                        "{} Branch {} created",
-                        term::PREFIX_SUCCESS,
-                        term::format::tertiary(&local_branch),
-                    );
+            hint(format!(
+                "to update, run `git push {upstream} {local_branch}`"
+            ));
+        }
+        // Setup current branch so that pushing updates the patch.
+        else if let Some(branch) =
+            rad::setup_patch_upstream(&patch, *head, working, upstream, false)?
+        {
+            if let Some(name) = branch.name()? {
+                if profile.hints() {
+                    // Remove the remote portion of the name, i.e.
+                    // rad/patches/deadbeef -> patches/deadbeef
+                    let name = name.split_once('/').unwrap_or_default().1;
                     hint(format!(
-                        "to update, run `git push {upstream} {local_branch}`"
+                        "to update, run `git push` or `git push {upstream} -f HEAD:{name}`"
                     ));
                 }
-                // Setup current branch so that pushing updates the patch.
-                else if let Some(branch) =
-                    rad::setup_patch_upstream(&patch, head, working, upstream, false)?
-                {
-                    if let Some(name) = branch.name()? {
-                        if profile.hints() {
-                            // Remove the remote portion of the name, i.e.
-                            // rad/patches/deadbeef -> patches/deadbeef
-                            let name = name.split_once('/').unwrap_or_default().1;
-                            hint(format!(
-                                "to update, run `git push` or `git push {upstream} -f HEAD:{name}`"
-                            ));
-                        }
-                    }
-                }
             }
-            Ok(Some(ExplorerResource::Patch { id: patch }))
         }
-        Err(e) => Err(e),
-    };
+    }
 
-    // Delete short-lived patch head reference.
-    stored
-        .raw()
-        .find_reference(&dst)
-        .map(|mut r| r.delete())
-        .ok();
-
-    result.map_err(Error::from)
+    Ok(Some(ExplorerResource::Patch { id: patch }))
 }
 
 /// Update an existing patch.
 #[allow(clippy::too_many_arguments)]
 fn patch_update<G>(
-    src: &git::Oid,
+    head: &git::Oid,
     dst: &git::Qualified,
     force: bool,
     patch_id: patch::PatchId,
@@ -653,35 +683,30 @@ fn patch_update<G>(
 where
     G: crypto::signature::Signer<crypto::Signature>,
 {
-    let commit = *src;
-    let dst = dst.with_namespace(nid.into());
-
-    push_ref(src, &dst, force, stored.raw(), opts.verbosity)?;
-
     let Ok(Some(patch)) = patches.get(&patch_id) else {
         return Err(Error::NotFound(patch_id));
     };
 
+    let temp = TempPatchRef::new(stored, head, nid);
+    temp.push(head, opts.verbosity)?;
+
+    let base = patch_base(head, &opts, stored)?;
+
     // Don't update patch if it already has a revision matching this commit.
-    if patch.revisions().any(|(_, r)| r.head() == commit) {
+    if patch.revisions().any(|(_, r)| r.head() == *head) {
         return Ok(None);
     }
 
     let (latest_id, latest) = patch.latest();
     let latest = latest.clone();
 
-    let message = term::patch::get_update_message(opts.message, &stored.backend, &latest, &commit)?;
+    let message = term::patch::get_update_message(opts.message, &stored.backend, &latest, head)?;
 
-    let (_, target) = stored.canonical_head()?;
-    let head: git::Oid = commit;
-    let base = if let Some(base) = opts.base {
-        base
-    } else {
-        stored.merge_base(&target, &head)?
-    };
+    let dst = dst.with_namespace(nid.into());
+    push_ref(head, &dst, force, stored.raw(), opts.verbosity)?;
 
     let mut patch_mut = patch::PatchMut::new(patch_id, patch, &mut patches);
-    let revision = patch_mut.update(message, base, head, signer)?;
+    let revision = patch_mut.update(message, base, *head, signer)?;
     let Some(revision) = patch_mut.revision(&revision).cloned() else {
         return Err(Error::RevisionNotFound(revision));
     };
@@ -699,8 +724,8 @@ where
     // This can happen if for eg. a patch commit is amended, the patch branch is merged
     // and pushed, but the patch hasn't yet been updated. On push to the patch branch,
     // it'll seem like the patch is "empty", because the changes are already in the base branch.
-    if base == head && patch_mut.is_open() {
-        patch_merge(patch_mut, revision.id(), head, working, signer)?;
+    if base == *head && patch_mut.is_open() {
+        patch_merge(patch_mut, revision.id(), *head, working, signer)?;
     } else {
         eprintln!(
             "To compare against your previous revision {}, run:\n\n   {}\n",
