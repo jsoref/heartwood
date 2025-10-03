@@ -45,6 +45,7 @@ struct CliArgs {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
+    Auth(auth::Args),
     Block(block::Args),
     Clean(clean::Args),
     Clone(clone::Args),
@@ -183,7 +184,9 @@ fn run(command: Command) -> Result<(), Option<anyhow::Error>> {
 pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyhow::Error>> {
     match exe {
         "auth" => {
-            term::run_command_args::<auth::Options, _>(auth::HELP, auth::run, args.to_vec());
+            if let Some(Commands::Auth(args)) = CliArgs::parse().command {
+                term::run_command_fn(auth::run, args);
+            }
         }
         "block" => {
             if let Some(Commands::Block(args)) = CliArgs::parse().command {

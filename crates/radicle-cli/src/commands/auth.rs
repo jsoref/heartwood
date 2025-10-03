@@ -1,5 +1,6 @@
 #![allow(clippy::or_fun_call)]
-use std::ffi::OsString;
+mod args;
+
 use std::str::FromStr;
 
 use anyhow::{anyhow, Context};
@@ -11,73 +12,18 @@ use radicle::profile::env;
 use radicle::{profile, Profile};
 
 use crate::terminal as term;
-use crate::terminal::args::{Args, Error, Help};
 
-pub const HELP: Help = Help {
-    name: "auth",
-    description: "Manage identities and profiles",
-    version: env!("RADICLE_VERSION"),
-    usage: r#"
-Usage
+pub use args::Args;
+pub(crate) use args::ABOUT;
 
-    rad auth [<option>...]
-
-    A passphrase may be given via the environment variable `RAD_PASSPHRASE` or
-    via the standard input stream if `--stdin` is used. Using either of these
-    methods disables the passphrase prompt.
-
-Options
-
-    --alias                 When initializing an identity, sets the node alias
-    --stdin                 Read passphrase from stdin (default: false)
-    --help                  Print help
-"#,
-};
-
-#[derive(Debug)]
-pub struct Options {
-    pub stdin: bool,
-    pub alias: Option<Alias>,
-}
-
-impl Args for Options {
-    fn from_args(args: Vec<OsString>) -> anyhow::Result<(Self, Vec<OsString>)> {
-        use lexopt::prelude::*;
-
-        let mut stdin = false;
-        let mut alias = None;
-        let mut parser = lexopt::Parser::from_args(args);
-
-        while let Some(arg) = parser.next()? {
-            match arg {
-                Long("alias") => {
-                    let val = parser.value()?;
-                    let val = term::args::alias(&val)?;
-
-                    alias = Some(val);
-                }
-                Long("stdin") => {
-                    stdin = true;
-                }
-                Long("help") | Short('h') => {
-                    return Err(Error::Help.into());
-                }
-                _ => anyhow::bail!(arg.unexpected()),
-            }
-        }
-
-        Ok((Options { alias, stdin }, vec![]))
-    }
-}
-
-pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
+pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
     match ctx.profile() {
-        Ok(profile) => authenticate(options, &profile),
-        Err(_) => init(options),
+        Ok(profile) => authenticate(args, &profile),
+        Err(_) => init(args),
     }
 }
 
-pub fn init(options: Options) -> anyhow::Result<()> {
+pub fn init(args: Args) -> anyhow::Result<()> {
     term::headline("Initializing your radicle 👾 identity");
 
     if let Ok(version) = radicle::git::version() {
@@ -92,7 +38,7 @@ pub fn init(options: Options) -> anyhow::Result<()> {
         anyhow::bail!("A Git installation is required for Radicle to run.");
     }
 
-    let alias: Alias = if let Some(alias) = options.alias {
+    let alias: Alias = if let Some(alias) = args.alias {
         alias
     } else {
         let user = env::var("USER").ok().and_then(|u| Alias::from_str(&u).ok());
@@ -105,7 +51,7 @@ pub fn init(options: Options) -> anyhow::Result<()> {
         user.ok_or_else(|| anyhow::anyhow!("An alias is required for Radicle to run."))?
     };
     let home = profile::home()?;
-    let passphrase = if options.stdin {
+    let passphrase = if args.stdin {
         Some(term::passphrase_stdin()?)
     } else {
         term::passphrase_confirm("Enter a passphrase:", env::RAD_PASSPHRASE)?
@@ -165,7 +111,7 @@ pub fn init(options: Options) -> anyhow::Result<()> {
 
 /// Try loading the identity's key into SSH Agent, falling back to verifying `RAD_PASSPHRASE` for
 /// use.
-pub fn authenticate(options: Options, profile: &Profile) -> anyhow::Result<()> {
+pub fn authenticate(args: Args, profile: &Profile) -> anyhow::Result<()> {
     if !profile.keystore.is_encrypted()? {
         term::success!("Authenticated as {}", term::format::tertiary(profile.id()));
         return Ok(());
@@ -186,7 +132,7 @@ pub fn authenticate(options: Options, profile: &Profile) -> anyhow::Result<()> {
             }
             let passphrase = if let Some(phrase) = profile::env::passphrase() {
                 phrase
-            } else if options.stdin {
+            } else if args.stdin {
                 term::passphrase_stdin()?
             } else if let Some(passphrase) =
                 term::io::passphrase(term::io::PassphraseValidator::new(profile.keystore.clone()))?

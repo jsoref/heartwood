@@ -37,7 +37,10 @@ impl CommandItem {
 }
 
 const COMMANDS: &[CommandItem] = &[
-    CommandItem::Lexopt(crate::commands::auth::HELP),
+    CommandItem::Clap {
+        name: "auth",
+        about: crate::commands::auth::ABOUT,
+    },
     CommandItem::Clap {
         name: "block",
         about: crate::commands::block::ABOUT,

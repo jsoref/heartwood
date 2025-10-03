@@ -1,17 +1,23 @@
 Note that aliases must not be longer than 32 bytes, or you will get an error.
 There are other rules as well:
 
-``` (fail)
+``` (stderr) (fail)
 $ rad auth --alias "5fad63fe6b339fa92c588d926121bea6240773a7"
-✗ Error: rad auth: alias cannot be greater than 32 bytes
+error: invalid value '5fad63fe6b339fa92c588d926121bea6240773a7' for '--alias <STRING>': alias cannot be greater than 32 bytes
+
+For more information, try '--help'.
 ```
 
-``` (fail)
+``` (stderr) (fail)
 $ rad auth --alias "john doe"
-✗ Error: rad auth: alias cannot contain whitespace or control characters
+error: invalid value 'john doe' for '--alias <STRING>': alias cannot contain whitespace or control characters
+
+For more information, try '--help'.
 ```
 
-``` (fail)
+``` (stderr) (fail)
 $ rad auth --alias ""
-✗ Error: rad auth: alias cannot be empty
+error: invalid value '' for '--alias <STRING>': alias cannot be empty
+
+For more information, try '--help'.
 ```
