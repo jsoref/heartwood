@@ -1,5 +1,6 @@
 #![allow(clippy::box_default)]
-use std::ffi::OsString;
+mod args;
+
 use std::path::PathBuf;
 
 use anyhow::anyhow;
@@ -12,80 +13,22 @@ use radicle::storage::git::transport;
 
 use crate::project;
 use crate::terminal as term;
-use crate::terminal::args::{Args, Error, Help};
 
-pub const HELP: Help = Help {
-    name: "checkout",
-    description: "Checkout a repository into the local directory",
-    version: env!("RADICLE_VERSION"),
-    usage: r#"
-Usage
+pub use args::Args;
+pub(crate) use args::ABOUT;
 
-    rad checkout <rid> [--remote <did>] [<option>...]
-
-    Creates a working copy from a repository in local storage.
-
-Options
-
-    --remote <did>  Remote peer to checkout
-    --no-confirm    Don't ask for confirmation during checkout
-    --help          Print help
-"#,
-};
-
-pub struct Options {
-    pub id: RepoId,
-    pub remote: Option<Did>,
-}
-
-impl Args for Options {
-    fn from_args(args: Vec<OsString>) -> anyhow::Result<(Self, Vec<OsString>)> {
-        use lexopt::prelude::*;
-
-        let mut parser = lexopt::Parser::from_args(args);
-        let mut id = None;
-        let mut remote = None;
-
-        while let Some(arg) = parser.next()? {
-            match arg {
-                Long("no-confirm") => {
-                    // Ignored for now.
-                }
-                Long("help") | Short('h') => return Err(Error::Help.into()),
-                Long("remote") => {
-                    let val = parser.value().unwrap();
-                    remote = Some(term::args::did(&val)?);
-                }
-                Value(val) if id.is_none() => {
-                    id = Some(term::args::rid(&val)?);
-                }
-                _ => anyhow::bail!(arg.unexpected()),
-            }
-        }
-
-        Ok((
-            Options {
-                id: id.ok_or_else(|| anyhow!("a repository to checkout must be provided"))?,
-                remote,
-            },
-            vec![],
-        ))
-    }
-}
-
-pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
+pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
     let profile = ctx.profile()?;
-    execute(options, &profile)?;
+    execute(args, &profile)?;
 
     Ok(())
 }
 
-fn execute(options: Options, profile: &Profile) -> anyhow::Result<PathBuf> {
-    let id = options.id;
+fn execute(args: Args, profile: &Profile) -> anyhow::Result<PathBuf> {
     let storage = &profile.storage;
-    let remote = options.remote.unwrap_or(profile.did());
+    let remote = args.remote.unwrap_or(profile.did());
     let doc = storage
-        .repository(id)?
+        .repository(args.repo)?
         .identity_doc()
         .context("repository could not be found in local storage")?;
     let payload = doc.project()?;
@@ -98,7 +41,7 @@ fn execute(options: Options, profile: &Profile) -> anyhow::Result<PathBuf> {
     }
 
     let mut spinner = term::spinner("Performing checkout...");
-    let repo = match radicle::rad::checkout(options.id, &remote, path.clone(), &storage, false) {
+    let repo = match radicle::rad::checkout(args.repo, &remote, path.clone(), &storage, false) {
         Ok(repo) => repo,
         Err(err) => {
             spinner.failed();
@@ -124,7 +67,7 @@ fn execute(options: Options, profile: &Profile) -> anyhow::Result<PathBuf> {
     // Setup remote tracking branches for project delegates.
     setup_remotes(
         project::SetupRemote {
-            rid: id,
+            rid: args.repo,
             tracking: Some(payload.default_branch().clone()),
             repo: &repo,
             fetch: true,

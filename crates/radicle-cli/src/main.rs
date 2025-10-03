@@ -47,6 +47,7 @@ struct CliArgs {
 enum Commands {
     Auth(auth::Args),
     Block(block::Args),
+    Checkout(checkout::Args),
     Clean(clean::Args),
     Clone(clone::Args),
     Debug(debug::Args),
@@ -209,11 +210,9 @@ pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyho
             }
         }
         "checkout" => {
-            term::run_command_args::<checkout::Options, _>(
-                checkout::HELP,
-                checkout::run,
-                args.to_vec(),
-            );
+            if let Some(Commands::Checkout(args)) = CliArgs::parse().command {
+                term::run_command_fn(checkout::run, args);
+            }
         }
         "clone" => {
             if let Some(Commands::Clone(args)) = CliArgs::parse().command {
