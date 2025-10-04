@@ -16,6 +16,7 @@ pub use radicle_git_ext::Oid;
 
 use crate::cob;
 use crate::collections::RandomMap;
+use crate::git::raw::ErrorExt as _;
 use crate::git::{canonical, ext as git_ext};
 use crate::git::{refspec::Refspec, PatternString, Qualified, RefError, RefStr, RefString};
 use crate::identity::{doc, Did, PayloadError};
@@ -133,9 +134,9 @@ pub enum RepositoryError {
 impl RepositoryError {
     pub fn is_not_found(&self) -> bool {
         match self {
-            Self::Storage(e) if e.is_not_found() => true,
-            Self::Git(e) if git_ext::is_not_found_err(e) => true,
-            Self::GitExt(git_ext::Error::NotFound(_)) => true,
+            Self::Storage(e) => e.is_not_found(),
+            Self::GitExt(e) => e.is_not_found(),
+            Self::Git(e) => e.is_not_found(),
             _ => false,
         }
     }
@@ -167,7 +168,7 @@ impl Error {
     pub fn is_not_found(&self) -> bool {
         match self {
             Self::Io(e) if e.kind() == io::ErrorKind::NotFound => true,
-            Self::Git(e) if git::ext::is_not_found_err(e) => true,
+            Self::Git(e) if e.is_not_found() => true,
             Self::Doc(e) if e.is_not_found() => true,
             _ => false,
         }

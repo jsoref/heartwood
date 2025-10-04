@@ -17,7 +17,6 @@ use crate::storage;
 use crate::storage::refs::Refs;
 use crate::storage::RemoteId;
 
-pub use ext::is_not_found_err;
 pub use ext::Error;
 pub use ext::NotFound;
 pub use ext::Oid;
@@ -30,6 +29,8 @@ pub use git_ext::ref_format::{
 pub use radicle_git_ext as ext;
 pub use storage::git::transport::local::Url;
 pub use storage::BranchName;
+
+use raw::ErrorExt as _;
 
 /// Default port of the `git` transport protocol.
 pub const PROTOCOL_PORT: u16 = 9418;
@@ -733,14 +734,14 @@ pub fn set_upstream(
     let branch_merge = format!("branch.{branch}.merge");
 
     config.remove_multivar(&branch_remote, ".*").or_else(|e| {
-        if ext::is_not_found_err(&e) {
+        if e.is_not_found() {
             Ok(())
         } else {
             Err(e)
         }
     })?;
     config.remove_multivar(&branch_merge, ".*").or_else(|e| {
-        if ext::is_not_found_err(&e) {
+        if e.is_not_found() {
             Ok(())
         } else {
             Err(e)

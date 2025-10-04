@@ -22,6 +22,7 @@ use crate::crypto;
 use crate::crypto::Signature;
 use crate::git;
 use crate::git::canonical::rules;
+use crate::git::raw::ErrorExt as _;
 use crate::identity::{project::Project, Did};
 use crate::node::device::Device;
 use crate::storage;
@@ -71,9 +72,8 @@ impl DocError {
     /// Whether this error is caused by the document not being found.
     pub fn is_not_found(&self) -> bool {
         match self {
-            Self::GitExt(git::Error::NotFound(_)) => true,
-            Self::GitExt(git::Error::Git(e)) if git::is_not_found_err(e) => true,
-            Self::Git(err) if git::is_not_found_err(err) => true,
+            Self::GitExt(e) => e.is_not_found(),
+            Self::Git(e) => e.is_not_found(),
             _ => false,
         }
     }
@@ -1160,7 +1160,10 @@ mod test {
         let oid = git::raw::Oid::from_str("2d52a53ce5e4f141148a5f770cfd3ead2d6a45b8").unwrap();
 
         let err = repo.identity_head_of(&remote).unwrap_err();
-        matches!(err, git::ext::Error::NotFound(_));
+        {
+            use crate::git::raw::ErrorExt as _;
+            assert!(err.is_not_found());
+        }
 
         let err = Doc::load_at(oid.into(), &repo).unwrap_err();
         assert!(err.is_not_found());

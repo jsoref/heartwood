@@ -1,6 +1,7 @@
 pub mod error;
 
 use either::Either;
+use radicle::git::raw::ErrorExt as _;
 use radicle::git::{self, Namespaced, Oid, Qualified};
 use radicle::storage::git::Repository;
 
@@ -53,7 +54,7 @@ fn find_and_peel(repo: &Repository, oid: Oid) -> Result<Oid, error::Ancestry> {
             .map_err(|err| error::Ancestry::Peel { oid, err })?
             .id()
             .into()),
-        Err(e) if git::is_not_found_err(&e) => Err(error::Ancestry::Missing { oid }),
+        Err(e) if e.is_not_found() => Err(error::Ancestry::Missing { oid }),
         Err(err) => Err(error::Ancestry::Object { oid, err }),
     }
 }

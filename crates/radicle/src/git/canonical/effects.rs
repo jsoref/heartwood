@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::git;
+use crate::git::raw::ErrorExt as _;
 use crate::git::{Oid, Qualified};
 use crate::prelude::Did;
 
@@ -215,7 +216,7 @@ impl FindObjects for git::raw::Repository {
             let name = &refname.with_namespace(did.as_key().into());
             let reference = match self.find_reference(name.as_str()) {
                 Ok(reference) => reference,
-                Err(e) if git::ext::is_not_found_err(&e) => {
+                Err(e) if e.is_not_found() => {
                     missing_refs.insert(name.to_owned());
                     continue;
                 }
@@ -235,7 +236,7 @@ impl FindObjects for git::raw::Repository {
                         object.kind().map(|kind| kind.to_string()),
                     )
                 }),
-                Err(err) if git::ext::is_not_found_err(&err) => {
+                Err(err) if err.is_not_found() => {
                     missing_objects.insert(*did, oid);
                     continue;
                 }

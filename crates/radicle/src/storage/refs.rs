@@ -14,6 +14,7 @@ use thiserror::Error;
 
 use crate::git;
 use crate::git::ext as git_ext;
+use crate::git::raw::ErrorExt as _;
 use crate::git::Oid;
 use crate::node::device::Device;
 use crate::profile::env;
@@ -64,9 +65,8 @@ impl Error {
     /// Whether this error is caused by a reference not being found.
     pub fn is_not_found(&self) -> bool {
         match self {
-            Self::GitExt(git::Error::NotFound(_)) => true,
-            Self::GitExt(git::Error::Git(e)) if git::is_not_found_err(e) => true,
-            Self::Git(e) if git::is_not_found_err(e) => true,
+            Self::GitExt(e) => e.is_not_found(),
+            Self::Git(e) => e.is_not_found(),
             _ => false,
         }
     }
@@ -430,7 +430,7 @@ impl SignedRefsAt {
     {
         let at = match RefsAt::new(repo, remote) {
             Ok(RefsAt { at, .. }) => at,
-            Err(e) if git::is_not_found_err(&e) => return Ok(None),
+            Err(e) if e.is_not_found() => return Ok(None),
             Err(e) => return Err(e.into()),
         };
         Self::load_at(at, remote, repo).map(Some)

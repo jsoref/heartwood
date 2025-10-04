@@ -4,6 +4,7 @@ use std::{thread, time};
 use anyhow::{anyhow, Context as _};
 
 use radicle::git;
+use radicle::git::raw::ErrorExt as _;
 use radicle::prelude::{NodeId, RepoId};
 use radicle::storage::{ReadRepository, ReadStorage};
 
@@ -169,7 +170,7 @@ fn reference<R: ReadRepository>(
 ) -> Result<Option<git::Oid>, git::raw::Error> {
     match repo.reference_oid(nid, qual) {
         Ok(oid) => Ok(Some(oid)),
-        Err(e) if git::ext::is_not_found_err(&e) => Ok(None),
+        Err(e) if e.is_not_found() => Ok(None),
         Err(e) => Err(e),
     }
 }

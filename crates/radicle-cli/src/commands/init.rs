@@ -13,6 +13,7 @@ use serde_json as json;
 use radicle::crypto::ssh;
 use radicle::explorer::ExplorerUrl;
 use radicle::git::raw;
+use radicle::git::raw::ErrorExt as _;
 use radicle::git::RefString;
 use radicle::identity::project::ProjectName;
 use radicle::identity::{Doc, RepoId, Visibility};
@@ -189,7 +190,7 @@ pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
     let path = options.path.as_deref().unwrap_or(cwd.as_path());
     let repo = match git::Repository::open(path) {
         Ok(r) => r,
-        Err(e) if radicle::git::ext::is_not_found_err(&e) => {
+        Err(e) if e.is_not_found() => {
             anyhow::bail!("a Git repository was not found at the given path")
         }
         Err(e) => return Err(e.into()),

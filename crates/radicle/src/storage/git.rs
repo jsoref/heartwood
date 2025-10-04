@@ -14,6 +14,7 @@ use std::{fs, io};
 use crypto::Verified;
 
 use crate::git::canonical::Quorum;
+use crate::git::raw::ErrorExt as _;
 use crate::identity::crefs::GetCanonicalRefs as _;
 use crate::identity::doc::DocError;
 use crate::identity::{CanonicalRefs, Doc, DocAt, RepoId};
@@ -817,7 +818,7 @@ impl ReadRepository for Repository {
 
         match result {
             Ok(oid) => Ok(oid),
-            Err(err) if git::ext::is_not_found_err(&err) => self.canonical_identity_head(),
+            Err(err) if err.is_not_found() => self.canonical_identity_head(),
             Err(err) => Err(err.into()),
         }
     }

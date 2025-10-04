@@ -3,6 +3,7 @@ use anyhow::anyhow;
 use git_ref_format::Qualified;
 use radicle::cob::patch;
 use radicle::cob::patch::RevisionId;
+use radicle::git::raw::ErrorExt as _;
 use radicle::git::RefString;
 use radicle::patch::cache::Patches as _;
 use radicle::patch::PatchId;
@@ -73,7 +74,7 @@ pub fn run(
                 }
                 head
             }
-            Err(e) if radicle::git::is_not_found_err(&e) => {
+            Err(e) if e.is_not_found() => {
                 let commit = find_patch_commit(revision, stored, working)?;
                 // Create patch branch and switch to it.
                 working.branch(patch_branch.as_str(), &commit, true)?;
@@ -128,7 +129,7 @@ fn find_patch_commit<'a>(
 
     match working.find_commit(head) {
         Ok(commit) => Ok(commit),
-        Err(e) if git::ext::is_not_found_err(&e) => {
+        Err(e) if e.is_not_found() => {
             let output = git::process::fetch_pack(
                 Some(working.path()),
                 stored,
