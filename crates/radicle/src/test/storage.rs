@@ -199,7 +199,7 @@ impl ReadRepository for MockRepository {
         self.id
     }
 
-    fn is_empty(&self) -> Result<bool, git2::Error> {
+    fn is_empty(&self) -> Result<bool, git::raw::Error> {
         Ok(self.remotes.is_empty())
     }
 
@@ -215,17 +215,17 @@ impl ReadRepository for MockRepository {
         todo!()
     }
 
-    fn commit(&self, oid: Oid) -> Result<git2::Commit, git_ext::Error> {
+    fn commit(&self, oid: Oid) -> Result<git::raw::Commit, git_ext::Error> {
         Err(git_ext::Error::NotFound(git_ext::NotFound::NoSuchObject(
             *oid,
         )))
     }
 
-    fn revwalk(&self, _head: Oid) -> Result<git2::Revwalk, git2::Error> {
+    fn revwalk(&self, _head: Oid) -> Result<git::raw::Revwalk, git::raw::Error> {
         todo!()
     }
 
-    fn contains(&self, oid: Oid) -> Result<bool, git2::Error> {
+    fn contains(&self, oid: Oid) -> Result<bool, git::raw::Error> {
         Ok(self
             .remotes
             .values()
@@ -236,7 +236,7 @@ impl ReadRepository for MockRepository {
         Ok(true)
     }
 
-    fn blob(&self, _oid: Oid) -> Result<git2::Blob, git_ext::Error> {
+    fn blob(&self, _oid: Oid) -> Result<git::raw::Blob, git_ext::Error> {
         todo!()
     }
 
@@ -244,7 +244,7 @@ impl ReadRepository for MockRepository {
         &self,
         _oid: git_ext::Oid,
         _path: P,
-    ) -> Result<git2::Blob, git_ext::Error> {
+    ) -> Result<git::raw::Blob, git_ext::Error> {
         todo!()
     }
 
@@ -252,7 +252,7 @@ impl ReadRepository for MockRepository {
         &self,
         _remote: &RemoteId,
         _reference: &git::Qualified,
-    ) -> Result<git2::Reference, git_ext::Error> {
+    ) -> Result<git::raw::Reference, git_ext::Error> {
         todo!()
     }
 
@@ -322,7 +322,7 @@ impl ReadRepository for MockRepository {
 }
 
 impl WriteRepository for MockRepository {
-    fn raw(&self) -> &git2::Repository {
+    fn raw(&self) -> &git::raw::Repository {
         todo!()
     }
 

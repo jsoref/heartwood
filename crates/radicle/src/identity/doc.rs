@@ -54,7 +54,7 @@ pub enum DocError {
     #[error("git: {0}")]
     GitExt(#[from] git::Error),
     #[error("git: {0}")]
-    Git(#[from] git2::Error),
+    Git(#[from] git::raw::Error),
     #[error("missing identity document")]
     Missing,
 }
@@ -687,7 +687,7 @@ impl Doc {
     }
 
     /// Construct a [`Doc`] contained in the provided Git blob.
-    pub fn from_blob(blob: &git2::Blob) -> Result<Self, DocError> {
+    pub fn from_blob(blob: &git::raw::Blob) -> Result<Self, DocError> {
         RawDoc::from_json(blob.content())?.verified()
     }
 
@@ -830,7 +830,7 @@ impl Doc {
     pub(crate) fn blob_at<R: ReadRepository>(
         commit: Oid,
         repo: &R,
-    ) -> Result<git2::Blob, DocError> {
+    ) -> Result<git::raw::Blob, DocError> {
         let path = Path::new("embeds").join(*PATH);
         repo.blob_at(commit, path.as_path()).map_err(DocError::from)
     }
@@ -843,7 +843,7 @@ impl Doc {
             serde_json::Serializer::with_formatter(&mut buf, CanonicalFormatter::new());
 
         self.serialize(&mut serializer)?;
-        let oid = git2::Oid::hash_object(git2::ObjectType::Blob, &buf)?;
+        let oid = git::raw::Oid::hash_object(git::raw::ObjectType::Blob, &buf)?;
 
         Ok((oid.into(), buf))
     }
@@ -1157,7 +1157,7 @@ mod test {
         let remote = arbitrary::gen::<RemoteId>(1);
         let proj = arbitrary::gen::<RepoId>(1);
         let repo = storage.create(proj).unwrap();
-        let oid = git2::Oid::from_str("2d52a53ce5e4f141148a5f770cfd3ead2d6a45b8").unwrap();
+        let oid = git::raw::Oid::from_str("2d52a53ce5e4f141148a5f770cfd3ead2d6a45b8").unwrap();
 
         let err = repo.identity_head_of(&remote).unwrap_err();
         matches!(err, git::ext::Error::NotFound(_));

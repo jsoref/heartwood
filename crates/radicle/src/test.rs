@@ -6,6 +6,7 @@ pub mod storage;
 
 use super::storage::{Namespaces, RefUpdate};
 
+use crate::git;
 use crate::prelude::NodeId;
 use crate::storage::WriteRepository;
 
@@ -22,13 +23,13 @@ pub fn fetch<W: WriteRepository>(
         Namespaces::Followed(followed) => followed.into_iter().next(),
     };
     let mut updates = Vec::new();
-    let mut callbacks = git2::RemoteCallbacks::new();
-    let mut opts = git2::FetchOptions::default();
+    let mut callbacks = git::raw::RemoteCallbacks::new();
+    let mut opts = git::raw::FetchOptions::default();
     let refspec = if let Some(namespace) = namespace {
-        opts.prune(git2::FetchPrune::On);
+        opts.prune(git::raw::FetchPrune::On);
         format!("refs/namespaces/{namespace}/refs/*:refs/namespaces/{namespace}/refs/*")
     } else {
-        opts.prune(git2::FetchPrune::Off);
+        opts.prune(git::raw::FetchPrune::Off);
         "refs/namespaces/*:refs/namespaces/*".to_owned()
     };
 
@@ -295,22 +296,22 @@ pub mod setup {
     }
 
     pub fn commit<S: AsRef<Path>, T: AsRef<[u8]>>(
-        repo: &git2::Repository,
+        repo: &git::raw::Repository,
         refname: &git::Qualified,
         blobs: impl IntoIterator<Item = (S, T)>,
-        parents: &[&git2::Commit<'_>],
+        parents: &[&git::raw::Commit<'_>],
     ) -> git::Oid {
         let tree = {
             let mut tb = repo.treebuilder(None).unwrap();
             for (name, blob) in blobs.into_iter() {
                 let oid = repo.blob(blob.as_ref()).unwrap();
-                tb.insert(name.as_ref(), oid, git2::FileMode::Blob.into())
+                tb.insert(name.as_ref(), oid, git::raw::FileMode::Blob.into())
                     .unwrap();
             }
             tb.write().unwrap()
         };
         let tree = repo.find_tree(tree).unwrap();
-        let author = git2::Signature::now("anonymous", "anonymous@example.com").unwrap();
+        let author = git::raw::Signature::now("anonymous", "anonymous@example.com").unwrap();
 
         repo.commit(
             Some(refname.as_str()),

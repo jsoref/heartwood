@@ -8,6 +8,7 @@ use std::thread::ThreadId;
 use std::{process, thread};
 
 use super::Url;
+use crate::git;
 use crate::storage::git::transport::ChildStream;
 use crate::storage::RemoteId;
 
@@ -19,19 +20,21 @@ static NODES: LazyLock<Mutex<HashMap<(ThreadId, RemoteId), PathBuf>>> =
 #[derive(Default)]
 struct MockTransport;
 
-impl git2::transport::SmartSubtransport for MockTransport {
+impl git::raw::transport::SmartSubtransport for MockTransport {
     fn action(
         &self,
         url: &str,
-        service: git2::transport::Service,
-    ) -> Result<Box<dyn git2::transport::SmartSubtransportStream>, git2::Error> {
-        let url = Url::from_str(url).map_err(|e| git2::Error::from_str(e.to_string().as_str()))?;
+        service: git::raw::transport::Service,
+    ) -> Result<Box<dyn git::raw::transport::SmartSubtransportStream>, git::raw::Error> {
+        let url =
+            Url::from_str(url).map_err(|e| git::raw::Error::from_str(e.to_string().as_str()))?;
         let id = thread::current().id();
         let nodes = NODES.lock().expect("lock cannot be poisoned");
         let storage = if let Some(storage) = nodes.get(&(id, url.node)) {
             match service {
-                git2::transport::Service::ReceivePack | git2::transport::Service::ReceivePackLs => {
-                    return Err(git2::Error::from_str(
+                git::raw::transport::Service::ReceivePack
+                | git::raw::transport::Service::ReceivePackLs => {
+                    return Err(git::raw::Error::from_str(
                         "git-receive-pack is not supported with the mock transport",
                     ));
                 }
@@ -39,7 +42,7 @@ impl git2::transport::SmartSubtransport for MockTransport {
             }
             storage
         } else {
-            return Err(git2::Error::from_str(&format!(
+            return Err(git::raw::Error::from_str(&format!(
                 "node {} was not registered with the mock transport",
                 url.node
             )));
@@ -76,7 +79,7 @@ impl git2::transport::SmartSubtransport for MockTransport {
         Ok(Box::new(ChildStream { stdout, stdin }))
     }
 
-    fn close(&self) -> Result<(), git2::Error> {
+    fn close(&self) -> Result<(), git::raw::Error> {
         Ok(())
     }
 }
@@ -86,8 +89,8 @@ pub fn register(node: &RemoteId, path: &Path) {
     static REGISTER: Once = Once::new();
 
     REGISTER.call_once(|| unsafe {
-        git2::transport::register(Url::SCHEME, move |remote| {
-            git2::transport::Transport::smart(remote, false, MockTransport)
+        git::raw::transport::register(Url::SCHEME, move |remote| {
+            git::raw::transport::Transport::smart(remote, false, MockTransport)
         })
         .expect("transport registration is successful");
     });

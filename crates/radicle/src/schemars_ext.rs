@@ -94,12 +94,12 @@ pub(crate) mod git {
 
     /// See [`crate::git::Oid`]
     /// See [`::git_ext::Oid`]
-    /// See [`::git2::Oid`]
+    /// See [`::git::raw::Oid`]
     ///
     /// A Git Object Identifier in hexadecimal encoding.
     #[derive(JsonSchema)]
     #[schemars(
-        remote = "git2::Oid",
+        remote = "git::raw::Oid",
         description = "A Git Object Identifier (SHA-1 or SHA-256 hash) in hexadecimal encoding."
     )]
     pub(crate) struct Oid(

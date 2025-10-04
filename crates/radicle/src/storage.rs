@@ -153,7 +153,7 @@ pub enum Error {
     #[error(transparent)]
     Refs(#[from] refs::Error),
     #[error("git: {0}")]
-    Git(#[from] git2::Error),
+    Git(#[from] git::raw::Error),
     #[error("git: {0}")]
     Ext(#[from] git::ext::Error),
     #[error("invalid repository identifier {0:?}")]
@@ -179,7 +179,7 @@ impl Error {
 #[allow(clippy::large_enum_variant)]
 pub enum FetchError {
     #[error("git: {0}")]
-    Git(#[from] git2::Error),
+    Git(#[from] git::raw::Error),
     #[error("i/o: {0}")]
     Io(#[from] io::Error),
     #[error(transparent)]
@@ -503,16 +503,20 @@ pub trait ReadRepository: Sized + ValidateRepository {
     fn id(&self) -> RepoId;
 
     /// Returns `true` if there are no references in the repository.
-    fn is_empty(&self) -> Result<bool, git2::Error>;
+    fn is_empty(&self) -> Result<bool, git::raw::Error>;
 
     /// The [`Path`] to the git repository.
     fn path(&self) -> &Path;
 
     /// Get a blob in this repository at the given commit and path.
-    fn blob_at<P: AsRef<Path>>(&self, commit: Oid, path: P) -> Result<git2::Blob, git_ext::Error>;
+    fn blob_at<P: AsRef<Path>>(
+        &self,
+        commit: Oid,
+        path: P,
+    ) -> Result<git::raw::Blob, git_ext::Error>;
 
     /// Get a blob in this repository, given its id.
-    fn blob(&self, oid: Oid) -> Result<git2::Blob, git_ext::Error>;
+    fn blob(&self, oid: Oid) -> Result<git::raw::Blob, git_ext::Error>;
 
     /// Get the head of this repository.
     ///
@@ -572,18 +576,18 @@ pub trait ReadRepository: Sized + ValidateRepository {
         &self,
         remote: &RemoteId,
         reference: &Qualified,
-    ) -> Result<git2::Reference, git_ext::Error>;
+    ) -> Result<git::raw::Reference, git_ext::Error>;
 
-    /// Get the [`git2::Commit`] found using its `oid`.
+    /// Get the [`git::raw::Commit`] found using its `oid`.
     ///
     /// Returns `Err` if the commit did not exist.
-    fn commit(&self, oid: Oid) -> Result<git2::Commit, git::ext::Error>;
+    fn commit(&self, oid: Oid) -> Result<git::raw::Commit, git::ext::Error>;
 
     /// Perform a revision walk of a commit history starting from the given head.
-    fn revwalk(&self, head: Oid) -> Result<git2::Revwalk, git2::Error>;
+    fn revwalk(&self, head: Oid) -> Result<git::raw::Revwalk, git::raw::Error>;
 
     /// Check if the underlying ODB contains the given `oid`.
-    fn contains(&self, oid: Oid) -> Result<bool, git2::Error>;
+    fn contains(&self, oid: Oid) -> Result<bool, git::raw::Error>;
 
     /// Check whether the given commit is an ancestor of another commit.
     fn is_ancestor_of(&self, ancestor: Oid, head: Oid) -> Result<bool, git::ext::Error>;
@@ -692,7 +696,7 @@ pub trait WriteRepository: ReadRepository + SignRepository {
     /// Set the user info of the Git repository.
     fn set_user(&self, info: &UserInfo) -> Result<(), Error>;
     /// Get the underlying git repository.
-    fn raw(&self) -> &git2::Repository;
+    fn raw(&self) -> &git::raw::Repository;
 }
 
 /// Allows signing refs.

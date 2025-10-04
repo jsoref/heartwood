@@ -72,7 +72,15 @@ pub fn project<P, G>(
     path: P,
     storage: &Storage,
     signer: &Device<G>,
-) -> Result<(RepoId, SignedRefs<Verified>, git2::Repository, git2::Oid), rad::InitError>
+) -> Result<
+    (
+        RepoId,
+        SignedRefs<Verified>,
+        git::raw::Repository,
+        git::raw::Oid,
+    ),
+    rad::InitError,
+>
 where
     P: AsRef<Path>,
     G: crypto::signature::Signer<crypto::Signature>,
@@ -94,19 +102,19 @@ where
 }
 
 /// Creates a regular repository at the given path with a couple of commits.
-pub fn repository<P: AsRef<Path>>(path: P) -> (git2::Repository, git2::Oid) {
+pub fn repository<P: AsRef<Path>>(path: P) -> (git::raw::Repository, git::raw::Oid) {
     let (repo, oid) = repository_with(
         path,
-        git2::RepositoryInitOptions::new().external_template(false),
+        git::raw::RepositoryInitOptions::new().external_template(false),
     );
     repo.checkout_head(None).unwrap();
     (repo, oid)
 }
 
-pub fn bare_repository<P: AsRef<Path>>(path: P) -> (git2::Repository, git2::Oid) {
+pub fn bare_repository<P: AsRef<Path>>(path: P) -> (git::raw::Repository, git::raw::Oid) {
     repository_with(
         path,
-        git2::RepositoryInitOptions::new()
+        git::raw::RepositoryInitOptions::new()
             .external_template(false)
             .bare(true),
     )
@@ -114,17 +122,21 @@ pub fn bare_repository<P: AsRef<Path>>(path: P) -> (git2::Repository, git2::Oid)
 
 fn repository_with<P: AsRef<Path>>(
     path: P,
-    opts: &mut git2::RepositoryInitOptions,
-) -> (git2::Repository, git2::Oid) {
-    let repo = git2::Repository::init_opts(path, opts).unwrap();
+    opts: &mut git::raw::RepositoryInitOptions,
+) -> (git::raw::Repository, git::raw::Oid) {
+    let repo = git::raw::Repository::init_opts(path, opts).unwrap();
 
     {
         let mut config = repo.config().unwrap();
         config.set_str("user.name", USER_NAME).unwrap();
         config.set_str("user.email", USER_EMAIL).unwrap();
     }
-    let sig =
-        git2::Signature::new(USER_NAME, USER_EMAIL, &git2::Time::new(RADICLE_EPOCH, 0)).unwrap();
+    let sig = git::raw::Signature::new(
+        USER_NAME,
+        USER_EMAIL,
+        &git::raw::Time::new(RADICLE_EPOCH, 0),
+    )
+    .unwrap();
     let head = git::initial_commit(&repo, &sig).unwrap();
     let tree = git::write_tree(Path::new("README"), "Hello World!\n".as_bytes(), &repo).unwrap();
     let oid = {
@@ -149,10 +161,14 @@ fn repository_with<P: AsRef<Path>>(
 }
 
 /// Create an empty commit on the current branch.
-pub fn commit(msg: &str, parents: &[git2::Oid], repo: &git2::Repository) -> git::Oid {
+pub fn commit(msg: &str, parents: &[git::raw::Oid], repo: &git::raw::Repository) -> git::Oid {
     let head = repo.head().unwrap();
-    let sig =
-        git2::Signature::new(USER_NAME, USER_EMAIL, &git2::Time::new(RADICLE_EPOCH, 0)).unwrap();
+    let sig = git::raw::Signature::new(
+        USER_NAME,
+        USER_EMAIL,
+        &git::raw::Time::new(RADICLE_EPOCH, 0),
+    )
+    .unwrap();
     let tree = head.peel_to_commit().unwrap().tree().unwrap();
     let parents = parents
         .iter()
@@ -166,19 +182,28 @@ pub fn commit(msg: &str, parents: &[git2::Oid], repo: &git2::Repository) -> git:
 }
 
 /// Create an (annotated) tag of the given commit.
-pub fn tag(name: &str, message: &str, commit: git2::Oid, repo: &git2::Repository) -> git::Oid {
+pub fn tag(
+    name: &str,
+    message: &str,
+    commit: git::raw::Oid,
+    repo: &git::raw::Repository,
+) -> git::Oid {
     let target = repo
-        .find_object(commit, Some(git2::ObjectType::Commit))
+        .find_object(commit, Some(git::raw::ObjectType::Commit))
         .unwrap();
-    let tagger =
-        git2::Signature::new(USER_NAME, USER_EMAIL, &git2::Time::new(RADICLE_EPOCH, 0)).unwrap();
+    let tagger = git::raw::Signature::new(
+        USER_NAME,
+        USER_EMAIL,
+        &git::raw::Time::new(RADICLE_EPOCH, 0),
+    )
+    .unwrap();
     repo.tag(name, &target, &tagger, message, false)
         .unwrap()
         .into()
 }
 
 /// Populate a repository with commits, branches and blobs.
-pub fn populate(repo: &git2::Repository, scale: usize) -> Vec<git::Qualified> {
+pub fn populate(repo: &git::raw::Repository, scale: usize) -> Vec<git::Qualified> {
     assert!(
         scale <= 8,
         "Scale parameter must be less than or equal to 8"
@@ -198,7 +223,7 @@ pub fn populate(repo: &git2::Repository, scale: usize) -> Vec<git::Qualified> {
             .to_lowercase();
         let name =
             git::refname!("feature").join(git::RefString::try_from(random.as_str()).unwrap());
-        let signature = git2::Signature::now("Radicle", "radicle@radicle.xyz").unwrap();
+        let signature = git::raw::Signature::now("Radicle", "radicle@radicle.xyz").unwrap();
 
         rng.fill(&mut buffer);
 
@@ -241,13 +266,13 @@ pub mod gen {
     }
 
     /// Creates a regular repository at the given path with a couple of commits.
-    pub fn repository<P: AsRef<Path>>(path: P) -> (git2::Repository, git2::Oid) {
-        let repo = git2::Repository::init_opts(
+    pub fn repository<P: AsRef<Path>>(path: P) -> (git::raw::Repository, git::raw::Oid) {
+        let repo = git::raw::Repository::init_opts(
             path,
-            git2::RepositoryInitOptions::new().external_template(false),
+            git::raw::RepositoryInitOptions::new().external_template(false),
         )
         .unwrap();
-        let sig = git2::Signature::now(string(6).as_str(), email().as_str()).unwrap();
+        let sig = git::raw::Signature::now(string(6).as_str(), email().as_str()).unwrap();
         let head = git::initial_commit(&repo, &sig).unwrap();
         let tree =
             git::write_tree(Path::new("README"), "Hello World!\n".as_bytes(), &repo).unwrap();

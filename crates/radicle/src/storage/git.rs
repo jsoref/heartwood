@@ -56,10 +56,10 @@ pub struct Ref {
     pub namespace: Option<RemoteId>,
 }
 
-impl TryFrom<git2::Reference<'_>> for Ref {
+impl TryFrom<git::raw::Reference<'_>> for Ref {
     type Error = RefError;
 
-    fn try_from(r: git2::Reference) -> Result<Self, Self::Error> {
+    fn try_from(r: git::raw::Reference) -> Result<Self, Self::Error> {
         let name = r.name().ok_or(RefError::InvalidName)?;
         let (namespace, name) = match git::parse_ref_namespaced::<RemoteId>(name) {
             Ok((namespace, refname)) => (Some(namespace), refname.to_ref_string()),
@@ -279,7 +279,7 @@ pub struct Repository {
     /// The repository identifier (RID).
     pub id: RepoId,
     /// The backing Git repository.
-    pub backend: git2::Repository,
+    pub backend: git::raw::Repository,
 }
 
 impl AsRef<Repository> for Repository {
@@ -380,12 +380,12 @@ pub enum Validation {
 impl Repository {
     /// Open an existing repository.
     pub fn open<P: AsRef<Path>>(path: P, id: RepoId) -> Result<Self, RepositoryError> {
-        let backend = git2::Repository::open_ext(
+        let backend = git::raw::Repository::open_ext(
             path.as_ref(),
-            git2::RepositoryOpenFlags::empty()
-                | git2::RepositoryOpenFlags::BARE
-                | git2::RepositoryOpenFlags::NO_DOTGIT
-                | git2::RepositoryOpenFlags::NO_SEARCH,
+            git::raw::RepositoryOpenFlags::empty()
+                | git::raw::RepositoryOpenFlags::BARE
+                | git::raw::RepositoryOpenFlags::NO_DOTGIT
+                | git::raw::RepositoryOpenFlags::NO_SEARCH,
             &[] as &[&std::ffi::OsStr],
         )?;
 
@@ -394,9 +394,9 @@ impl Repository {
 
     /// Create a new repository.
     pub fn create<P: AsRef<Path>>(path: P, id: RepoId, info: &UserInfo) -> Result<Self, Error> {
-        let backend = git2::Repository::init_opts(
+        let backend = git::raw::Repository::init_opts(
             &path,
-            git2::RepositoryInitOptions::new()
+            git::raw::RepositoryInitOptions::new()
                 .bare(true)
                 .no_reinit(true)
                 .external_template(false),
@@ -506,7 +506,7 @@ impl Repository {
     /// Iterate over all references.
     pub fn references(
         &self,
-    ) -> Result<impl Iterator<Item = Result<Ref, refs::Error>> + '_, git2::Error> {
+    ) -> Result<impl Iterator<Item = Result<Ref, refs::Error>> + '_, git::raw::Error> {
         let refs = self
             .backend
             .references()?
@@ -539,7 +539,7 @@ impl Repository {
 
     pub fn remote_ids(
         &self,
-    ) -> Result<impl Iterator<Item = Result<RemoteId, refs::Error>> + '_, git2::Error> {
+    ) -> Result<impl Iterator<Item = Result<RemoteId, refs::Error>> + '_, git::raw::Error> {
         let iter = self.backend.references_glob(SIGREFS_GLOB.as_str())?.map(
             |reference| -> Result<RemoteId, refs::Error> {
                 let r = reference?;
@@ -556,7 +556,7 @@ impl Repository {
         &self,
     ) -> Result<
         impl Iterator<Item = Result<(RemoteId, Remote<Verified>), refs::Error>> + '_,
-        git2::Error,
+        git::raw::Error,
     > {
         let remotes =
             self.backend
@@ -652,7 +652,7 @@ impl ReadRepository for Repository {
         self.id
     }
 
-    fn is_empty(&self) -> Result<bool, git2::Error> {
+    fn is_empty(&self) -> Result<bool, git::raw::Error> {
         Ok(self.remotes()?.next().is_none())
     }
 
@@ -660,7 +660,7 @@ impl ReadRepository for Repository {
         self.backend.path()
     }
 
-    fn blob_at<P: AsRef<Path>>(&self, commit: Oid, path: P) -> Result<git2::Blob, git::Error> {
+    fn blob_at<P: AsRef<Path>>(&self, commit: Oid, path: P) -> Result<git::raw::Blob, git::Error> {
         let commit = self.backend.find_commit(*commit)?;
         let tree = commit.tree()?;
         let entry = tree.get_path(path.as_ref())?;
@@ -674,7 +674,7 @@ impl ReadRepository for Repository {
         Ok(blob)
     }
 
-    fn blob(&self, oid: Oid) -> Result<git2::Blob, git::Error> {
+    fn blob(&self, oid: Oid) -> Result<git::raw::Blob, git::Error> {
         self.backend.find_blob(oid.into()).map_err(git::Error::from)
     }
 
@@ -682,7 +682,7 @@ impl ReadRepository for Repository {
         &self,
         remote: &RemoteId,
         name: &git::Qualified,
-    ) -> Result<git2::Reference, git::Error> {
+    ) -> Result<git::raw::Reference, git::Error> {
         let name = name.with_namespace(remote.into());
         self.backend.find_reference(&name).map_err(git::Error::from)
     }
@@ -698,13 +698,13 @@ impl ReadRepository for Repository {
         Ok(oid.into())
     }
 
-    fn commit(&self, oid: Oid) -> Result<git2::Commit, git::Error> {
+    fn commit(&self, oid: Oid) -> Result<git::raw::Commit, git::Error> {
         self.backend
             .find_commit(oid.into())
             .map_err(git::Error::from)
     }
 
-    fn revwalk(&self, head: Oid) -> Result<git2::Revwalk, git2::Error> {
+    fn revwalk(&self, head: Oid) -> Result<git::raw::Revwalk, git::raw::Error> {
         let mut revwalk = self.backend.revwalk()?;
         revwalk.push(head.into())?;
 
@@ -936,7 +936,7 @@ impl WriteRepository for Repository {
         Ok(())
     }
 
-    fn raw(&self) -> &git2::Repository {
+    fn raw(&self) -> &git::raw::Repository {
         &self.backend
     }
 }
@@ -986,7 +986,7 @@ pub mod trailers {
 
     pub fn parse_signatures(msg: &str) -> Result<HashMap<PublicKey, Signature>, Error> {
         let trailers =
-            git2::message_trailers_strs(msg).map_err(|_| Error::SignatureTrailerFormat)?;
+            git::raw::message_trailers_strs(msg).map_err(|_| Error::SignatureTrailerFormat)?;
         let mut signatures = HashMap::with_capacity(trailers.len());
 
         for (key, val) in trailers.iter() {
@@ -1097,7 +1097,7 @@ mod tests {
             fixtures::project(tmp.path().join("project"), &storage, &signer).unwrap();
         let stored = storage.repository(rid).unwrap();
         let sig =
-            git2::Signature::now(&alice.to_string(), "anonymous@radicle.example.com").unwrap();
+            git::raw::Signature::now(&alice.to_string(), "anonymous@radicle.example.com").unwrap();
         let head = working.head().unwrap().peel_to_commit().unwrap();
 
         git::commit(

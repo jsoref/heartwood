@@ -126,7 +126,7 @@ pub enum ApplyError {
     #[error("document does not contain any changes to current identity")]
     DocUnchanged,
     #[error("git: {0}")]
-    Git(#[from] git2::Error),
+    Git(#[from] crate::git::raw::Error),
     #[error("git: {0}")]
     GitExt(#[from] git_ext::Error),
     #[error("identity document error: {0}")]

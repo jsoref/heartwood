@@ -780,7 +780,7 @@ mod tests {
         doc.delegates().clone()
     }
 
-    fn tag(name: RefString, head: git2::Oid, repo: &git2::Repository) -> git::Oid {
+    fn tag(name: RefString, head: git::raw::Oid, repo: &git::raw::Repository) -> git::Oid {
         let commit = fixtures::commit(name.as_str(), &[head], repo);
         let target = repo.find_object(*commit, None).unwrap();
         let tagger = repo.signature().unwrap();

@@ -1,4 +1,5 @@
 pub mod canonical;
+pub mod raw;
 
 use std::io;
 use std::path::Path;
@@ -20,7 +21,6 @@ pub use ext::is_not_found_err;
 pub use ext::Error;
 pub use ext::NotFound;
 pub use ext::Oid;
-pub use git2 as raw;
 pub use git_ext::ref_format as fmt;
 pub use git_ext::ref_format::{
     component, lit, name, qualified, refname, refspec,
@@ -173,13 +173,13 @@ pub enum RefError {
         err: Box<dyn std::error::Error + Send + Sync + 'static>,
     },
     #[error(transparent)]
-    Other(#[from] git2::Error),
+    Other(#[from] raw::Error),
 }
 
 #[derive(thiserror::Error, Debug)]
 pub enum ListRefsError {
     #[error("git error: {0}")]
-    Git(#[from] git2::Error),
+    Git(#[from] raw::Error),
     #[error("invalid ref: {0}")]
     InvalidRef(#[from] RefError),
 }
@@ -189,7 +189,7 @@ pub mod refs {
     use radicle_cob as cob;
 
     /// Try to get a qualified reference from a generic reference.
-    pub fn qualified_from<'a>(r: &'a git2::Reference) -> Result<(Qualified<'a>, Oid), RefError> {
+    pub fn qualified_from<'a>(r: &'a raw::Reference) -> Result<(Qualified<'a>, Oid), RefError> {
         let name = r.name().ok_or(RefError::InvalidName)?;
         let refstr = RefStr::try_from_str(name)?;
         let target = r.resolve()?.target().ok_or(RefError::NoTarget)?;
@@ -462,9 +462,9 @@ pub mod refs {
 pub fn remote_refs(url: &Url) -> Result<RandomMap<RemoteId, Refs>, ListRefsError> {
     let url = url.to_string();
     let mut remotes = RandomMap::default();
-    let mut remote = git2::Remote::create_detached(url)?;
+    let mut remote = raw::Remote::create_detached(url)?;
 
-    remote.connect(git2::Direction::Fetch)?;
+    remote.connect(raw::Direction::Fetch)?;
 
     let refs = remote.list()?;
     for r in refs {
@@ -557,9 +557,9 @@ where
 
 /// Create an initial empty commit.
 pub fn initial_commit<'a>(
-    repo: &'a git2::Repository,
-    sig: &git2::Signature,
-) -> Result<git2::Commit<'a>, git2::Error> {
+    repo: &'a raw::Repository,
+    sig: &raw::Signature,
+) -> Result<raw::Commit<'a>, raw::Error> {
     let tree_id = repo.index()?.write_tree()?;
     let tree = repo.find_tree(tree_id)?;
     let oid = repo.commit(None, sig, sig, "Initial commit", &tree, &[])?;
@@ -570,13 +570,13 @@ pub fn initial_commit<'a>(
 
 /// Create a commit and update the given ref to it.
 pub fn commit<'a>(
-    repo: &'a git2::Repository,
-    parent: &'a git2::Commit,
+    repo: &'a raw::Repository,
+    parent: &'a raw::Commit,
     target: &RefStr,
     message: &str,
-    sig: &git2::Signature,
-    tree: &git2::Tree,
-) -> Result<git2::Commit<'a>, git2::Error> {
+    sig: &raw::Signature,
+    tree: &raw::Tree,
+) -> Result<raw::Commit<'a>, raw::Error> {
     let oid = repo.commit(Some(target.as_str()), sig, sig, message, tree, &[parent])?;
     let commit = repo.find_commit(oid)?;
 
@@ -585,12 +585,12 @@ pub fn commit<'a>(
 
 /// Create an empty commit on top of the parent.
 pub fn empty_commit<'a>(
-    repo: &'a git2::Repository,
-    parent: &'a git2::Commit,
+    repo: &'a raw::Repository,
+    parent: &'a raw::Commit,
     target: &RefStr,
     message: &str,
-    sig: &git2::Signature,
-) -> Result<git2::Commit<'a>, git2::Error> {
+    sig: &raw::Signature,
+) -> Result<raw::Commit<'a>, raw::Error> {
     let tree = parent.tree()?;
     let oid = repo.commit(Some(target.as_str()), sig, sig, message, &tree, &[parent])?;
     let commit = repo.find_commit(oid)?;
@@ -599,7 +599,7 @@ pub fn empty_commit<'a>(
 }
 
 /// Get the repository head.
-pub fn head(repo: &git2::Repository) -> Result<git2::Commit, git2::Error> {
+pub fn head(repo: &raw::Repository) -> Result<raw::Commit, raw::Error> {
     let head = repo.head()?.peel_to_commit()?;
 
     Ok(head)
@@ -609,8 +609,8 @@ pub fn head(repo: &git2::Repository) -> Result<git2::Commit, git2::Error> {
 pub fn write_tree<'r>(
     path: &Path,
     bytes: &[u8],
-    repo: &'r git2::Repository,
-) -> Result<git2::Tree<'r>, Error> {
+    repo: &'r raw::Repository,
+) -> Result<raw::Tree<'r>, Error> {
     let blob_id = repo.blob(bytes)?;
     let mut builder = repo.treebuilder(None)?;
     builder.insert(path, blob_id, 0o100_644)?;
@@ -624,7 +624,7 @@ pub fn write_tree<'r>(
 /// Configure a radicle repository.
 ///
 /// * Sets `push.default = upstream`.
-pub fn configure_repository(repo: &git2::Repository) -> Result<(), git2::Error> {
+pub fn configure_repository(repo: &raw::Repository) -> Result<(), raw::Error> {
     let mut cfg = repo.config()?;
     cfg.set_str("push.default", "upstream")?;
 
@@ -652,11 +652,11 @@ pub fn configure_repository(repo: &git2::Repository) -> Result<(), git2::Error> 
 ///  2. `tagOpt = --no-tags` to ensure that tags are not fetched and stored
 ///     under `refs/tags`, again, because these are fetched by the `rad` remote.
 pub fn configure_remote<'r>(
-    repo: &'r git2::Repository,
+    repo: &'r raw::Repository,
     name: &str,
     fetch: &Url,
     push: &Url,
-) -> Result<git2::Remote<'r>, git2::Error> {
+) -> Result<raw::Remote<'r>, raw::Error> {
     let fetchspec = format!("+refs/heads/*:refs/remotes/{name}/*");
     let remote = repo.remote_with_fetch(name, fetch.to_string().as_str(), &fetchspec)?;
 
@@ -679,14 +679,14 @@ pub fn configure_remote<'r>(
 }
 
 /// Fetch from the given `remote`.
-pub fn fetch(repo: &git2::Repository, remote: &str) -> Result<(), git2::Error> {
+pub fn fetch(repo: &raw::Repository, remote: &str) -> Result<(), raw::Error> {
     repo.find_remote(remote)?.fetch::<&str>(
         &[],
         Some(
-            git2::FetchOptions::new()
+            raw::FetchOptions::new()
                 .update_fetchhead(false)
-                .prune(git2::FetchPrune::On)
-                .download_tags(git2::AutotagOption::None),
+                .prune(raw::FetchPrune::On)
+                .download_tags(raw::AutotagOption::None),
         ),
         None,
     )
@@ -694,10 +694,10 @@ pub fn fetch(repo: &git2::Repository, remote: &str) -> Result<(), git2::Error> {
 
 /// Push `refspecs` to the given `remote` using the provided `namespace`.
 pub fn push<'a>(
-    repo: &git2::Repository,
+    repo: &raw::Repository,
     remote: &str,
     refspecs: impl IntoIterator<Item = (&'a Qualified<'a>, &'a Qualified<'a>)>,
-) -> Result<(), git2::Error> {
+) -> Result<(), raw::Error> {
     let refspecs = refspecs
         .into_iter()
         .map(|(src, dst)| format!("{src}:{dst}"));
@@ -719,11 +719,11 @@ pub fn push<'a>(
 ///     merge = refs/heads/main
 /// ```
 pub fn set_upstream(
-    repo: &git2::Repository,
+    repo: &raw::Repository,
     remote: impl AsRef<str>,
     branch: impl AsRef<str>,
     merge: impl AsRef<str>,
-) -> Result<(), git2::Error> {
+) -> Result<(), raw::Error> {
     let remote = remote.as_ref();
     let branch = branch.as_ref();
     let merge = merge.as_ref();
@@ -752,14 +752,14 @@ pub fn set_upstream(
     Ok(())
 }
 
-pub fn init_default_branch(repo: &git2::Repository) -> Result<Option<String>, git2::Error> {
+pub fn init_default_branch(repo: &raw::Repository) -> Result<Option<String>, raw::Error> {
     let config = repo.config().and_then(|mut c| c.snapshot())?;
     let default_branch = config.get_str("init.defaultbranch")?;
-    let branch = repo.find_branch(default_branch, git2::BranchType::Local)?;
+    let branch = repo.find_branch(default_branch, raw::BranchType::Local)?;
     Ok(branch.into_reference().shorthand().map(ToOwned::to_owned))
 }
 
-pub fn head_refname(repo: &git2::Repository) -> Result<Option<String>, git2::Error> {
+pub fn head_refname(repo: &raw::Repository) -> Result<Option<String>, raw::Error> {
     let head = repo.head()?;
     match head.shorthand() {
         Some("HEAD") => Ok(None),

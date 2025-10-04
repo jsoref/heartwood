@@ -13,7 +13,7 @@ pub const RAD_PREFIX: &str = "rad:";
 #[derive(Error, Debug)]
 pub enum IdError {
     #[error("invalid git object id: {0}")]
-    InvalidOid(#[from] git2::Error),
+    InvalidOid(#[from] git::raw::Error),
     #[error(transparent)]
     Multibase(#[from] multibase::Error),
 }
@@ -102,8 +102,8 @@ impl From<git::Oid> for RepoId {
     }
 }
 
-impl From<git2::Oid> for RepoId {
-    fn from(oid: git2::Oid) -> Self {
+impl From<git::raw::Oid> for RepoId {
+    fn from(oid: git::raw::Oid) -> Self {
         Self(oid.into())
     }
 }

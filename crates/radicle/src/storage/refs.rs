@@ -55,7 +55,7 @@ pub enum Error {
     #[error("invalid reference: {0}")]
     Ref(#[from] git::RefError),
     #[error(transparent)]
-    Git(#[from] git2::Error),
+    Git(#[from] git::raw::Error),
     #[error(transparent)]
     GitExt(#[from] git_ext::Error),
 }
@@ -322,8 +322,8 @@ impl SignedRefs<Verified> {
                     env::GIT_COMMITTER_DATE
                 );
             };
-            let time = git2::Time::new(timestamp, 0);
-            git2::Signature::new("radicle", remote.to_string().as_str(), &time)?
+            let time = git::raw::Time::new(timestamp, 0);
+            git::raw::Signature::new("radicle", remote.to_string().as_str(), &time)?
         } else {
             raw.signature()?
         };
@@ -334,13 +334,13 @@ impl SignedRefs<Verified> {
             &author,
             "Update signed refs\n",
             &tree,
-            &parent.iter().collect::<Vec<&git2::Commit>>(),
+            &parent.iter().collect::<Vec<&git::raw::Commit>>(),
         );
 
         match commit {
             Ok(oid) => Ok(Updated::Updated { oid: oid.into() }),
             Err(e) => match (e.class(), e.code()) {
-                (git2::ErrorClass::Object, git2::ErrorCode::Modified) => {
+                (git::raw::ErrorClass::Object, git::raw::ErrorCode::Modified) => {
                     log::warn!("Concurrent modification of refs: {e:?}");
 
                     Err(Error::Git(e))
@@ -471,7 +471,7 @@ pub mod canonical {
         #[error(transparent)]
         Io(#[from] io::Error),
         #[error(transparent)]
-        Git(#[from] git2::Error),
+        Git(#[from] git::raw::Error),
     }
 }
 
@@ -581,7 +581,7 @@ mod tests {
             .unwrap();
 
             let paris_head = bob_working.find_commit(paris_head).unwrap();
-            let bob_sig = git2::Signature::now("bob", "bob@example.com").unwrap();
+            let bob_sig = git::raw::Signature::now("bob", "bob@example.com").unwrap();
             let bob_head = git::empty_commit(
                 &bob_working,
                 &paris_head,

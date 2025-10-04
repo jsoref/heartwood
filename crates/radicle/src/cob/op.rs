@@ -21,7 +21,7 @@ pub enum OpEncodingError {
     #[error("encoding failed: {0}")]
     Encoding(#[from] serde_json::Error),
     #[error("git: {0}")]
-    Git(#[from] git2::Error),
+    Git(#[from] git::raw::Error),
 }
 
 #[derive(Error, Debug)]

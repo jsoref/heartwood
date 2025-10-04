@@ -22,7 +22,7 @@ impl Stream {
 #[derive(Debug, Error)]
 pub enum Ops {
     #[error("failed to get a commit while iterating over stream: {source}")]
-    Commit { source: git2::Error },
+    Commit { source: crate::git::raw::Error },
     #[error("failed to load COB operation: {source}")]
     Load { source: op::LoadError },
     #[error("failed to load COB manifest: {source}")]

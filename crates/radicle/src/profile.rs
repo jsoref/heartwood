@@ -88,7 +88,7 @@ pub mod env {
 
     /// Get the configured pager program from the environment.
     pub fn pager() -> Option<String> {
-        if let Ok(cfg) = git2::Config::open_default() {
+        if let Ok(cfg) = crate::git::raw::Config::open_default() {
             if let Ok(pager) = cfg.get_string("core.pager") {
                 return Some(pager);
             }

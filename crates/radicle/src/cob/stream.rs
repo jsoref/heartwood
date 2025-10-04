@@ -8,6 +8,7 @@ use std::marker::PhantomData;
 
 use serde::Deserialize;
 
+use crate::git;
 use crate::git::Oid;
 
 use super::{ObjectId, Op, TypeName};
@@ -92,7 +93,7 @@ impl HasRoot for CobRange {
 ///
 /// To construct a `Stream`, use [`Stream::new`].
 pub struct Stream<'a, A> {
-    repo: &'a git2::Repository,
+    repo: &'a git::raw::Repository,
     range: CobRange,
     typename: TypeName,
     marker: PhantomData<A>,
@@ -101,7 +102,7 @@ pub struct Stream<'a, A> {
 impl<'a, A> Stream<'a, A> {
     /// Construct a new stream providing the underlying `repo`, a [`CobRange`],
     /// and the [`TypeName`] of the COB that is being streamed.
-    pub fn new(repo: &'a git2::Repository, range: CobRange, typename: TypeName) -> Self {
+    pub fn new(repo: &'a git::raw::Repository, range: CobRange, typename: TypeName) -> Self {
         Self {
             repo,
             range,
@@ -185,7 +186,7 @@ mod tests {
         "xyz.radicle.test".parse::<TypeName>().unwrap()
     }
 
-    fn gen_ops(repo: &git2::Repository, signer: &MockSigner) -> Vec<cob::Entry> {
+    fn gen_ops(repo: &git::raw::Repository, signer: &MockSigner) -> Vec<cob::Entry> {
         // Number of ops
         let n = gen::<u8>(1).clamp(1, 10);
         let mut entries = Vec::with_capacity(n.into());
@@ -213,7 +214,7 @@ mod tests {
     }
 
     fn create_entry(
-        repo: &git2::Repository,
+        repo: &git::raw::Repository,
         signer: &MockSigner,
         contents: NonEmpty<Vec<u8>>,
         parent: Option<Oid>,

@@ -39,7 +39,7 @@ pub enum InitError {
     #[error("project payload: {0}")]
     ProjectPayload(String),
     #[error("git: {0}")]
-    Git(#[from] git2::Error),
+    Git(#[from] git::raw::Error),
     #[error("i/o: {0}")]
     Io(#[from] io::Error),
     #[error("storage: {0}")]
@@ -48,7 +48,7 @@ pub enum InitError {
 
 /// Initialize a new radicle project from a git repository.
 pub fn init<G, S>(
-    repo: &git2::Repository,
+    repo: &git::raw::Repository,
     name: ProjectName,
     description: &str,
     default_branch: BranchName,
@@ -96,7 +96,7 @@ where
 }
 
 fn init_configure<G>(
-    repo: &git2::Repository,
+    repo: &git::raw::Repository,
     stored: &Repository,
     default_branch: &BranchName,
     url: &git::Url,
@@ -152,7 +152,7 @@ where
 #[derive(Error, Debug)]
 pub enum ForkError {
     #[error("git: {0}")]
-    Git(#[from] git2::Error),
+    Git(#[from] git::raw::Error),
     #[error("storage: {0}")]
     Storage(#[from] storage::Error),
     #[error("payload: {0}")]
@@ -236,7 +236,7 @@ pub enum CheckoutError {
         stdout: String,
     },
     #[error("git: {0}")]
-    Git(#[from] git2::Error),
+    Git(#[from] git::raw::Error),
     #[error("payload: {0}")]
     Payload(#[from] doc::PayloadError),
     #[error("repository `{0}` was not found in storage")]
@@ -253,19 +253,19 @@ pub fn checkout<P: AsRef<Path>, S: storage::ReadStorage>(
     path: P,
     storage: &S,
     bare: bool,
-) -> Result<git2::Repository, CheckoutError> {
+) -> Result<git::raw::Repository, CheckoutError> {
     // TODO: Decide on whether we can use `clone_local`
     // TODO: Look into sharing object databases.
     let doc = storage.get(proj)?.ok_or(CheckoutError::NotFound(proj))?;
     let project = doc.project()?;
 
-    let mut opts = git2::RepositoryInitOptions::new();
+    let mut opts = git::raw::RepositoryInitOptions::new();
     opts.no_reinit(true)
         .external_template(false)
         .description(project.description())
         .bare(bare);
 
-    let repo = git2::Repository::init_opts(path.as_ref(), &opts)?;
+    let repo = git::raw::Repository::init_opts(path.as_ref(), &opts)?;
     let url = git::Url::from(proj);
 
     // Configure repository for radicle.
@@ -335,7 +335,7 @@ pub fn checkout<P: AsRef<Path>, S: storage::ReadStorage>(
 #[derive(Error, Debug)]
 pub enum RemoteError {
     #[error("git: {0}")]
-    Git(#[from] git2::Error),
+    Git(#[from] git::raw::Error),
     #[error("invalid remote url: {0}")]
     Url(#[from] transport::local::UrlError),
     #[error("invalid utf-8 string")]
@@ -347,9 +347,9 @@ pub enum RemoteError {
 }
 
 /// Get the radicle ("rad") remote of a repository, and return the associated project id.
-pub fn remote(repo: &git2::Repository) -> Result<(git2::Remote<'_>, RepoId), RemoteError> {
+pub fn remote(repo: &git::raw::Repository) -> Result<(git::raw::Remote<'_>, RepoId), RemoteError> {
     let remote = repo.find_remote(&REMOTE_NAME).map_err(|e| {
-        if e.code() == git2::ErrorCode::NotFound {
+        if e.code() == git::raw::ErrorCode::NotFound {
             RemoteError::NotFound(REMOTE_NAME.to_string())
         } else {
             RemoteError::from(e)
@@ -362,9 +362,9 @@ pub fn remote(repo: &git2::Repository) -> Result<(git2::Remote<'_>, RepoId), Rem
 }
 
 /// Delete the radicle ("rad") remote of a repository.
-pub fn remove_remote(repo: &git2::Repository) -> Result<(), RemoteError> {
+pub fn remove_remote(repo: &git::raw::Repository) -> Result<(), RemoteError> {
     repo.remote_delete(&REMOTE_NAME).map_err(|e| {
-        if e.code() == git2::ErrorCode::NotFound {
+        if e.code() == git::raw::ErrorCode::NotFound {
             RemoteError::NotFound(REMOTE_NAME.to_string())
         } else {
             RemoteError::from(e)
@@ -380,7 +380,7 @@ pub enum CwdError {
 
     #[error("Detection failed (git: '{git}', jj: '{jj}')")]
     Detection {
-        git: git2::Error,
+        git: git::raw::Error,
         jj: JujutsuGitRootError,
     },
 }
@@ -395,7 +395,7 @@ pub enum CwdError {
 /// This function should only perform read operations since we do not
 /// want to modify the wrong repository in the case that it found a
 /// Git repository that is not a Radicle repository.
-pub fn cwd() -> Result<(git2::Repository, RepoId), CwdError> {
+pub fn cwd() -> Result<(git::raw::Repository, RepoId), CwdError> {
     let repo =
         repo().or_else(|git| repo_jj_git_root().map_err(|jj| CwdError::Detection { git, jj }))?;
 
@@ -404,23 +404,23 @@ pub fn cwd() -> Result<(git2::Repository, RepoId), CwdError> {
 }
 
 /// Get the repository of project in specified directory
-pub fn at(path: impl AsRef<Path>) -> Result<(git2::Repository, RepoId), RemoteError> {
-    let repo = git2::Repository::open(path)?;
+pub fn at(path: impl AsRef<Path>) -> Result<(git::raw::Repository, RepoId), RemoteError> {
+    let repo = git::raw::Repository::open(path)?;
     let (_, id) = remote(&repo)?;
 
     Ok((repo, id))
 }
 
 /// Get the current Git repository.
-pub fn repo() -> Result<git2::Repository, git2::Error> {
-    let mut flags = git2::RepositoryOpenFlags::empty();
+pub fn repo() -> Result<git::raw::Repository, git::raw::Error> {
+    let mut flags = git::raw::RepositoryOpenFlags::empty();
     // Allow to search upwards.
-    flags.set(git2::RepositoryOpenFlags::NO_SEARCH, false);
+    flags.set(git::raw::RepositoryOpenFlags::NO_SEARCH, false);
     // Allow to use `GIT_DIR` env.
-    flags.set(git2::RepositoryOpenFlags::FROM_ENV, true);
+    flags.set(git::raw::RepositoryOpenFlags::FROM_ENV, true);
 
     let ceilings: &[&str] = &[];
-    let repo = git2::Repository::open_ext(Path::new("."), flags, ceilings)?;
+    let repo = git::raw::Repository::open_ext(Path::new("."), flags, ceilings)?;
 
     Ok(repo)
 }
@@ -428,7 +428,7 @@ pub fn repo() -> Result<git2::Repository, git2::Error> {
 #[derive(Error, Debug)]
 pub enum JujutsuGitRootError {
     #[error("git: {0}")]
-    Git(#[from] git2::Error),
+    Git(#[from] git::raw::Error),
 
     #[error("i/o: {0}")]
     Io(#[from] io::Error),
@@ -438,7 +438,7 @@ pub enum JujutsuGitRootError {
 }
 
 /// Get the Git repo underlying the current Jujutsu repository.
-pub fn repo_jj_git_root() -> Result<git2::Repository, JujutsuGitRootError> {
+pub fn repo_jj_git_root() -> Result<git::raw::Repository, JujutsuGitRootError> {
     let output = std::process::Command::new("jj")
         .args(["git", "root"])
         .output()?;
@@ -450,7 +450,7 @@ pub fn repo_jj_git_root() -> Result<git2::Repository, JujutsuGitRootError> {
     }
 
     let path = std::path::PathBuf::from(String::from_utf8_lossy(&output.stdout).to_string().trim());
-    Ok(git2::Repository::open(path)?)
+    Ok(git::raw::Repository::open(path)?)
 }
 
 /// Setup patch upstream branch such that `git push` updates the patch.

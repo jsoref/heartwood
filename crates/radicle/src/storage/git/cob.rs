@@ -33,7 +33,7 @@ pub enum ObjectsError {
     #[error(transparent)]
     Convert(#[from] cob::object::storage::convert::Error),
     #[error(transparent)]
-    Git(#[from] git2::Error),
+    Git(#[from] git::raw::Error),
     #[error(transparent)]
     GitExt(#[from] git_ext::Error),
 }
@@ -43,7 +43,7 @@ pub enum TypesError {
     #[error(transparent)]
     Convert(#[from] cob::object::storage::convert::Error),
     #[error(transparent)]
-    Git(#[from] git2::Error),
+    Git(#[from] git::raw::Error),
     #[error(transparent)]
     ParseKey(#[from] crypto::Error),
     #[error(transparent)]
@@ -55,12 +55,12 @@ pub enum TypesError {
 impl cob::Store for Repository {}
 
 impl change::Storage for Repository {
-    type StoreError = <git2::Repository as change::Storage>::StoreError;
-    type LoadError = <git2::Repository as change::Storage>::LoadError;
+    type StoreError = <git::raw::Repository as change::Storage>::StoreError;
+    type LoadError = <git::raw::Repository as change::Storage>::LoadError;
 
-    type ObjectId = <git2::Repository as change::Storage>::ObjectId;
-    type Parent = <git2::Repository as change::Storage>::Parent;
-    type Signatures = <git2::Repository as change::Storage>::Signatures;
+    type ObjectId = <git::raw::Repository as change::Storage>::ObjectId;
+    type Parent = <git::raw::Repository as change::Storage>::Parent;
+    type Signatures = <git::raw::Repository as change::Storage>::Signatures;
 
     fn store<Signer>(
         &self,
@@ -91,8 +91,8 @@ impl change::Storage for Repository {
 impl cob::object::Storage for Repository {
     type ObjectsError = ObjectsError;
     type TypesError = TypesError;
-    type UpdateError = git2::Error;
-    type RemoveError = git2::Error;
+    type UpdateError = git::raw::Error;
+    type RemoveError = git::raw::Error;
 
     type Namespace = NodeId;
 
@@ -200,12 +200,12 @@ impl<'a, R> DraftStore<'a, R> {
 impl<R: storage::WriteRepository> cob::Store for DraftStore<'_, R> {}
 
 impl<R: storage::WriteRepository> change::Storage for DraftStore<'_, R> {
-    type StoreError = <git2::Repository as change::Storage>::StoreError;
-    type LoadError = <git2::Repository as change::Storage>::LoadError;
+    type StoreError = <git::raw::Repository as change::Storage>::StoreError;
+    type LoadError = <git::raw::Repository as change::Storage>::LoadError;
 
-    type ObjectId = <git2::Repository as change::Storage>::ObjectId;
-    type Parent = <git2::Repository as change::Storage>::Parent;
-    type Signatures = <git2::Repository as change::Storage>::Signatures;
+    type ObjectId = <git::raw::Repository as change::Storage>::ObjectId;
+    type Parent = <git::raw::Repository as change::Storage>::Parent;
+    type Signatures = <git::raw::Repository as change::Storage>::Signatures;
 
     fn store<Signer>(
         &self,
@@ -274,7 +274,7 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
         self.repo.id()
     }
 
-    fn is_empty(&self) -> Result<bool, git2::Error> {
+    fn is_empty(&self) -> Result<bool, git::raw::Error> {
         self.repo.is_empty()
     }
 
@@ -290,11 +290,11 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
         self.repo.path()
     }
 
-    fn commit(&self, oid: Oid) -> Result<git2::Commit, git_ext::Error> {
+    fn commit(&self, oid: Oid) -> Result<git::raw::Commit, git_ext::Error> {
         self.repo.commit(oid)
     }
 
-    fn revwalk(&self, head: Oid) -> Result<git2::Revwalk, git2::Error> {
+    fn revwalk(&self, head: Oid) -> Result<git::raw::Revwalk, git::raw::Error> {
         self.repo.revwalk(head)
     }
 
@@ -310,7 +310,7 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
         &self,
         oid: git_ext::Oid,
         path: P,
-    ) -> Result<git2::Blob, git_ext::Error> {
+    ) -> Result<git::raw::Blob, git_ext::Error> {
         self.repo.blob_at(oid, path)
     }
 
@@ -322,7 +322,7 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
         &self,
         remote: &RemoteId,
         reference: &git::Qualified,
-    ) -> Result<git2::Reference, git_ext::Error> {
+    ) -> Result<git::raw::Reference, git_ext::Error> {
         self.repo.reference(remote, reference)
     }
 
@@ -381,8 +381,8 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
 impl<R: storage::WriteRepository> cob::object::Storage for DraftStore<'_, R> {
     type ObjectsError = ObjectsError;
     type TypesError = git::ext::Error;
-    type UpdateError = git2::Error;
-    type RemoveError = git2::Error;
+    type UpdateError = git::raw::Error;
+    type RemoveError = git::raw::Error;
 
     type Namespace = NodeId;
 

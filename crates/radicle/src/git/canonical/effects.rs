@@ -167,7 +167,7 @@ pub struct GraphDescendant {
 // `git2` implementations of the above effects
 // ===========================================
 
-impl FindMergeBase for git2::Repository {
+impl FindMergeBase for git::raw::Repository {
     fn merge_base(&self, a: Oid, b: Oid) -> Result<MergeBase, MergeBaseError> {
         self.merge_base(*a, *b)
             .map_err(|err| MergeBaseError {
@@ -183,7 +183,7 @@ impl FindMergeBase for git2::Repository {
     }
 }
 
-impl Ancestry for git2::Repository {
+impl Ancestry for git::raw::Repository {
     fn graph_ahead_behind(
         &self,
         commit: Oid,
@@ -199,7 +199,7 @@ impl Ancestry for git2::Repository {
     }
 }
 
-impl FindObjects for git2::Repository {
+impl FindObjects for git::raw::Repository {
     fn find_objects<'a, 'b, I>(
         &self,
         refname: &Qualified,

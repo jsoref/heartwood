@@ -39,7 +39,7 @@ impl From<PatternString> for Until {
 /// from.
 pub(super) struct WalkIter<'a> {
     /// Git repository for looking up the commit object during the revwalk.
-    repo: &'a git2::Repository,
+    repo: &'a git::raw::Repository,
     /// The root commit that is being walked from.
     ///
     /// N.b. This is required since ranges are non-inclusive in Git, and if the
@@ -47,7 +47,7 @@ pub(super) struct WalkIter<'a> {
     /// error.
     from: Option<Oid>,
     /// The revwalk that is being iterated over.
-    inner: git2::Revwalk<'a>,
+    inner: git::raw::Revwalk<'a>,
 }
 
 impl From<CobRange> for Walk {
@@ -76,10 +76,10 @@ impl Walk {
     }
 
     /// Get the iterator for the walk.
-    pub(super) fn iter(self, repo: &git2::Repository) -> Result<WalkIter<'_>, git2::Error> {
+    pub(super) fn iter(self, repo: &git::raw::Repository) -> Result<WalkIter<'_>, git::raw::Error> {
         let mut walk = repo.revwalk()?;
         // N.b. ensure that we start from the `self.from` commit.
-        walk.set_sorting(git2::Sort::TOPOLOGICAL.union(git2::Sort::REVERSE))?;
+        walk.set_sorting(git::raw::Sort::TOPOLOGICAL.union(git::raw::Sort::REVERSE))?;
         match self.until {
             Until::Tip(tip) => walk.push_range(&format!("{}..{}", self.from, tip))?,
             Until::Glob(glob) => {
@@ -97,7 +97,7 @@ impl Walk {
 }
 
 impl<'a> Iterator for WalkIter<'a> {
-    type Item = Result<git2::Commit<'a>, git2::Error>;
+    type Item = Result<git::raw::Commit<'a>, git::raw::Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
         // N.b. ensure that we start using the `from` commit and use the revwalk
