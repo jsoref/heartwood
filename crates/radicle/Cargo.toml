@@ -33,7 +33,7 @@ multibase = { workspace = true }
 nonempty = { workspace = true, features = ["serialize"] }
 qcheck = { workspace = true, optional = true }
 radicle-cob = { workspace = true }
-radicle-crypto = { workspace = true, features = ["radicle-git-ext", "ssh", "sqlite", "cyphernet"] }
+radicle-crypto = { workspace = true, features = ["git-ref-format-core", "ssh", "sqlite", "cyphernet"] }
 radicle-git-ext = { workspace = true, features = ["serde"] }
 radicle-ssh = { workspace = true }
 schemars = { workspace = true, optional = true }

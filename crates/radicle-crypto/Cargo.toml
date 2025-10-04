@@ -23,7 +23,7 @@ ec25519 = "0.1.0"
 fastrand = { workspace = true, optional = true }
 multibase = { workspace = true }
 qcheck = { workspace = true, optional = true }
-radicle-git-ext = { workspace = true, optional = true }
+git-ref-format-core = { workspace = true, optional = true }
 radicle-ssh = { workspace = true, optional = true }
 serde = { workspace = true, features = ["derive"] }
 signature = { workspace = true }

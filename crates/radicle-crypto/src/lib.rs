@@ -353,20 +353,20 @@ impl PublicKey {
         multibase::encode(multibase::Base::Base58Btc, buf)
     }
 
-    #[cfg(feature = "radicle-git-ext")]
-    pub fn to_namespace(&self) -> radicle_git_ext::ref_format::RefString {
-        use radicle_git_ext::ref_format::{refname, Component};
-        refname!("refs/namespaces").join(Component::from(self))
+    #[cfg(feature = "git-ref-format-core")]
+    pub fn to_namespace(&self) -> git_ref_format_core::RefString {
+        use git_ref_format_core::name::{Component, NAMESPACES, REFS};
+        REFS.to_owned().and(NAMESPACES).and(Component::from(self))
     }
 
-    #[cfg(feature = "radicle-git-ext")]
-    pub fn to_component(&self) -> radicle_git_ext::ref_format::Component {
-        radicle_git_ext::ref_format::Component::from(self)
+    #[cfg(feature = "git-ref-format-core")]
+    pub fn to_component(&self) -> git_ref_format_core::Component {
+        git_ref_format_core::Component::from(self)
     }
 
-    #[cfg(feature = "radicle-git-ext")]
+    #[cfg(feature = "git-ref-format-core")]
     pub fn from_namespaced(
-        refstr: &radicle_git_ext::ref_format::Namespaced,
+        refstr: &git_ref_format_core::Namespaced,
     ) -> Result<Self, PublicKeyError> {
         let name = refstr.namespace().into_inner();
 
@@ -406,10 +406,10 @@ impl Deref for PublicKey {
     }
 }
 
-#[cfg(feature = "radicle-git-ext")]
-impl From<&PublicKey> for radicle_git_ext::ref_format::Component<'_> {
+#[cfg(feature = "git-ref-format-core")]
+impl From<&PublicKey> for git_ref_format_core::Component<'_> {
     fn from(id: &PublicKey) -> Self {
-        use radicle_git_ext::ref_format::{Component, RefString};
+        use git_ref_format_core::{Component, RefString};
         let refstr =
             RefString::try_from(id.to_string()).expect("encoded public keys are valid ref strings");
         Component::from_refstr(refstr).expect("encoded public keys are valid refname components")

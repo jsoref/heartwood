@@ -35,5 +35,5 @@ thiserror = { workspace = true }
 fastrand = { workspace = true }
 qcheck = { workspace = true }
 qcheck-macros = { workspace = true }
-radicle-crypto = { workspace = true, features = ["test", "radicle-git-ext"] }
+radicle-crypto = { workspace = true, features = ["test", "git-ref-format-core"] }
 tempfile = { workspace = true }
