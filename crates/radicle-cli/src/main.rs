@@ -52,6 +52,7 @@ enum Commands {
     Fork(fork::Args),
     Init(init::Args),
     Issue(issue::Args),
+    Ls(ls::Args),
     Path(path::Args),
     Publish(publish::Args),
     Stats(stats::Args),
@@ -249,7 +250,9 @@ pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyho
             }
         }
         "ls" => {
-            term::run_command_args::<ls::Options, _>(ls::HELP, ls::run, args.to_vec());
+            if let Some(Commands::Ls(args)) = CliArgs::parse().command {
+                term::run_command_fn(ls::run, args);
+            }
         }
         "node" => {
             term::run_command_args::<node::Options, _>(node::HELP, node::run, args.to_vec());
