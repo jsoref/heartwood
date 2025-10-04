@@ -8,9 +8,10 @@ use radicle_crypto::PublicKey;
 
 use crate::cob;
 use crate::cob::Timestamp;
+use crate::git;
+use crate::identity;
 use crate::identity::DocAt;
 use crate::storage::ReadRepository;
-use crate::{git, identity};
 
 /// The author of an [`Op`].
 pub type ActorId = PublicKey;

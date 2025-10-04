@@ -1,4 +1,4 @@
-use git_ext::Oid;
+use oid::Oid;
 use serde::{Deserialize, Serialize};
 
 use crate::test::storage::{self, Storage};

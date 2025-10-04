@@ -90,23 +90,9 @@ pub(crate) mod localtime {
 }
 
 pub(crate) mod git {
-    use super::*;
-
-    /// See [`crate::git::Oid`]
-    /// See [`::git_ext::Oid`]
-    /// See [`::git::raw::Oid`]
-    ///
-    /// A Git Object Identifier in hexadecimal encoding.
-    #[derive(JsonSchema)]
-    #[schemars(
-        remote = "git::raw::Oid",
-        description = "A Git Object Identifier (SHA-1 or SHA-256 hash) in hexadecimal encoding."
-    )]
-    pub(crate) struct Oid(
-        #[schemars(regex(pattern = r"^([0-9a-fA-F]{64}|[0-9a-fA-F]{40})$"))] String,
-    );
-
-    /// See [`crate::git::RefString`]
-    #[derive(JsonSchema)]
-    pub(crate) struct RefString(String);
+    pub(crate) mod fmt {
+        /// See [`crate::git::fmt::RefString`]
+        #[derive(schemars::JsonSchema)]
+        pub(crate) struct RefString(String);
+    }
 }

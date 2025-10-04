@@ -7,7 +7,7 @@ use anyhow::anyhow;
 
 use radicle::cob::{self, issue, patch};
 use radicle::crypto;
-use radicle::git::{Oid, RefString};
+use radicle::git::{fmt::RefString, Oid};
 use radicle::node::{Address, Alias};
 use radicle::prelude::{Did, NodeId, RepoId};
 

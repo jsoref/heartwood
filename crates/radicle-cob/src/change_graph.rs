@@ -3,8 +3,8 @@
 use std::ops::ControlFlow;
 use std::{cmp::Ordering, collections::BTreeSet};
 
-use git_ext::Oid;
-use radicle_dag::Dag;
+use dag::Dag;
+use oid::Oid;
 
 use crate::{
     change, object, object::collaboration::Evaluate, signatures::ExtendedSignature,

@@ -1,6 +1,6 @@
 // Copyright © 2021 The Radicle Link Contributors
 
-use git_ext::Oid;
+use oid::Oid;
 
 pub mod store;
 pub use store::{Contents, EntryId, Storage, Template, Timestamp};

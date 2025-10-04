@@ -34,7 +34,7 @@ pub fn fetch<W: WriteRepository>(
     };
 
     callbacks.update_tips(|name, old, new| {
-        if let Ok(name) = crate::git::RefString::try_from(name) {
+        if let Ok(name) = git::fmt::RefString::try_from(name) {
             if name.to_namespaced().is_some() {
                 updates.push(RefUpdate::from(name, old, new));
                 // Returning `true` ensures the process is not aborted.
@@ -77,13 +77,8 @@ pub mod setup {
     use crate::crypto::test::signer::MockSigner;
     use crate::node::device::Device;
     use crate::storage::git::transport::remote;
-    use crate::{
-        git,
-        profile::Home,
-        rad::REMOTE_NAME,
-        test::{fixtures, storage::git::Repository},
-        Storage,
-    };
+    use crate::storage::git::Repository;
+    use crate::{git, profile::Home, rad::REMOTE_NAME, test::fixtures, Storage};
     use crate::{prelude::*, rad};
 
     /// A node.
@@ -188,7 +183,8 @@ pub mod setup {
             &self,
             blobs: impl IntoIterator<Item = (S, T)>,
         ) -> BranchWith {
-            let refname = git::Qualified::from(git::lit::refs_heads(git::refname!("master")));
+            let refname =
+                git::fmt::Qualified::from(git::fmt::lit::refs_heads(git::fmt::refname!("master")));
             let base = self.checkout.refname_to_id(refname.as_str()).unwrap();
             let parent = self.checkout.find_commit(base).unwrap();
             let oid = commit(&self.checkout, &refname, blobs, &[&parent]);
@@ -297,10 +293,10 @@ pub mod setup {
 
     pub fn commit<S: AsRef<Path>, T: AsRef<[u8]>>(
         repo: &git::raw::Repository,
-        refname: &git::Qualified,
+        refname: &git::fmt::Qualified,
         blobs: impl IntoIterator<Item = (S, T)>,
         parents: &[&git::raw::Commit<'_>],
-    ) -> git::Oid {
+    ) -> crate::git::Oid {
         let tree = {
             let mut tb = repo.treebuilder(None).unwrap();
             for (name, blob) in blobs.into_iter() {

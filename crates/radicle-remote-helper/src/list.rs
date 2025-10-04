@@ -19,7 +19,7 @@ pub enum Error {
     Identity(#[from] radicle::identity::DocError),
     /// Git error.
     #[error(transparent)]
-    Git(#[from] radicle::git::ext::Error),
+    Git(#[from] radicle::git::raw::Error),
     /// Profile error.
     #[error(transparent)]
     Profile(#[from] profile::Error),
@@ -56,8 +56,8 @@ pub fn for_fetch<R: ReadRepository + cob::Store<Namespace = NodeId> + 'static>(
         // List canonical references.
         // Skip over `refs/rad/*`, since those are not meant to be fetched into a working copy.
         for glob in [
-            git::refspec::pattern!("refs/heads/*"),
-            git::refspec::pattern!("refs/tags/*"),
+            git::fmt::pattern!("refs/heads/*"),
+            git::fmt::pattern!("refs/tags/*"),
         ] {
             for (name, oid) in stored.references_glob(&glob)? {
                 println!("{oid} {name}");
@@ -81,8 +81,8 @@ pub fn for_push<R: ReadRepository>(profile: &Profile, stored: &R) -> Result<(), 
     // Only our own refs can be pushed to.
     for (name, oid) in stored.references_of(profile.id())? {
         // Only branches and tags can be pushed to.
-        if name.starts_with(git::refname!("refs/heads").as_str())
-            || name.starts_with(git::refname!("refs/tags").as_str())
+        if name.starts_with(git::fmt::refname!("refs/heads").as_str())
+            || name.starts_with(git::fmt::refname!("refs/tags").as_str())
         {
             println!("{oid} {name}");
         }

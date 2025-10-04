@@ -5,11 +5,11 @@ use std::convert::TryFrom;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 
-use git_ext::author::Author;
-use git_ext::commit::{headers::Headers, Commit};
-use git_ext::Oid;
+use metadata::author::Author;
+use metadata::commit::headers::Headers;
+use metadata::commit::trailers::OwnedTrailer;
 use nonempty::NonEmpty;
-use radicle_git_ext::commit::trailers::OwnedTrailer;
+use oid::Oid;
 
 use crate::change::store::Version;
 use crate::signatures;
@@ -21,6 +21,8 @@ use crate::{
     trailers, Embed,
 };
 
+use super::commit::Commit;
+
 /// Name of the COB manifest file.
 pub const MANIFEST_BLOB_NAME: &str = "manifest";
 /// Path under which COB embeds are kept.
@@ -30,8 +32,7 @@ pub mod error {
     use std::str::Utf8Error;
     use std::string::FromUtf8Error;
 
-    use git_ext::commit;
-    use git_ext::Oid;
+    use oid::Oid;
     use thiserror::Error;
 
     use crate::signatures::error::Signatures;
@@ -39,7 +40,7 @@ pub mod error {
     #[derive(Debug, Error)]
     pub enum Create {
         #[error(transparent)]
-        WriteCommit(#[from] commit::error::Write),
+        WriteCommit(#[from] super::super::commit::error::Write),
         #[error(transparent)]
         FromUtf8(#[from] FromUtf8Error),
         #[error(transparent)]
@@ -55,7 +56,7 @@ pub mod error {
     #[derive(Debug, Error)]
     pub enum Load {
         #[error(transparent)]
-        Read(#[from] commit::error::Read),
+        Read(#[from] super::super::commit::error::Read),
         #[error(transparent)]
         Signatures(#[from] Signatures),
         #[error(transparent)]
@@ -123,7 +124,7 @@ impl change::Storage for git2::Repository {
 
         let (id, timestamp) = write_commit(
             self,
-            resource.map(|o| *o),
+            resource.map(|o| o.into()),
             // Commit to tips, extra parents and resource.
             tips.iter()
                 .cloned()
@@ -134,7 +135,7 @@ impl change::Storage for git2::Repository {
             signature.clone(),
             related
                 .iter()
-                .map(|p| trailers::CommitTrailer::Related(**p).into()),
+                .map(|p| trailers::CommitTrailer::Related(*p).into()),
             tree,
         )?;
 
@@ -153,40 +154,34 @@ impl change::Storage for git2::Repository {
 
     fn parents_of(&self, id: &Oid) -> Result<Vec<Oid>, Self::LoadError> {
         Ok(self
-            .find_commit(**id)?
+            .find_commit(id.into())?
             .parent_ids()
             .map(Oid::from)
             .collect::<Vec<_>>())
     }
 
     fn manifest_of(&self, id: &Oid) -> Result<crate::Manifest, Self::LoadError> {
-        let commit = self.find_commit(**id)?;
+        let commit = self.find_commit(id.into())?;
         let tree = commit.tree()?;
         load_manifest(self, &tree)
     }
 
     fn load(&self, id: Self::ObjectId) -> Result<Entry, Self::LoadError> {
-        let commit = Commit::read(self, id.into())?;
-        let timestamp = git2::Time::from(commit.committer().time).seconds() as u64;
+        let commit = super::commit::Commit::read(self, id.into())?;
+        let timestamp = commit.committer().time.seconds() as u64;
         let trailers = parse_trailers(commit.trailers())?;
         let (resources, related): (Vec<_>, Vec<_>) = trailers.iter().partition(|t| match t {
             CommitTrailer::Resource(_) => true,
             CommitTrailer::Related(_) => false,
         });
-        let mut resources = resources
-            .into_iter()
-            .map(|r| r.oid().into())
-            .collect::<Vec<_>>();
-        let related = related
-            .into_iter()
-            .map(|r| r.oid().into())
-            .collect::<Vec<_>>();
+        let mut resources = resources.into_iter().map(|r| r.oid()).collect::<Vec<_>>();
+        let related = related.into_iter().map(|r| r.oid()).collect::<Vec<_>>();
         let parents = commit
             .parents()
             .map(Oid::from)
             .filter(|p| !resources.contains(p) && !related.contains(p))
             .collect();
-        let mut signatures = Signatures::try_from(&commit)?
+        let mut signatures = Signatures::try_from(&*commit)?
             .into_iter()
             .collect::<Vec<_>>();
         let Some((key, sig)) = signatures.pop() else {
@@ -285,7 +280,7 @@ fn write_commit(
 ) -> Result<(Oid, Timestamp), error::Create> {
     let trailers: Vec<OwnedTrailer> = trailers
         .into_iter()
-        .chain(resource.map(|r| trailers::CommitTrailer::Resource(r).into()))
+        .chain(resource.map(|r| trailers::CommitTrailer::Resource(r.into()).into()))
         .collect();
     let author = repo.signature()?;
     #[allow(unused_variables)]
@@ -299,29 +294,37 @@ fn write_commit(
             .map_err(signatures::error::Signatures::from)?
             .as_str(),
     );
-    let author = Author::try_from(&author)?;
+
+    let author = Author {
+        name: String::from_utf8(author.name_bytes().to_vec())?,
+        email: String::from_utf8(author.email_bytes().to_vec())?,
+        time: {
+            let when = author.when();
+            metadata::author::Time::new(when.seconds(), when.offset_minutes())
+        },
+    };
 
     #[cfg(feature = "stable-commit-ids")]
     // Ensures the commit id doesn't change on every run.
     let (author, timestamp) = {
-        let stable = crate::git::stable::read_timestamp();
+        let stable = crate::stable::read_timestamp();
         (
             Author {
-                time: git_ext::author::Time::new(stable, 0),
+                time: metadata::author::Time::new(stable, 0),
                 ..author
             },
             stable,
         )
     };
-    let (author, timestamp) = if let Ok(s) = std::env::var(crate::git::GIT_COMMITTER_DATE) {
+    let (author, timestamp) = if let Ok(s) = std::env::var(super::GIT_COMMITTER_DATE) {
         let Ok(timestamp) = s.trim().parse::<i64>() else {
             panic!(
                 "Invalid timestamp value {s:?} for `{}`",
-                crate::git::GIT_COMMITTER_DATE
+                super::GIT_COMMITTER_DATE
             );
         };
         let author = Author {
-            time: git_ext::author::Time::new(timestamp, 0),
+            time: metadata::author::Time::new(timestamp, 0),
             ..author
         };
         (author, timestamp)
@@ -380,7 +383,7 @@ fn write_manifest(
             let oid = embed.content;
             let path = PathBuf::from(embed.name);
 
-            embeds_tree.insert(path, *oid, git2::FileMode::Blob.into())?;
+            embeds_tree.insert(path, oid.into(), git2::FileMode::Blob.into())?;
         }
         let oid = embeds_tree.write()?;
 

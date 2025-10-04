@@ -9,6 +9,7 @@ use thiserror::Error;
 use crate::cob::ObjectId;
 use crate::crypto::Verified;
 use crate::git;
+use crate::git::BranchName;
 use crate::identity::doc;
 use crate::identity::doc::{DocError, RepoId, Visibility};
 use crate::identity::project::{Project, ProjectName};
@@ -17,18 +18,18 @@ use crate::storage::git::transport;
 use crate::storage::git::Repository;
 use crate::storage::refs::SignedRefs;
 use crate::storage::RepositoryError;
-use crate::storage::{BranchName, ReadRepository as _, RemoteId, SignRepository as _};
+use crate::storage::{ReadRepository as _, RemoteId, SignRepository as _};
 use crate::storage::{WriteRepository, WriteStorage};
 use crate::{identity, storage};
 
 /// Name of the radicle storage remote.
-pub static REMOTE_NAME: LazyLock<git::RefString> = LazyLock::new(|| git::refname!("rad"));
+pub static REMOTE_NAME: LazyLock<git::fmt::RefString> = LazyLock::new(|| git::fmt::refname!("rad"));
 /// Name of the radicle storage remote.
-pub static REMOTE_COMPONENT: LazyLock<git::Component> =
-    LazyLock::new(|| git::fmt::name::component!("rad"));
+pub static REMOTE_COMPONENT: LazyLock<git::fmt::Component> =
+    LazyLock::new(|| git::fmt::component!("rad"));
 /// Refname used for pushing patches.
-pub static PATCHES_REFNAME: LazyLock<git::RefString> =
-    LazyLock::new(|| git::refname!("refs/patches"));
+pub static PATCHES_REFNAME: LazyLock<git::fmt::RefString> =
+    LazyLock::new(|| git::fmt::refname!("refs/patches"));
 
 #[derive(Error, Debug)]
 pub enum InitError {
@@ -110,16 +111,16 @@ where
 
     git::configure_repository(repo)?;
     git::configure_remote(repo, &REMOTE_NAME, url, &url.clone().with_namespace(*pk))?;
-    let branch = git::Qualified::from(git::fmt::lit::refs_heads(default_branch));
+    let branch = git::fmt::Qualified::from(git::fmt::lit::refs_heads(default_branch));
 
     {
         // Push branch to storage.
         let stored = dunce::canonicalize(stored.path())?.display().to_string();
 
         // Pushes to default branch to the namespace of the `signer`.
-        let pushspec = git::Refspec {
+        let pushspec = git::fmt::refspec::Refspec {
             src: branch.clone(),
-            dst: branch.with_namespace(git::Component::from(pk)),
+            dst: branch.with_namespace(git::fmt::Component::from(pk)),
             force: false,
         }
         .to_string();
@@ -128,8 +129,8 @@ where
     }
 
     // N.b. we need to create the remote branch for the default branch
-    let rad_remote =
-        git::Qualified::from(git::lit::refs_remotes(&*REMOTE_COMPONENT)).join(default_branch);
+    let rad_remote = git::fmt::Qualified::from(git::fmt::lit::refs_remotes(&*REMOTE_COMPONENT))
+        .join(default_branch);
     let oid = repo.refname_to_id(branch.as_str())?;
     repo.reference(
         rad_remote.as_str(),
@@ -215,7 +216,7 @@ where
 
     raw.reference(
         &canonical_branch.with_namespace(me.into()),
-        *canonical_head,
+        canonical_head.into(),
         true,
         &format!("creating default branch for {me}"),
     )?;
@@ -281,10 +282,10 @@ pub fn checkout<P: AsRef<Path>, S: storage::ReadStorage>(
     {
         // Fetch remote head to working copy.
 
-        let fetchspec = git::Refspec {
-            src: git::refspec::pattern!("refs/heads/*"),
-            dst: git::Qualified::from(git::lit::refs_remotes(&*REMOTE_NAME))
-                .to_pattern(git::refspec::STAR)
+        let fetchspec = git::fmt::refspec::Refspec {
+            src: git::fmt::pattern!("refs/heads/*"),
+            dst: git::fmt::Qualified::from(git::fmt::lit::refs_remotes(&*REMOTE_NAME))
+                .to_pattern(git::fmt::refspec::STAR)
                 .into_patternstring(),
             force: false,
         }
@@ -456,15 +457,15 @@ pub fn repo_jj_git_root() -> Result<git::raw::Repository, JujutsuGitRootError> {
 /// Setup patch upstream branch such that `git push` updates the patch.
 pub fn setup_patch_upstream<'a>(
     patch: &ObjectId,
-    patch_head: git::Oid,
-    working: &'a git::raw::Repository,
-    remote: &git::RefString,
+    patch_head: crate::git::Oid,
+    working: &'a crate::git::raw::Repository,
+    remote: &git::fmt::RefString,
     force: bool,
-) -> Result<Option<git::raw::Branch<'a>>, git::ext::Error> {
+) -> Result<Option<crate::git::raw::Branch<'a>>, crate::git::raw::Error> {
     let head = working.head()?;
 
     // Don't do anything in case we're not on the patch branch.
-    if head.peel_to_commit()?.id() != *patch_head {
+    if patch_head != head.peel_to_commit()?.id() {
         return Ok(None);
     }
     let Ok(r) = head.resolve() else {
@@ -476,18 +477,18 @@ pub fn setup_patch_upstream<'a>(
         return Ok(None);
     }
 
-    let branch = git::raw::Branch::wrap(r);
+    let branch = crate::git::raw::Branch::wrap(r);
 
     // Only set the upstream if it's missing or `force` is `true`
     if branch.upstream().is_ok() && !force {
         return Ok(None);
     }
 
-    let name: Option<git::RefString> = branch.name()?.and_then(|b| b.try_into().ok());
+    let name: Option<git::fmt::RefString> = branch.name()?.and_then(|b| b.try_into().ok());
     let remote_branch = git::refs::workdir::patch_upstream(patch);
     let remote_branch = working.reference(
         &remote_branch,
-        *patch_head,
+        patch_head.into(),
         true,
         "Create remote tracking branch for patch",
     )?;
@@ -498,7 +499,7 @@ pub fn setup_patch_upstream<'a>(
             git::set_upstream(working, remote, name.as_str(), git::refs::patch(patch))?;
         }
     }
-    Ok(Some(git::raw::Branch::wrap(remote_branch)))
+    Ok(Some(crate::git::raw::Branch::wrap(remote_branch)))
 }
 
 #[cfg(test)]
@@ -508,12 +509,12 @@ mod tests {
 
     use pretty_assertions::assert_eq;
 
-    use crate::git::{name::component, qualified};
     use crate::identity::Did;
     use crate::storage::git::transport;
     use crate::storage::git::Storage;
     use crate::storage::{ReadStorage, RemoteRepository as _};
     use crate::test::fixtures;
+    use git::fmt::{component, qualified};
 
     use super::*;
 
@@ -531,7 +532,7 @@ mod tests {
             &repo,
             "acme".try_into().unwrap(),
             "Acme's repo",
-            git::refname!("master"),
+            git::fmt::refname!("master"),
             Visibility::default(),
             &signer,
             &storage,
@@ -553,19 +554,19 @@ mod tests {
 
         // Test canonical refs.
         assert_eq!(refs.head(component!("master")).unwrap(), head);
-        assert_eq!(project_repo.raw().refname_to_id("HEAD").unwrap(), *head);
+        assert_eq!(head, project_repo.raw().refname_to_id("HEAD").unwrap());
         assert_eq!(
+            head,
             project_repo
                 .raw()
                 .refname_to_id("refs/heads/master")
                 .unwrap(),
-            *head
         );
 
         assert_eq!(remotes[&public_key].refs, refs);
         assert_eq!(project.name(), "acme");
         assert_eq!(project.description(), "Acme's repo");
-        assert_eq!(project.default_branch(), &git::refname!("master"));
+        assert_eq!(project.default_branch(), &git::fmt::refname!("master"));
         assert_eq!(doc.delegates().first(), &Did::from(public_key));
     }
 
@@ -586,7 +587,7 @@ mod tests {
             &original,
             "acme".try_into().unwrap(),
             "Acme's repo",
-            git::refname!("master"),
+            git::fmt::refname!("master"),
             Visibility::default(),
             &alice,
             &storage,
@@ -622,7 +623,7 @@ mod tests {
             &original,
             "acme".try_into().unwrap(),
             "Acme's repo",
-            git::refname!("master"),
+            git::fmt::refname!("master"),
             Visibility::default(),
             &signer,
             &storage,

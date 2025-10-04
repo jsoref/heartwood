@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use std::time;
 
 use radicle::crypto::PublicKey;
-use radicle::git;
+use radicle::git::Oid;
 use radicle::storage::refs::RefsAt;
 
 use crate::identity::RepoId;
@@ -108,7 +108,7 @@ impl radicle::node::Handle for Handle {
 
         Ok(RefsAt {
             remote: self.nid()?,
-            at: git::raw::Oid::zero().into(),
+            at: Oid::sha1_zero(),
         })
     }
 

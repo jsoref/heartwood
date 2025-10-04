@@ -13,6 +13,9 @@ pub mod thread;
 #[cfg(test)]
 pub mod test;
 
+#[cfg(test)]
+pub use radicle_cob::stable;
+
 pub use cache::{migrate, MigrateCallback};
 pub use common::*;
 pub use op::{ActorId, Op};
@@ -21,7 +24,7 @@ pub use radicle_cob::{
     CollaborativeObject, Contents, Create, Embed, Entry, Evaluate, History, Manifest, ObjectId,
     Store, TypeName, Update, Updated, Version,
 };
-pub use radicle_cob::{create, get, git, list, remove, update};
+pub use radicle_cob::{create, get, list, remove, update};
 
 /// The exact identifier for a particular COB.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize)]
@@ -66,17 +69,17 @@ impl TypedId {
         self.type_name == *identity::TYPENAME
     }
 
-    /// Parse a [`crate::git::Namespaced`] refname into a [`TypedId`].
+    /// Parse a [`crate::git::fmt::Namespaced`] refname into a [`TypedId`].
     ///
     /// All namespaces are stripped before parsing the suffix for the
     /// [`TypedId`] (see [`TypedId::from_qualified`]).
     pub fn from_namespaced(
-        n: &crate::git::Namespaced,
+        n: &crate::git::fmt::Namespaced,
     ) -> Result<Option<Self>, ParseIdentifierError> {
         Self::from_qualified(&n.strip_namespace_recursive())
     }
 
-    /// Parse a [`crate::git::Qualified`] refname into a [`TypedId`].
+    /// Parse a [`crate::git::fmt::Qualified`] refname into a [`TypedId`].
     ///
     /// The refname is expected to be of the form:
     ///     `refs/cobs/<type name>/<object id>`
@@ -87,7 +90,9 @@ impl TypedId {
     ///
     /// This will fail if the refname is of the correct form, but the
     /// type name or object id fail to parse.
-    pub fn from_qualified(q: &crate::git::Qualified) -> Result<Option<Self>, ParseIdentifierError> {
+    pub fn from_qualified(
+        q: &crate::git::fmt::Qualified,
+    ) -> Result<Option<Self>, ParseIdentifierError> {
         match q.non_empty_iter() {
             ("refs", "cobs", type_name, mut id) => {
                 let Some(id) = id.next() else {

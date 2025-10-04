@@ -1765,7 +1765,7 @@ mod test {
             .unwrap();
 
         // Comments require references, so adding two of them to the same transaction errors.
-        let mut tx: Transaction<Issue, test::storage::git::Repository> =
+        let mut tx: Transaction<Issue, crate::storage::git::Repository> =
             Transaction::<Issue, _>::default();
         tx.comment("First reply", *issue.id, vec![]).unwrap();
         let err = tx.comment("Second reply", *issue.id, vec![]).unwrap_err();

@@ -7,7 +7,6 @@ pub extern crate radicle_crypto as crypto;
 
 #[macro_use]
 extern crate amplify;
-extern crate radicle_git_ext as git_ext;
 
 mod canonical;
 
@@ -42,10 +41,9 @@ pub mod prelude {
     use super::*;
 
     pub use crypto::{PublicKey, Verified};
+    pub use git::BranchName;
     pub use identity::{project::Project, Did, Doc, RawDoc, RepoId};
     pub use node::{Alias, NodeId, Timestamp};
     pub use profile::Profile;
-    pub use storage::{
-        BranchName, ReadRepository, ReadStorage, SignRepository, WriteRepository, WriteStorage,
-    };
+    pub use storage::{ReadRepository, ReadStorage, SignRepository, WriteRepository, WriteStorage};
 }

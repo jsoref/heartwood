@@ -6,9 +6,10 @@
 
 use std::collections::BTreeSet;
 
-use git_ext::Oid;
+use crypto::ssh::ExtendedSignature;
+use oid::Oid;
 
-use crate::{change_graph::ChangeGraph, ObjectId, Store, TypeName};
+use crate::{change_graph::ChangeGraph, ObjectId, TypeName};
 
 use super::error;
 
@@ -28,7 +29,7 @@ pub struct ChangeGraphInfo {
 ///
 /// The `storage` is the backing storage for storing
 /// [`crate::Entry`]s at content-addressable locations. Please see
-/// [`Store`] for further information.
+/// [`crate::Store`] for further information.
 ///
 /// The `typename` is the type of object to be found, while the `oid`
 /// is the identifier for the particular object under that type.
@@ -38,7 +39,12 @@ pub fn changegraph<S>(
     oid: &ObjectId,
 ) -> Result<Option<ChangeGraphInfo>, error::Retrieve>
 where
-    S: Store,
+    S: crate::object::Storage,
+    S: crate::change::Storage<
+        ObjectId = crate::object::Oid,
+        Parent = crate::object::Oid,
+        Signatures = ExtendedSignature,
+    >,
 {
     let tip_refs = storage
         .objects(typename, oid)

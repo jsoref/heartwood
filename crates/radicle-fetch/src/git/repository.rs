@@ -2,7 +2,11 @@ pub mod error;
 
 use either::Either;
 use radicle::git::raw::ErrorExt as _;
-use radicle::git::{self, Namespaced, Oid, Qualified};
+use radicle::git::{
+    self,
+    fmt::{Namespaced, Qualified},
+    Oid,
+};
 use radicle::storage::git::Repository;
 
 use super::refs::{Applied, Policy, RefUpdate, Update};
@@ -48,7 +52,7 @@ pub fn contains(repo: &Repository, oid: Oid) -> Result<bool, error::Contains> {
 /// - The object does not peel to a commit
 /// - Attempting to find the object fails
 fn find_and_peel(repo: &Repository, oid: Oid) -> Result<Oid, error::Ancestry> {
-    match repo.backend.find_object(*oid, None) {
+    match repo.backend.find_object(oid.into(), None) {
         Ok(object) => Ok(object
             .peel(git::raw::ObjectType::Commit)
             .map_err(|err| error::Ancestry::Peel { oid, err })?
@@ -80,7 +84,7 @@ pub fn ahead_behind(
 
     let (ahead, behind) = repo
         .backend
-        .graph_ahead_behind(*new_commit, *old_commit)
+        .graph_ahead_behind(new_commit.into(), old_commit.into())
         .map_err(|err| error::Ancestry::Check {
             old: old_commit,
             new: new_commit,
@@ -100,7 +104,7 @@ pub fn refname_to_id<'a, N>(repo: &Repository, refname: N) -> Result<Option<Oid>
 where
     N: Into<Qualified<'a>>,
 {
-    use radicle::git::raw::ErrorCode::NotFound;
+    use git::raw::ErrorCode::NotFound;
 
     let refname = refname.into();
     match repo.backend.refname_to_id(refname.as_ref()) {
@@ -170,7 +174,7 @@ fn direct<'a>(
         });
     };
 
-    if prev == *target {
+    if target == prev {
         // If the two objects are identical, their ancestry does not matter,
         // we can always skip the update.
         return Ok(RefUpdate::Skipped {
@@ -193,7 +197,7 @@ fn direct<'a>(
 
         let target = repo
             .backend
-            .find_object(*target, ANY_KIND)
+            .find_object(target.into(), ANY_KIND)
             .map_err(|err| error::Update::Ancestry(error::Ancestry::Object { oid: target, err }))?;
 
         match (prev.kind(), target.kind()) {
@@ -276,7 +280,7 @@ fn prune<'a>(
     name: Namespaced<'a>,
     prev: Either<Oid, Qualified<'a>>,
 ) -> Result<Updated<'a>, error::Update> {
-    use radicle::git::raw::ObjectType;
+    use git::raw::ObjectType;
 
     match find(repo, &name)? {
         Some(mut r) => {

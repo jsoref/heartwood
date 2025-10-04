@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use git_ext::Oid;
+use oid::Oid;
 use serde::{Deserialize, Serialize};
 
 use crate::test;

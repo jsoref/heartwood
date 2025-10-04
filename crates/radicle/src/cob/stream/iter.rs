@@ -3,7 +3,9 @@ use std::marker::PhantomData;
 use serde::Deserialize;
 
 use crate::cob::{Op, TypeName};
-use crate::git::{self, Oid, PatternString};
+use crate::git;
+use crate::git::fmt::refspec::PatternString;
+use crate::git::Oid;
 
 use super::error;
 use super::CobRange;
@@ -83,7 +85,7 @@ impl Walk {
         match self.until {
             Until::Tip(tip) => walk.push_range(&format!("{}..{}", self.from, tip))?,
             Until::Glob(glob) => {
-                walk.push(*self.from)?;
+                walk.push(self.from.into())?;
                 walk.push_glob(glob.as_str())?
             }
         }
@@ -103,7 +105,7 @@ impl<'a> Iterator for WalkIter<'a> {
         // N.b. ensure that we start using the `from` commit and use the revwalk
         // after that.
         if let Some(from) = self.from.take() {
-            return Some(self.repo.find_commit(*from));
+            return Some(self.repo.find_commit(from.into()));
         }
         let oid = self.inner.next()?;
         Some(oid.and_then(|oid| self.repo.find_commit(oid)))
@@ -132,7 +134,7 @@ where
         let commit = self.walk.next()?;
         match commit {
             Ok(commit) => {
-                let entry = git::Oid::from(commit.id());
+                let entry = crate::git::Oid::from(commit.id());
                 // N.b. mark this commit as seen, so that it is not walked again
                 self.walk.inner.hide(commit.id()).ok();
                 // Skip any Op that do not match the manifest
@@ -155,7 +157,7 @@ impl<'a, A> OpsIter<'a, A> {
 
     /// Load the `Op` for the given `entry`, ensuring that manifest matches with
     /// the expected manifest.
-    fn load(&self, entry: git::Oid) -> Result<Option<Op<A>>, error::Ops>
+    fn load(&self, entry: crate::git::Oid) -> Result<Option<Op<A>>, error::Ops>
     where
         A: for<'de> Deserialize<'de>,
     {

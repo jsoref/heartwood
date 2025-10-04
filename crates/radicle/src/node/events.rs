@@ -9,7 +9,8 @@ use std::time;
 
 use crossbeam_channel as chan;
 
-use crate::git::{Oid, Qualified};
+use crate::git::fmt::Qualified;
+use crate::git::Oid;
 use crate::node;
 use crate::prelude::*;
 use crate::storage::{refs, RefUpdate};

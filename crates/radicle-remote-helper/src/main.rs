@@ -117,6 +117,9 @@ pub enum Error {
     /// List error.
     #[error(transparent)]
     List(#[from] list::Error),
+    /// Invalid object ID.
+    #[error("invalid oid: {0}")]
+    InvalidOid(#[from] radicle::git::ParseOidError),
 }
 
 /// Models values for the `verbosity` option, see
@@ -162,13 +165,13 @@ pub enum Branch {
     /// Create a branch with the same name as the upstream branch (i.e. `patches/<patch id>`).
     MirrorUpstream,
     /// Create a branch with the provided name.
-    Provided(git::RefString),
+    Provided(git::fmt::RefString),
 }
 
 impl Branch {
     /// Return the branch name to be used for the local branch when creating a
     /// patch.
-    pub fn to_branch_name(self, object: &radicle::patch::PatchId) -> Option<git::Qualified> {
+    pub fn to_branch_name(self, object: &radicle::patch::PatchId) -> Option<git::fmt::Qualified> {
         match self {
             Self::None => None,
             Self::MirrorUpstream => Some(git::refs::patch(object)),
@@ -207,12 +210,15 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
     // module is aware of that.
     cli::Paint::set_terminal(cli::TerminalFile::Stderr);
 
-    let (remote, url): (Option<git::RefString>, Url) = {
+    let (remote, url): (Option<git::fmt::RefString>, Url) = {
         let args = env::args().skip(1).take(2).collect::<Vec<_>>();
 
         match args.as_slice() {
             [url] => (None, url.parse()?),
-            [remote, url] => (git::RefString::try_from(remote.as_str()).ok(), url.parse()?),
+            [remote, url] => (
+                git::fmt::RefString::try_from(remote.as_str()).ok(),
+                url.parse()?,
+            ),
 
             _ => {
                 return Err(Error::InvalidArguments(args));
@@ -274,7 +280,7 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
             }
             ["fetch", oid, refstr] => {
                 let oid = git::Oid::from_str(oid)?;
-                let refstr = git::RefString::try_from(*refstr)?;
+                let refstr = git::fmt::RefString::try_from(*refstr)?;
 
                 return Ok(fetch::run(
                     vec![(oid, refstr)],
@@ -347,7 +353,9 @@ fn push_option(args: &[&str], opts: &mut Options) -> Result<(), Error> {
 
                     opts.base = Some(git::Oid::from(commit.id()));
                 }
-                "patch.branch" => opts.branch = Branch::Provided(git::RefString::try_from(val)?),
+                "patch.branch" => {
+                    opts.branch = Branch::Provided(git::fmt::RefString::try_from(val)?)
+                }
                 other => {
                     return Err(Error::UnsupportedPushOption(other.to_owned()));
                 }

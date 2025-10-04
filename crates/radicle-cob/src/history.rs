@@ -2,8 +2,8 @@
 #![allow(clippy::too_many_arguments)]
 use std::{cmp::Ordering, collections::BTreeSet, ops::ControlFlow};
 
-use git_ext::Oid;
-use radicle_dag::Dag;
+use dag::Dag;
+use oid::Oid;
 
 pub use crate::change::{Contents, Entry, EntryId, Timestamp};
 
@@ -77,7 +77,7 @@ impl History {
         self.graph.node(id, change);
 
         for tip in tips {
-            self.graph.dependency(id, (*tip).into());
+            self.graph.dependency(id, tip);
         }
     }
 

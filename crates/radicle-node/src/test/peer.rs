@@ -138,7 +138,7 @@ impl<G: crypto::signature::Signer<crypto::Signature>> Peer<Storage, G> {
             &repo,
             name.try_into().unwrap(),
             description,
-            radicle::git::refname!("master"),
+            radicle::git::fmt::refname!("master"),
             Visibility::default(),
             self.signer(),
             self.storage(),

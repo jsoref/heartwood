@@ -19,11 +19,12 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::ops::ControlFlow;
 
-use git_ext::ref_format::Namespaced;
+use crate::git::fmt::Namespaced;
 
 use crate::prelude::Did;
 
-use super::{Oid, Qualified};
+use super::fmt::Qualified;
+use crate::git::Oid;
 
 /// A marker for the initial state of [`Canonical`], after construction using
 /// [`Canonical::new`].
@@ -510,20 +511,19 @@ mod tests {
 
     /// Test helper to construct a Canonical and get the quorum
     fn quorum(
-        heads: &[git::raw::Oid],
+        heads: &[crate::git::Oid],
         threshold: usize,
-        repo: &git::raw::Repository,
+        repo: &crate::git::raw::Repository,
     ) -> Result<Oid, QuorumError> {
-        let refname =
-            git::refs::branch(git_ext::ref_format::RefStr::try_from_str("master").unwrap());
+        let refname = git::refs::branch(crate::git::fmt::RefStr::try_from_str("master").unwrap());
 
         let mut delegates = Vec::new();
         for (i, head) in heads.iter().enumerate() {
             let signer = Device::mock_from_seed([(i + 1) as u8; 32]);
             let did = Did::from(signer.public_key());
             delegates.push(did);
-            let ns = git::Component::from(signer.public_key());
-            repo.reference(refname.with_namespace(ns).as_str(), *head, true, "")
+            let ns = git::fmt::Component::from(signer.public_key());
+            repo.reference(refname.with_namespace(ns).as_str(), head.into(), true, "")
                 .unwrap();
         }
 
@@ -557,18 +557,18 @@ mod tests {
     fn test_quorum_properties() {
         let tmp = tempfile::tempdir().unwrap();
         let (repo, c0) = fixtures::repository(tmp.path());
-        let c0: git::Oid = c0.into();
-        let a1 = fixtures::commit("A1", &[*c0], &repo);
-        let a2 = fixtures::commit("A2", &[*a1], &repo);
-        let d1 = fixtures::commit("D1", &[*c0], &repo);
-        let c1 = fixtures::commit("C1", &[*c0], &repo);
-        let c2 = fixtures::commit("C2", &[*c1], &repo);
-        let b2 = fixtures::commit("B2", &[*c1], &repo);
-        let a1 = fixtures::commit("A1", &[*c0], &repo);
-        let m1 = fixtures::commit("M1", &[*c2, *b2], &repo);
-        let m2 = fixtures::commit("M2", &[*a1, *b2], &repo);
+        let c0: crate::git::Oid = c0.into();
+        let a1 = fixtures::commit("A1", &[c0.into()], &repo);
+        let a2 = fixtures::commit("A2", &[a1.into()], &repo);
+        let d1 = fixtures::commit("D1", &[c0.into()], &repo);
+        let c1 = fixtures::commit("C1", &[c0.into()], &repo);
+        let c2 = fixtures::commit("C2", &[c1.into()], &repo);
+        let b2 = fixtures::commit("B2", &[c1.into()], &repo);
+        let a1 = fixtures::commit("A1", &[c0.into()], &repo);
+        let m1 = fixtures::commit("M1", &[c2.into(), b2.into()], &repo);
+        let m2 = fixtures::commit("M2", &[a1.into(), b2.into()], &repo);
         let mut rng = fastrand::Rng::new();
-        let choices = [*c0, *c1, *c2, *b2, *a1, *a2, *d1, *m1, *m2];
+        let choices = [c0, c1, c2, b2, a1, a2, d1, m1, m2];
 
         for _ in 0..100 {
             let count = rng.usize(1..=choices.len());
@@ -591,11 +591,10 @@ mod tests {
     fn test_quorum_different_types() {
         let tmp = tempfile::tempdir().unwrap();
         let (repo, c0) = fixtures::repository(tmp.path());
-        let c0: git::Oid = c0.into();
-        let t0 = fixtures::tag("v1", "", *c0, &repo);
+        let t0 = fixtures::tag("v1", "", c0, &repo);
 
         assert_matches!(
-            quorum(&[*c0, *t0], 1, &repo),
+            quorum(&[c0.into(), t0], 1, &repo),
             Err(QuorumError::DifferentTypes { .. })
         );
     }

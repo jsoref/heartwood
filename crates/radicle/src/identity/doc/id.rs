@@ -1,7 +1,7 @@
 use std::ops::Deref;
 use std::{ffi::OsString, fmt, str::FromStr};
 
-use git_ext::ref_format::{Component, RefString};
+use crate::git::fmt::{Component, RefString};
 use thiserror::Error;
 
 use crate::git;
@@ -12,10 +12,10 @@ pub const RAD_PREFIX: &str = "rad:";
 
 #[derive(Error, Debug)]
 pub enum IdError {
-    #[error("invalid git object id: {0}")]
-    InvalidOid(#[from] git::raw::Error),
     #[error(transparent)]
     Multibase(#[from] multibase::Error),
+    #[error("invalid length: expected {expected} bytes, got {actual} bytes")]
+    Length { expected: usize, actual: usize },
 }
 
 /// A repository identifier.
@@ -68,14 +68,18 @@ impl RepoId {
     /// Eg. `z3XncAdkZjeK9mQS5Sdc4qhw98BUX`.
     ///
     pub fn canonical(&self) -> String {
-        multibase::encode(multibase::Base::Base58Btc, self.0.as_bytes())
+        multibase::encode(multibase::Base::Base58Btc, AsRef::<[u8]>::as_ref(&self.0))
     }
 
     pub fn from_canonical(input: &str) -> Result<Self, IdError> {
+        const EXPECTED_LEN: usize = 20;
         let (_, bytes) = multibase::decode(input)?;
-        let array: git::Oid = bytes.as_slice().try_into()?;
-
-        Ok(Self(array))
+        let bytes: [u8; EXPECTED_LEN] =
+            bytes.try_into().map_err(|bytes: Vec<u8>| IdError::Length {
+                expected: EXPECTED_LEN,
+                actual: bytes.len(),
+            })?;
+        Ok(Self(crate::git::Oid::from_sha1(bytes)))
     }
 }
 

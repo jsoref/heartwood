@@ -10,7 +10,9 @@ use sqlite as sql;
 use thiserror::Error;
 
 use crate::git;
-use crate::git::{Oid, RefError, RefString};
+use crate::git::fmt::RefString;
+use crate::git::Oid;
+use crate::git::RefError;
 use crate::prelude::RepoId;
 use crate::sql::transaction;
 use crate::storage::RefUpdate;
@@ -40,7 +42,7 @@ pub enum Error {
     RefName(#[from] RefError),
     /// Invalid Git ref format.
     #[error("invalid ref format: {0}")]
-    RefFormat(#[from] git_ext::ref_format::Error),
+    RefFormat(#[from] crate::git::fmt::Error),
     /// Invalid notification kind.
     #[error("invalid notification kind: {0}")]
     NotificationKind(#[from] NotificationKindError),
@@ -414,10 +416,10 @@ mod parse {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod test {
-    use radicle_git_ext::ref_format::{qualified, refname};
+    use crate::git::fmt::{qualified, refname};
+    use crate::{cob, node::NodeId, test::arbitrary};
 
     use super::*;
-    use crate::{cob, node::NodeId, test::arbitrary};
 
     #[test]
     fn test_clear() {

@@ -186,8 +186,6 @@ pub enum Error {
     #[error(transparent)]
     Git(#[from] radicle::git::raw::Error),
     #[error(transparent)]
-    GitExt(#[from] radicle::git::ext::Error),
-    #[error(transparent)]
     Storage(#[from] storage::Error),
     #[error(transparent)]
     Gossip(#[from] gossip::Error),

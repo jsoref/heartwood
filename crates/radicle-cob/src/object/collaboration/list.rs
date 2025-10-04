@@ -1,6 +1,6 @@
 // Copyright © 2022 The Radicle Link Contributors
 
-use crate::{change_graph::ChangeGraph, CollaborativeObject, Evaluate, Store, TypeName};
+use crate::{change_graph::ChangeGraph, CollaborativeObject, Evaluate, TypeName};
 
 use super::error;
 
@@ -8,7 +8,7 @@ use super::error;
 ///
 /// The `storage` is the backing storage for storing
 /// [`crate::Entry`]s at content-addressable locations. Please see
-/// [`Store`] for further information.
+/// [`crate::Store`] for further information.
 ///
 /// The `typename` is the type of objects to be listed.
 pub fn list<T, S>(
@@ -17,7 +17,12 @@ pub fn list<T, S>(
 ) -> Result<Vec<CollaborativeObject<T>>, error::Retrieve>
 where
     T: Evaluate<S>,
-    S: Store,
+    S: crate::object::Storage,
+    S: crate::change::Storage<
+        ObjectId = crate::object::Oid,
+        Parent = crate::object::Oid,
+        Signatures = crate::ExtendedSignature,
+    >,
 {
     let references = storage
         .types(typename)

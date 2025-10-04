@@ -11,8 +11,9 @@ rust-version.workspace = true
 
 [features]
 default = []
-test = ["tempfile", "qcheck", "radicle-crypto/test"]
+test = ["tempfile", "qcheck", "radicle-crypto/test", "radicle-cob/test"]
 logger = ["colored", "chrono"]
+schemars = ["radicle-oid/schemars", "dep:schemars"]
 
 [dependencies]
 amplify = { workspace = true, features = ["std"] }
@@ -32,9 +33,10 @@ log = { workspace = true, features = ["std"] }
 multibase = { workspace = true }
 nonempty = { workspace = true, features = ["serialize"] }
 qcheck = { workspace = true, optional = true }
-radicle-cob = { workspace = true }
+radicle-cob = { workspace = true, features = ["git2"] }
 radicle-crypto = { workspace = true, features = ["git-ref-format-core", "ssh", "sqlite", "cyphernet"] }
-radicle-git-ext = { workspace = true, features = ["serde"] }
+radicle-git-ref-format = { workspace = true, features = ["macro", "serde"] }
+radicle-oid = { workspace = true, features = ["git2", "serde", "std", "sha1"] }
 radicle-ssh = { workspace = true }
 schemars = { workspace = true, optional = true, features = ["derive", "std"] }
 serde = { workspace = true, features = ["derive"] }
@@ -58,6 +60,7 @@ jsonschema = { version = "0.30", default-features = false }
 pretty_assertions = { workspace = true }
 qcheck = { workspace = true }
 qcheck-macros = { workspace = true }
-radicle-cob = { workspace = true, features = ["stable-commit-ids"] }
+radicle-cob = { workspace = true, features = ["stable-commit-ids", "test"] }
 radicle-crypto = { workspace = true, features = ["test"] }
+radicle-git-metadata = { workspace = true }
 tempfile = { workspace = true }

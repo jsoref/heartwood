@@ -57,7 +57,7 @@ where
             &repo,
             name.try_into().unwrap(),
             desc,
-            git::refname!("master"),
+            git::fmt::refname!("master"),
             Visibility::default(),
             signer,
             &storage,
@@ -92,7 +92,7 @@ where
         &working,
         "acme".try_into().unwrap(),
         "Acme's repository",
-        git::refname!("master"),
+        git::fmt::refname!("master"),
         Visibility::default(),
         signer,
         storage,
@@ -131,19 +131,21 @@ fn repository_with<P: AsRef<Path>>(
         config.set_str("user.name", USER_NAME).unwrap();
         config.set_str("user.email", USER_EMAIL).unwrap();
     }
+
     let sig = git::raw::Signature::new(
         USER_NAME,
         USER_EMAIL,
         &git::raw::Time::new(RADICLE_EPOCH, 0),
     )
     .unwrap();
+
     let head = git::initial_commit(&repo, &sig).unwrap();
     let tree = git::write_tree(Path::new("README"), "Hello World!\n".as_bytes(), &repo).unwrap();
     let oid = {
         let commit = git::commit(
             &repo,
             &head,
-            git::refname!("refs/heads/master").as_refstr(),
+            git::fmt::refname!("refs/heads/master").as_refstr(),
             "Second commit",
             &sig,
             &tree,
@@ -203,7 +205,7 @@ pub fn tag(
 }
 
 /// Populate a repository with commits, branches and blobs.
-pub fn populate(repo: &git::raw::Repository, scale: usize) -> Vec<git::Qualified> {
+pub fn populate(repo: &git::raw::Repository, scale: usize) -> Vec<git::fmt::Qualified> {
     assert!(
         scale <= 8,
         "Scale parameter must be less than or equal to 8"
@@ -221,8 +223,8 @@ pub fn populate(repo: &git::raw::Repository, scale: usize) -> Vec<git::Qualified
             .take(7)
             .collect::<String>()
             .to_lowercase();
-        let name =
-            git::refname!("feature").join(git::RefString::try_from(random.as_str()).unwrap());
+        let name = git::fmt::refname!("feature")
+            .join(git::fmt::RefString::try_from(random.as_str()).unwrap());
         let signature = git::raw::Signature::now("Radicle", "radicle@radicle.xyz").unwrap();
 
         rng.fill(&mut buffer);
@@ -244,7 +246,7 @@ pub fn populate(repo: &git::raw::Repository, scale: usize) -> Vec<git::Qualified
         )
         .unwrap();
 
-        refs.push(git::Qualified::from_refstr(refstr).unwrap());
+        refs.push(git::fmt::Qualified::from_refstr(refstr).unwrap());
     }
     refs
 }
@@ -279,7 +281,7 @@ pub mod gen {
         let oid = git::commit(
             &repo,
             &head,
-            git::refname!("refs/heads/master").as_refstr(),
+            git::fmt::refname!("refs/heads/master").as_refstr(),
             string(16).as_str(),
             &sig,
             &tree,

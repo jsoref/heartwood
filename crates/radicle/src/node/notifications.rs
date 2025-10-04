@@ -7,7 +7,7 @@ use thiserror::Error;
 
 use crate::cob;
 use crate::cob::TypedId;
-use crate::git::{BranchName, Qualified};
+use crate::git::{fmt::Qualified, BranchName};
 use crate::prelude::RepoId;
 use crate::storage::{RefUpdate, RemoteId};
 
@@ -73,7 +73,7 @@ pub enum NotificationKindError {
     TypedId(#[from] cob::ParseIdentifierError),
     /// Invalid Git ref format.
     #[error("invalid ref format: {0}")]
-    RefFormat(#[from] radicle_git_ext::ref_format::Error),
+    RefFormat(#[from] crate::git::fmt::Error),
 }
 
 impl TryFrom<Qualified<'_>> for NotificationKind {

@@ -241,12 +241,6 @@ checksum = "23ce669cd6c8588f79e15cf450314f9638f967fc5770ff1c7c1deb0925ea7cfa"
 
 [[package]]
 name = "base64"
-version = "0.13.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
-
-[[package]]
-name = "base64"
 version = "0.21.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
@@ -1119,9 +1113,9 @@ checksum = "07e28edb80900c19c28f1072f2e8aeca7fa06b23cd4169cefe1af5aa3260783f"
 
 [[package]]
 name = "git-ref-format"
-version = "0.3.1"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7428e0d6e549a9a613d6f019b839a0f5142c331295b79e119ca8f4faac145da1"
+checksum = "76314f6eb43910ebc5eb89a1f0728724a6b9144dabd18bca4e7cc7c01c3804e3"
 dependencies = [
  "git-ref-format-core",
  "git-ref-format-macro",
@@ -1129,9 +1123,9 @@ dependencies = [
 
 [[package]]
 name = "git-ref-format-core"
-version = "0.3.1"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bbaeb9672a55e9e32cb6d3ef781e7526b25ab97d499fae71615649340b143424"
+checksum = "ae6d9ee666ca7d4ad49cbf7174f785f299a18b37565694f665e8c7df24999cdd"
 dependencies = [
  "bstr",
  "serde",
@@ -1140,12 +1134,12 @@ dependencies = [
 
 [[package]]
 name = "git-ref-format-macro"
-version = "0.3.1"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b6ca5353accc201f6324dff744ba4660099546d4daf187ba868f07562e36ca4"
+checksum = "2dc2ded12a6ea2b6e63afaf09415e4c15bf4baa74e530acd9daed9ff47e7dd41"
 dependencies = [
  "git-ref-format-core",
- "proc-macro-error",
+ "proc-macro-error2",
  "quote",
  "syn 2.0.89",
 ]
@@ -2240,12 +2234,6 @@ dependencies = [
 
 [[package]]
 name = "nonempty"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ff7ac1e5ea23db6d61ad103e91864675049644bf47c35912336352fa4e9c109"
-
-[[package]]
-name = "nonempty"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "995defdca0a589acfdd1bd2e8e3b896b4d4f7675a31fd14c32611440c7f608e6"
@@ -2643,27 +2631,25 @@ dependencies = [
 ]
 
 [[package]]
-name = "proc-macro-error"
-version = "1.0.4"
+name = "proc-macro-error-attr2"
+version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da25490ff9892aab3fcf7c36f08cfb902dd3e71ca0f9f9517bea02a73a5ce38c"
+checksum = "96de42df36bb9bba5542fe9f1a054b8cc87e172759a1868aa05c1f3acc89dfc5"
 dependencies = [
- "proc-macro-error-attr",
  "proc-macro2",
  "quote",
- "syn 1.0.109",
- "version_check",
 ]
 
 [[package]]
-name = "proc-macro-error-attr"
-version = "1.0.4"
+name = "proc-macro-error2"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1be40180e52ecc98ad80b184934baf3d0d29f979574e439af5a55274b35f869"
+checksum = "11ec05c52be0a07b08061f7dd003e7d7092e0472bc731b4af7bb1ef876109802"
 dependencies = [
+ "proc-macro-error-attr2",
  "proc-macro2",
  "quote",
- "version_check",
+ "syn 2.0.89",
 ]
 
 [[package]]
@@ -2751,13 +2737,15 @@ dependencies = [
  "localtime",
  "log",
  "multibase",
- "nonempty 0.9.0",
+ "nonempty",
  "pretty_assertions",
  "qcheck",
  "qcheck-macros",
  "radicle-cob",
  "radicle-crypto",
- "radicle-git-ext",
+ "radicle-git-metadata",
+ "radicle-git-ref-format",
+ "radicle-oid",
  "radicle-ssh",
  "schemars",
  "serde",
@@ -2779,19 +2767,18 @@ dependencies = [
  "chrono",
  "clap",
  "dunce",
- "git-ref-format",
  "human-panic",
  "itertools",
  "lexopt",
  "localtime",
  "log",
- "nonempty 0.9.0",
+ "nonempty",
  "pretty_assertions",
  "radicle",
  "radicle-cli-test",
  "radicle-cob",
  "radicle-crypto",
- "radicle-git-ext",
+ "radicle-git-ref-format",
  "radicle-node",
  "radicle-surf",
  "radicle-term",
@@ -2837,14 +2824,17 @@ name = "radicle-cob"
 version = "0.17.0"
 dependencies = [
  "fastrand",
+ "git-ref-format-core",
  "git2",
  "log",
- "nonempty 0.9.0",
+ "nonempty",
  "qcheck",
  "qcheck-macros",
  "radicle-crypto",
  "radicle-dag",
- "radicle-git-ext",
+ "radicle-git-metadata",
+ "radicle-git-ref-format",
+ "radicle-oid",
  "serde",
  "serde_json",
  "signature 2.2.0",
@@ -2894,17 +2884,18 @@ dependencies = [
  "gix-protocol",
  "gix-transport",
  "log",
- "nonempty 0.9.0",
+ "nonempty",
  "radicle",
- "radicle-git-ext",
+ "radicle-git-ref-format",
+ "radicle-oid",
  "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "radicle-git-ext"
-version = "0.8.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b78c26e67d1712ad5a0c602ae3b236609461372ac04e200bda359fe4a1c6650"
+checksum = "fb3de6999a8ff570e0dd92a04ba3132853dd08a3bcfc2f7faf56de7b1bd36053"
 dependencies = [
  "git-ref-format",
  "git2",
@@ -2944,13 +2935,12 @@ dependencies = [
  "localtime",
  "log",
  "mio 1.0.4",
- "nonempty 0.9.0",
+ "nonempty",
  "qcheck",
  "qcheck-macros",
  "radicle",
  "radicle-crypto",
  "radicle-fetch",
- "radicle-git-ext",
  "radicle-protocol",
  "radicle-signals",
  "radicle-systemd",
@@ -2991,14 +2981,13 @@ dependencies = [
  "fastrand",
  "localtime",
  "log",
- "nonempty 0.9.0",
+ "nonempty",
  "paste",
  "qcheck",
  "qcheck-macros",
  "radicle",
  "radicle-crypto",
  "radicle-fetch",
- "radicle-git-ext",
  "scrypt",
  "serde",
  "serde_json",
@@ -3015,7 +3004,6 @@ dependencies = [
  "radicle",
  "radicle-cli",
  "radicle-crypto",
- "radicle-git-ext",
  "thiserror 1.0.69",
 ]
 
@@ -3049,22 +3037,22 @@ dependencies = [
 
 [[package]]
 name = "radicle-std-ext"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db20136bbc9ae63f3fec8e5a6c369f4902fac2244501b5dfc6d668e43475aaa4"
+checksum = "5310e7a04506b6ce92dc9c47b26bd24c1c680937a3dcd13cd20847f89dbda32a"
 
 [[package]]
 name = "radicle-surf"
-version = "0.22.0"
+version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb308c3989087f71e43d8c7a2737273fdc7fbcd3e6628af81a42f601ae64f314"
+checksum = "2f08adc954d4a49287d86bd1ce14ca7e34a11a3acd904044db30551ca8f4e46a"
 dependencies = [
  "anyhow",
- "base64 0.13.1",
+ "base64 0.21.7",
  "flate2",
  "git2",
  "log",
- "nonempty 0.5.0",
+ "nonempty",
  "radicle-git-ext",
  "radicle-std-ext",
  "tar",

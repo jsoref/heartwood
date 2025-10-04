@@ -10,9 +10,9 @@ use std::path::Path;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
+use crate::git::Oid;
 use nonempty::NonEmpty;
 use radicle_cob::type_name::{TypeName, TypeNameParse};
-use radicle_git_ext::Oid;
 use serde::{de, Deserialize, Serialize};
 use thiserror::Error;
 
@@ -53,8 +53,6 @@ pub enum DocError {
     #[error(transparent)]
     Threshold(#[from] ThresholdError),
     #[error("git: {0}")]
-    GitExt(#[from] git::Error),
-    #[error("git: {0}")]
     Git(#[from] git::raw::Error),
     #[error("missing identity document")]
     Missing,
@@ -72,7 +70,6 @@ impl DocError {
     /// Whether this error is caused by the document not being found.
     pub fn is_not_found(&self) -> bool {
         match self {
-            Self::GitExt(e) => e.is_not_found(),
             Self::Git(e) => e.is_not_found(),
             _ => false,
         }
@@ -810,7 +807,7 @@ impl Doc {
         if !self.is_delegate(&key.into()) {
             return Err(*key);
         }
-        if key.verify(blob.as_bytes(), signature).is_err() {
+        if key.verify(AsRef::<[u8]>::as_ref(&blob), signature).is_err() {
             return Err(*key);
         }
         Ok(())
@@ -855,7 +852,7 @@ impl Doc {
         G: crypto::signature::Signer<crypto::Signature>,
     {
         let (oid, bytes) = self.encode()?;
-        let sig = signer.sign(oid.as_bytes());
+        let sig = signer.sign(oid.as_ref());
 
         Ok((oid, bytes, sig))
     }
@@ -1132,7 +1129,7 @@ mod test {
             &repo,
             "heartwood".try_into().unwrap(),
             "Radicle Heartwood Protocol & Stack",
-            git::refname!("master"),
+            git::fmt::refname!("master"),
             Visibility::default(),
             &delegate,
             &storage,
@@ -1182,7 +1179,7 @@ mod test {
             &working,
             "heartwood".try_into().unwrap(),
             "Radicle Heartwood Protocol & Stack",
-            git::refname!("master"),
+            git::fmt::refname!("master"),
             Visibility::default(),
             &delegate,
             &storage,

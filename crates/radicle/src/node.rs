@@ -729,7 +729,7 @@ impl FetchResult {
         }
     }
 
-    pub fn find_updated(&self, name: &git::RefStr) -> Option<RefUpdate> {
+    pub fn find_updated(&self, name: &git::fmt::RefStr) -> Option<RefUpdate> {
         let updated = match self {
             Self::Success { updated, .. } => Some(updated),
             _ => None,

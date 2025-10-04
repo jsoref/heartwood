@@ -156,9 +156,9 @@ pub fn setup_remotes(
 pub fn setup_remote(
     setup: &project::SetupRemote,
     remote_id: &NodeId,
-    remote_name: Option<git::RefString>,
+    remote_name: Option<git::fmt::RefString>,
     aliases: &impl AliasStore,
-) -> anyhow::Result<git::RefString> {
+) -> anyhow::Result<git::fmt::RefString> {
     let remote_name = if let Some(name) = remote_name {
         name
     } else {
@@ -167,7 +167,7 @@ pub fn setup_remote(
         } else {
             remote_id.to_human()
         };
-        git::RefString::try_from(name.as_str())
+        git::fmt::RefString::try_from(name.as_str())
             .map_err(|_| anyhow!("invalid remote name: '{name}'"))?
     };
     let (remote, branch) = setup.run(&remote_name, *remote_id)?;

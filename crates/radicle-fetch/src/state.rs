@@ -3,7 +3,7 @@ use std::time::Instant;
 
 use gix_protocol::handshake;
 use radicle::crypto::PublicKey;
-use radicle::git::{Oid, Qualified};
+use radicle::git::{fmt::Qualified, Oid};
 use radicle::identity::{Did, Doc, DocError};
 
 use radicle::prelude::Verified;

@@ -130,7 +130,7 @@ pub enum Error {
     Payload(#[from] PayloadError),
     /// Git error.
     #[error("git: {0}")]
-    Git(#[from] git::ext::Error),
+    Git(#[from] git::raw::Error),
     /// Store error.
     #[error("store: {0}")]
     Store(#[from] store::Error),
@@ -601,12 +601,15 @@ impl Patch {
     }
 
     /// Get the merge base of this patch.
-    pub fn merge_base<R: ReadRepository>(&self, repo: &R) -> Result<git::Oid, git::ext::Error> {
+    pub fn merge_base<R: ReadRepository>(
+        &self,
+        repo: &R,
+    ) -> Result<crate::git::Oid, crate::git::raw::Error> {
         repo.merge_base(self.base(), self.head())
     }
 
     /// Get the commit range of this patch.
-    pub fn range(&self) -> Result<(git::Oid, git::Oid), git::ext::Error> {
+    pub fn range(&self) -> Result<(crate::git::Oid, crate::git::Oid), crate::git::raw::Error> {
         Ok((*self.base(), *self.head()))
     }
 
@@ -3334,7 +3337,7 @@ mod test {
             },
             &alice,
         );
-        let patch = Patch::from_history(&h0, &repo).unwrap();
+        let patch: Patch = Patch::from_history(&h0, &repo).unwrap();
         assert_eq!(patch.revisions().count(), 2);
 
         let mut h1 = h0.clone();

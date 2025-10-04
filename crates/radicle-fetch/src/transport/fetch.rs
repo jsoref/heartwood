@@ -9,7 +9,7 @@ use gix_protocol::fetch::negotiate::one_round::State;
 use gix_protocol::handshake;
 use gix_protocol::handshake::Ref;
 
-use crate::git::{oid, packfile};
+use crate::git::packfile;
 
 use super::{agent_name, Connection, WantsHaves};
 
@@ -109,7 +109,7 @@ impl fetch::Negotiate for Negotiate {
     ) -> bool {
         let mut has_want = false;
         for oid in &self.wants_haves.wants {
-            arguments.want(oid::to_object_id(*oid));
+            arguments.want(oid);
             has_want = true;
         }
         has_want
@@ -126,7 +126,7 @@ impl fetch::Negotiate for Negotiate {
         _previous_response: Option<&fetch::Response>,
     ) -> Result<(fetch::negotiate::Round, bool), fetch::negotiate::Error> {
         for oid in &self.wants_haves.haves {
-            arguments.have(oid::to_object_id(*oid));
+            arguments.have(oid);
         }
 
         let round = fetch::negotiate::Round {

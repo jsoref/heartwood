@@ -43,7 +43,7 @@ pub enum Error {
     NoKey,
     /// User tried to delete the canonical branch.
     #[error("refusing to delete default branch ref '{0}'")]
-    DeleteForbidden(git::RefString),
+    DeleteForbidden(git::fmt::RefString),
     /// Identity document error.
     #[error("doc: {0}")]
     Doc(#[from] radicle::identity::doc::DocError),
@@ -65,9 +65,6 @@ pub enum Error {
     /// Git error.
     #[error("git: {0}")]
     Git(#[from] git::raw::Error),
-    /// Git extension error.
-    #[error("git: {0}")]
-    GitExt(#[from] git::ext::Error),
     /// Storage error.
     #[error(transparent)]
     Storage(#[from] radicle::storage::Error),
@@ -136,9 +133,9 @@ pub enum Error {
 /// Push command.
 enum Command {
     /// Update ref.
-    Push(git::Refspec<git::Oid, git::RefString>),
+    Push(git::fmt::refspec::Refspec<git::Oid, git::fmt::RefString>),
     /// Delete ref.
-    Delete(git::RefString),
+    Delete(git::fmt::RefString),
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -173,7 +170,7 @@ impl Command {
         let Some((src, dst)) = s.split_once(':') else {
             return Err(CommandError::Empty { rev: s.to_string() });
         };
-        let dst = git::RefString::try_from(dst).map_err(|err| CommandError::Delete {
+        let dst = git::fmt::RefString::try_from(dst).map_err(|err| CommandError::Delete {
             rev: dst.to_string(),
             err,
         })?;
@@ -195,12 +192,12 @@ impl Command {
                 .id()
                 .into();
 
-            Ok(Self::Push(git::Refspec { src, dst, force }))
+            Ok(Self::Push(git::fmt::refspec::Refspec { src, dst, force }))
         }
     }
 
     /// Return the destination refname.
-    fn dst(&self) -> &git::RefStr {
+    fn dst(&self) -> &git::fmt::RefStr {
         match self {
             Self::Push(rs) => rs.dst.as_refstr(),
             Self::Delete(rs) => rs,
@@ -211,30 +208,30 @@ impl Command {
 enum PushAction {
     OpenPatch,
     UpdatePatch {
-        dst: git::Qualified<'static>,
+        dst: git::fmt::Qualified<'static>,
         patch: patch::PatchId,
     },
     PushRef {
-        dst: git::Qualified<'static>,
+        dst: git::fmt::Qualified<'static>,
     },
 }
 
 impl PushAction {
-    fn new(dst: &git::RefString) -> Result<Self, error::PushAction> {
+    fn new(dst: &git::fmt::RefString) -> Result<Self, error::PushAction> {
         if dst == &*rad::PATCHES_REFNAME {
             Ok(Self::OpenPatch)
         } else {
-            let dst = git::Qualified::from_refstr(dst)
+            let dst = git::fmt::Qualified::from_refstr(dst)
                 .ok_or_else(|| error::PushAction::InvalidRef {
                     refname: dst.clone(),
                 })?
                 .to_owned();
 
-            if let Some(oid) = dst.strip_prefix(git::refname!("refs/heads/patches")) {
+            if let Some(oid) = dst.strip_prefix(git::fmt::refname!("refs/heads/patches")) {
                 let patch = git::Oid::from_str(oid)
-                    .map_err(|err| error::PushAction::InvalidPatchId {
+                    .map_err(|source| error::PushAction::InvalidPatchId {
                         suffix: oid.to_string(),
-                        source: err,
+                        source,
                     })
                     .map(patch::PatchId::from)?;
                 Ok(Self::UpdatePatch { dst, patch })
@@ -248,7 +245,7 @@ impl PushAction {
 /// Run a git push command.
 pub fn run(
     mut specs: Vec<String>,
-    remote: Option<git::RefString>,
+    remote: Option<git::fmt::RefString>,
     url: Url,
     stored: &storage::git::Repository,
     profile: &Profile,
@@ -290,7 +287,7 @@ pub fn run(
     let identity = stored.identity()?;
     let project = identity.project()?;
     let canonical_ref = git::refs::branch(project.default_branch());
-    let mut set_canonical_refs: Vec<(git::Qualified, git::canonical::Object)> =
+    let mut set_canonical_refs: Vec<(git::fmt::Qualified, git::canonical::Object)> =
         Vec::with_capacity(specs.len());
 
     // Rely on the environment variable `GIT_DIR`.
@@ -317,7 +314,7 @@ pub fn run(
                     .map(|_| None)
                     .map_err(Error::from)
             }
-            Command::Push(git::Refspec { src, dst, force }) => {
+            Command::Push(git::fmt::refspec::Refspec { src, dst, force }) => {
                 let patches = crate::patches_mut(profile, stored)?;
                 let action = PushAction::new(dst)?;
 
@@ -373,7 +370,7 @@ pub fn run(
                         // canonical branch.
                         if let Some(canonical) = rules.canonical(dst.clone(), stored) {
                             let object = working
-                                .find_object(**src, None)
+                                .find_object(src.into(), None)
                                 .map(|obj| git::canonical::Object::new(&obj))?
                                 .ok_or(Error::UnknownObjectType { oid: *src })?;
 
@@ -429,10 +426,10 @@ pub fn run(
             }
 
             match stored.backend.refname_to_id(refname.as_str()) {
-                Ok(new) if new != *oid => {
+                Ok(new) if oid != new => {
                     stored.backend.reference(
                         refname.as_str(),
-                        *oid,
+                        oid.into(),
                         true,
                         "set-canonical-reference from git-push (radicle)",
                     )?;
@@ -441,7 +438,7 @@ pub fn run(
                 Err(e) if e.code() == git::raw::ErrorCode::NotFound => {
                     stored.backend.reference(
                         refname.as_str(),
-                        *oid,
+                        oid.into(),
                         true,
                         "set-canonical-reference from git-push (radicle)",
                     )?;
@@ -505,7 +502,7 @@ fn patch_base(
 /// [`Drop::drop`].
 struct TempPatchRef<'a> {
     stored: &'a storage::git::Repository,
-    reference: git::Namespaced<'a>,
+    reference: git::fmt::Namespaced<'a>,
 }
 
 impl<'a> TempPatchRef<'a> {
@@ -539,7 +536,7 @@ impl<'a> Drop for TempPatchRef<'a> {
 /// Open a new patch.
 fn patch_open<G>(
     head: &git::Oid,
-    upstream: &Option<git::RefString>,
+    upstream: &Option<git::fmt::RefString>,
     nid: &NodeId,
     working: &git::raw::Repository,
     stored: &storage::git::Repository,
@@ -563,7 +560,7 @@ where
     }
 
     let (title, description) =
-        term::patch::get_create_message(opts.message, &stored.backend, &base, head)?;
+        term::patch::get_create_message(opts.message, &stored.backend, &base.into(), &head.into())?;
 
     let patch = if opts.draft {
         patches.draft(
@@ -607,24 +604,29 @@ where
     let refname = git::refs::patch(&patch).with_namespace(nid.into());
     let _ = stored.raw().reference(
         refname.as_str(),
-        **head,
+        head.into(),
         true,
         "Create reference for patch head",
     )?;
 
     if let Some(upstream) = upstream {
         if let Some(local_branch) = opts.branch.to_branch_name(&patch) {
-            fn strip_refs_heads(qualified: git::Qualified) -> git::RefString {
+            fn strip_refs_heads(qualified: git::fmt::Qualified) -> git::fmt::RefString {
                 let (_refs, _heads, x, xs) = qualified.non_empty_components();
                 std::iter::once(x).chain(xs).collect()
             }
 
-            working.reference(&local_branch, **head, true, "Create local branch for patch")?;
+            working.reference(
+                &local_branch,
+                head.into(),
+                true,
+                "Create local branch for patch",
+            )?;
 
             let remote_branch = git::refs::workdir::patch_upstream(&patch);
             let remote_branch = working.reference(
                 &remote_branch,
-                **head,
+                head.into(),
                 true,
                 "Create remote tracking branch for patch",
             )?;
@@ -667,7 +669,7 @@ where
 #[allow(clippy::too_many_arguments)]
 fn patch_update<G>(
     head: &git::Oid,
-    dst: &git::Qualified,
+    dst: &git::fmt::Qualified,
     force: bool,
     patch_id: patch::PatchId,
     nid: &NodeId,
@@ -703,7 +705,8 @@ where
     let (latest_id, latest) = patch.latest();
     let latest = latest.clone();
 
-    let message = term::patch::get_update_message(opts.message, &stored.backend, &latest, head)?;
+    let message =
+        term::patch::get_update_message(opts.message, &stored.backend, &latest, &head.into())?;
 
     let dst = dst.with_namespace(nid.into());
     push_ref(head, &dst, force, stored.raw(), opts.verbosity)?;
@@ -744,7 +747,7 @@ where
 
 fn push<G>(
     src: &git::Oid,
-    dst: &git::Qualified,
+    dst: &git::fmt::Qualified,
     force: bool,
     nid: &NodeId,
     working: &git::raw::Repository,
@@ -768,7 +771,7 @@ where
 
     if let Some(old) = old {
         let proj = stored.project()?;
-        let master = &*git::Qualified::from(git::lit::refs_heads(proj.default_branch()));
+        let master = &*git::fmt::Qualified::from(git::fmt::lit::refs_heads(proj.default_branch()));
 
         // If we're pushing to the project's default branch, we want to see if any patches got
         // merged or reverted, and if so, update the patch COB.
@@ -800,8 +803,8 @@ where
 {
     // Find all commits reachable from the old OID but not from the new OID.
     let mut revwalk = stored.revwalk()?;
-    revwalk.push(*old)?;
-    revwalk.hide(*new)?;
+    revwalk.push(old.into())?;
+    revwalk.hide(new.into())?;
 
     // List of commits that have been dropped.
     let dropped = revwalk
@@ -943,7 +946,7 @@ where
 /// Push a single reference to storage.
 fn push_ref(
     src: &git::Oid,
-    dst: &git::Namespaced,
+    dst: &git::fmt::Namespaced,
     force: bool,
     stored: &git::raw::Repository,
     verbosity: Verbosity,
@@ -951,7 +954,7 @@ fn push_ref(
     let path = dunce::canonicalize(stored.path())?.display().to_string();
     // Nb. The *force* indicator (`+`) is processed by Git tooling before we even reach this code.
     // This happens during the `list for-push` phase.
-    let refspec = git::Refspec { src, dst, force };
+    let refspec = git::fmt::refspec::Refspec { src, dst, force };
 
     let mut args = vec!["send-pack".to_string()];
 

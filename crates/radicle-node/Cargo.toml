@@ -31,9 +31,6 @@ nonempty = { workspace = true, features = ["serialize"] }
 qcheck = { workspace = true, optional = true }
 radicle = { workspace = true, features = ["logger"] }
 radicle-fetch = { workspace = true }
-# N.b. this is required to use macros, even though it's re-exported
-# through radicle
-radicle-git-ext = { workspace = true, features = ["serde"] }
 radicle-protocol = { workspace = true }
 radicle-signals = { workspace = true }
 sqlite = { workspace = true, features = ["bundled"] }

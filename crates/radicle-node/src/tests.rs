@@ -1567,7 +1567,7 @@ fn test_queued_fetch_from_ann_same_rid() {
     let refname = carol
         .id()
         .to_namespace()
-        .join(git::refname!("refs/sigrefs"));
+        .join(git::fmt::refname!("refs/sigrefs"));
 
     // Finish the 1st fetch.
     // Ensure the ref is in the storage and cache.
@@ -1749,7 +1749,7 @@ fn test_init_and_seed() {
         &repo,
         "alice".try_into().unwrap(),
         "alice's repo",
-        git::refname!("master"),
+        git::fmt::refname!("master"),
         Visibility::default(),
         alice.signer(),
         alice.storage(),

@@ -1,12 +1,12 @@
 // Copyright © 2022 The Radicle Link Contributors
 use std::iter;
 
-use git_ext::Oid;
 use nonempty::NonEmpty;
+use oid::Oid;
 
 use crate::{
     change, change_graph::ChangeGraph, history::EntryId, CollaborativeObject, Embed, Evaluate,
-    ExtendedSignature, ObjectId, Store, TypeName,
+    ExtendedSignature, ObjectId, TypeName,
 };
 
 use super::error;
@@ -40,7 +40,7 @@ pub struct Update {
 ///
 /// The `storage` is the backing storage for storing
 /// [`crate::Entry`]s at content-addressable locations. Please see
-/// [`Store`] for further information.
+/// [`crate::Store`] for further information.
 ///
 /// The `signer` is expected to be a cryptographic signing key. This
 /// ensures that the objects origin is cryptographically verifiable.
@@ -65,7 +65,8 @@ pub fn update<T, S, G>(
 ) -> Result<Updated<T>, error::Update>
 where
     T: Evaluate<S>,
-    S: Store,
+    S: crate::object::Storage,
+    S: change::Storage<ObjectId = Oid, Parent = Oid, Signatures = ExtendedSignature>,
     G: signature::Signer<ExtendedSignature>,
 {
     let Update {
@@ -86,18 +87,20 @@ where
         graph.evaluate(storage).map_err(error::Update::evaluate)?;
 
     // Create a commit for this change, but don't update any references yet.
-    let entry = storage.store(
-        resource,
-        related,
-        signer,
-        change::Template {
-            tips: object.history.tips().into_iter().collect(),
-            embeds,
-            contents: changes,
-            type_name: typename.clone(),
-            message,
-        },
-    )?;
+    let entry = storage
+        .store(
+            resource,
+            related,
+            signer,
+            change::Template {
+                tips: object.history.tips().into_iter().collect(),
+                embeds,
+                contents: changes,
+                type_name: typename.clone(),
+                message,
+            },
+        )
+        .map_err(Into::<error::Update>::into)?;
     let head = entry.id;
     let parents = entry.parents.to_vec();
 

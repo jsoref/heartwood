@@ -1,7 +1,11 @@
 use bstr::{BString, ByteSlice};
 use either::Either;
 use radicle::crypto::PublicKey;
-use radicle::git::{self, Component, Namespaced, Oid, Qualified};
+use radicle::git::{
+    self,
+    fmt::{Component, Namespaced, Qualified},
+    Oid,
+};
 use thiserror::Error;
 
 pub use radicle::git::refs::storage::Special;
@@ -26,7 +30,6 @@ pub enum Error {
 pub(crate) fn unpack_ref<'a>(
     r: gix_protocol::handshake::Ref,
 ) -> Result<(ReceivedRefname<'a>, Oid), Error> {
-    use crate::git::oid;
     use gix_protocol::handshake::Ref;
 
     match r {
@@ -43,7 +46,7 @@ pub(crate) fn unpack_ref<'a>(
             full_ref_name,
             object,
             ..
-        } => ReceivedRefname::try_from(full_ref_name).map(|name| (name, oid::to_oid(object))),
+        } => ReceivedRefname::try_from(full_ref_name).map(|name| (name, object.into())),
         Ref::Unborn { full_ref_name, .. } => {
             unreachable!("BUG: unborn ref {}", full_ref_name)
         }

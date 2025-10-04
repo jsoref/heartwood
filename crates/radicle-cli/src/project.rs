@@ -1,7 +1,7 @@
 use radicle::prelude::*;
 
 use crate::git;
-use radicle::git::RefStr;
+use radicle::git::fmt::RefStr;
 use radicle::node::NodeId;
 
 /// Setup a repository remote and tracking branch.

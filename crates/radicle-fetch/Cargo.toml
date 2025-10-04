@@ -20,5 +20,6 @@ gix-transport = { version = "0.44.0", features = ["blocking-client"] }
 log = { workspace = true, features = ["std"] }
 nonempty = { workspace = true }
 radicle = { workspace = true }
-radicle-git-ext = { workspace = true, features = ["bstr"] }
+radicle-oid = { workspace = true, features = ["gix"] }
+radicle-git-ref-format = { workspace = true, features = ["bstr"] }
 thiserror = { workspace = true }

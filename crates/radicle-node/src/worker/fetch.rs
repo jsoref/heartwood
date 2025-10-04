@@ -196,7 +196,7 @@ fn notify(
                 // for sigref verification.
                 continue;
             }
-            if let Some(rest) = r.strip_prefix(git::refname!("refs/heads/patches")) {
+            if let Some(rest) = r.strip_prefix(git::fmt::refname!("refs/heads/patches")) {
                 if radicle::cob::ObjectId::from_str(rest.as_str()).is_ok() {
                     // Don't notify about patch branches, since we already get
                     // notifications about patch updates.
@@ -400,7 +400,7 @@ fn set_canonical_refs(
                 let oid = object.id();
                 if let Err(e) = repo.backend.reference(
                     refname.clone().as_str(),
-                    *oid,
+                    oid.into(),
                     true,
                     "set-canonical-reference from fetch (radicle)",
                 ) {

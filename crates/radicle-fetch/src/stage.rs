@@ -37,7 +37,7 @@ use either::Either;
 use gix_protocol::handshake::Ref;
 use nonempty::NonEmpty;
 use radicle::crypto::PublicKey;
-use radicle::git::{refname, Component, Namespaced, Qualified};
+use radicle::git::fmt::{refname, Component, Namespaced, Qualified};
 use radicle::storage::git::Repository;
 use radicle::storage::refs::{RefsAt, Special};
 use radicle::storage::ReadRepository;
@@ -52,7 +52,7 @@ use crate::{policy, refs};
 
 pub mod error {
     use radicle::crypto::PublicKey;
-    use radicle::git::RefString;
+    use radicle::git::fmt::RefString;
     use thiserror::Error;
 
     use crate::transport::WantsHavesError;

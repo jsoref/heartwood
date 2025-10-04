@@ -2,14 +2,13 @@
 
 use thiserror::Error;
 
-use crate::git;
-
 #[derive(Debug, Error)]
 pub enum Create {
     #[error(transparent)]
     Evaluate(Box<dyn std::error::Error + Send + Sync + 'static>),
     #[error(transparent)]
-    CreateChange(#[from] git::change::error::Create),
+    #[cfg(feature = "git2")]
+    CreateChange(#[from] crate::backend::git::change::error::Create),
     #[error("failed to updated references for during object creation: {err}")]
     Refs {
         #[source]
@@ -39,6 +38,7 @@ pub enum Retrieve {
     #[error(transparent)]
     Evaluate(Box<dyn std::error::Error + Send + Sync + 'static>),
     #[error(transparent)]
+    #[cfg(feature = "git2")]
     Git(#[from] git2::Error),
     #[error("failed to get references during object retrieval: {err}")]
     Refs {
@@ -62,13 +62,15 @@ pub enum Update {
     #[error("no object found")]
     NoSuchObject,
     #[error(transparent)]
-    CreateChange(#[from] git::change::error::Create),
+    #[cfg(feature = "git2")]
+    CreateChange(#[from] crate::backend::git::change::error::Create),
     #[error("failed to get references during object update: {err}")]
     Refs {
         #[source]
         err: Box<dyn std::error::Error + Send + Sync + 'static>,
     },
     #[error(transparent)]
+    #[cfg(feature = "git2")]
     Git(#[from] git2::Error),
     #[error(transparent)]
     Io(#[from] std::io::Error),

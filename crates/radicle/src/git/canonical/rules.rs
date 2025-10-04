@@ -22,9 +22,9 @@ use thiserror::Error;
 use crate::git;
 use crate::git::canonical;
 use crate::git::canonical::Canonical;
+use crate::git::fmt::refspec::QualifiedPattern;
+use crate::git::fmt::Qualified;
 use crate::git::fmt::{refname, RefString};
-use crate::git::refspec::QualifiedPattern;
-use crate::git::Qualified;
 use crate::identity::{doc, Did};
 
 const ASTERISK: char = '*';
@@ -214,7 +214,7 @@ impl Ord for Pattern {
             }
         }
 
-        use git::refspec::Component;
+        use git::fmt::refspec::Component;
 
         fn cmp_component(lhs: Component<'_>, rhs: Component<'_>) -> ComponentOrdering {
             let (l, r) = (lhs.as_str(), rhs.as_str());
@@ -401,7 +401,10 @@ impl ValidRule {
     /// # Errors
     ///
     /// If the `name` reference begins with `refs/rad`.
-    pub fn default_branch(did: Did, name: &git::RefStr) -> Result<(Pattern, Self), PatternError> {
+    pub fn default_branch(
+        did: Did,
+        name: &git::fmt::RefStr,
+    ) -> Result<(Pattern, Self), PatternError> {
         let pattern = Pattern::try_from(git::refs::branch(name).to_owned())?;
         let rule = Self {
             allow: ResolvedDelegates::Delegates(doc::Delegates::from(did)),
@@ -732,9 +735,7 @@ pub enum ValidationError {
 #[derive(Debug, Error)]
 pub enum CanonicalError {
     #[error(transparent)]
-    Git(#[from] git::raw::Error),
-    #[error(transparent)]
-    References(#[from] git::ext::Error),
+    Git(#[from] crate::git::raw::Error),
 }
 
 #[cfg(test)]
@@ -746,8 +747,8 @@ mod tests {
 
     use crate::crypto::{test::signer::MockSigner, Signer};
     use crate::git;
-    use crate::git::refspec::qualified_pattern;
-    use crate::git::RefString;
+    use crate::git::fmt::qualified_pattern;
+    use crate::git::fmt::RefString;
     use crate::identity::doc::Doc;
     use crate::identity::Visibility;
     use crate::node::device::Device;
@@ -782,7 +783,7 @@ mod tests {
 
     fn tag(name: RefString, head: git::raw::Oid, repo: &git::raw::Repository) -> git::Oid {
         let commit = fixtures::commit(name.as_str(), &[head], repo);
-        let target = repo.find_object(*commit, None).unwrap();
+        let target = repo.find_object(commit.into(), None).unwrap();
         let tagger = repo.signature().unwrap();
         repo.tag(name.as_str(), &target, &tagger, name.as_str(), false)
             .unwrap()
@@ -1118,7 +1119,7 @@ mod tests {
             &repo,
             "heartwood".try_into().unwrap(),
             "Radicle Heartwood Protocol & Stack",
-            git::refname!("master"),
+            git::fmt::refname!("master"),
             Visibility::default(),
             &delegate,
             &storage,
@@ -1132,20 +1133,20 @@ mod tests {
         // Create tags and keep track of their OIDs
         //
         // follows the `refs/tags/release/candidates/*` rule
-        let failing_tag = git::refname!("release/candidates/v1.0");
+        let failing_tag = git::fmt::refname!("release/candidates/v1.0");
         let tags = [
             // follows the `refs/tags/*` rule
-            git::refname!("v1.0"),
+            git::fmt::refname!("v1.0"),
             // follows the `refs/tags/release/*` rule
-            git::refname!("release/v1.0"),
+            git::fmt::refname!("release/v1.0"),
             failing_tag.clone(),
             // follows the `refs/tags/*` rule
-            git::refname!("qa/v1.0"),
+            git::fmt::refname!("qa/v1.0"),
         ]
         .into_iter()
         .map(|name| {
             (
-                git::lit::refs_tags(name.clone()).into(),
+                git::fmt::lit::refs_tags(name.clone()).into(),
                 tag(name, head, &repo),
             )
         })
@@ -1156,20 +1157,20 @@ mod tests {
             &rad::REMOTE_NAME,
             [
                 (
-                    &git::qualified!("refs/tags/v1.0"),
-                    &git::qualified!("refs/tags/v1.0"),
+                    &git::fmt::qualified!("refs/tags/v1.0"),
+                    &git::fmt::qualified!("refs/tags/v1.0"),
                 ),
                 (
-                    &git::qualified!("refs/tags/release/v1.0"),
-                    &git::qualified!("refs/tags/release/v1.0"),
+                    &git::fmt::qualified!("refs/tags/release/v1.0"),
+                    &git::fmt::qualified!("refs/tags/release/v1.0"),
                 ),
                 (
-                    &git::qualified!("refs/tags/release/candidates/v1.0"),
-                    &git::qualified!("refs/tags/release/candidates/v1.0"),
+                    &git::fmt::qualified!("refs/tags/release/candidates/v1.0"),
+                    &git::fmt::qualified!("refs/tags/release/candidates/v1.0"),
                 ),
                 (
-                    &git::qualified!("refs/tags/qa/v1.0"),
-                    &git::qualified!("refs/tags/qa/v1.0"),
+                    &git::fmt::qualified!("refs/tags/qa/v1.0"),
+                    &git::fmt::qualified!("refs/tags/qa/v1.0"),
                 ),
             ],
         )
@@ -1200,7 +1201,7 @@ mod tests {
         // All tags should succeed at getting their canonical commit other than the
         // candidates tag.
         let stored = storage.repository(rid).unwrap();
-        let failing = git::Qualified::from(git::lit::refs_tags(failing_tag));
+        let failing = git::fmt::Qualified::from(git::fmt::lit::refs_tags(failing_tag));
         for (refname, oid) in tags.into_iter() {
             let canonical = rules
                 .canonical(refname.clone(), &stored)

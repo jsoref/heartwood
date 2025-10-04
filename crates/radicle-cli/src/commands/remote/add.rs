@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use radicle::git;
-use radicle::git::RefString;
+use radicle::git::fmt::RefString;
 use radicle::prelude::*;
 use radicle::Profile;
 use radicle_crypto::PublicKey;

@@ -4,7 +4,8 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use git_ext::ref_format as fmt;
+pub use crate::git;
+use crate::git::fmt;
 
 use crate::crypto::Verified;
 use crate::identity::doc::{Doc, DocAt, DocError, RawDoc, RepoId};
@@ -18,7 +19,7 @@ use super::{arbitrary, fixtures};
 #[derive(Clone, Debug)]
 pub struct MockStorage {
     pub path: PathBuf,
-    pub info: git::UserInfo,
+    pub info: crate::git::UserInfo,
 
     /// All refs keyed by RID.
     /// Each value is a map of refs keyed by node Id (public key).
@@ -67,7 +68,7 @@ impl MockStorage {
 impl ReadStorage for MockStorage {
     type Repository = MockRepository;
 
-    fn info(&self) -> &git::UserInfo {
+    fn info(&self) -> &crate::git::UserInfo {
         &self.info
     }
 
@@ -215,10 +216,12 @@ impl ReadRepository for MockRepository {
         todo!()
     }
 
-    fn commit(&self, oid: Oid) -> Result<git::raw::Commit, git_ext::Error> {
-        Err(git_ext::Error::NotFound(git_ext::NotFound::NoSuchObject(
-            *oid,
-        )))
+    fn commit(&self, oid: Oid) -> Result<git::raw::Commit, git::raw::Error> {
+        Err(git::raw::Error::new(
+            git::raw::ErrorCode::NotFound,
+            git::raw::ErrorClass::None,
+            format!("commit {oid} not found"),
+        ))
     }
 
     fn revwalk(&self, _head: Oid) -> Result<git::raw::Revwalk, git::raw::Error> {
@@ -232,39 +235,39 @@ impl ReadRepository for MockRepository {
             .any(|sigrefs| sigrefs.at == oid || sigrefs.refs.values().any(|oid_| *oid_ == oid)))
     }
 
-    fn is_ancestor_of(&self, _ancestor: Oid, _head: Oid) -> Result<bool, git_ext::Error> {
+    fn is_ancestor_of(&self, _ancestor: Oid, _head: Oid) -> Result<bool, crate::git::raw::Error> {
         Ok(true)
     }
 
-    fn blob(&self, _oid: Oid) -> Result<git::raw::Blob, git_ext::Error> {
+    fn blob(&self, _oid: Oid) -> Result<git::raw::Blob, git::raw::Error> {
         todo!()
     }
 
     fn blob_at<P: AsRef<std::path::Path>>(
         &self,
-        _oid: git_ext::Oid,
+        _oid: Oid,
         _path: P,
-    ) -> Result<git::raw::Blob, git_ext::Error> {
+    ) -> Result<git::raw::Blob, git::raw::Error> {
         todo!()
     }
 
     fn reference(
         &self,
         _remote: &RemoteId,
-        _reference: &git::Qualified,
-    ) -> Result<git::raw::Reference, git_ext::Error> {
+        _reference: &git::fmt::Qualified,
+    ) -> Result<git::raw::Reference, git::raw::Error> {
         todo!()
     }
 
     fn reference_oid(
         &self,
         remote: &RemoteId,
-        reference: &git::Qualified,
-    ) -> Result<git_ext::Oid, git::raw::Error> {
+        reference: &crate::git::fmt::Qualified,
+    ) -> Result<Oid, crate::git::raw::Error> {
         let not_found = || {
-            git::raw::Error::new(
-                git::raw::ErrorCode::NotFound,
-                git::raw::ErrorClass::Reference,
+            crate::git::raw::Error::new(
+                crate::git::raw::ErrorCode::NotFound,
+                crate::git::raw::ErrorClass::Reference,
                 format!("could not find {reference} for {remote}"),
             )
         };
@@ -283,8 +286,8 @@ impl ReadRepository for MockRepository {
 
     fn references_glob(
         &self,
-        _pattern: &git::PatternStr,
-    ) -> Result<Vec<(fmt::Qualified, Oid)>, git::ext::Error> {
+        _pattern: &crate::git::fmt::refspec::PatternStr,
+    ) -> Result<Vec<(fmt::Qualified, Oid)>, crate::git::raw::Error> {
         todo!()
     }
 
@@ -300,7 +303,7 @@ impl ReadRepository for MockRepository {
         self.canonical_identity_head()
     }
 
-    fn identity_head_of(&self, _remote: &RemoteId) -> Result<Oid, git::ext::Error> {
+    fn identity_head_of(&self, _remote: &RemoteId) -> Result<Oid, crate::git::raw::Error> {
         Ok(self.doc.commit)
     }
 
@@ -316,7 +319,7 @@ impl ReadRepository for MockRepository {
         Ok(self.doc.commit)
     }
 
-    fn merge_base(&self, _left: &Oid, _right: &Oid) -> Result<Oid, git::ext::Error> {
+    fn merge_base(&self, _left: &Oid, _right: &Oid) -> Result<Oid, crate::git::raw::Error> {
         todo!()
     }
 }
@@ -342,7 +345,7 @@ impl WriteRepository for MockRepository {
         todo!()
     }
 
-    fn set_user(&self, _info: &git::UserInfo) -> Result<(), Error> {
+    fn set_user(&self, _info: &crate::git::UserInfo) -> Result<(), Error> {
         todo!()
     }
 }

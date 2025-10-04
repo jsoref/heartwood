@@ -1,9 +1,9 @@
 // Copyright © 2022 The Radicle Link Contributors
 
-use std::{convert::TryFrom as _, fmt, ops::Deref, str::FromStr};
+use std::{convert::TryFrom as _, ops::Deref, str::FromStr};
 
-use git_ext::ref_format::{Component, RefString};
-use git_ext::Oid;
+use fmt::{Component, RefString};
+use oid::Oid;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -19,7 +19,7 @@ pub use storage::{Commit, Objects, Reference, Storage};
 #[derive(Debug, Error)]
 pub enum ParseObjectId {
     #[error(transparent)]
-    Git(#[from] git2::Error),
+    Git(#[from] oid::str::ParseOidError),
 }
 
 /// The id of an object
@@ -48,12 +48,14 @@ impl From<&Oid> for ObjectId {
     }
 }
 
+#[cfg(feature = "git2")]
 impl From<git2::Oid> for ObjectId {
     fn from(oid: git2::Oid) -> Self {
         Oid::from(oid).into()
     }
 }
 
+#[cfg(feature = "git2")]
 impl From<&git2::Oid> for ObjectId {
     fn from(oid: &git2::Oid) -> Self {
         ObjectId(Oid::from(*oid))
@@ -68,8 +70,8 @@ impl Deref for ObjectId {
     }
 }
 
-impl fmt::Display for ObjectId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for ObjectId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }

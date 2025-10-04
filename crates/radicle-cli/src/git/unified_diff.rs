@@ -7,7 +7,6 @@ use radicle_surf::diff::FileStats;
 use thiserror::Error;
 
 use radicle::git;
-use radicle::git::raw::Oid;
 use radicle_surf::diff;
 use radicle_surf::diff::{Diff, DiffContent, DiffFile, FileDiff, Hunk, Hunks, Line, Modification};
 
@@ -307,8 +306,8 @@ impl Encode for FileHeader {
                 if old.mode == new.mode {
                     w.meta(format!(
                         "index {}..{} {:o}",
-                        term::format::oid(old.oid),
-                        term::format::oid(new.oid),
+                        term::format::oid(*old.oid),
+                        term::format::oid(*new.oid),
                         u32::from(old.mode.clone()),
                     ))?;
                 } else {
@@ -316,8 +315,8 @@ impl Encode for FileHeader {
                     w.meta(format!("new mode {:o}", u32::from(new.mode.clone())))?;
                     w.meta(format!(
                         "index {}..{}",
-                        term::format::oid(old.oid),
-                        term::format::oid(new.oid)
+                        term::format::oid(*old.oid),
+                        term::format::oid(*new.oid)
                     ))?;
                 }
 
@@ -334,8 +333,8 @@ impl Encode for FileHeader {
                 w.meta(format!("new file mode {:o}", u32::from(new.mode.clone())))?;
                 w.meta(format!(
                     "index {}..{}",
-                    term::format::oid(Oid::zero()),
-                    term::format::oid(new.oid),
+                    term::format::oid(git::Oid::sha1_zero()),
+                    term::format::oid(*new.oid),
                 ))?;
 
                 w.meta("--- /dev/null")?;
@@ -355,8 +354,8 @@ impl Encode for FileHeader {
                 ))?;
                 w.meta(format!(
                     "index {}..{}",
-                    term::format::oid(old.oid),
-                    term::format::oid(Oid::zero())
+                    term::format::oid(*old.oid),
+                    term::format::oid(git::Oid::sha1_zero())
                 ))?;
 
                 w.meta(format!("--- a/{}", path.display()))?;

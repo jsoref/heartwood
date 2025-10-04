@@ -71,7 +71,7 @@ pub fn run(_args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
             let remote = remote?;
             let sigrefs = repo.reference_oid(&remote, &git::refs::storage::SIGREFS_BRANCH)?;
             let mut walk = repo.raw().revwalk()?;
-            walk.push(*sigrefs)?;
+            walk.push(sigrefs.into())?;
 
             stats.local.pushes += walk.count();
             stats.local.forks += 1;

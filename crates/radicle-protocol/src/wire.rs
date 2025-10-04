@@ -20,6 +20,7 @@ use cyphernet::addr::tor;
 use radicle::crypto::{PublicKey, Signature, Unverified};
 use radicle::git;
 use radicle::git::fmt;
+use radicle::git::raw;
 use radicle::identity::RepoId;
 use radicle::node;
 use radicle::node::Alias;
@@ -285,7 +286,7 @@ where
     }
 }
 
-impl Encode for git::RefString {
+impl Encode for git::fmt::RefString {
     fn encode(&self, buf: &mut impl BufMut) {
         self.as_str().encode(buf)
     }
@@ -300,7 +301,8 @@ impl Encode for Signature {
 impl Encode for git::Oid {
     fn encode(&self, buf: &mut impl BufMut) {
         // Nb. We use length-encoding here to support future SHA-2 object ids.
-        self.as_bytes().encode(buf)
+        let bytes: &[u8] = self.as_ref();
+        bytes.encode(buf)
     }
 }
 
@@ -321,7 +323,7 @@ impl Decode for Refs {
 
         for _ in 0..len {
             let name = String::decode(buf)?;
-            let name = git::RefString::try_from(name).map_err(Invalid::from)?;
+            let name = git::fmt::RefString::try_from(name).map_err(Invalid::from)?;
             let oid = git::Oid::decode(buf)?;
 
             refs.insert(name, oid);
@@ -330,10 +332,10 @@ impl Decode for Refs {
     }
 }
 
-impl Decode for git::RefString {
+impl Decode for git::fmt::RefString {
     fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
         let ref_str = String::decode(buf)?;
-        Ok(git::RefString::try_from(ref_str).map_err(Invalid::from)?)
+        Ok(git::fmt::RefString::try_from(ref_str).map_err(Invalid::from)?)
     }
 }
 
@@ -365,7 +367,7 @@ where
 
 impl Decode for git::Oid {
     fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
-        const LEN_EXPECTED: usize = mem::size_of::<git::raw::Oid>();
+        const LEN_EXPECTED: usize = mem::size_of::<raw::Oid>();
 
         let len = Size::decode(buf)? as usize;
 
@@ -378,7 +380,7 @@ impl Decode for git::Oid {
         }
 
         let buf: [u8; LEN_EXPECTED] = Decode::decode(buf)?;
-        let oid = git::raw::Oid::from_bytes(&buf).expect("the buffer is exactly the right size");
+        let oid = raw::Oid::from_bytes(&buf).expect("the buffer is exactly the right size");
         let oid = git::Oid::from(oid);
 
         Ok(oid)
@@ -627,7 +629,7 @@ mod tests {
 
     #[quickcheck]
     fn prop_oid(input: [u8; 20]) {
-        roundtrip(git::Oid::try_from(input.as_slice()).unwrap());
+        roundtrip(git::Oid::from_sha1(input));
     }
 
     #[test]

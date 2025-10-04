@@ -3,6 +3,7 @@ use std::{collections::HashSet, thread, time};
 use radicle::cob::Title;
 use test_log::test;
 
+use radicle::git::raw::ErrorExt as _;
 use radicle::node::device::Device;
 use radicle::node::policy::Scope;
 use radicle::node::Event;
@@ -248,7 +249,7 @@ fn test_replication_ref_in_sigrefs() {
     bob.storage
         .repository_mut(acme)
         .unwrap()
-        .reference(&bob.id, &git::qualified!("refs/heads/master"))
+        .reference(&bob.id, &git::fmt::qualified!("refs/heads/master"))
         .unwrap()
         .delete()
         .unwrap();
@@ -271,7 +272,7 @@ fn test_replication_ref_in_sigrefs() {
             .storage
             .repository(acme)
             .unwrap()
-            .reference(&bob.id, &git::qualified!("refs/heads/master"))
+            .reference(&bob.id, &git::fmt::qualified!("refs/heads/master"))
             .is_ok(),
         "refs/namespaces/{}/refs/heads/master does not exist",
         bob.id
@@ -292,8 +293,8 @@ fn test_replication_invalid() {
     // Create some unsigned refs for Carol in Bob's storage.
     repo.raw()
         .reference(
-            &git::qualified!("refs/heads/carol").with_namespace(carol.public_key().into()),
-            *head,
+            &git::fmt::qualified!("refs/heads/carol").with_namespace(carol.public_key().into()),
+            head.into(),
             true,
             &String::default(),
         )
@@ -579,7 +580,7 @@ fn test_clone() {
         .canonical_head()
         .unwrap();
 
-    assert_eq!(oid, *canonical);
+    assert_eq!(canonical, oid);
 
     // Make sure that bob has refs/rad/id set
     assert!(bob
@@ -1193,7 +1194,6 @@ fn missing_default_branch() {
 
 #[test]
 fn missing_delegate_default_branch() {
-    use radicle::git::raw;
     use radicle::identity::Identity;
     use radicle::storage::git::Repository;
     let tmp = tempfile::tempdir().unwrap();
@@ -1238,7 +1238,7 @@ fn missing_delegate_default_branch() {
         );
         assert!(matches!(
             default_branch,
-            Err(radicle::git::Error::Git(e)) if e.code() == raw::ErrorCode::NotFound
+            Err(e) if e.is_not_found()
         ));
     };
 
@@ -1528,10 +1528,10 @@ fn test_fetch_emits_canonical_ref_update() {
     let result = bob.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap();
     assert!(result.is_success());
 
-    let default_branch: git::Qualified = {
+    let default_branch: git::fmt::Qualified = {
         let repo = alice.storage.repository(rid).unwrap();
         let proj = repo.project().unwrap();
-        git::lit::refs_heads(proj.default_branch()).into()
+        git::fmt::lit::refs_heads(proj.default_branch()).into()
     };
     alice.commit_to(rid, &default_branch);
 

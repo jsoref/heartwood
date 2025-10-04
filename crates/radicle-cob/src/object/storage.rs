@@ -2,8 +2,8 @@
 
 use std::{collections::BTreeMap, error::Error};
 
-use git_ext::ref_format::RefString;
-use git_ext::Oid;
+use fmt::RefString;
+use oid::Oid;
 
 use crate::change::EntryId;
 use crate::{ObjectId, TypeName};
@@ -93,41 +93,43 @@ pub trait Storage {
 pub mod convert {
     use std::str;
 
-    use git_ext::ref_format::RefString;
+    use fmt::RefString;
     use thiserror::Error;
-
-    use super::{Commit, Reference};
 
     #[derive(Debug, Error)]
     pub enum Error {
         #[error("the reference '{name}' does not point to a commit object")]
         NotCommit {
             name: RefString,
+            #[cfg(feature = "git2")]
             #[source]
             err: git2::Error,
         },
         #[error(transparent)]
-        Ref(#[from] git_ext::ref_format::Error),
+        Ref(#[from] fmt::Error),
         #[error(transparent)]
         Utf8(#[from] str::Utf8Error),
     }
 
-    impl<'a> TryFrom<git2::Reference<'a>> for Reference {
+    #[cfg(feature = "git2")]
+    impl<'a> TryFrom<git2::Reference<'a>> for super::Reference {
         type Error = Error;
 
         fn try_from(value: git2::Reference<'a>) -> Result<Self, Self::Error> {
             let name = RefString::try_from(str::from_utf8(value.name_bytes())?)?;
-            let target = Commit::from(value.peel_to_commit().map_err(|err| Error::NotCommit {
-                name: name.clone(),
-                err,
-            })?);
+            let target =
+                super::Commit::from(value.peel_to_commit().map_err(|err| Error::NotCommit {
+                    name: name.clone(),
+                    err,
+                })?);
             Ok(Self { name, target })
         }
     }
 
-    impl<'a> From<git2::Commit<'a>> for Commit {
+    #[cfg(feature = "git2")]
+    impl<'a> From<git2::Commit<'a>> for super::Commit {
         fn from(commit: git2::Commit<'a>) -> Self {
-            Commit {
+            Self {
                 id: commit.id().into(),
             }
         }

@@ -1,6 +1,8 @@
 use std::{collections::BTreeMap, convert::TryFrom as _};
 
-use radicle_git_ext::ref_format::{refname, Component};
+use radicle_git_ref_format::refname;
+
+use fmt::Component;
 use tempfile::TempDir;
 
 use crate::{
@@ -29,7 +31,7 @@ pub mod error {
         #[error(transparent)]
         Git(#[from] git2::Error),
         #[error(transparent)]
-        Format(#[from] git_ext::ref_format::Error),
+        Format(#[from] fmt::Error),
     }
 }
 
@@ -93,16 +95,16 @@ impl change::Storage for Storage {
         self.as_raw().load(id)
     }
 
-    fn parents_of(&self, id: &git_ext::Oid) -> Result<Vec<git_ext::Oid>, Self::LoadError> {
+    fn parents_of(&self, id: &oid::Oid) -> Result<Vec<radicle_oid::Oid>, Self::LoadError> {
         Ok(self
             .as_raw()
-            .find_commit(**id)?
+            .find_commit(id.into())?
             .parent_ids()
-            .map(git_ext::Oid::from)
+            .map(oid::Oid::from)
             .collect::<Vec<_>>())
     }
 
-    fn manifest_of(&self, id: &git_ext::Oid) -> Result<crate::Manifest, Self::LoadError> {
+    fn manifest_of(&self, id: &oid::Oid) -> Result<crate::Manifest, Self::LoadError> {
         self.as_raw().manifest_of(id)
     }
 }

@@ -1,6 +1,6 @@
 // Copyright © 2022 The Radicle Link Contributors
 
-use crate::{ObjectId, Store, TypeName};
+use crate::{ObjectId, TypeName};
 
 use super::error;
 
@@ -8,7 +8,7 @@ use super::error;
 ///
 /// The `storage` is the backing storage for storing
 /// [`crate::Entry`]s at content-addressable locations. Please see
-/// [`Store`] for further information.
+/// [`crate::Store`] for further information.
 ///
 /// The `typename` is the type of object to be found, while the
 /// `object_id` is the identifier for the particular object under that
@@ -20,7 +20,7 @@ pub fn remove<S>(
     oid: &ObjectId,
 ) -> Result<(), error::Remove>
 where
-    S: Store,
+    S: crate::object::Storage,
 {
     storage
         .remove(identifier, typename, oid)

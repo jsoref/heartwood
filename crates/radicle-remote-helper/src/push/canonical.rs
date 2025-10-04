@@ -40,7 +40,7 @@ where
     /// copy, and that checks that any two commits are related in the graph.
     ///
     /// Ensures that the new head and the canonical commit do not diverge.
-    pub fn quorum(self) -> Result<(git::Qualified<'a>, canonical::Object), QuorumError> {
+    pub fn quorum(self) -> Result<(git::fmt::Qualified<'a>, canonical::Object), QuorumError> {
         self.canonical
             .quorum()
             .map(|QuorumWithConvergence { quorum, .. }| (quorum.refname, quorum.object))

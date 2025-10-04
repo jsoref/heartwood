@@ -208,7 +208,8 @@ pub fn verify(raw: RawDoc) -> Result<Doc, error::DocVerification> {
         .map(|rcrefs| rcrefs.and_then(|c| project.map(|p| (c, p))))
     {
         Ok(Some((crefs, project))) => {
-            let default = git::Qualified::from(git::lit::refs_heads(project.default_branch()));
+            let default =
+                git::fmt::Qualified::from(git::fmt::lit::refs_heads(project.default_branch()));
             let matches = crefs
                 .raw_rules()
                 .matches(&default)
@@ -300,7 +301,7 @@ mod test {
     #[test]
     fn test_cannot_include_default_branch_rule() {
         let raw = arbitrary::gen::<RawDoc>(1);
-        let branch = git::Qualified::from(git::lit::refs_heads(
+        let branch = git::fmt::Qualified::from(git::fmt::lit::refs_heads(
             raw.project().unwrap().default_branch(),
         ));
         let raw = super::payload(
@@ -333,7 +334,7 @@ mod test {
     #[test]
     fn test_default_branch_rule_exists_after_verification() {
         let raw = arbitrary::gen::<RawDoc>(1);
-        let branch = git::Qualified::from(git::lit::refs_heads(
+        let branch = git::fmt::Qualified::from(git::fmt::lit::refs_heads(
             raw.project().unwrap().default_branch(),
         ));
         let raw = super::payload(

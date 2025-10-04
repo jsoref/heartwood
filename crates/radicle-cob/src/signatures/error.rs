@@ -1,6 +1,6 @@
 // Copyright © 2019-2020 The Radicle Foundation <hello@radicle.foundation>
 
-use radicle_crypto::ssh::ExtendedSignatureError;
+use crypto::ssh::ExtendedSignatureError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]

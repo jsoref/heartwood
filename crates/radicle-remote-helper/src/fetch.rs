@@ -19,9 +19,9 @@ pub enum Error {
     /// Invalid reference name.
     #[error("invalid ref: {0}")]
     InvalidRef(#[from] radicle::git::fmt::Error),
-    /// Git error.
-    #[error("git: {0}")]
-    InvalidOid(#[source] git::raw::Error),
+    /// Invalid object ID.
+    #[error("invalid oid: {0}")]
+    InvalidOid(#[from] radicle::git::ParseOidError),
 
     /// Error fetching pack from storage to working copy.
     #[error("`git fetch-pack` failed with exit status {status}, stderr and stdout follow:\n{stderr}\n{stdout}")]
@@ -34,7 +34,7 @@ pub enum Error {
 
 /// Run a git fetch command.
 pub fn run<R: ReadRepository>(
-    mut refs: Vec<(git::Oid, git::RefString)>,
+    mut refs: Vec<(git::Oid, git::fmt::RefString)>,
     stored: R,
     stdin: &io::Stdin,
     verbosity: Verbosity,
@@ -45,8 +45,8 @@ pub fn run<R: ReadRepository>(
         let tokens = read_line(stdin, &mut line)?;
         match tokens.as_slice() {
             ["fetch", oid, refstr] => {
-                let oid = git::Oid::from_str(oid).map_err(Error::InvalidOid)?;
-                let refstr = git::RefString::try_from(*refstr)?;
+                let oid = git::Oid::from_str(oid)?;
+                let refstr = git::fmt::RefString::try_from(*refstr)?;
 
                 refs.push((oid, refstr));
             }

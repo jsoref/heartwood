@@ -7,9 +7,9 @@ use serde::{
 use thiserror::Error;
 
 use crate::crypto;
+use crate::git::BranchName;
 use crate::identity::doc;
 use crate::identity::doc::Payload;
-use crate::storage::BranchName;
 
 pub use crypto::PublicKey;
 

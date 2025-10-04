@@ -12,6 +12,7 @@ use storage::SignRepository;
 use storage::ValidateRepository;
 
 use crate::git;
+use crate::git::fmt::*;
 use crate::git::*;
 use crate::identity;
 use crate::identity::doc::DocError;
@@ -34,8 +35,6 @@ pub enum ObjectsError {
     Convert(#[from] cob::object::storage::convert::Error),
     #[error(transparent)]
     Git(#[from] git::raw::Error),
-    #[error(transparent)]
-    GitExt(#[from] git_ext::Error),
 }
 
 #[derive(Error, Debug)]
@@ -290,7 +289,7 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
         self.repo.path()
     }
 
-    fn commit(&self, oid: Oid) -> Result<git::raw::Commit, git_ext::Error> {
+    fn commit(&self, oid: Oid) -> Result<git::raw::Commit, git::raw::Error> {
         self.repo.commit(oid)
     }
 
@@ -298,39 +297,39 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
         self.repo.revwalk(head)
     }
 
-    fn contains(&self, oid: Oid) -> Result<bool, raw::Error> {
+    fn contains(&self, oid: Oid) -> Result<bool, crate::git::raw::Error> {
         self.repo.contains(oid)
     }
 
-    fn is_ancestor_of(&self, ancestor: Oid, head: Oid) -> Result<bool, git_ext::Error> {
+    fn is_ancestor_of(&self, ancestor: Oid, head: Oid) -> Result<bool, crate::git::raw::Error> {
         self.repo.is_ancestor_of(ancestor, head)
     }
 
     fn blob_at<P: AsRef<Path>>(
         &self,
-        oid: git_ext::Oid,
+        oid: Oid,
         path: P,
-    ) -> Result<git::raw::Blob, git_ext::Error> {
+    ) -> Result<git::raw::Blob, git::raw::Error> {
         self.repo.blob_at(oid, path)
     }
 
-    fn blob(&self, oid: git_ext::Oid) -> Result<raw::Blob, ext::Error> {
+    fn blob(&self, oid: Oid) -> Result<crate::git::raw::Blob, crate::git::raw::Error> {
         self.repo.blob(oid)
     }
 
     fn reference(
         &self,
         remote: &RemoteId,
-        reference: &git::Qualified,
-    ) -> Result<git::raw::Reference, git_ext::Error> {
+        reference: &git::fmt::Qualified,
+    ) -> Result<git::raw::Reference, git::raw::Error> {
         self.repo.reference(remote, reference)
     }
 
     fn reference_oid(
         &self,
         remote: &RemoteId,
-        reference: &git::Qualified,
-    ) -> Result<git_ext::Oid, git::raw::Error> {
+        reference: &git::fmt::Qualified,
+    ) -> Result<Oid, crate::git::raw::Error> {
         self.repo.reference_oid(remote, reference)
     }
 
@@ -340,8 +339,8 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
 
     fn references_glob(
         &self,
-        pattern: &git::PatternStr,
-    ) -> Result<Vec<(fmt::Qualified, Oid)>, git::ext::Error> {
+        pattern: &git::fmt::refspec::PatternStr,
+    ) -> Result<Vec<(fmt::Qualified, Oid)>, crate::git::raw::Error> {
         self.repo.references_glob(pattern)
     }
 
@@ -357,7 +356,7 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
         self.repo.identity_head()
     }
 
-    fn identity_head_of(&self, remote: &RemoteId) -> Result<Oid, super::ext::Error> {
+    fn identity_head_of(&self, remote: &RemoteId) -> Result<Oid, crate::git::raw::Error> {
         self.repo.identity_head_of(remote)
     }
 
@@ -373,14 +372,14 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
         self.repo.canonical_identity_head()
     }
 
-    fn merge_base(&self, left: &Oid, right: &Oid) -> Result<Oid, git::ext::Error> {
+    fn merge_base(&self, left: &Oid, right: &Oid) -> Result<Oid, crate::git::raw::Error> {
         self.repo.merge_base(left, right)
     }
 }
 
 impl<R: storage::WriteRepository> cob::object::Storage for DraftStore<'_, R> {
     type ObjectsError = ObjectsError;
-    type TypesError = git::ext::Error;
+    type TypesError = git::raw::Error;
     type UpdateError = git::raw::Error;
     type RemoveError = git::raw::Error;
 

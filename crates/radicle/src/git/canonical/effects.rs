@@ -1,8 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::git;
+use crate::git::fmt::Qualified;
 use crate::git::raw::ErrorExt as _;
-use crate::git::{Oid, Qualified};
+use crate::git::Oid;
 use crate::prelude::Did;
 
 use super::{FoundObjects, GraphAheadBehind, MergeBase, Object};
@@ -40,7 +41,7 @@ pub enum FindObjectsError {
     },
     #[error("failed to find reference {refname} due to: {source}")]
     FindReference {
-        refname: git::Namespaced<'static>,
+        refname: git::fmt::Namespaced<'static>,
         source: Box<dyn std::error::Error + Send + Sync + 'static>,
     },
     #[error("failed to find objects")]
@@ -60,7 +61,7 @@ impl FindObjectsError {
         }
     }
 
-    pub fn find_reference<E>(refname: git::Namespaced<'static>, err: E) -> Self
+    pub fn find_reference<E>(refname: git::fmt::Namespaced<'static>, err: E) -> Self
     where
         E: std::error::Error + Send + Sync + 'static,
     {
@@ -170,7 +171,7 @@ pub struct GraphDescendant {
 
 impl FindMergeBase for git::raw::Repository {
     fn merge_base(&self, a: Oid, b: Oid) -> Result<MergeBase, MergeBaseError> {
-        self.merge_base(*a, *b)
+        self.merge_base(a.into(), b.into())
             .map_err(|err| MergeBaseError {
                 a,
                 b,
@@ -190,7 +191,7 @@ impl Ancestry for git::raw::Repository {
         commit: Oid,
         upstream: Oid,
     ) -> Result<GraphAheadBehind, GraphDescendant> {
-        self.graph_ahead_behind(*commit, *upstream)
+        self.graph_ahead_behind(commit.into(), upstream.into())
             .map_err(|err| GraphDescendant {
                 commit,
                 upstream,
@@ -228,7 +229,7 @@ impl FindObjects for git::raw::Repository {
                 log::warn!(target: "radicle", "Missing target for reference `{name}`");
                 continue;
             };
-            let object = match self.find_object(*oid, None) {
+            let object = match self.find_object(oid.into(), None) {
                 Ok(object) => Object::new(&object).ok_or_else(|| {
                     FindObjectsError::invalid_object_type(
                         *did,

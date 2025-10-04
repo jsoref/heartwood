@@ -4,16 +4,17 @@ use std::process;
 
 use anyhow::anyhow;
 
-use git_ref_format::Qualified;
 use localtime::LocalTime;
 use radicle::cob::TypedId;
+use radicle::git::fmt::Qualified;
+use radicle::git::BranchName;
 use radicle::identity::Identity;
 use radicle::issue::cache::Issues as _;
 use radicle::node::notifications;
 use radicle::node::notifications::*;
 use radicle::patch::cache::Patches as _;
 use radicle::prelude::{NodeId, Profile, RepoId};
-use radicle::storage::{BranchName, ReadRepository, ReadStorage};
+use radicle::storage::{ReadRepository, ReadStorage};
 use radicle::{cob, git, Storage};
 
 use term::Element as _;

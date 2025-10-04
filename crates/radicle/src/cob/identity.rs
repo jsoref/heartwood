@@ -4,11 +4,11 @@ use std::{fmt, ops::Deref, str::FromStr};
 
 use crypto::{PublicKey, Signature};
 use radicle_cob::{Embed, ObjectId, TypeName};
-use radicle_git_ext as git_ext;
-use radicle_git_ext::Oid;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+use crate::git;
+use crate::git::Oid;
 use crate::identity::doc::Doc;
 use crate::node::device::Device;
 use crate::node::NodeId;
@@ -126,9 +126,7 @@ pub enum ApplyError {
     #[error("document does not contain any changes to current identity")]
     DocUnchanged,
     #[error("git: {0}")]
-    Git(#[from] crate::git::raw::Error),
-    #[error("git: {0}")]
-    GitExt(#[from] git_ext::Error),
+    Git(#[from] git::raw::Error),
     #[error("identity document error: {0}")]
     Doc(#[from] DocError),
 }
@@ -1323,16 +1321,15 @@ mod test {
             .unwrap();
 
         bob.repo.fetch(alice);
-        let a3 = cob::git::stable::with_advanced_timestamp(|| {
+        let a3 = cob::stable::with_advanced_timestamp(|| {
             alice_identity.redact(a2, &alice.signer).unwrap()
         });
         assert!(alice_identity.revision(&a1).is_some());
         assert_eq!(alice_identity.timeline, vec![a0, a1, a2, a3]);
 
         let mut bob_identity = Identity::load_mut(&*bob.repo).unwrap();
-        let b1 = cob::git::stable::with_advanced_timestamp(|| {
-            bob_identity.accept(&a2, &bob.signer).unwrap()
-        });
+        let b1 =
+            cob::stable::with_advanced_timestamp(|| bob_identity.accept(&a2, &bob.signer).unwrap());
 
         assert_eq!(bob_identity.timeline, vec![a0, a1, a2, b1]);
         assert_eq!(bob_identity.revision(&a2).unwrap().state, State::Accepted);
@@ -1381,15 +1378,14 @@ mod test {
         eve.repo.fetch(bob);
 
         let mut bob_identity = Identity::load_mut(&*bob.repo).unwrap();
-        let b1 = cob::git::stable::with_advanced_timestamp(|| {
-            bob_identity.accept(&a2, &bob.signer).unwrap()
-        });
+        let b1 =
+            cob::stable::with_advanced_timestamp(|| bob_identity.accept(&a2, &bob.signer).unwrap());
         assert_eq!(bob_identity.current, a2);
 
         let mut eve_identity = Identity::load_mut(&*eve.repo).unwrap();
         let mut eve_doc = eve_identity.doc().clone().edit();
         eve_doc.visibility = Visibility::private([eve.signer.public_key().into()]);
-        let e1 = cob::git::stable::with_advanced_timestamp(|| {
+        let e1 = cob::stable::with_advanced_timestamp(|| {
             eve_identity
                 .update(
                     cob::Title::new("Change visibility").unwrap(),
@@ -1458,15 +1454,13 @@ mod test {
 
         // Bob accepts alice's revision.
         let mut bob_identity = Identity::load_mut(&*bob.repo).unwrap();
-        let b1 = cob::git::stable::with_advanced_timestamp(|| {
-            bob_identity.accept(&a2, &bob.signer).unwrap()
-        });
+        let b1 =
+            cob::stable::with_advanced_timestamp(|| bob_identity.accept(&a2, &bob.signer).unwrap());
 
         // Eve rejects the revision, not knowing.
         let mut eve_identity = Identity::load_mut(&*eve.repo).unwrap();
-        let e1 = cob::git::stable::with_advanced_timestamp(|| {
-            eve_identity.reject(a2, &eve.signer).unwrap()
-        });
+        let e1 =
+            cob::stable::with_advanced_timestamp(|| eve_identity.reject(a2, &eve.signer).unwrap());
         assert!(eve_identity.revision(&a2).unwrap().is_active());
 
         // Then she submits a new revision.
@@ -1576,7 +1570,7 @@ mod test {
         assert_eq!(eve_identity.revision(&e1).unwrap().state, State::Active);
 
         alice_identity.reload().unwrap();
-        let a2 = cob::git::stable::with_advanced_timestamp(|| {
+        let a2 = cob::stable::with_advanced_timestamp(|| {
             alice_identity.accept(&b1, &alice.signer).unwrap()
         });
 

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use radicle::git::{Component, Oid, Qualified, RefString};
+use radicle::git::fmt::{Component, Qualified, RefString};
+use radicle::git::Oid;
 use radicle::prelude::PublicKey;
 
 use super::refs::{Applied, RefUpdate, Update};

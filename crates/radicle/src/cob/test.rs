@@ -12,10 +12,6 @@ use crate::cob::store::encoding;
 use crate::cob::{patch, Title};
 use crate::cob::{Entry, History, Manifest, Timestamp, Version};
 use crate::crypto::Signer;
-use crate::git;
-use crate::git::ext::author::Author;
-use crate::git::ext::commit::headers::Headers;
-use crate::git::ext::commit::{trailers::OwnedTrailer, Commit};
 use crate::git::Oid;
 use crate::node::device::Device;
 use crate::prelude::Did;
@@ -101,7 +97,7 @@ where
         self.history.merge(other.history);
     }
 
-    pub fn commit<G: Signer>(&mut self, action: &T::Action, signer: &G) -> git::ext::Oid {
+    pub fn commit<G: Signer>(&mut self, action: &T::Action, signer: &G) -> crate::git::Oid {
         let timestamp = self.time;
         let tips = self.tips();
         let revision = arbitrary::oid();
@@ -182,7 +178,8 @@ impl<G: Signer> Actor<G> {
             "nonce": fastrand::u64(..),
         }))
         .unwrap();
-        let oid = git::raw::Oid::hash_object(git::raw::ObjectType::Blob, &data).unwrap();
+        let oid =
+            crate::git::raw::Oid::hash_object(crate::git::raw::ObjectType::Blob, &data).unwrap();
         let id = oid.into();
         let author = *self.signer.public_key();
         let actions = NonEmpty::from_vec(actions).unwrap();
@@ -226,8 +223,8 @@ impl<G: Signer> Actor<G> {
         &mut self,
         title: Title,
         description: impl ToString,
-        base: git::Oid,
-        oid: git::Oid,
+        base: crate::git::Oid,
+        oid: crate::git::Oid,
         repo: &R,
     ) -> Result<Patch, patch::Error> {
         Patch::from_root(
@@ -252,21 +249,26 @@ impl<G: Signer> Actor<G> {
 ///
 /// Doesn't encode in the same way as we do in production, but attempts to include the same data
 /// that feeds into the hash entropy, so that changing any input will change the resulting oid.
-pub fn encoded<T: Cob, G: Signer>(
+fn encoded<T: Cob, G: Signer>(
     action: &T::Action,
     timestamp: Timestamp,
     parents: impl IntoIterator<Item = Oid>,
     signer: &G,
-) -> (Vec<u8>, git::ext::Oid) {
+) -> (Vec<u8>, crate::git::Oid) {
+    use radicle_git_metadata::{
+        author::{Author, Time},
+        commit::{headers::Headers, trailers::OwnedTrailer, CommitData},
+    };
+
     let data = encoding::encode(action).unwrap();
-    let oid = git::raw::Oid::hash_object(git::raw::ObjectType::Blob, &data).unwrap();
-    let parents = parents.into_iter().map(|o| *o);
+    let oid = crate::git::raw::Oid::hash_object(crate::git::raw::ObjectType::Blob, &data).unwrap();
+    let parents = parents.into_iter().map(|o| o.into());
     let author = Author {
         name: "radicle".to_owned(),
         email: signer.public_key().to_human(),
-        time: git_ext::author::Time::new(timestamp.as_secs() as i64, 0),
+        time: Time::new(timestamp.as_secs() as i64, 0),
     };
-    let commit = Commit::new::<_, _, OwnedTrailer>(
+    let commit = CommitData::<git2::Oid, git2::Oid>::new::<_, _, OwnedTrailer>(
         oid,
         parents,
         author.clone(),
@@ -277,7 +279,9 @@ pub fn encoded<T: Cob, G: Signer>(
     )
     .to_string();
 
-    let hash = git::raw::Oid::hash_object(git::raw::ObjectType::Commit, commit.as_bytes()).unwrap();
+    let hash =
+        crate::git::raw::Oid::hash_object(crate::git::raw::ObjectType::Commit, commit.as_bytes())
+            .unwrap();
 
     (data, hash.into())
 }

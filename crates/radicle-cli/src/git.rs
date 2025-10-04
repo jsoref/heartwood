@@ -20,14 +20,15 @@ use thiserror::Error;
 
 use radicle::crypto::ssh;
 use radicle::git;
-use radicle::git::raw as git2;
 use radicle::git::{Version, VERSION_REQUIRED};
 use radicle::prelude::{NodeId, RepoId};
 use radicle::storage::git::transport;
 
+pub use radicle::git::Oid;
+
 pub use radicle::git::raw::{
-    build::CheckoutBuilder, AnnotatedCommit, Commit, Direction, ErrorCode, MergeAnalysis,
-    MergeOptions, Oid, Reference, Repository, Signature,
+    build::CheckoutBuilder, AnnotatedCommit, Commit, Direction, ErrorCode, ErrorExt as _,
+    MergeAnalysis, MergeOptions, Reference, Repository, Signature,
 };
 
 pub const CONFIG_COMMIT_GPG_SIGN: &str = "commit.gpgsign";
@@ -46,10 +47,10 @@ impl Rev {
         &self.0
     }
 
-    /// Resolve the revision to an [`From<git2::Oid>`].
-    pub fn resolve<T>(&self, repo: &git2::Repository) -> Result<T, git2::Error>
+    /// Resolve the revision to an [`From<git::raw::Oid>`].
+    pub fn resolve<T>(&self, repo: &Repository) -> Result<T, git::raw::Error>
     where
-        T: From<git2::Oid>,
+        T: From<git::raw::Oid>,
     {
         let object = repo.revparse_single(self.as_str())?;
         Ok(object.id().into())
@@ -84,13 +85,13 @@ pub struct Remote<'a> {
     pub url: radicle::git::Url,
     pub pushurl: Option<radicle::git::Url>,
 
-    inner: git2::Remote<'a>,
+    inner: git::raw::Remote<'a>,
 }
 
-impl<'a> TryFrom<git2::Remote<'a>> for Remote<'a> {
+impl<'a> TryFrom<git::raw::Remote<'a>> for Remote<'a> {
     type Error = RemoteError;
 
-    fn try_from(value: git2::Remote<'a>) -> Result<Self, Self::Error> {
+    fn try_from(value: git::raw::Remote<'a>) -> Result<Self, Self::Error> {
         let url = value.url().map_or(Err(RemoteError::MissingUrl), |url| {
             Ok(radicle::git::Url::from_str(url)?)
         })?;
@@ -110,7 +111,7 @@ impl<'a> TryFrom<git2::Remote<'a>> for Remote<'a> {
 }
 
 impl<'a> Deref for Remote<'a> {
-    type Target = git2::Remote<'a>;
+    type Target = git::raw::Remote<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -250,7 +251,7 @@ pub fn is_signing_configured(repo: &Path) -> Result<bool, anyhow::Error> {
 }
 
 /// Return the list of radicle remotes for the given repository.
-pub fn rad_remotes(repo: &git2::Repository) -> anyhow::Result<Vec<Remote>> {
+pub fn rad_remotes(repo: &Repository) -> anyhow::Result<Vec<Remote>> {
     let remotes: Vec<_> = repo
         .remotes()?
         .iter()
@@ -263,16 +264,16 @@ pub fn rad_remotes(repo: &git2::Repository) -> anyhow::Result<Vec<Remote>> {
 }
 
 /// Check if the git remote is configured for the `Repository`.
-pub fn is_remote(repo: &git2::Repository, alias: &str) -> anyhow::Result<bool> {
+pub fn is_remote(repo: &Repository, alias: &str) -> anyhow::Result<bool> {
     match repo.find_remote(alias) {
         Ok(_) => Ok(true),
-        Err(err) if err.code() == git2::ErrorCode::NotFound => Ok(false),
+        Err(err) if err.is_not_found() => Ok(false),
         Err(err) => Err(err.into()),
     }
 }
 
 /// Get the repository's "rad" remote.
-pub fn rad_remote(repo: &Repository) -> anyhow::Result<(git2::Remote, RepoId)> {
+pub fn rad_remote(repo: &Repository) -> anyhow::Result<(git::raw::Remote, RepoId)> {
     match radicle::rad::remote(repo) {
         Ok((remote, id)) => Ok((remote, id)),
         Err(radicle::rad::RemoteError::NotFound(_)) => Err(anyhow!(
@@ -352,12 +353,12 @@ pub fn parse_remote(refspec: &str) -> Option<(NodeId, &str)> {
 }
 
 pub fn add_tag(
-    repo: &git2::Repository,
+    repo: &Repository,
     message: &str,
     patch_tag_name: &str,
-) -> anyhow::Result<git2::Oid> {
+) -> anyhow::Result<git::raw::Oid> {
     let head = repo.head()?;
-    let commit = head.peel(git2::ObjectType::Commit).unwrap();
+    let commit = head.peel(git::raw::ObjectType::Commit).unwrap();
     let oid = repo.tag(patch_tag_name, &commit, &repo.signature()?, message, false)?;
 
     Ok(oid)

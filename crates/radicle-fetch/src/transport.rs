@@ -13,12 +13,11 @@ use gix_protocol::handshake;
 use gix_transport::client;
 use gix_transport::Protocol;
 use gix_transport::Service;
+use radicle::git::fmt::Qualified;
 use radicle::git::Oid;
-use radicle::git::Qualified;
 use radicle::storage::git::Repository;
 use thiserror::Error;
 
-use crate::git::oid;
 use crate::git::packfile::Keepfile;
 use crate::git::repository;
 
@@ -163,7 +162,7 @@ where
 
             let idx = File::at(pack_path, gix_hash::Kind::Sha1)?;
             for oid in wants_haves.wants {
-                if idx.lookup(oid::to_object_id(oid)).is_none() {
+                if idx.lookup(oid).is_none() {
                     return Err(Error::NotFound(oid));
                 }
             }

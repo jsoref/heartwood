@@ -1,7 +1,9 @@
 pub mod project;
 pub use project::{Project, RemoteProject};
 
+#[cfg(feature = "git2")]
 pub mod person;
+#[cfg(feature = "git2")]
 pub use person::Person;
 
 #[derive(Clone, Debug, PartialEq, Eq)]

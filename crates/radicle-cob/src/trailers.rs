@@ -1,6 +1,6 @@
 // Copyright © 2019-2020 The Radicle Foundation <hello@radicle.foundation>
 
-use git_ext::commit::trailers::{OwnedTrailer, Token, Trailer};
+use metadata::commit::trailers::{OwnedTrailer, Token, Trailer};
 use std::ops::Deref as _;
 
 pub mod error {
@@ -12,21 +12,22 @@ pub mod error {
         WrongToken,
         #[error("no value for Rad-Resource")]
         NoValue,
-        #[error("invalid git OID")]
-        InvalidOid,
+        /// Invalid object ID.
+        #[error("invalid oid: {0}")]
+        InvalidOid(#[from] radicle_oid::str::ParseOidError),
     }
 }
 
 /// Commit trailer for COB commits.
 pub enum CommitTrailer {
     /// Points to the owning resource.
-    Resource(git2::Oid),
+    Resource(oid::Oid),
     /// Points to a related change.
-    Related(git2::Oid),
+    Related(oid::Oid),
 }
 
 impl CommitTrailer {
-    pub fn oid(&self) -> git2::Oid {
+    pub fn oid(&self) -> oid::Oid {
         match self {
             Self::Resource(oid) => *oid,
             Self::Related(oid) => *oid,
@@ -38,12 +39,11 @@ impl TryFrom<&Trailer<'_>> for CommitTrailer {
     type Error = error::InvalidResourceTrailer;
 
     fn try_from(Trailer { value, token }: &Trailer<'_>) -> Result<Self, Self::Error> {
-        let ext_oid =
-            git_ext::Oid::try_from(value.as_ref()).map_err(|_| Self::Error::InvalidOid)?;
+        let oid = value.as_ref().parse::<oid::Oid>()?;
         if token.deref() == "Rad-Resource" {
-            Ok(CommitTrailer::Resource(ext_oid.into()))
+            Ok(CommitTrailer::Resource(oid))
         } else if token.deref() == "Rad-Related" {
-            Ok(CommitTrailer::Related(ext_oid.into()))
+            Ok(CommitTrailer::Related(oid))
         } else {
             Err(Self::Error::WrongToken)
         }

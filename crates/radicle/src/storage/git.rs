@@ -27,24 +27,26 @@ use crate::storage::{
     ReadRepository, ReadStorage, Remote, Remotes, RepositoryInfo, SetHead, SignRepository,
     WriteRepository, WriteStorage,
 };
-use crate::{git, node};
+use crate::{git, git::Oid, node};
 
-pub use crate::git::{
-    ext, raw, refname, refspec, Oid, PatternStr, Qualified, RefError, RefString, UserInfo,
+use crate::git::fmt::{
+    refname, refspec, refspec::PatternStr, refspec::PatternString, Qualified, RefString,
 };
+use crate::git::RefError;
+use crate::git::UserInfo;
 pub use crate::storage::{Error, RepositoryError};
 
 use super::refs::RefsAt;
 use super::{RemoteId, RemoteRepository, ValidateRepository};
 
-pub static NAMESPACES_GLOB: LazyLock<git::refspec::PatternString> =
-    LazyLock::new(|| git::refspec::pattern!("refs/namespaces/*"));
+pub static NAMESPACES_GLOB: LazyLock<PatternString> =
+    LazyLock::new(|| git::fmt::pattern!("refs/namespaces/*"));
 pub static SIGREFS_GLOB: LazyLock<refspec::PatternString> =
-    LazyLock::new(|| git::refspec::pattern!("refs/namespaces/*/rad/sigrefs"));
-pub static CANONICAL_IDENTITY: LazyLock<git::Qualified> = LazyLock::new(|| {
-    git::Qualified::from_components(
-        git::name::component!("rad"),
-        git::name::component!("id"),
+    LazyLock::new(|| git::fmt::pattern!("refs/namespaces/*/rad/sigrefs"));
+pub static CANONICAL_IDENTITY: LazyLock<git::fmt::Qualified> = LazyLock::new(|| {
+    git::fmt::Qualified::from_components(
+        git::fmt::component!("rad"),
+        git::fmt::component!("id"),
         None,
     )
 });
@@ -52,7 +54,7 @@ pub static CANONICAL_IDENTITY: LazyLock<git::Qualified> = LazyLock::new(|| {
 /// A parsed Git reference.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ref {
-    pub oid: git::Oid,
+    pub oid: crate::git::Oid,
     pub name: RefString,
     pub namespace: Option<RemoteId>,
 }
@@ -446,9 +448,9 @@ impl Repository {
                 continue;
             }
 
-            let glob = git::refname!("refs/namespaces")
-                .join(git::Component::from(&id))
-                .with_pattern(git::refspec::STAR);
+            let glob = git::fmt::refname!("refs/namespaces")
+                .join(git::fmt::Component::from(&id))
+                .with_pattern(git::fmt::refspec::STAR);
             let refs = match self.references_glob(&glob) {
                 Ok(refs) => refs,
                 Err(e) => {
@@ -476,7 +478,7 @@ impl Repository {
         doc: &Doc,
         storage: &S,
         signer: &Device<G>,
-    ) -> Result<(Self, git::Oid), RepositoryError>
+    ) -> Result<(Self, crate::git::Oid), RepositoryError>
     where
         G: crypto::signature::Signer<crypto::Signature>,
         S: WriteStorage,
@@ -486,7 +488,7 @@ impl Repository {
         let repo = Self::create(paths::repository(storage, &id), id, storage.info())?;
         let oid = repo.backend.blob(&doc_bytes)?; // Store document blob in repository.
 
-        debug_assert_eq!(oid, *doc_oid);
+        debug_assert_eq!(doc_oid, oid);
 
         let commit = doc.init(&repo, signer)?;
 
@@ -661,48 +663,52 @@ impl ReadRepository for Repository {
         self.backend.path()
     }
 
-    fn blob_at<P: AsRef<Path>>(&self, commit: Oid, path: P) -> Result<git::raw::Blob, git::Error> {
-        let commit = self.backend.find_commit(*commit)?;
+    fn blob_at<P: AsRef<Path>>(
+        &self,
+        commit_id: Oid,
+        path: P,
+    ) -> Result<git::raw::Blob, git::raw::Error> {
+        let commit = self.backend.find_commit(git::raw::Oid::from(commit_id))?;
         let tree = commit.tree()?;
         let entry = tree.get_path(path.as_ref())?;
         let obj = entry.to_object(&self.backend)?;
-        let blob = obj.into_blob().map_err(|_| {
-            git::Error::NotFound(git::NotFound::NoSuchBlob(
-                path.as_ref().display().to_string(),
-            ))
-        })?;
+        let blob = obj.into_blob().map_err(|_|
+            crate::git::raw::Error::new(
+                crate::git::raw::ErrorCode::NotFound,
+                crate::git::raw::ErrorClass::None,
+                format!("Path '{}' in tree of commit {commit_id} was expected to be a blob, but is not.", path.as_ref().display()),
+            )
+        )?;
 
         Ok(blob)
     }
 
-    fn blob(&self, oid: Oid) -> Result<git::raw::Blob, git::Error> {
-        self.backend.find_blob(oid.into()).map_err(git::Error::from)
+    fn blob(&self, oid: Oid) -> Result<git::raw::Blob, git::raw::Error> {
+        self.backend.find_blob(oid.into())
     }
 
     fn reference(
         &self,
         remote: &RemoteId,
-        name: &git::Qualified,
-    ) -> Result<git::raw::Reference, git::Error> {
+        name: &git::fmt::Qualified,
+    ) -> Result<git::raw::Reference, git::raw::Error> {
         let name = name.with_namespace(remote.into());
-        self.backend.find_reference(&name).map_err(git::Error::from)
+        self.backend.find_reference(&name)
     }
 
     fn reference_oid(
         &self,
         remote: &RemoteId,
-        reference: &git::Qualified,
-    ) -> Result<Oid, git::raw::Error> {
+        reference: &git::fmt::Qualified,
+    ) -> Result<Oid, crate::git::raw::Error> {
         let name = reference.with_namespace(remote.into());
         let oid = self.backend.refname_to_id(&name)?;
 
         Ok(oid.into())
     }
 
-    fn commit(&self, oid: Oid) -> Result<git::raw::Commit, git::Error> {
-        self.backend
-            .find_commit(oid.into())
-            .map_err(git::Error::from)
+    fn commit(&self, oid: Oid) -> Result<git::raw::Commit, git::raw::Error> {
+        self.backend.find_commit(oid.into())
     }
 
     fn revwalk(&self, head: Oid) -> Result<git::raw::Revwalk, git::raw::Error> {
@@ -712,14 +718,13 @@ impl ReadRepository for Repository {
         Ok(revwalk)
     }
 
-    fn contains(&self, oid: Oid) -> Result<bool, raw::Error> {
+    fn contains(&self, oid: Oid) -> Result<bool, crate::git::raw::Error> {
         self.backend.odb().map(|odb| odb.exists(oid.into()))
     }
 
-    fn is_ancestor_of(&self, ancestor: Oid, head: Oid) -> Result<bool, git::Error> {
+    fn is_ancestor_of(&self, ancestor: Oid, head: Oid) -> Result<bool, crate::git::raw::Error> {
         self.backend
             .graph_descendant_of(head.into(), ancestor.into())
-            .map_err(git::Error::from)
     }
 
     fn references_of(&self, remote: &RemoteId) -> Result<Refs, Error> {
@@ -735,12 +740,14 @@ impl ReadRepository for Repository {
             let oid = e.resolve()?.target().ok_or(Error::InvalidRef)?;
             let (_, category, _, _) = refname.non_empty_components();
 
+            use git::fmt::{component, name};
+
             if [
-                git::name::HEADS,
-                git::name::TAGS,
-                git::name::NOTES,
-                &git::name::component!("rad"),
-                &git::name::component!("cobs"),
+                name::HEADS,
+                name::TAGS,
+                name::NOTES,
+                &component!("rad"),
+                &component!("cobs"),
             ]
             .contains(&category.as_ref())
             {
@@ -753,7 +760,7 @@ impl ReadRepository for Repository {
     fn references_glob(
         &self,
         pattern: &PatternStr,
-    ) -> Result<Vec<(Qualified, Oid)>, git::ext::Error> {
+    ) -> Result<Vec<(Qualified, Oid)>, crate::git::raw::Error> {
         let mut refs = Vec::new();
 
         for r in self.backend.references_glob(pattern)? {
@@ -765,8 +772,8 @@ impl ReadRepository for Repository {
 
             if let Some(name) = r
                 .name()
-                .and_then(|n| git::RefStr::try_from_str(n).ok())
-                .and_then(git::Qualified::from_refstr)
+                .and_then(|n| git::fmt::RefStr::try_from_str(n).ok())
+                .and_then(git::fmt::Qualified::from_refstr)
             {
                 refs.push((name.to_owned(), oid.into()));
             }
@@ -823,9 +830,8 @@ impl ReadRepository for Repository {
         }
     }
 
-    fn identity_head_of(&self, remote: &RemoteId) -> Result<Oid, git::ext::Error> {
+    fn identity_head_of(&self, remote: &RemoteId) -> Result<Oid, crate::git::raw::Error> {
         self.reference_oid(remote, &git::refs::storage::IDENTITY_BRANCH)
-            .map_err(git::ext::Error::from)
     }
 
     fn identity_root(&self) -> Result<Oid, RepositoryError> {
@@ -864,7 +870,7 @@ impl ReadRepository for Repository {
             let blob = Doc::blob_at(root, self)?;
 
             // We've got an identity that goes back to the correct root.
-            if blob.id() == **self.id {
+            if *self.id == blob.id() {
                 let identity = Identity::get(&root.into(), self)?;
 
                 return Ok(identity.head());
@@ -873,11 +879,10 @@ impl ReadRepository for Repository {
         Err(DocError::Missing.into())
     }
 
-    fn merge_base(&self, left: &Oid, right: &Oid) -> Result<Oid, git::ext::Error> {
+    fn merge_base(&self, left: &Oid, right: &Oid) -> Result<Oid, crate::git::raw::Error> {
         self.backend
-            .merge_base(**left, **right)
+            .merge_base(left.into(), right.into())
             .map(Oid::from)
-            .map_err(git::ext::Error::from)
     }
 }
 
@@ -897,7 +902,7 @@ impl WriteRepository for Repository {
         }
         log::debug!(target: "storage", "Setting ref: {} -> {}", &branch_ref, new);
         self.raw()
-            .reference(&branch_ref, *new, true, "set-local-branch (radicle)")?;
+            .reference(&branch_ref, new.into(), true, "set-local-branch (radicle)")?;
 
         log::debug!(target: "storage", "Setting ref: {head_ref} -> {branch_ref}");
         self.raw()
@@ -910,7 +915,7 @@ impl WriteRepository for Repository {
         log::debug!(target: "storage", "Setting ref: {} -> {}", *CANONICAL_IDENTITY, commit);
         self.raw().reference(
             CANONICAL_IDENTITY.as_str(),
-            *commit,
+            commit.into(),
             true,
             "set-local-branch (radicle)",
         )?;
@@ -925,7 +930,7 @@ impl WriteRepository for Repository {
         let refname = git::refs::storage::id_root(remote);
 
         self.raw()
-            .reference(refname.as_str(), *root, true, "set-id-root (radicle)")?;
+            .reference(refname.as_str(), root.into(), true, "set-id-root (radicle)")?;
 
         Ok(())
     }
@@ -1104,7 +1109,7 @@ mod tests {
         git::commit(
             &working,
             &head,
-            &git::RefString::try_from(format!("refs/remotes/{alice}/heads/master")).unwrap(),
+            &git::fmt::RefString::try_from(format!("refs/remotes/{alice}/heads/master")).unwrap(),
             "Second commit",
             &sig,
             &head.tree().unwrap(),

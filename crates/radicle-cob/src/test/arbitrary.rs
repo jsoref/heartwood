@@ -26,11 +26,7 @@ impl Arbitrary for TypeName {
 
 impl Arbitrary for ObjectId {
     fn arbitrary(g: &mut qcheck::Gen) -> Self {
-        let mut rng = fastrand::Rng::with_seed(u64::arbitrary(g));
-        let bytes = iter::repeat_with(|| rng.u8(..))
-            .take(20)
-            .collect::<Vec<_>>();
-        Self::from(git_ext::Oid::try_from(bytes.as_slice()).unwrap())
+        Self::from(oid::Oid::arbitrary(g))
     }
 }
 

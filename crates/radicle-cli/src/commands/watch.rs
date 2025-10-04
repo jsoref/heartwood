@@ -41,7 +41,7 @@ Options
 
 pub struct Options {
     rid: Option<RepoId>,
-    refstr: git::RefString,
+    refstr: git::fmt::RefString,
     target: Option<git::Oid>,
     nid: Option<NodeId>,
     interval: time::Duration,
@@ -56,7 +56,7 @@ impl Args for Options {
         let mut rid = None;
         let mut nid: Option<NodeId> = None;
         let mut target: Option<git::Oid> = None;
-        let mut refstr: Option<git::RefString> = None;
+        let mut refstr: Option<git::fmt::RefString> = None;
         let mut interval: Option<time::Duration> = None;
         let mut timeout: time::Duration = time::Duration::MAX;
 
@@ -166,7 +166,7 @@ pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
 fn reference<R: ReadRepository>(
     repo: &R,
     nid: &NodeId,
-    qual: &git::Qualified,
+    qual: &git::fmt::Qualified,
 ) -> Result<Option<git::Oid>, git::raw::Error> {
     match repo.reference_oid(nid, qual) {
         Ok(oid) => Ok(Some(oid)),

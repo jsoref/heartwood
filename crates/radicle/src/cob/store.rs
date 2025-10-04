@@ -125,7 +125,7 @@ pub enum Error {
     Git(git::raw::Error),
     #[error("failed to find reference '{name}': {err}")]
     RefLookup {
-        name: git::RefString,
+        name: git::fmt::RefString,
         #[source]
         err: git::raw::Error,
     },

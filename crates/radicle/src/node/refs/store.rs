@@ -6,7 +6,8 @@ use localtime::LocalTime;
 use sqlite as sql;
 use thiserror::Error;
 
-use crate::git::{Oid, Qualified};
+use crate::git::fmt::Qualified;
+use crate::git::Oid;
 use crate::node::Database;
 use crate::node::NodeId;
 use crate::prelude::RepoId;
@@ -176,7 +177,7 @@ impl Store for Database {
 #[allow(clippy::unwrap_used)]
 mod test {
     use super::*;
-    use crate::git::qualified;
+    use crate::git::fmt::qualified;
     use crate::test::arbitrary;
     use localtime::{LocalDuration, LocalTime};
 

@@ -13,7 +13,6 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::git;
-use crate::git::ext as git_ext;
 use crate::git::raw::ErrorExt as _;
 use crate::git::Oid;
 use crate::node::device::Device;
@@ -48,7 +47,7 @@ pub enum Error {
     #[error("invalid reference")]
     InvalidRef,
     #[error("missing identity root reference '{0}'")]
-    MissingIdentityRoot(git::RefString),
+    MissingIdentityRoot(git::fmt::RefString),
     #[error("missing identity object '{0}'")]
     MissingIdentity(Oid),
     #[error("mismatched identity: local {local}, remote {remote}")]
@@ -57,26 +56,23 @@ pub enum Error {
     Ref(#[from] git::RefError),
     #[error(transparent)]
     Git(#[from] git::raw::Error),
-    #[error(transparent)]
-    GitExt(#[from] git_ext::Error),
 }
 
 impl Error {
     /// Whether this error is caused by a reference not being found.
     pub fn is_not_found(&self) -> bool {
         match self {
-            Self::GitExt(e) => e.is_not_found(),
             Self::Git(e) => e.is_not_found(),
             _ => false,
         }
     }
 }
 
-// TODO(finto): we should turn `git::RefString` to `git::Qualified`,
+// TODO(finto): we should turn `git::fmt::RefString` to `git::fmt::Qualified`,
 // since all these refs SHOULD be `Qualified`.
 /// The published state of a local repository.
 #[derive(Default, Clone, Debug, PartialEq, Eq, Serialize)]
-pub struct Refs(BTreeMap<git::RefString, Oid>);
+pub struct Refs(BTreeMap<git::fmt::RefString, Oid>);
 
 impl Refs {
     /// Verify the given signature on these refs, and return [`SignedRefs`] on success.
@@ -102,13 +98,13 @@ impl Refs {
     }
 
     /// Get a particular ref.
-    pub fn get(&self, name: &git::Qualified) -> Option<Oid> {
+    pub fn get(&self, name: &git::fmt::Qualified) -> Option<Oid> {
         self.0.get(name.to_ref_string().as_refstr()).copied()
     }
 
     /// Get a particular head ref.
-    pub fn head(&self, name: impl AsRef<git::RefStr>) -> Option<Oid> {
-        let branch = git::refname!("refs/heads").join(name);
+    pub fn head(&self, name: impl AsRef<git::fmt::RefStr>) -> Option<Oid> {
+        let branch = git::fmt::refname!("refs/heads").join(name);
         self.0.get(&branch).copied()
     }
 
@@ -123,8 +119,8 @@ impl Refs {
                 .split_once(' ')
                 .ok_or(canonical::Error::InvalidFormat)?;
 
-            let name = git::RefString::try_from(name)?;
-            let oid = Oid::from_str(oid)?;
+            let name = git::fmt::RefString::try_from(name)?;
+            let oid = Oid::from_str(oid).map_err(|_| canonical::Error::InvalidFormat)?;
 
             if oid.is_zero() {
                 continue;
@@ -148,15 +144,15 @@ impl Refs {
 }
 
 impl IntoIterator for Refs {
-    type Item = (git::RefString, Oid);
-    type IntoIter = std::collections::btree_map::IntoIter<git::RefString, Oid>;
+    type Item = (git::fmt::RefString, Oid);
+    type IntoIter = std::collections::btree_map::IntoIter<git::fmt::RefString, Oid>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
     }
 }
 
-impl From<Refs> for BTreeMap<git::RefString, Oid> {
+impl From<Refs> for BTreeMap<git::fmt::RefString, Oid> {
     fn from(refs: Refs) -> Self {
         refs.0
     }
@@ -168,14 +164,14 @@ impl<V> From<SignedRefs<V>> for Refs {
     }
 }
 
-impl From<BTreeMap<git::RefString, Oid>> for Refs {
-    fn from(refs: BTreeMap<git::RefString, Oid>) -> Self {
+impl From<BTreeMap<git::fmt::RefString, Oid>> for Refs {
+    fn from(refs: BTreeMap<git::fmt::RefString, Oid>) -> Self {
         Self(refs)
     }
 }
 
 impl Deref for Refs {
-    type Target = BTreeMap<git::RefString, Oid>;
+    type Target = BTreeMap<git::fmt::RefString, Oid>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -297,7 +293,7 @@ impl SignedRefs<Verified> {
             Some(SignedRefsAt { sigrefs, at }) if sigrefs.signature == self.signature => {
                 return Ok(Updated::Unchanged { oid: at });
             }
-            Some(SignedRefsAt { at, .. }) => Some(raw.find_commit(*at)?),
+            Some(SignedRefsAt { at, .. }) => Some(raw.find_commit(at.into())?),
             None => None,
         };
 
@@ -386,12 +382,14 @@ pub struct RefsAt {
     )]
     pub remote: RemoteId,
     /// The commit SHA that `rad/sigrefs` points to.
-    #[cfg_attr(feature = "schemars", schemars(with = "crate::schemars_ext::git::Oid"))]
     pub at: Oid,
 }
 
 impl RefsAt {
-    pub fn new<S: ReadRepository>(repo: &S, remote: RemoteId) -> Result<Self, git::raw::Error> {
+    pub fn new<S: ReadRepository>(
+        repo: &S,
+        remote: RemoteId,
+    ) -> Result<Self, crate::git::raw::Error> {
         let at = repo.reference_oid(&remote, &storage::refs::SIGREFS_BRANCH)?;
         Ok(RefsAt { remote, at })
     }
@@ -400,7 +398,7 @@ impl RefsAt {
         SignedRefsAt::load_at(self.at, self.remote, repo)
     }
 
-    pub fn path(&self) -> &git::Qualified {
+    pub fn path(&self) -> &git::fmt::Qualified {
         &SIGREFS_BRANCH
     }
 }
@@ -446,7 +444,7 @@ impl SignedRefsAt {
         })
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (&git::RefString, &Oid)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&git::fmt::RefString, &Oid)> {
         self.sigrefs.refs.iter()
     }
 }
@@ -515,7 +513,7 @@ mod tests {
             &paris_repo,
             "paris".try_into().unwrap(),
             "Paris repository",
-            git::refname!("master"),
+            git::fmt::refname!("master"),
             Default::default(),
             &alice,
             storage,
@@ -528,7 +526,7 @@ mod tests {
             &london_repo,
             "london".try_into().unwrap(),
             "London repository",
-            git::refname!("master"),
+            git::fmt::refname!("master"),
             Default::default(),
             &alice,
             storage,
@@ -585,7 +583,7 @@ mod tests {
             let bob_head = git::empty_commit(
                 &bob_working,
                 &paris_head,
-                git::refname!("refs/heads/master").as_refstr(),
+                git::fmt::refname!("refs/heads/master").as_refstr(),
                 "Bob's commit",
                 &bob_sig,
             )
@@ -602,9 +600,9 @@ mod tests {
 
             assert_eq!(
                 sigrefs
-                    .get(&git_ext::ref_format::qualified!("refs/heads/master"))
+                    .get(&crate::git::fmt::qualified!("refs/heads/master"))
                     .unwrap(),
-                bob_head.id().into()
+                bob_head.id()
             );
             (sigrefs, bob_head.id())
         };
@@ -616,10 +614,10 @@ mod tests {
                 .unwrap();
             assert_ne!(
                 alice_paris_sigrefs
-                    .get(&git_ext::ref_format::qualified!("refs/heads/master"))
+                    .get(&crate::git::fmt::qualified!("refs/heads/master"))
                     .unwrap(),
                 bob_paris_sigrefs
-                    .get(&git_ext::ref_format::qualified!("refs/heads/master"))
+                    .get(&crate::git::fmt::qualified!("refs/heads/master"))
                     .unwrap()
             );
         }
@@ -651,7 +649,8 @@ mod tests {
         london
             .raw()
             .reference(
-                git::refs::storage::branch_of(bob.public_key(), &git::refname!("master")).as_str(),
+                git::refs::storage::branch_of(bob.public_key(), &git::fmt::refname!("master"))
+                    .as_str(),
                 bob_head,
                 false,
                 "",

@@ -5,6 +5,7 @@ use localtime::LocalTime;
 use radicle::cob::cache::COBS_DB_FILE;
 use radicle::crypto::ssh::{keystore::MemorySigner, Keystore};
 use radicle::crypto::{KeyPair, Seed};
+use radicle::git;
 use radicle::node::policy::store as policy;
 use radicle::node::{self, UserAgent};
 use radicle::node::{Alias, Config, POLICIES_DB_FILE};
@@ -233,7 +234,7 @@ impl Environment {
     pub fn repository(
         &self,
         has_alias: &impl HasAlias,
-    ) -> (radicle_cli::git::Repository, radicle_cli::git::Oid) {
+    ) -> (radicle_cli::git::Repository, git::raw::Oid) {
         radicle::test::fixtures::repository(self.work(has_alias).as_path())
     }
 

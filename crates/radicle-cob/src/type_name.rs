@@ -1,8 +1,8 @@
 // Copyright © 2022 The Radicle Link Contributors
 
-use std::{fmt, str::FromStr};
+use std::str::FromStr;
 
-use git_ext::ref_format::{Component, RefString};
+use fmt::{Component, RefString};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -24,8 +24,8 @@ impl TypeName {
     }
 }
 
-impl fmt::Display for TypeName {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for TypeName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(self.0.as_str())
     }
 }

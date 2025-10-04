@@ -1,9 +1,8 @@
 // Copyright © 2022 The Radicle Team
 
-pub mod change;
+mod commit;
 
-#[cfg(feature = "stable-commit-ids")]
-pub mod stable;
+pub mod change;
 
 /// Environment variable to set to overwrite the commit date for both the author and the committer.
 ///

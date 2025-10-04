@@ -10,15 +10,16 @@ use nonempty::NonEmpty;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+pub use crate::git::Oid;
 use crypto::{PublicKey, Unverified, Verified};
 pub use git::{Validation, Validations};
-pub use radicle_git_ext::Oid;
 
 use crate::cob;
 use crate::collections::RandomMap;
+use crate::git::canonical;
+use crate::git::fmt::{refspec::PatternString, refspec::Refspec, Qualified, RefStr, RefString};
 use crate::git::raw::ErrorExt as _;
-use crate::git::{canonical, ext as git_ext};
-use crate::git::{refspec::Refspec, PatternString, Qualified, RefError, RefStr, RefString};
+use crate::git::RefError;
 use crate::identity::{doc, Did, PayloadError};
 use crate::identity::{Doc, DocAt, DocError};
 use crate::identity::{Identity, RepoId};
@@ -27,10 +28,8 @@ use crate::node::SyncedAt;
 use crate::storage::git::NAMESPACES_GLOB;
 use crate::storage::refs::Refs;
 
-use self::git::UserInfo;
 use self::refs::{RefsAt, SignedRefs};
-
-pub type BranchName = git::RefString;
+use crate::git::UserInfo;
 
 /// Basic repository information.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -69,7 +68,9 @@ impl Namespaces {
             Namespaces::Followed(pks) => pks
                 .iter()
                 .map(|pk| {
-                    let ns = pk.to_namespace().with_pattern(git::refspec::STAR);
+                    let ns = pk
+                        .to_namespace()
+                        .with_pattern(crate::git::fmt::refspec::STAR);
                     Refspec {
                         src: ns.clone(),
                         dst: ns,
@@ -114,9 +115,7 @@ pub enum RepositoryError {
     #[error(transparent)]
     Payload(#[from] PayloadError),
     #[error(transparent)]
-    Git(#[from] git::raw::Error),
-    #[error(transparent)]
-    GitExt(#[from] git_ext::Error),
+    Git(#[from] crate::git::raw::Error),
     #[error(transparent)]
     Quorum(#[from] canonical::error::QuorumError),
     #[error(transparent)]
@@ -135,7 +134,6 @@ impl RepositoryError {
     pub fn is_not_found(&self) -> bool {
         match self {
             Self::Storage(e) => e.is_not_found(),
-            Self::GitExt(e) => e.is_not_found(),
             Self::Git(e) => e.is_not_found(),
             _ => false,
         }
@@ -154,9 +152,7 @@ pub enum Error {
     #[error(transparent)]
     Refs(#[from] refs::Error),
     #[error("git: {0}")]
-    Git(#[from] git::raw::Error),
-    #[error("git: {0}")]
-    Ext(#[from] git::ext::Error),
+    Git(#[from] crate::git::raw::Error),
     #[error("invalid repository identifier {0:?}")]
     InvalidId(std::ffi::OsString),
     #[error("i/o: {0}")]
@@ -180,7 +176,7 @@ impl Error {
 #[allow(clippy::large_enum_variant)]
 pub enum FetchError {
     #[error("git: {0}")]
-    Git(#[from] git::raw::Error),
+    Git(#[from] crate::git::raw::Error),
     #[error("i/o: {0}")]
     Io(#[from] io::Error),
     #[error(transparent)]
@@ -205,36 +201,31 @@ pub enum RefUpdate {
     Updated {
         #[cfg_attr(
             feature = "schemars",
-            schemars(with = "crate::schemars_ext::git::RefString")
+            schemars(with = "crate::schemars_ext::git::fmt::RefString")
         )]
         name: RefString,
-        #[cfg_attr(feature = "schemars", schemars(with = "crate::schemars_ext::git::Oid"))]
         old: Oid,
-        #[cfg_attr(feature = "schemars", schemars(with = "crate::schemars_ext::git::Oid"))]
         new: Oid,
     },
     Created {
         #[cfg_attr(
             feature = "schemars",
-            schemars(with = "crate::schemars_ext::git::RefString")
+            schemars(with = "crate::schemars_ext::git::fmt::RefString")
         )]
         name: RefString,
-        #[cfg_attr(feature = "schemars", schemars(with = "crate::schemars_ext::git::Oid"))]
         oid: Oid,
     },
     Deleted {
         #[cfg_attr(
             feature = "schemars",
-            schemars(with = "crate::schemars_ext::git::RefString")
+            schemars(with = "crate::schemars_ext::git::fmt::RefString")
         )]
         name: RefString,
-        #[cfg_attr(feature = "schemars", schemars(with = "crate::schemars_ext::git::Oid"))]
         oid: Oid,
     },
     Skipped {
         #[cfg_attr(feature = "schemars", schemars(with = "String"))]
         name: RefString,
-        #[cfg_attr(feature = "schemars", schemars(with = "crate::schemars_ext::git::Oid"))]
         oid: Oid,
     },
 }
@@ -504,7 +495,7 @@ pub trait ReadRepository: Sized + ValidateRepository {
     fn id(&self) -> RepoId;
 
     /// Returns `true` if there are no references in the repository.
-    fn is_empty(&self) -> Result<bool, git::raw::Error>;
+    fn is_empty(&self) -> Result<bool, crate::git::raw::Error>;
 
     /// The [`Path`] to the git repository.
     fn path(&self) -> &Path;
@@ -514,10 +505,10 @@ pub trait ReadRepository: Sized + ValidateRepository {
         &self,
         commit: Oid,
         path: P,
-    ) -> Result<git::raw::Blob, git_ext::Error>;
+    ) -> Result<crate::git::raw::Blob, crate::git::raw::Error>;
 
     /// Get a blob in this repository, given its id.
-    fn blob(&self, oid: Oid) -> Result<git::raw::Blob, git_ext::Error>;
+    fn blob(&self, oid: Oid) -> Result<crate::git::raw::Blob, crate::git::raw::Error>;
 
     /// Get the head of this repository.
     ///
@@ -541,7 +532,7 @@ pub trait ReadRepository: Sized + ValidateRepository {
     fn identity_head(&self) -> Result<Oid, RepositoryError>;
 
     /// Get the identity head of a specific remote.
-    fn identity_head_of(&self, remote: &RemoteId) -> Result<Oid, git::ext::Error>;
+    fn identity_head_of(&self, remote: &RemoteId) -> Result<Oid, crate::git::raw::Error>;
 
     /// Get the root commit of the canonical identity branch.
     fn identity_root(&self) -> Result<Oid, RepositoryError>;
@@ -577,28 +568,28 @@ pub trait ReadRepository: Sized + ValidateRepository {
         &self,
         remote: &RemoteId,
         reference: &Qualified,
-    ) -> Result<git::raw::Reference, git_ext::Error>;
+    ) -> Result<crate::git::raw::Reference, crate::git::raw::Error>;
 
-    /// Get the [`git::raw::Commit`] found using its `oid`.
+    /// Get the [`crate::git::raw::Commit`] found using its `oid`.
     ///
     /// Returns `Err` if the commit did not exist.
-    fn commit(&self, oid: Oid) -> Result<git::raw::Commit, git::ext::Error>;
+    fn commit(&self, oid: Oid) -> Result<crate::git::raw::Commit, crate::git::raw::Error>;
 
     /// Perform a revision walk of a commit history starting from the given head.
-    fn revwalk(&self, head: Oid) -> Result<git::raw::Revwalk, git::raw::Error>;
+    fn revwalk(&self, head: Oid) -> Result<crate::git::raw::Revwalk, crate::git::raw::Error>;
 
     /// Check if the underlying ODB contains the given `oid`.
-    fn contains(&self, oid: Oid) -> Result<bool, git::raw::Error>;
+    fn contains(&self, oid: Oid) -> Result<bool, crate::git::raw::Error>;
 
     /// Check whether the given commit is an ancestor of another commit.
-    fn is_ancestor_of(&self, ancestor: Oid, head: Oid) -> Result<bool, git::ext::Error>;
+    fn is_ancestor_of(&self, ancestor: Oid, head: Oid) -> Result<bool, crate::git::raw::Error>;
 
     /// Get the object id of a reference under the given remote.
     fn reference_oid(
         &self,
         remote: &RemoteId,
         reference: &Qualified,
-    ) -> Result<Oid, git::raw::Error>;
+    ) -> Result<Oid, crate::git::raw::Error>;
 
     /// Get all references of the given remote.
     fn references_of(&self, remote: &RemoteId) -> Result<Refs, Error>;
@@ -610,8 +601,8 @@ pub trait ReadRepository: Sized + ValidateRepository {
     /// commit pointed to by the tag is returned, and not the [`Oid`] of the tag itsself.
     fn references_glob(
         &self,
-        pattern: &git::PatternStr,
-    ) -> Result<Vec<(Qualified, Oid)>, git::ext::Error>;
+        pattern: &crate::git::fmt::refspec::PatternStr,
+    ) -> Result<Vec<(Qualified, Oid)>, crate::git::raw::Error>;
 
     /// Get repository delegates.
     fn delegates(&self) -> Result<NonEmpty<Did>, RepositoryError> {
@@ -632,7 +623,7 @@ pub trait ReadRepository: Sized + ValidateRepository {
     fn identity_doc_at(&self, head: Oid) -> Result<DocAt, DocError>;
 
     /// Get the merge base of two commits.
-    fn merge_base(&self, left: &Oid, right: &Oid) -> Result<Oid, git::ext::Error>;
+    fn merge_base(&self, left: &Oid, right: &Oid) -> Result<Oid, crate::git::raw::Error>;
 }
 
 /// Access the remotes of a repository.
@@ -697,7 +688,7 @@ pub trait WriteRepository: ReadRepository + SignRepository {
     /// Set the user info of the Git repository.
     fn set_user(&self, info: &UserInfo) -> Result<(), Error>;
     /// Get the underlying git repository.
-    fn raw(&self) -> &git::raw::Repository;
+    fn raw(&self) -> &crate::git::raw::Repository;
 }
 
 /// Allows signing refs.

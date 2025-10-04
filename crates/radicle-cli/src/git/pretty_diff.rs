@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use radicle::git;
-use radicle_git_ext::Oid;
+use radicle::git::Oid;
 use radicle_surf::diff;
 use radicle_surf::diff::{Added, Copied, Deleted, FileStats, Hunks, Modified, Moved};
 use radicle_surf::diff::{Diff, DiffContent, FileDiff, Hunk, Modification};
@@ -33,7 +33,7 @@ pub trait Repo {
 
 impl Repo for git::raw::Repository {
     fn blob(&self, oid: git::Oid) -> Result<Blob, git::raw::Error> {
-        let blob = self.find_blob(*oid)?;
+        let blob = self.find_blob(oid.into())?;
 
         if blob.is_binary() {
             Ok(Blob::Binary)
@@ -338,7 +338,7 @@ impl ToPretty for Added {
         repo: &R,
     ) -> Self::Output {
         let old = None;
-        let new = Some((self.path.as_path(), self.new.oid));
+        let new = Some((self.path.as_path(), Oid::from(*self.new.oid)));
 
         pretty_modification(header, &self.diff, old, new, repo, hi)
     }
@@ -354,7 +354,7 @@ impl ToPretty for Deleted {
         header: &Self::Context,
         repo: &R,
     ) -> Self::Output {
-        let old = Some((self.path.as_path(), self.old.oid));
+        let old = Some((self.path.as_path(), Oid::from(*self.old.oid)));
         let new = None;
 
         pretty_modification(header, &self.diff, old, new, repo, hi)
@@ -371,8 +371,8 @@ impl ToPretty for Modified {
         header: &Self::Context,
         repo: &R,
     ) -> Self::Output {
-        let old = Some((self.path.as_path(), self.old.oid));
-        let new = Some((self.path.as_path(), self.new.oid));
+        let old = Some((self.path.as_path(), Oid::from(*self.old.oid)));
+        let new = Some((self.path.as_path(), Oid::from(*self.new.oid)));
 
         pretty_modification(header, &self.diff, old, new, repo, hi)
     }
@@ -595,8 +595,8 @@ mod test {
     use term::Element;
 
     use super::*;
-    use radicle::git::raw::RepositoryOpenFlags;
-    use radicle::git::raw::{Oid, Repository};
+    use git::raw::RepositoryOpenFlags;
+    use git::raw::{Oid, Repository};
 
     #[test]
     #[ignore]

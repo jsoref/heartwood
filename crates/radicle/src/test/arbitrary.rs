@@ -27,14 +27,14 @@ use crate::{cob, git};
 
 pub fn oid() -> storage::Oid {
     let oid_bytes: [u8; 20] = gen(1);
-    storage::Oid::try_from(oid_bytes.as_slice()).unwrap()
+    storage::Oid::from_sha1(oid_bytes)
 }
 
 pub fn entry_id() -> cob::EntryId {
     self::oid()
 }
 
-pub fn refstring(len: usize) -> git::RefString {
+pub fn refstring(len: usize) -> git::fmt::RefString {
     let mut buf = Vec::<u8>::new();
     for _ in 0..len {
         buf.push(fastrand::u8(0x61..0x7a));
@@ -135,7 +135,7 @@ impl Arbitrary for Project {
         let description = iter::repeat_with(|| rng.alphanumeric())
             .take(length * 2)
             .collect();
-        let default_branch: git::RefString = iter::repeat_with(|| rng.alphanumeric())
+        let default_branch: git::fmt::RefString = iter::repeat_with(|| rng.alphanumeric())
             .take(length)
             .collect::<String>()
             .try_into()
@@ -207,7 +207,7 @@ impl Arbitrary for SignedRefs<Unverified> {
 
 impl Arbitrary for Refs {
     fn arbitrary(g: &mut qcheck::Gen) -> Self {
-        let mut refs: BTreeMap<git::RefString, storage::Oid> = BTreeMap::new();
+        let mut refs: BTreeMap<git::fmt::RefString, storage::Oid> = BTreeMap::new();
         let mut bytes: [u8; 20] = [0; 20];
         let names = &[
             "heads/master",
@@ -225,8 +225,8 @@ impl Arbitrary for Refs {
                 for byte in &mut bytes {
                     *byte = u8::arbitrary(g);
                 }
-                let oid = storage::Oid::try_from(&bytes[..]).unwrap();
-                let name = git::RefString::try_from(*name).unwrap();
+                let oid = storage::Oid::from_sha1(bytes);
+                let name = git::fmt::RefString::try_from(*name).unwrap();
 
                 refs.insert(name, oid);
             }
@@ -273,7 +273,7 @@ impl Arbitrary for storage::Remote<crypto::Unverified> {
 impl Arbitrary for RepoId {
     fn arbitrary(g: &mut qcheck::Gen) -> Self {
         let bytes = <[u8; 20]>::arbitrary(g);
-        let oid = git::Oid::try_from(bytes.as_slice()).unwrap();
+        let oid = crate::git::Oid::from_sha1(bytes);
 
         RepoId::from(oid)
     }

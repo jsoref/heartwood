@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 use crate::git;
-use crate::git::RefString;
+use crate::git::fmt::RefString;
 use crate::identity::{doc::PayloadId, Did, DocError};
 
 #[derive(Debug, Error)]
@@ -31,7 +31,7 @@ pub enum DocVerification {
     #[error("incompatible payloads: The rule(s) xyz.radicle.crefs.rules.{matches:?} matches the value of xyz.radicle.project.defaultBranch ('{default}'). Possible resolutions: Change the name of the default branch or remove the rule(s).")]
     DisallowDefault {
         matches: Vec<String>,
-        default: git::Qualified<'static>,
+        default: git::fmt::Qualified<'static>,
     },
 }
 

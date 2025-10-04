@@ -24,7 +24,7 @@ use anyhow::anyhow;
 
 use radicle::cob::patch::PatchId;
 use radicle::cob::{patch, Label, Reaction};
-use radicle::git::RefString;
+use radicle::git::fmt::RefString;
 use radicle::patch::cache::Patches as _;
 use radicle::storage::git::transport;
 use radicle::{prelude::*, Node};

@@ -3,7 +3,6 @@ pub use store::{Error, Store};
 
 use localtime::LocalTime;
 
-use crate::git;
 use crate::node::KnownAddress;
 use crate::prelude::NodeId;
 use crate::storage::{refs::RefsAt, ReadRepository, RemoteId};
@@ -14,8 +13,7 @@ use crate::storage::{refs::RefsAt, ReadRepository, RemoteId};
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct SyncedAt {
     /// Head of `rad/sigrefs`.
-    #[cfg_attr(feature = "schemars", schemars(with = "crate::schemars_ext::git::Oid"))]
-    pub oid: git_ext::Oid,
+    pub oid: crate::git::Oid,
     /// When these refs were synced.
     #[serde(with = "crate::serde_ext::localtime::time")]
     #[cfg_attr(
@@ -27,7 +25,10 @@ pub struct SyncedAt {
 
 impl SyncedAt {
     /// Load a new [`SyncedAt`] for the given remote.
-    pub fn load<S: ReadRepository>(repo: &S, remote: RemoteId) -> Result<Self, git::ext::Error> {
+    pub fn load<S: ReadRepository>(
+        repo: &S,
+        remote: RemoteId,
+    ) -> Result<Self, crate::git::raw::Error> {
         let refs = RefsAt::new(repo, remote)?;
         let oid = refs.at;
 
@@ -35,7 +36,10 @@ impl SyncedAt {
     }
 
     /// Create a new [`SyncedAt`] given an OID, by looking up the timestamp in the repo.
-    pub fn new<S: ReadRepository>(oid: git::ext::Oid, repo: &S) -> Result<Self, git::ext::Error> {
+    pub fn new<S: ReadRepository>(
+        oid: crate::git::Oid,
+        repo: &S,
+    ) -> Result<Self, crate::git::raw::Error> {
         let timestamp = repo.commit(oid)?.time();
         let timestamp = LocalTime::from_secs(timestamp.seconds() as u64);
 

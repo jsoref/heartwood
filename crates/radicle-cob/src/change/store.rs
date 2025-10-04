@@ -3,14 +3,15 @@
 use std::{error::Error, fmt, num::NonZeroUsize};
 
 use nonempty::NonEmpty;
-use radicle_git_ext::Oid;
+use oid::Oid;
 use serde::{Deserialize, Serialize};
 
+use crate::object::collaboration::error::{Create, Update};
 use crate::{signatures, TypeName};
 
 /// Change entry storage.
 pub trait Storage {
-    type StoreError: Error + Send + Sync + 'static;
+    type StoreError: Error + Send + Sync + 'static + Into<Create> + Into<Update>;
     type LoadError: Error + Send + Sync + 'static;
 
     type ObjectId;
@@ -194,6 +195,7 @@ pub struct Embed<T = Vec<u8>> {
     pub content: T,
 }
 
+#[cfg(feature = "git2")]
 impl<T: From<Oid>> Embed<T> {
     /// Create a new embed.
     pub fn store(
@@ -210,6 +212,7 @@ impl<T: From<Oid>> Embed<T> {
     }
 }
 
+#[cfg(feature = "git2")]
 impl Embed<Vec<u8>> {
     /// Get the object id of the embedded content.
     pub fn oid(&self) -> Oid {

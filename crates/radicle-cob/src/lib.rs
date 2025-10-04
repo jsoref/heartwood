@@ -59,11 +59,19 @@ extern crate qcheck;
 #[macro_use(quickcheck)]
 extern crate qcheck_macros;
 
+extern crate git_ref_format_core as fmt;
 extern crate radicle_crypto as crypto;
-extern crate radicle_git_ext as git_ext;
+extern crate radicle_dag as dag;
+extern crate radicle_git_metadata as metadata;
+extern crate radicle_oid as oid;
 
 mod backend;
+
+#[cfg(all(any(test, feature = "test"), feature = "git2"))]
 pub use backend::git;
+
+#[cfg(feature = "stable-commit-ids")]
+pub use backend::stable;
 
 mod change_graph;
 mod trailers;
@@ -105,19 +113,9 @@ mod tests;
 ///
 ///   * [`object::Storage`]
 ///
-/// **Note**: [`change::Storage`] is already implemented for
-/// [`git2::Repository`]. It is expected that the underlying storage
-/// for `object::Storage` will also be `git2::Repository`, but if not
-/// please open an issue to change the definition of `Store` :)
 pub trait Store
 where
     Self: object::Storage
-        + change::Storage<
-            StoreError = git::change::error::Create,
-            LoadError = git::change::error::Load,
-            ObjectId = git_ext::Oid,
-            Parent = git_ext::Oid,
-            Signatures = ExtendedSignature,
-        >,
+        + change::Storage<ObjectId = oid::Oid, Parent = oid::Oid, Signatures = ExtendedSignature>,
 {
 }

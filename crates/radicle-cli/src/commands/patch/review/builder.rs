@@ -23,10 +23,10 @@ use radicle::cob::patch::{PatchId, Revision, Verdict};
 use radicle::cob::{CodeLocation, CodeRange};
 use radicle::crypto;
 use radicle::git;
+use radicle::git::Oid;
 use radicle::node::device::Device;
 use radicle::prelude::*;
 use radicle::storage::git::{cob::DraftStore, Repository};
-use radicle_git_ext::Oid;
 use radicle_surf::diff::*;
 use radicle_term::{Element, VStack};
 
@@ -196,25 +196,28 @@ impl ReviewItem {
 
     fn paths(&self) -> (Option<(&Path, Oid)>, Option<(&Path, Oid)>) {
         match self {
-            Self::FileAdded { path, new, .. } => (None, Some((path, new.oid))),
-            Self::FileDeleted { path, old, .. } => (Some((path, old.oid)), None),
+            Self::FileAdded { path, new, .. } => (None, Some((path, Oid::from(*new.oid)))),
+            Self::FileDeleted { path, old, .. } => (Some((path, Oid::from(*old.oid))), None),
             Self::FileMoved { moved } => (
-                Some((&moved.old_path, moved.old.oid)),
-                Some((&moved.new_path, moved.new.oid)),
+                Some((&moved.old_path, Oid::from(*moved.old.oid))),
+                Some((&moved.new_path, Oid::from(*moved.new.oid))),
             ),
             Self::FileCopied { copied } => (
-                Some((&copied.old_path, copied.old.oid)),
-                Some((&copied.new_path, copied.new.oid)),
+                Some((&copied.old_path, Oid::from(*copied.old.oid))),
+                Some((&copied.new_path, Oid::from(*copied.new.oid))),
             ),
-            Self::FileModified { path, old, new, .. } => {
-                (Some((path, old.oid)), Some((path, new.oid)))
-            }
-            Self::FileEofChanged { path, old, new, .. } => {
-                (Some((path, old.oid)), Some((path, new.oid)))
-            }
-            Self::FileModeChanged { path, old, new, .. } => {
-                (Some((path, old.oid)), Some((path, new.oid)))
-            }
+            Self::FileModified { path, old, new, .. } => (
+                Some((path, Oid::from(*old.oid))),
+                Some((path, Oid::from(*new.oid))),
+            ),
+            Self::FileEofChanged { path, old, new, .. } => (
+                Some((path, Oid::from(*old.oid))),
+                Some((path, Oid::from(*new.oid))),
+            ),
+            Self::FileModeChanged { path, old, new, .. } => (
+                Some((path, Oid::from(*old.oid))),
+                Some((path, Oid::from(*new.oid))),
+            ),
         }
     }
 
@@ -479,7 +482,7 @@ impl FileReviewBuilder {
 /// of changes introduced by a patch.
 pub struct Brain<'a> {
     /// Where the review draft is being stored.
-    refname: git::Namespaced<'a>,
+    refname: git::fmt::Namespaced<'a>,
     /// The commit pointed to by the ref.
     head: git::raw::Commit<'a>,
     /// The tree of accepted changes pointed to by the head commit.
@@ -565,7 +568,7 @@ impl<'a> Brain<'a> {
     }
 
     /// Get the brain's refname given the patch and remote.
-    fn refname(patch: &PatchId, remote: &NodeId) -> git::Namespaced<'a> {
+    fn refname(patch: &PatchId, remote: &NodeId) -> git::fmt::Namespaced<'a> {
         git::refs::storage::draft::review(remote, patch)
     }
 }

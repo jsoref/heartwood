@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 
 use radicle::git;
-use radicle::git::raw::Oid;
+use radicle::git::Oid;
 use radicle::prelude::*;
 use radicle::storage::git::Repository;
 
@@ -9,7 +9,7 @@ use crate::terminal as term;
 
 /// Give the oid of the branch or an appropriate error.
 #[inline]
-pub fn branch_oid(branch: &git::raw::Branch) -> anyhow::Result<git::Oid> {
+pub fn branch_oid(branch: &git::raw::Branch) -> anyhow::Result<Oid> {
     let oid = branch
         .get()
         .target()
@@ -18,7 +18,7 @@ pub fn branch_oid(branch: &git::raw::Branch) -> anyhow::Result<git::Oid> {
 }
 
 #[inline]
-fn get_branch(git_ref: git::Qualified) -> git::RefString {
+fn get_branch(git_ref: git::fmt::Qualified) -> git::fmt::RefString {
     let (_, _, head, tail) = git_ref.non_empty_components();
     std::iter::once(head).chain(tail).collect()
 }
@@ -28,16 +28,18 @@ fn get_branch(git_ref: git::Qualified) -> git::RefString {
 pub fn get_merge_target(
     storage: &Repository,
     head_branch: &git::raw::Branch,
-) -> anyhow::Result<(git::RefString, git::Oid)> {
+) -> anyhow::Result<(git::fmt::RefString, git::Oid)> {
     let (qualified_ref, target_oid) = storage.canonical_head()?;
     let head_oid = branch_oid(head_branch)?;
-    let merge_base = storage.raw().merge_base(*head_oid, *target_oid)?;
+    let merge_base = storage
+        .raw()
+        .merge_base(head_oid.into(), target_oid.into())?;
 
-    if head_oid == merge_base.into() {
+    if head_oid == merge_base {
         anyhow::bail!("commits are already included in the target branch; nothing to do");
     }
 
-    Ok((get_branch(qualified_ref), (*target_oid).into()))
+    Ok((get_branch(qualified_ref), (target_oid)))
 }
 
 /// Get the diff stats between two commits.
@@ -47,8 +49,8 @@ pub fn diff_stats(
     old: &Oid,
     new: &Oid,
 ) -> Result<git::raw::DiffStats, git::raw::Error> {
-    let old = repo.find_commit(*old)?;
-    let new = repo.find_commit(*new)?;
+    let old = repo.find_commit(old.into())?;
+    let new = repo.find_commit(new.into())?;
     let old_tree = old.tree()?;
     let new_tree = new.tree()?;
     let mut diff = repo.diff_tree_to_tree(Some(&old_tree), Some(&new_tree), None)?;
@@ -64,7 +66,7 @@ pub fn ahead_behind(
     revision_oid: Oid,
     head_oid: Oid,
 ) -> anyhow::Result<term::Line> {
-    let (a, b) = repo.graph_ahead_behind(revision_oid, head_oid)?;
+    let (a, b) = repo.graph_ahead_behind(revision_oid.into(), head_oid.into())?;
     if a == 0 && b == 0 {
         return Ok(term::Line::new(term::format::dim("up to date")));
     }
@@ -88,7 +90,7 @@ pub fn branches(target: &Oid, repo: &git::raw::Repository) -> anyhow::Result<Vec
             continue;
         }
         if let (Some(oid), Some(name)) = (&r.target(), &r.shorthand()) {
-            if oid == target {
+            if target == oid {
                 branches.push(name.to_string());
             };
         };

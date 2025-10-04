@@ -8,7 +8,7 @@ use std::ffi::OsString;
 
 use anyhow::anyhow;
 
-use radicle::git::RefString;
+use radicle::git::fmt::RefString;
 use radicle::prelude::NodeId;
 use radicle::storage::ReadStorage;
 

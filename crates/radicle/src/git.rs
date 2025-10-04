@@ -5,32 +5,23 @@ use std::io;
 use std::path::Path;
 use std::process::Command;
 use std::str::FromStr;
-use std::sync::LazyLock;
 
-use git_ext::ref_format as format;
+pub use radicle_oid::{str::ParseOidError, Oid};
+
+pub extern crate radicle_git_ref_format as fmt;
 
 use crate::collections::RandomMap;
 use crate::crypto::PublicKey;
 use crate::node::Alias;
 use crate::rad;
-use crate::storage;
 use crate::storage::refs::Refs;
 use crate::storage::RemoteId;
 
-pub use ext::Error;
-pub use ext::NotFound;
-pub use ext::Oid;
-pub use git_ext::ref_format as fmt;
-pub use git_ext::ref_format::{
-    component, lit, name, qualified, refname, refspec,
-    refspec::{PatternStr, PatternString, Refspec},
-    Component, Namespaced, Qualified, RefStr, RefString,
-};
-pub use radicle_git_ext as ext;
-pub use storage::git::transport::local::Url;
-pub use storage::BranchName;
+pub use crate::storage::git::transport::local::Url;
 
 use raw::ErrorExt as _;
+
+pub type BranchName = crate::git::fmt::RefString;
 
 /// Default port of the `git` transport protocol.
 pub const PROTOCOL_PORT: u16 = 9418;
@@ -160,16 +151,16 @@ pub enum RefError {
     #[error("ref name is not valid UTF-8")]
     InvalidName,
     #[error("unexpected unqualified ref: {0}")]
-    Unqualified(RefString),
+    Unqualified(fmt::RefString),
     #[error("invalid ref format: {0}")]
-    Format(#[from] format::Error),
+    Format(#[from] fmt::Error),
     #[error("reference has no target")]
     NoTarget,
     #[error("expected ref to begin with 'refs/namespaces' but found '{0}'")]
-    MissingNamespace(format::RefString),
+    MissingNamespace(fmt::RefString),
     #[error("ref name contains invalid namespace identifier '{name}'")]
     InvalidNamespace {
-        name: format::RefString,
+        name: fmt::RefString,
         #[source]
         err: Box<dyn std::error::Error + Send + Sync + 'static>,
     },
@@ -186,8 +177,12 @@ pub enum ListRefsError {
 }
 
 pub mod refs {
-    use super::*;
+    use std::sync::LazyLock;
+
     use radicle_cob as cob;
+
+    use super::fmt::*;
+    use super::*;
 
     /// Try to get a qualified reference from a generic reference.
     pub fn qualified_from<'a>(r: &'a raw::Reference) -> Result<(Qualified<'a>, Oid), RefError> {
@@ -214,35 +209,28 @@ pub mod refs {
     ///
     pub fn patch<'a>(object_id: &cob::ObjectId) -> Qualified<'a> {
         Qualified::from_components(
-            name::component!("heads"),
-            name::component!("patches"),
+            component!("heads"),
+            component!("patches"),
             Some(object_id.into()),
         )
     }
 
     pub mod storage {
-        use format::{
-            lit,
-            name::component,
-            refspec::{self, PatternString},
-        };
-
         use super::*;
 
         /// Where the repo's identity document is stored.
         ///
         /// `refs/rad/id`
         ///
-        pub static IDENTITY_BRANCH: LazyLock<Qualified> = LazyLock::new(|| {
-            Qualified::from_components(name::component!("rad"), name::component!("id"), None)
-        });
+        pub static IDENTITY_BRANCH: LazyLock<Qualified> =
+            LazyLock::new(|| Qualified::from_components(component!("rad"), component!("id"), None));
 
         /// Where the repo's identity root document is stored.
         ///
         /// `refs/rad/root`
         ///
         pub static IDENTITY_ROOT: LazyLock<Qualified> = LazyLock::new(|| {
-            Qualified::from_components(name::component!("rad"), name::component!("root"), None)
+            Qualified::from_components(component!("rad"), component!("root"), None)
         });
 
         /// Where the project's signed references are stored.
@@ -250,7 +238,7 @@ pub mod refs {
         /// `refs/rad/sigrefs`
         ///
         pub static SIGREFS_BRANCH: LazyLock<Qualified> = LazyLock::new(|| {
-            Qualified::from_components(name::component!("rad"), name::component!("sigrefs"), None)
+            Qualified::from_components(component!("rad"), component!("sigrefs"), None)
         });
 
         /// The set of special references used in the Heartwood protocol.
@@ -341,8 +329,8 @@ pub mod refs {
         ///
         /// `refs/namespaces/*/refs/cobs/<typename>/<object_id>`
         ///
-        pub fn cobs(typename: &cob::TypeName, object_id: &cob::ObjectId) -> PatternString {
-            refspec::pattern!("refs/namespaces/*")
+        pub fn cobs(typename: &cob::TypeName, object_id: &cob::ObjectId) -> refspec::PatternString {
+            pattern!("refs/namespaces/*")
                 .join(refname!("refs/cobs"))
                 .join(Component::from(typename))
                 .join(Component::from(object_id))
@@ -390,8 +378,11 @@ pub mod refs {
             ///
             /// `refs/namespaces/*/refs/drafts/cobs/<typename>/<object_id>`
             ///
-            pub fn cobs(typename: &cob::TypeName, object_id: &cob::ObjectId) -> PatternString {
-                refspec::pattern!("refs/namespaces/*")
+            pub fn cobs(
+                typename: &cob::TypeName,
+                object_id: &cob::ObjectId,
+            ) -> refspec::PatternString {
+                pattern!("refs/namespaces/*")
                     .join(refname!("refs/drafts/cobs"))
                     .join(Component::from(typename))
                     .join(Component::from(object_id))
@@ -423,7 +414,6 @@ pub mod refs {
 
     pub mod workdir {
         use super::*;
-        use format::name::component;
 
         /// Create a [`RefString`] that corresponds to `refs/heads/<branch>`.
         pub fn branch(branch: &RefStr) -> RefString {
@@ -483,7 +473,7 @@ pub fn remote_refs(url: &Url) -> Result<RandomMap<RemoteId, Refs>, ListRefsError
     Ok(remotes)
 }
 
-/// Parse a [`format::Qualified`] reference string while expecting the reference
+/// Parse a [`fmt::Qualified`] reference string while expecting the reference
 /// to start with `refs/namespaces`. If the namespace is not present, then an
 /// error will be returned.
 ///
@@ -498,7 +488,7 @@ pub fn remote_refs(url: &Url) -> Result<RandomMap<RemoteId, Refs>, ListRefsError
 /// The `T` can be specified when calling the function. For example, if you
 /// wanted to parse the namespace as a `PublicKey`, then you would the function
 /// like so, `parse_ref_namespaced::<PublicKey>(s)`.
-pub fn parse_ref_namespaced<T>(s: &str) -> Result<(T, format::Qualified), RefError>
+pub fn parse_ref_namespaced<T>(s: &str) -> Result<(T, fmt::Qualified), RefError>
 where
     T: FromStr,
     T::Err: std::error::Error + Send + Sync + 'static,
@@ -510,7 +500,7 @@ where
     }
 }
 
-/// Parse a [`format::Qualified`] reference string. It will optionally return
+/// Parse a [`fmt::Qualified`] reference string. It will optionally return
 /// the namespace, if present.
 ///
 /// The qualified form could be of the form: `refs/heads/main`,
@@ -527,15 +517,15 @@ where
 /// The `T` can be specified when calling the function. For example, if you
 /// wanted to parse the namespace as a `PublicKey`, then you would the function
 /// like so, `parse_ref::<PublicKey>(s)`.
-pub fn parse_ref<T>(s: &str) -> Result<(Option<T>, format::Qualified), RefError>
+pub fn parse_ref<T>(s: &str) -> Result<(Option<T>, fmt::Qualified), RefError>
 where
     T: FromStr,
     T::Err: std::error::Error + Send + Sync + 'static,
 {
-    let input = format::RefStr::try_from_str(s)?;
+    let input = fmt::RefStr::try_from_str(s)?;
     match input.to_namespaced() {
         None => {
-            let refname = Qualified::from_refstr(input)
+            let refname = fmt::Qualified::from_refstr(input)
                 .ok_or_else(|| RefError::Unqualified(input.to_owned()))?;
 
             Ok((None, refname))
@@ -573,7 +563,7 @@ pub fn initial_commit<'a>(
 pub fn commit<'a>(
     repo: &'a raw::Repository,
     parent: &'a raw::Commit,
-    target: &RefStr,
+    target: &fmt::RefStr,
     message: &str,
     sig: &raw::Signature,
     tree: &raw::Tree,
@@ -588,7 +578,7 @@ pub fn commit<'a>(
 pub fn empty_commit<'a>(
     repo: &'a raw::Repository,
     parent: &'a raw::Commit,
-    target: &RefStr,
+    target: &fmt::RefStr,
     message: &str,
     sig: &raw::Signature,
 ) -> Result<raw::Commit<'a>, raw::Error> {
@@ -611,7 +601,7 @@ pub fn write_tree<'r>(
     path: &Path,
     bytes: &[u8],
     repo: &'r raw::Repository,
-) -> Result<raw::Tree<'r>, Error> {
+) -> Result<raw::Tree<'r>, raw::Error> {
     let blob_id = repo.blob(bytes)?;
     let mut builder = repo.treebuilder(None)?;
     builder.insert(path, blob_id, 0o100_644)?;
@@ -697,7 +687,7 @@ pub fn fetch(repo: &raw::Repository, remote: &str) -> Result<(), raw::Error> {
 pub fn push<'a>(
     repo: &raw::Repository,
     remote: &str,
-    refspecs: impl IntoIterator<Item = (&'a Qualified<'a>, &'a Qualified<'a>)>,
+    refspecs: impl IntoIterator<Item = (&'a fmt::Qualified<'a>, &'a fmt::Qualified<'a>)>,
 ) -> Result<(), raw::Error> {
     let refspecs = refspecs
         .into_iter()

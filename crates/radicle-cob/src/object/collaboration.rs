@@ -2,8 +2,8 @@
 use std::convert::Infallible;
 use std::fmt::Debug;
 
-use git_ext::Oid;
 use nonempty::NonEmpty;
+use oid::Oid;
 
 use crate::change::store::{Manifest, Version};
 use crate::{change, Entry, History, ObjectId, TypeName};
@@ -101,11 +101,11 @@ impl<R> Evaluate<R> for NonEmpty<Entry> {
 /// [`TypeName`] and [`ObjectId`] from it.
 ///
 /// This assumes that the `refname` is in a
-/// [`git_ext::ref_format::Qualified`] format. If it has any
+/// [`fmt::Qualified`] format. If it has any
 /// `refs/namespaces`, they will be stripped to access the underlying
-/// [`git_ext::ref_format::Qualified`] format.
+/// [`fmt::Qualified`] format.
 ///
-/// In the [`git_ext::ref_format::Qualified`] format it assumes that the
+/// In the [`fmt::Qualified`] format it assumes that the
 /// reference name is of the form:
 ///
 ///   `refs/<category>/<typename>/<object_id>[/<rest>*]`
@@ -115,14 +115,14 @@ impl<R> Evaluate<R> for NonEmpty<Entry> {
 ///
 /// Also note that this will return `None` if:
 ///
-///   * The `refname` is not [`git_ext::ref_format::Qualified`]
+///   * The `refname` is not [`fmt::Qualified`]
 ///   * The parsing of the [`ObjectId`] fails
 ///   * The parsing of the [`TypeName`] fails
 pub fn parse_refstr<R>(name: &R) -> Option<(TypeName, ObjectId)>
 where
-    R: AsRef<git_ext::ref_format::RefStr>,
+    R: AsRef<fmt::RefStr>,
 {
-    use git_ext::ref_format::Qualified;
+    use fmt::Qualified;
     let name = name.as_ref();
     let refs_cobs = match name.to_namespaced() {
         None => Qualified::from_refstr(name)?,

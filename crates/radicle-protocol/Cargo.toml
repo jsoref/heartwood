@@ -23,7 +23,6 @@ nonempty = { workspace = true, features = ["serialize"] }
 qcheck = { workspace = true, optional = true }
 radicle = { workspace = true, features = ["logger"] }
 radicle-fetch = { workspace = true }
-radicle-git-ext = { workspace = true, features = ["serde"] }
 sqlite = { workspace = true, features = ["bundled"] }
 scrypt = { version = "0.11.0", default-features = false }
 serde = { workspace = true, features = ["derive"] }

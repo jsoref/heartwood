@@ -225,7 +225,7 @@ impl<R: ReadRepository> Evaluate<R> for External {
         Self::from_root(Op::try_from(entry)?, store)
     }
 
-    fn apply<'a, I: Iterator<Item = (&'a radicle_git_ext::Oid, &'a radicle_cob::Entry)>>(
+    fn apply<'a, I: Iterator<Item = (&'a crate::git::Oid, &'a radicle_cob::Entry)>>(
         &mut self,
         entry: &radicle_cob::Entry,
         concurrent: I,

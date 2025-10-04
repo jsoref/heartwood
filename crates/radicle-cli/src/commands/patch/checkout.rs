@@ -1,10 +1,10 @@
 use anyhow::anyhow;
 
-use git_ref_format::Qualified;
 use radicle::cob::patch;
 use radicle::cob::patch::RevisionId;
+use radicle::git::fmt::Qualified;
+use radicle::git::fmt::RefString;
 use radicle::git::raw::ErrorExt as _;
-use radicle::git::RefString;
 use radicle::patch::cache::Patches as _;
 use radicle::patch::PatchId;
 use radicle::storage::git::Repository;
@@ -25,7 +25,7 @@ impl Options {
             Some(refname) => Ok(Qualified::from_refstr(refname)
                 .map_or_else(|| refname.clone(), |q| q.to_ref_string())),
             // SAFETY: Patch IDs are valid refstrings.
-            None => Ok(git::refname!("patch")
+            None => Ok(git::fmt::refname!("patch")
                 .join(RefString::try_from(term::format::cob(id).item).unwrap())),
         }
     }
@@ -57,34 +57,33 @@ pub fn run(
     let mut spinner = term::spinner("Performing checkout...");
     let patch_branch = opts.branch(patch_id)?;
 
-    let commit =
-        match working.find_branch(patch_branch.as_str(), radicle::git::raw::BranchType::Local) {
-            Ok(branch) if opts.force => {
-                let commit = find_patch_commit(revision, stored, working)?;
-                let mut r = branch.into_reference();
-                r.set_target(commit.id(), &format!("force update '{patch_branch}'"))?;
-                commit
+    let commit = match working.find_branch(patch_branch.as_str(), git::raw::BranchType::Local) {
+        Ok(branch) if opts.force => {
+            let commit = find_patch_commit(revision, stored, working)?;
+            let mut r = branch.into_reference();
+            r.set_target(commit.id(), &format!("force update '{patch_branch}'"))?;
+            commit
+        }
+        Ok(branch) => {
+            let head = branch.get().peel_to_commit()?;
+            if revision.head() != head.id() {
+                anyhow::bail!(
+                    "branch '{patch_branch}' already exists (use `--force` to overwrite)"
+                );
             }
-            Ok(branch) => {
-                let head = branch.get().peel_to_commit()?;
-                if head.id() != *revision.head() {
-                    anyhow::bail!(
-                        "branch '{patch_branch}' already exists (use `--force` to overwrite)"
-                    );
-                }
-                head
-            }
-            Err(e) if e.is_not_found() => {
-                let commit = find_patch_commit(revision, stored, working)?;
-                // Create patch branch and switch to it.
-                working.branch(patch_branch.as_str(), &commit, true)?;
-                commit
-            }
-            Err(e) => return Err(e.into()),
-        };
+            head
+        }
+        Err(e) if e.is_not_found() => {
+            let commit = find_patch_commit(revision, stored, working)?;
+            // Create patch branch and switch to it.
+            working.branch(patch_branch.as_str(), &commit, true)?;
+            commit
+        }
+        Err(e) => return Err(e.into()),
+    };
 
     if opts.force {
-        let mut builder = radicle::git::raw::build::CheckoutBuilder::new();
+        let mut builder = git::raw::build::CheckoutBuilder::new();
         builder.force();
         working.checkout_tree(commit.as_object(), Some(&mut builder))?;
     } else {
@@ -125,7 +124,7 @@ fn find_patch_commit<'a>(
     stored: &Repository,
     working: &'a git::raw::Repository,
 ) -> anyhow::Result<git::raw::Commit<'a>> {
-    let head = *revision.head();
+    let head = revision.head().into();
 
     match working.find_commit(head) {
         Ok(commit) => Ok(commit),

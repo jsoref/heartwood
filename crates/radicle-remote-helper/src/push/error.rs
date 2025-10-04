@@ -37,10 +37,10 @@ pub struct HeadsDiverge {
 #[derive(Debug, Error)]
 pub enum PushAction {
     #[error("invalid reference {refname}, expected qualified reference starting with `refs/`")]
-    InvalidRef { refname: git::RefString },
-    #[error("found refs/heads/patches/{suffix} where {suffix} was an invalid Patch ID")]
+    InvalidRef { refname: git::fmt::RefString },
+    #[error("found refs/heads/patches/{suffix} where {suffix} was an invalid Patch ID: {source}")]
     InvalidPatchId {
         suffix: String,
-        source: git::raw::Error,
+        source: radicle::git::ParseOidError,
     },
 }

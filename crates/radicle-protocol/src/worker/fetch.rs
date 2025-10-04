@@ -36,12 +36,12 @@ impl FetchResult {
 /// corresponding targets.
 #[derive(Clone, Default, Debug)]
 pub struct UpdatedCanonicalRefs {
-    inner: BTreeMap<git::Qualified<'static>, git::Oid>,
+    inner: BTreeMap<git::fmt::Qualified<'static>, git::Oid>,
 }
 
 impl IntoIterator for UpdatedCanonicalRefs {
-    type Item = (git::Qualified<'static>, git::Oid);
-    type IntoIter = std::collections::btree_map::IntoIter<git::Qualified<'static>, git::Oid>;
+    type Item = (git::fmt::Qualified<'static>, git::Oid);
+    type IntoIter = std::collections::btree_map::IntoIter<git::fmt::Qualified<'static>, git::Oid>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner.into_iter()
@@ -51,12 +51,12 @@ impl IntoIterator for UpdatedCanonicalRefs {
 impl UpdatedCanonicalRefs {
     /// Insert a new updated entry for the canonical reference identified by
     /// `refname` and its new `target.`
-    pub fn updated(&mut self, refname: git::Qualified<'static>, target: git::Oid) {
+    pub fn updated(&mut self, refname: git::fmt::Qualified<'static>, target: git::Oid) {
         self.inner.insert(refname, target);
     }
 
     /// Return an iterator of all the updates.
-    pub fn iter(&self) -> impl Iterator<Item = (&git::Qualified<'static>, &git::Oid)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&git::fmt::Qualified<'static>, &git::Oid)> {
         self.inner.iter()
     }
 }

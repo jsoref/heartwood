@@ -16,7 +16,7 @@ use radicle::crypto::ssh::keystore::MemorySigner;
 use radicle::crypto::test::signer::MockSigner;
 use radicle::crypto::Signature;
 use radicle::git;
-use radicle::git::refname;
+use radicle::git::fmt::refname;
 use radicle::identity::{RepoId, Visibility};
 use radicle::node::config::ConnectAddress;
 use radicle::node::policy::store as policy;
@@ -363,7 +363,7 @@ impl<G: Signer<Signature> + cyphernet::Ecdh> NodeHandle<G> {
     /// of the new commit, and the reference will be updated.
     ///
     /// The `rad/sigrefs` are then updated to reflect the new change.
-    pub fn commit_to(&self, rid: RepoId, refname: impl AsRef<git::RefStr>) {
+    pub fn commit_to(&self, rid: RepoId, refname: impl AsRef<git::fmt::RefStr>) {
         use radicle::test::arbitrary;
 
         let refname = refname.as_ref();
@@ -516,14 +516,14 @@ impl<G: cyphernet::Ecdh<Pk = NodeId> + Signer<Signature> + Clone> Node<G> {
         );
 
         // Push local branches to storage.
-        let mut refs = Vec::<(git::Qualified, git::Qualified)>::new();
+        let mut refs = Vec::<(git::fmt::Qualified, git::fmt::Qualified)>::new();
         for branch in repo.branches(Some(git::raw::BranchType::Local)).unwrap() {
             let (branch, _) = branch.unwrap();
-            let name = git::RefString::try_from(branch.name().unwrap().unwrap()).unwrap();
+            let name = git::fmt::RefString::try_from(branch.name().unwrap().unwrap()).unwrap();
 
             refs.push((
-                git::lit::refs_heads(&name).into(),
-                git::lit::refs_heads(&name).into(),
+                git::fmt::lit::refs_heads(&name).into(),
+                git::fmt::lit::refs_heads(&name).into(),
             ));
         }
         git::push(repo, "rad", refs.iter().map(|(a, b)| (a, b))).unwrap();

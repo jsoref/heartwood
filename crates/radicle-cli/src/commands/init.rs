@@ -16,9 +16,9 @@ use serde_json as json;
 
 use radicle::crypto::ssh;
 use radicle::explorer::ExplorerUrl;
+use radicle::git::fmt::RefString;
 use radicle::git::raw;
 use radicle::git::raw::ErrorExt as _;
-use radicle::git::RefString;
 use radicle::identity::project::ProjectName;
 use radicle::identity::{Doc, RepoId, Visibility};
 use radicle::node::events::UploadPack;

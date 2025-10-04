@@ -188,8 +188,8 @@ fn message_from_commits(name: &str, commits: Vec<git::raw::Commit>) -> Result<St
 /// Return commits between the merge base and a head.
 pub fn patch_commits<'a>(
     repo: &'a git::raw::Repository,
-    base: &git::Oid,
-    head: &git::Oid,
+    base: &git::raw::Oid,
+    head: &git::raw::Oid,
 ) -> Result<Vec<git::raw::Commit<'a>>, git::raw::Error> {
     let mut commits = Vec::new();
     let mut revwalk = repo.revwalk()?;
@@ -205,8 +205,8 @@ pub fn patch_commits<'a>(
 /// The message shown in the editor when creating a `Patch`.
 fn create_display_message(
     repo: &git::raw::Repository,
-    base: &git::Oid,
-    head: &git::Oid,
+    base: &git::raw::Oid,
+    head: &git::raw::Oid,
 ) -> Result<String, Error> {
     let commits = patch_commits(repo, base, head)?;
     if commits.is_empty() {
@@ -226,8 +226,8 @@ fn create_display_message(
 pub fn get_create_message(
     message: term::patch::Message,
     repo: &git::raw::Repository,
-    base: &git::Oid,
-    head: &git::Oid,
+    base: &git::raw::Oid,
+    head: &git::raw::Oid,
 ) -> Result<(Title, String), Error> {
     let display_msg = create_display_message(repo, base, head)?;
     let message = message.get(&display_msg)?;
@@ -279,10 +279,10 @@ pub fn get_edit_message(
 /// The message shown in the editor when updating a `Patch`.
 fn update_display_message(
     repo: &git::raw::Repository,
-    last_rev_head: &git::Oid,
-    head: &git::Oid,
+    last_rev_head: &git::raw::Oid,
+    head: &git::raw::Oid,
 ) -> Result<String, Error> {
-    if !repo.graph_descendant_of(**head, **last_rev_head)? {
+    if !repo.graph_descendant_of(*head, *last_rev_head)? {
         return Ok(REVISION_MSG.trim_start().to_string());
     }
 
@@ -302,9 +302,9 @@ pub fn get_update_message(
     message: term::patch::Message,
     repo: &git::raw::Repository,
     latest: &patch::Revision,
-    head: &git::Oid,
+    head: &git::raw::Oid,
 ) -> Result<String, Error> {
-    let display_msg = update_display_message(repo, &latest.head(), head)?;
+    let display_msg = update_display_message(repo, &latest.head().into(), head)?;
     let message = message.get(&display_msg)?;
     let message = message.trim();
 
@@ -366,11 +366,8 @@ pub fn show(
     } else {
         vec![]
     };
-    let ahead_behind = common::ahead_behind(
-        stored.raw(),
-        *revision.head(),
-        *patch.target().head(stored)?,
-    )?;
+    let ahead_behind =
+        common::ahead_behind(stored.raw(), revision.head(), patch.target().head(stored)?)?;
     let author = patch.author();
     let author = term::format::Author::new(author.id(), profile, verbose);
     let labels = patch.labels().map(|l| l.to_string()).collect::<Vec<_>>();
@@ -468,7 +465,7 @@ fn patch_commit_lines(
     let (from, to) = patch.range()?;
     let mut lines = Vec::new();
 
-    for commit in patch_commits(stored.raw(), &from, &to)? {
+    for commit in patch_commits(stored.raw(), &from.into(), &to.into())? {
         lines.push(term::Line::spaced([
             term::label(term::format::secondary::<String>(
                 term::format::oid(commit.id()).into(),
@@ -484,37 +481,36 @@ fn patch_commit_lines(
 #[cfg(test)]
 mod test {
     use super::*;
-    use radicle::git::refname;
+    use radicle::git::fmt::refname;
     use radicle::test::fixtures;
     use std::path;
 
     fn commit(
         repo: &git::raw::Repository,
-        branch: &git::RefStr,
-        parent: &git::Oid,
+        branch: &git::fmt::RefStr,
+        parent: &git::raw::Oid,
         msg: &str,
-    ) -> git::Oid {
+    ) -> git::raw::Oid {
         let sig = git::raw::Signature::new(
             "anonymous",
             "anonymous@radicle.example.com",
             &git::raw::Time::new(0, 0),
         )
         .unwrap();
-        let head = repo.find_commit(**parent).unwrap();
+        let head = repo.find_commit(*parent).unwrap();
         let tree =
             git::write_tree(path::Path::new("README"), "Hello World!\n".as_bytes(), repo).unwrap();
 
         let branch = git::refs::branch(branch);
         let commit = git::commit(repo, &head, &branch, msg, &sig, &tree).unwrap();
 
-        commit.id().into()
+        commit.id()
     }
 
     #[test]
     fn test_create_display_message() {
         let tmpdir = tempfile::tempdir().unwrap();
         let (repo, commit_0) = fixtures::repository(&tmpdir);
-        let commit_0 = commit_0.into();
         let commit_1 = commit(
             &repo,
             &refname!("feature"),
@@ -625,7 +621,6 @@ mod test {
     fn test_update_display_message() {
         let tmpdir = tempfile::tempdir().unwrap();
         let (repo, commit_0) = fixtures::repository(&tmpdir);
-        let commit_0 = commit_0.into();
 
         let commit_1 = commit(&repo, &refname!("feature"), &commit_0, "commit 1\n");
         let commit_2 = commit(&repo, &refname!("feature"), &commit_1, "commit 2\n");

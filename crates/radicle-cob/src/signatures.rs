@@ -8,9 +8,9 @@ use std::{
 };
 
 use crypto::{ssh, PublicKey};
-use git_ext::commit::{
+use metadata::commit::{
     headers::Signature::{Pgp, Ssh},
-    Commit,
+    CommitData,
 };
 
 pub use ssh::ExtendedSignature;
@@ -55,10 +55,10 @@ impl From<Signatures> for BTreeMap<PublicKey, crypto::Signature> {
     }
 }
 
-impl TryFrom<&Commit> for Signatures {
+impl<Tree, Parent> TryFrom<&CommitData<Tree, Parent>> for Signatures {
     type Error = error::Signatures;
 
-    fn try_from(value: &Commit) -> Result<Self, Self::Error> {
+    fn try_from(value: &CommitData<Tree, Parent>) -> Result<Self, Self::Error> {
         value
             .signatures()
             .filter_map(|signature| {

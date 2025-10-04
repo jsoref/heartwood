@@ -4,7 +4,6 @@ use nonempty::NonEmpty;
 
 use crate::Embed;
 use crate::Evaluate;
-use crate::Store;
 
 use super::*;
 
@@ -23,7 +22,7 @@ pub struct Create {
 }
 
 impl Create {
-    fn template(self) -> change::Template<git_ext::Oid> {
+    fn template(self) -> change::Template<oid::Oid> {
         change::Template {
             type_name: self.type_name,
             tips: Vec::new(),
@@ -38,7 +37,7 @@ impl Create {
 ///
 /// The `storage` is the backing storage for storing
 /// [`crate::Entry`]s at content-addressable locations. Please see
-/// [`Store`] for further information.
+/// [`crate::Store`] for further information.
 ///
 /// The `signer` is expected to be a cryptographic signing key. This
 /// ensures that the objects origin is cryptographically verifiable.
@@ -57,19 +56,24 @@ pub fn create<T, S, G>(
     signer: &G,
     resource: Option<Oid>,
     related: Vec<Oid>,
-    identifier: &S::Namespace,
+    identifier: &<S as crate::object::Storage>::Namespace,
     args: Create,
 ) -> Result<CollaborativeObject<T>, error::Create>
 where
     T: Evaluate<S>,
-    S: Store,
+    S: crate::object::Storage
+        + crate::change::Storage<
+            ObjectId = crate::object::Oid,
+            Parent = crate::object::Oid,
+            Signatures = crate::ExtendedSignature,
+        >,
     G: signature::Signer<crate::ExtendedSignature>,
 {
     let type_name = args.type_name.clone();
     let version = args.version;
     let init_change = storage
         .store(resource, related, signer, args.template())
-        .map_err(error::Create::from)?;
+        .map_err(Into::<error::Create>::into)?;
     let object_id = init_change.id().into();
     let object = T::init(&init_change, storage).map_err(error::Create::evaluate)?;
 

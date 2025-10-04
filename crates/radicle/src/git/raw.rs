@@ -49,14 +49,3 @@ impl ErrorExt for git2::Error {
         self.code() == git2::ErrorCode::NotFound
     }
 }
-
-impl ErrorExt for git_ext::Error {
-    fn is_not_found(&self) -> bool {
-        use git_ext::Error::*;
-        match self {
-            Git(e) => e.is_not_found(),
-            NotFound(_) => true,
-            _ => false,
-        }
-    }
-}

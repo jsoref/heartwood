@@ -18,6 +18,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Re-exports from `git2` at `radicle::git::raw` were limited, using
+  the heartwood workspace as a filter. Dependents that require members that
+  are not exported anymore will have to depend on `git2` directly.
+- Some re-exports from `git-ref-format-core` were moved from `radicle::git`
+  to `radicle::fmt`.
+- The crate now re-exports `radicle::git::Oid` from a new `radicle-oid` crate,
+  in an effort to decrease dependence on `git2` via `radicle-git-ext`. This
+  new object identifier type does not implement `Deref` anymore. Use `Into`
+  to convert to a `git2::Oid` as necessary.
+- Re-exports of `radicle-git-ext` were removed, as this dependency is removed.
+  Instead of `radicle_git_ext::Error`, use `git2::Error` (re-exported as
+  `radicle::git::raw::Error`) together with the new extension trait
+  `radicle::git::raw::ErrorExt`.
+
 ### Deprecated
 
 - `radicle::node::Handle::announce_refs` is deprecated in favor of
