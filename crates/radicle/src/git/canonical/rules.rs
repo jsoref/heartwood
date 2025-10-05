@@ -894,27 +894,33 @@ mod tests {
     #[test]
     fn test_order() {
         assert!(
-            pattern(qualified_pattern!("a/b/c/d/*")) < pattern(qualified_pattern!("*/x")),
+            pattern(qualified_pattern!("refs/heads/a/b/c/d/*"))
+                < pattern(qualified_pattern!("refs/heads/*/x")),
             "example 1"
         );
         assert!(
-            pattern(qualified_pattern!("a")) < pattern(qualified_pattern!("*")),
+            pattern(qualified_pattern!("refs/heads/a"))
+                < pattern(qualified_pattern!("refs/heads/*")),
             "example 2.a"
         );
         assert!(
-            pattern(qualified_pattern!("abc")) < pattern(qualified_pattern!("a*")),
+            pattern(qualified_pattern!("refs/heads/abc"))
+                < pattern(qualified_pattern!("refs/heads/a*")),
             "example 2.a"
         );
         assert!(
-            pattern(qualified_pattern!("a/b/*")) < pattern(qualified_pattern!("a/*/c")),
+            pattern(qualified_pattern!("refs/heads/a/b/*"))
+                < pattern(qualified_pattern!("refs/heads/a/*/c")),
             "example 2.a"
         );
         assert!(
-            pattern(qualified_pattern!("aa*")) < pattern(qualified_pattern!("a*")),
+            pattern(qualified_pattern!("refs/heads/aa*"))
+                < pattern(qualified_pattern!("refs/heads/a*")),
             "example 2.b.A"
         );
         assert!(
-            pattern(qualified_pattern!("a*b")) < pattern(qualified_pattern!("a*")),
+            pattern(qualified_pattern!("refs/heads/a*b"))
+                < pattern(qualified_pattern!("refs/heads/a*")),
             "example 2.b.B"
         );
 
@@ -930,17 +936,17 @@ mod tests {
 
         let pattern09 = pattern(qualified_pattern!("refs/foos/*"));
 
-        let pattern10 = pattern(qualified_pattern!("a"));
-        let pattern11 = pattern(qualified_pattern!("b"));
+        let pattern10 = pattern(qualified_pattern!("refs/heads/a"));
+        let pattern11 = pattern(qualified_pattern!("refs/heads/b"));
 
-        let pattern12 = pattern(qualified_pattern!("a/*"));
-        let pattern13 = pattern(qualified_pattern!("b/*"));
+        let pattern12 = pattern(qualified_pattern!("refs/heads/a/*"));
+        let pattern13 = pattern(qualified_pattern!("refs/heads/b/*"));
 
-        let pattern14 = pattern(qualified_pattern!("a/*/ab"));
-        let pattern15 = pattern(qualified_pattern!("a/*/a"));
+        let pattern14 = pattern(qualified_pattern!("refs/heads/a/*/ab"));
+        let pattern15 = pattern(qualified_pattern!("refs/heads/a/*/a"));
 
-        let pattern16 = pattern(qualified_pattern!("a/*/b"));
-        let pattern17 = pattern(qualified_pattern!("a/*/a"));
+        let pattern16 = pattern(qualified_pattern!("refs/heads/a/*/b"));
+        let pattern17 = pattern(qualified_pattern!("refs/heads/a/*/a"));
 
         // Test priority for path specificity
         assert!(
