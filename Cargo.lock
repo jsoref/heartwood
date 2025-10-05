@@ -2915,6 +2915,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "radicle-git-ref-format"
+version = "0.1.0"
+dependencies = [
+ "git-ref-format-core",
+]
+
+[[package]]
 name = "radicle-node"
 version = "0.16.0"
 dependencies = [
