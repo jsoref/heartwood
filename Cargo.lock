@@ -2915,6 +2915,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "radicle-git-metadata"
+version = "0.1.0"
+dependencies = [
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "radicle-git-ref-format"
 version = "0.1.0"
 dependencies = [
