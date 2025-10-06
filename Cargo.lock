@@ -2767,7 +2767,7 @@ checksum = "69cdb34c158ceb288df11e18b4bd39de994f6657d83847bdffdbd7f346754b0f"
 
 [[package]]
 name = "radicle"
-version = "0.19.0"
+version = "0.20.0"
 dependencies = [
  "amplify",
  "base64 0.21.7",
@@ -2809,7 +2809,7 @@ dependencies = [
 
 [[package]]
 name = "radicle-cli"
-version = "0.16.0"
+version = "0.17.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2870,7 +2870,7 @@ dependencies = [
 
 [[package]]
 name = "radicle-cob"
-version = "0.16.0"
+version = "0.17.0"
 dependencies = [
  "fastrand",
  "git2",
@@ -2890,7 +2890,7 @@ dependencies = [
 
 [[package]]
 name = "radicle-crypto"
-version = "0.13.0"
+version = "0.14.0"
 dependencies = [
  "amplify",
  "cyphernet",
@@ -2919,7 +2919,7 @@ dependencies = [
 
 [[package]]
 name = "radicle-fetch"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "bstr",
  "either",
@@ -2952,7 +2952,7 @@ dependencies = [
 
 [[package]]
 name = "radicle-node"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "amplify",
  "backtrace",
@@ -2994,7 +2994,7 @@ dependencies = [
 
 [[package]]
 name = "radicle-protocol"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "bloomy",
  "bytes",
@@ -3020,7 +3020,7 @@ dependencies = [
 
 [[package]]
 name = "radicle-remote-helper"
-version = "0.13.0"
+version = "0.14.0"
 dependencies = [
  "dunce",
  "log",
@@ -3033,7 +3033,7 @@ dependencies = [
 
 [[package]]
 name = "radicle-schemars"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "radicle",
  "schemars",
@@ -3086,7 +3086,7 @@ dependencies = [
 
 [[package]]
 name = "radicle-systemd"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "log",
  "systemd-journal-logger",
@@ -3094,7 +3094,7 @@ dependencies = [
 
 [[package]]
 name = "radicle-term"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anstyle-query",
  "crossbeam-channel",
