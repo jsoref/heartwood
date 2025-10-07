@@ -44,10 +44,8 @@ impl std::fmt::Display for Target {
 pub struct Args {
     /// A Repository ID or Node ID to block from seeding or following (respectively)
     ///
-    /// Example values:
-    /// - z6MkiswaKJ85vafhffCGBu2gdBsYoDAyHVBWRxL3j297fwS9 (Node ID)
-    /// - rad:z3Tr6bC7ctEg2EHmLvknUr29mEDLH (Repository ID)
-    #[arg(value_name = "RID|NID", verbatim_doc_comment)]
+    /// [example values: rad:z3Tr6bC7ctEg2EHmLvknUr29mEDLH, z6MkiswaKJ85vafhffCGBu2gdBsYoDAyHVBWRxL3j297fwS9]
+    #[arg(value_name = "RID|NID")]
     pub(super) target: Target,
 }
 
