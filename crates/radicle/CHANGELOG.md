@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Security
+
+## 0.20.0
+
+### Added
+
 - Introduce a node event for canonical reference updates, `Event::CanonicalRefUpdated`.
   Whenever the node fetches new updates, it checks if canonical references can
   be updated. The node has learned how to return these results and emit them as
@@ -21,8 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `radicle::profile::Home::socket` defaults to the path `\\.\pipe\radicle-node`
   on Windows. The behavior on Unix-like systems has *not* changed.
-
-### Deprecated
 
 ### Removed
 
