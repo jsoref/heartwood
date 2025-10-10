@@ -176,25 +176,46 @@
         // {
           pre-commit-check = let
             grep = rec {
-              words = ["radicle.xyz" "radicle.zulipchat.com"];
-              after = map id words;
+              generators = [
+                {
+                  word = "radicle.xyz";
+                  files = "\\.rs$";
+                  excludes = [];
+                }
+                {
+                  word = "radicle.zulipchat.com";
+                  files = "\\.rs$";
+                  excludes = [];
+                }
+                {
+                  word = "git2::";
+                  files = "^crates/radicle/.*\\.rs$";
+                  excludes = ["crates/radicle/src/git/raw.rs"];
+                }
+              ];
+              after = map id generators;
               prefix = "grep-";
-              id = word: prefix + word;
-              hooks = builtins.listToAttrs (map (word: {
+              id = {word, ...}: prefix + word;
+              hooks = builtins.listToAttrs (map (generator: {
                   # "," is problematic, as this is used to split
                   # lists of hook names, when skipping, see:
                   # https://pre-commit.com/#temporarily-disabling-hooks
-                  name = assert !lib.hasInfix "," word; id word;
-                  value = hook word;
+                  name = assert !lib.hasInfix "," generator.word; id generator;
+                  value = hook generator;
                 })
-                words);
-              hook = word: {
+                generators);
+              hook = {
+                word,
+                files,
+                excludes,
+              }: {
+                inherit files excludes;
                 enable = true;
                 entry = builtins.toString (pkgs.writeShellScript
                   "grep-${word}"
                   "! ${lib.getExe pkgs.ripgrep} --context=3 --fixed-strings '${word}' $@");
-                name = "Avoid '${word}' in Rust code";
-                files = "\\.rs$";
+                name = "Avoid '${word}' in '${files}'";
+                stages = ["pre-commit" "pre-push"];
                 pass_filenames = true;
               };
             };
