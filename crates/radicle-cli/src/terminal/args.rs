@@ -5,9 +5,12 @@ use std::time;
 
 use anyhow::anyhow;
 
+use clap::builder::TypedValueParser;
+
 use radicle::cob::{self, issue, patch};
 use radicle::crypto;
 use radicle::git::{fmt::RefString, Oid};
+use radicle::node::policy::Scope;
 use radicle::node::{Address, Alias};
 use radicle::prelude::{Did, NodeId, RepoId};
 
@@ -202,4 +205,29 @@ pub fn patch(val: &OsString) -> anyhow::Result<patch::PatchId> {
 pub fn cob(val: &OsString) -> anyhow::Result<cob::ObjectId> {
     let val = val.to_string_lossy();
     cob::ObjectId::from_str(&val).map_err(|_| anyhow!("invalid Object ID '{}'", val))
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct ScopeParser;
+
+impl TypedValueParser for ScopeParser {
+    type Value = Scope;
+
+    fn parse_ref(
+        &self,
+        cmd: &clap::Command,
+        arg: Option<&clap::Arg>,
+        value: &std::ffi::OsStr,
+    ) -> Result<Self::Value, clap::Error> {
+        <Scope as std::str::FromStr>::from_str.parse_ref(cmd, arg, value)
+    }
+
+    fn possible_values(
+        &self,
+    ) -> Option<Box<dyn Iterator<Item = clap::builder::PossibleValue> + '_>> {
+        use clap::builder::PossibleValue;
+        Some(Box::new(
+            [PossibleValue::new("all"), PossibleValue::new("followed")].into_iter(),
+        ))
+    }
 }

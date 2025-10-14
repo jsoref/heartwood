@@ -9,6 +9,8 @@ use radicle::identity::IdError;
 use radicle::node::policy::Scope;
 use radicle::prelude::*;
 
+use crate::terminal;
+
 pub(crate) const ABOUT: &str = "Clone a Radicle repository";
 
 const LONG_ABOUT: &str = r#"
@@ -44,31 +46,6 @@ impl From<SyncArgs> for SyncSettings {
     }
 }
 
-#[derive(Clone, Debug)]
-struct ScopeParser;
-
-impl clap::builder::TypedValueParser for ScopeParser {
-    type Value = Scope;
-
-    fn parse_ref(
-        &self,
-        cmd: &clap::Command,
-        arg: Option<&clap::Arg>,
-        value: &std::ffi::OsStr,
-    ) -> Result<Self::Value, clap::Error> {
-        <Scope as std::str::FromStr>::from_str.parse_ref(cmd, arg, value)
-    }
-
-    fn possible_values(
-        &self,
-    ) -> Option<Box<dyn Iterator<Item = clap::builder::PossibleValue> + '_>> {
-        use clap::builder::PossibleValue;
-        Some(Box::new(
-            [PossibleValue::new("all"), PossibleValue::new("followed")].into_iter(),
-        ))
-    }
-}
-
 #[derive(Debug, Parser)]
 #[clap(about = ABOUT, long_about = LONG_ABOUT, disable_version_flag = true)]
 pub struct Args {
@@ -83,7 +60,11 @@ pub struct Args {
     pub(super) directory: Option<PathBuf>,
 
     /// Follow scope
-    #[arg(long, default_value_t = Scope::All, value_name = "SCOPE", value_parser = ScopeParser)]
+    #[arg(
+        long,
+        default_value_t = Scope::All,
+        value_parser = terminal::args::ScopeParser
+    )]
     pub(super) scope: Scope,
 
     #[clap(flatten)]
