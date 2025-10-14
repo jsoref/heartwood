@@ -68,6 +68,7 @@ enum Commands {
     Ls(ls::Args),
     Path(path::Args),
     Publish(publish::Args),
+    Seed(seed::Args),
     Stats(stats::Args),
     Unfollow(unfollow::Args),
     Unseed(unseed::Args),
@@ -306,7 +307,9 @@ pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyho
             term::run_command_args::<sync::Options, _>(sync::HELP, sync::run, args.to_vec());
         }
         "seed" => {
-            term::run_command_args::<seed::Options, _>(seed::HELP, seed::run, args.to_vec());
+            if let Some(Commands::Seed(args)) = CliArgs::parse().command {
+                term::run_command_fn(seed::run, args);
+            }
         }
         "unblock" => {
             term::run_command_args::<unblock::Options, _>(
