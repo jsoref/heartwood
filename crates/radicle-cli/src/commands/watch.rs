@@ -1,133 +1,28 @@
-use std::ffi::OsString;
+mod args;
+
 use std::{thread, time};
 
 use anyhow::{anyhow, Context as _};
 
 use radicle::git;
 use radicle::git::raw::ErrorExt as _;
-use radicle::prelude::{NodeId, RepoId};
+use radicle::prelude::NodeId;
 use radicle::storage::{ReadRepository, ReadStorage};
 
 use crate::terminal as term;
-use crate::terminal::args::{Args, Error, Help};
 
-pub const HELP: Help = Help {
-    name: "wait",
-    description: "Wait for some state to be updated",
-    version: env!("RADICLE_VERSION"),
-    usage: r#"
-Usage
+pub use args::Args;
+pub(crate) use args::ABOUT;
 
-    rad watch -r <ref> [-t <oid>] [--repo <rid>] [<option>...]
-
-    Watches a Git reference, and optionally exits when it reaches a target value.
-    If no target value is passed, exits when the target changes.
-
-Options
-
-        --repo      <rid>       The repository to watch (default: `rad .`)
-        --node      <nid>       The namespace under which this reference exists
-                                (default: NID of the profile)
-    -r, --ref       <ref>       The fully-qualified Git reference (branch, tag, etc.) to watch,
-                                eg. 'refs/heads/master'
-    -t, --target    <oid>       The target OID (commit hash) that when reached,
-                                will cause the command to exit
-    -i, --interval  <millis>    How often, in milliseconds, to check the reference target
-                                (default: 1000)
-        --timeout   <millis>    Timeout, in milliseconds (default: none)
-    -h, --help                  Print help
-"#,
-};
-
-pub struct Options {
-    rid: Option<RepoId>,
-    refstr: git::fmt::RefString,
-    target: Option<git::Oid>,
-    nid: Option<NodeId>,
-    interval: time::Duration,
-    timeout: time::Duration,
-}
-
-impl Args for Options {
-    fn from_args(args: Vec<OsString>) -> anyhow::Result<(Self, Vec<OsString>)> {
-        use lexopt::prelude::*;
-
-        let mut parser = lexopt::Parser::from_args(args);
-        let mut rid = None;
-        let mut nid: Option<NodeId> = None;
-        let mut target: Option<git::Oid> = None;
-        let mut refstr: Option<git::fmt::RefString> = None;
-        let mut interval: Option<time::Duration> = None;
-        let mut timeout: time::Duration = time::Duration::MAX;
-
-        while let Some(arg) = parser.next()? {
-            match arg {
-                Long("repo") => {
-                    let value = parser.value()?;
-                    let value = term::args::rid(&value)?;
-
-                    rid = Some(value);
-                }
-                Long("node") => {
-                    let value = parser.value()?;
-                    let value = term::args::nid(&value)?;
-
-                    nid = Some(value);
-                }
-                Long("ref") | Short('r') => {
-                    let value = parser.value()?;
-                    let value = term::args::refstring("ref", value)?;
-
-                    refstr = Some(value);
-                }
-                Long("target") | Short('t') => {
-                    let value = parser.value()?;
-                    let value = term::args::oid(&value)?;
-
-                    target = Some(value);
-                }
-                Long("interval") | Short('i') => {
-                    let value = parser.value()?;
-                    let value = term::args::milliseconds(&value)?;
-
-                    interval = Some(value);
-                }
-                Long("timeout") => {
-                    let value = parser.value()?;
-                    let value = term::args::milliseconds(&value)?;
-
-                    timeout = value;
-                }
-                Long("help") | Short('h') => {
-                    return Err(Error::Help.into());
-                }
-                _ => anyhow::bail!(arg.unexpected()),
-            }
-        }
-
-        Ok((
-            Options {
-                rid,
-                refstr: refstr.ok_or_else(|| anyhow!("a reference must be provided"))?,
-                nid,
-                target,
-                interval: interval.unwrap_or(time::Duration::from_secs(1)),
-                timeout,
-            },
-            vec![],
-        ))
-    }
-}
-
-pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
+pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
     let profile = ctx.profile()?;
     let storage = &profile.storage;
-    let qualified = options
+    let qualified = args
         .refstr
         .qualified()
         .ok_or_else(|| anyhow!("reference must be fully-qualified, eg. 'refs/heads/master'"))?;
-    let nid = options.nid.unwrap_or(profile.public_key);
-    let rid = match options.rid {
+    let nid = args.node.unwrap_or(profile.public_key);
+    let rid = match args.repo {
         Some(rid) => rid,
         None => {
             let (_, rid) =
@@ -137,26 +32,28 @@ pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
     };
     let repo = storage.repository(rid)?;
     let now = time::SystemTime::now();
+    let timeout = args.timeout();
+    let interval = args.interval();
 
-    if let Some(target) = options.target {
+    if let Some(target) = args.target {
         while reference(&repo, &nid, &qualified)? != Some(target) {
-            thread::sleep(options.interval);
-            if now.elapsed()? >= options.timeout {
-                anyhow::bail!("timed out after {}ms", options.timeout.as_millis());
+            thread::sleep(interval);
+            if now.elapsed()? >= timeout {
+                anyhow::bail!("timed out after {}ms", timeout.as_millis());
             }
         }
     } else {
         let initial = reference(&repo, &nid, &qualified)?;
 
         loop {
-            thread::sleep(options.interval);
+            thread::sleep(interval);
             let oid = reference(&repo, &nid, &qualified)?;
             if oid != initial {
                 term::info!("{}", oid.unwrap_or(git::raw::Oid::zero().into()));
                 break;
             }
-            if now.elapsed()? >= options.timeout {
-                anyhow::bail!("timed out after {}ms", options.timeout.as_millis());
+            if now.elapsed()? >= timeout {
+                anyhow::bail!("timed out after {}ms", timeout.as_millis());
             }
         }
     }

@@ -58,6 +58,7 @@ enum Commands {
     Stats(stats::Args),
     Unfollow(unfollow::Args),
     Unseed(unseed::Args),
+    Watch(watch::Args),
 }
 
 #[derive(Debug)]
@@ -314,7 +315,9 @@ pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyho
             }
         }
         "watch" => {
-            term::run_command_args::<watch::Options, _>(watch::HELP, watch::run, args.to_vec())
+            if let Some(Commands::Watch(args)) = CliArgs::parse().command {
+                term::run_command_fn(watch::run, args);
+            }
         }
         other => {
             let exe = format!("{NAME}-{exe}");

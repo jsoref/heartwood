@@ -104,6 +104,10 @@ const COMMANDS: &[CommandItem] = &[
         about: crate::commands::stats::ABOUT,
     },
     CommandItem::Lexopt(crate::commands::sync::HELP),
+    CommandItem::Clap {
+        name: "watch",
+        about: crate::commands::watch::ABOUT,
+    },
 ];
 
 #[derive(Default)]

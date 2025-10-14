@@ -34,6 +34,7 @@ Common `rad` commands used in various situations:
 	remote       Manage a repository's remotes
 	stats        Displays aggregated repository and node metrics
 	sync         Sync repositories to the network
+	watch        Wait for some state to be updated
 
 See `rad <command> --help` to learn about a specific command.
 
