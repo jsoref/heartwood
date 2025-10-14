@@ -4,7 +4,7 @@ use radicle::node::policy::Policy;
 
 use crate::terminal as term;
 
-use args::Target;
+use term::args::BlockTarget;
 
 pub use args::Args;
 pub(crate) use args::ABOUT;
@@ -14,8 +14,8 @@ pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
     let mut policies = profile.policies_mut()?;
 
     let updated = match args.target {
-        Target::Node(nid) => policies.set_follow_policy(&nid, Policy::Block)?,
-        Target::Repo(rid) => policies.set_seed_policy(&rid, Policy::Block)?,
+        BlockTarget::Node(nid) => policies.set_follow_policy(&nid, Policy::Block)?,
+        BlockTarget::Repo(rid) => policies.set_seed_policy(&rid, Policy::Block)?,
     };
     if updated {
         term::success!("Policy for {} set to 'block'", args.target);

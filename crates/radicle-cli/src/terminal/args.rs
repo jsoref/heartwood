@@ -4,8 +4,8 @@ use std::str::FromStr;
 use std::time;
 
 use anyhow::anyhow;
-
 use clap::builder::TypedValueParser;
+use thiserror::Error;
 
 use radicle::cob::{self, issue, patch};
 use radicle::crypto;
@@ -207,6 +207,43 @@ pub fn cob(val: &OsString) -> anyhow::Result<cob::ObjectId> {
     cob::ObjectId::from_str(&val).map_err(|_| anyhow!("invalid Object ID '{}'", val))
 }
 
+/// Targets used in the `block` and `unblock` commands
+#[derive(Clone, Debug)]
+pub(crate) enum BlockTarget {
+    Node(NodeId),
+    Repo(RepoId),
+}
+
+#[derive(Debug, Error)]
+#[error("invalid repository or node specified (RID parsing failed with: '{repo}', NID parsing failed with: '{node}'))")]
+pub(crate) struct BlockTargetParseError {
+    repo: radicle::identity::IdError,
+    node: radicle::crypto::PublicKeyError,
+}
+
+impl std::str::FromStr for BlockTarget {
+    type Err = BlockTargetParseError;
+
+    fn from_str(val: &str) -> Result<Self, Self::Err> {
+        val.parse::<RepoId>()
+            .map(BlockTarget::Repo)
+            .or_else(|repo| {
+                val.parse::<NodeId>()
+                    .map(BlockTarget::Node)
+                    .map_err(|node| BlockTargetParseError { repo, node })
+            })
+    }
+}
+
+impl std::fmt::Display for BlockTarget {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Node(nid) => nid.fmt(f),
+            Self::Repo(rid) => rid.fmt(f),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub(crate) struct ScopeParser;
 
@@ -229,5 +266,31 @@ impl TypedValueParser for ScopeParser {
         Some(Box::new(
             [PossibleValue::new("all"), PossibleValue::new("followed")].into_iter(),
         ))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::str::FromStr;
+
+    use super::BlockTarget;
+    use super::BlockTargetParseError;
+
+    #[test]
+    fn should_parse_nid() {
+        let target = BlockTarget::from_str("z6MkiswaKJ85vafhffCGBu2gdBsYoDAyHVBWRxL3j297fwS9");
+        assert!(target.is_ok())
+    }
+
+    #[test]
+    fn should_parse_rid() {
+        let target = BlockTarget::from_str("rad:z3Tr6bC7ctEg2EHmLvknUr29mEDLH");
+        assert!(target.is_ok())
+    }
+
+    #[test]
+    fn should_not_parse() {
+        let err = BlockTarget::from_str("bee").unwrap_err();
+        assert!(matches!(err, BlockTargetParseError { .. }));
     }
 }
