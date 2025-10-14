@@ -244,6 +244,21 @@ impl std::fmt::Display for BlockTarget {
     }
 }
 
+#[derive(Debug, thiserror::Error)]
+#[error("invalid Node ID specified (Node ID parsing failed with: '{nid}', DID parsing failed with: '{did}'))")]
+pub(crate) struct NodeIdParseError {
+    did: radicle::identity::did::DidError,
+    nid: radicle::crypto::PublicKeyError,
+}
+
+pub(crate) fn parse_nid(value: &str) -> Result<NodeId, NodeIdParseError> {
+    value.parse::<Did>().map(NodeId::from).or_else(|did| {
+        value
+            .parse::<NodeId>()
+            .map_err(|nid| NodeIdParseError { nid, did })
+    })
+}
+
 #[derive(Clone, Debug)]
 pub(crate) struct ScopeParser;
 
