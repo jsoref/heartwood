@@ -70,6 +70,7 @@ enum Commands {
     Publish(publish::Args),
     Seed(seed::Args),
     Stats(stats::Args),
+    Unblock(unblock::Args),
     Unfollow(unfollow::Args),
     Unseed(unseed::Args),
     Watch(watch::Args),
@@ -312,11 +313,9 @@ pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyho
             }
         }
         "unblock" => {
-            term::run_command_args::<unblock::Options, _>(
-                unblock::HELP,
-                unblock::run,
-                args.to_vec(),
-            );
+            if let Some(Commands::Unblock(args)) = CliArgs::parse().command {
+                term::run_command_fn(unblock::run, args);
+            }
         }
         "unfollow" => {
             if let Some(Commands::Unfollow(args)) = CliArgs::parse().command {
