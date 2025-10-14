@@ -100,7 +100,10 @@ const COMMANDS: &[CommandItem] = &[
         name: "seed",
         about: crate::commands::seed::ABOUT,
     },
-    CommandItem::Lexopt(crate::commands::follow::HELP),
+    CommandItem::Clap {
+        name: "follow",
+        about: crate::commands::follow::ABOUT,
+    },
     CommandItem::Clap {
         name: "unblock",
         about: crate::commands::unblock::ABOUT,

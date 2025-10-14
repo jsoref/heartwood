@@ -63,6 +63,7 @@ enum Commands {
     #[command(external_subcommand, hide = true)]
     Diff(Vec<OsString>),
 
+    Follow(follow::Args),
     Fork(fork::Args),
     Id(id::Args),
     Init(init::Args),
@@ -238,7 +239,9 @@ pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyho
             }
         }
         "follow" => {
-            term::run_command_args::<follow::Options, _>(follow::HELP, follow::run, args.to_vec());
+            if let Some(Commands::Follow(args)) = CliArgs::parse().command {
+                term::run_command_fn(follow::run, args);
+            }
         }
         "fork" => {
             if let Some(Commands::Fork(args)) = CliArgs::parse().command {
