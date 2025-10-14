@@ -63,6 +63,7 @@ enum Commands {
     Diff(Vec<OsString>),
 
     Fork(fork::Args),
+    Id(id::Args),
     Init(init::Args),
     Issue(issue::Args),
     Ls(ls::Args),
@@ -249,7 +250,9 @@ pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyho
             term::run_command_args::<help::Options, _>(help::HELP, help::run, args.to_vec());
         }
         "id" => {
-            term::run_command_args::<id::Options, _>(id::HELP, id::run, args.to_vec());
+            if let Some(Commands::Id(args)) = CliArgs::parse().command {
+                term::run_command_fn(id::run, args);
+            }
         }
         "inbox" => {
             term::run_command_args::<inbox::Options, _>(inbox::HELP, inbox::run, args.to_vec())
