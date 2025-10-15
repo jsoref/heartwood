@@ -18,7 +18,7 @@ sha1 = []
 
 [dependencies]
 git2 = { workspace = true, optional = true, default-features = false }
-gix-hash = { version = "0.15.1", optional = true, default-features = false }
+gix-hash = { workspace = true, optional = true }
 qcheck = { workspace = true, optional = true, default-features = false }
 radicle-git-ref-format = { workspace = true, optional = true, default-features = false }
 schemars = { workspace = true, optional = true, default-features = false }
@@ -26,6 +26,6 @@ serde = { workspace = true, optional = true, default-features = false }
 
 [dev-dependencies]
 git2 = { workspace = true }
-gix-hash = { version = "0.15.1" }
+gix-hash = { workspace = true }
 qcheck = { workspace = true }
 qcheck-macros = { workspace = true }
