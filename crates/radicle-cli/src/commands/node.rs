@@ -1,310 +1,52 @@
-use std::ffi::OsString;
-use std::path::PathBuf;
-use std::str::FromStr;
-use std::{process, time};
-
-use anyhow::anyhow;
-
-use radicle::node::address::Store as AddressStore;
-use radicle::node::config::ConnectAddress;
-use radicle::node::routing::Store;
-use radicle::node::Handle as _;
-use radicle::node::{Address, Node, NodeId, PeerAddr};
-use radicle::prelude::RepoId;
-
-use crate::terminal as term;
-use crate::terminal::args::{Args, Error, Help};
-use crate::terminal::Element as _;
-
+mod args;
 mod commands;
 pub mod control;
 mod events;
 mod logs;
 pub mod routing;
 
-pub const HELP: Help = Help {
-    name: "node",
-    description: "Control and query the Radicle Node",
-    version: env!("RADICLE_VERSION"),
-    usage: r#"
-Usage
+use std::{process, time};
 
-    rad node status [<option>...]
-    rad node start [--foreground] [--verbose] [<option>...] [-- <node-option>...]
-    rad node stop [<option>...]
-    rad node logs [-n <lines>]
-    rad node debug [<option>...]
-    rad node connect <nid>[@<addr>] [<option>...]
-    rad node routing [--rid <rid>] [--nid <nid>] [--json] [<option>...]
-    rad node inventory [--nid <nid>] [<option>...]
-    rad node events [--timeout <secs>] [-n <count>] [<option>...]
-    rad node config [--addresses]
-    rad node db <command> [<option>..]
+use radicle::node::address::Store as AddressStore;
+use radicle::node::config::ConnectAddress;
+use radicle::node::routing::Store;
+use radicle::node::Handle as _;
+use radicle::node::Node;
 
-    For `<node-option>` see `radicle-node --help`.
+use crate::commands::node::args::Only;
+use crate::terminal as term;
+use crate::terminal::Element as _;
+use crate::warning;
 
-Start options
+pub use args::Args;
+pub(crate) use args::ABOUT;
+use args::{Addr, Command};
 
-    --foreground         Start the node in the foreground
-    --path <path>        Start node binary at path (default: radicle-node)
-    --verbose, -v        Verbose output
-
-Routing options
-
-    --rid <rid>          Show the routing table entries for the given RID
-    --nid <nid>          Show the routing table entries for the given NID
-    --json               Output the routing table as json
-
-Inventory options
-
-    --nid <nid>          List the inventory of the given NID (default: self)
-
-Events options
-
-    --timeout <secs>     How long to wait to receive an event before giving up
-    --count, -n <count>  Exit after <count> events
-
-Status options
-
-    --only nid           If node is running, only print the Node ID and exit,
-                         otherwise exit with a non-zero exit status.
-
-General options
-
-    --help               Print help
-"#,
-};
-
-pub struct Options {
-    op: Operation,
-}
-
-/// Address used for the [`Operation::Connect`]
-pub enum Addr {
-    /// Fully-specified address of the form `<NID>@<Address>`
-    Peer(PeerAddr<NodeId, Address>),
-    /// Just the `NID`, to be used for address lookups.
-    Node(NodeId),
-}
-
-impl FromStr for Addr {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s.contains("@") {
-            PeerAddr::from_str(s)
-                .map(Self::Peer)
-                .map_err(|e| anyhow!("expected <nid> or <nid>@<addr>: {e}"))
-        } else {
-            NodeId::from_str(s)
-                .map(Self::Node)
-                .map_err(|e| anyhow!("expected <nid> or <nid>@<addr>: {e}"))
-        }
-    }
-}
-
-pub enum Operation {
-    Connect {
-        addr: Addr,
-        timeout: time::Duration,
-    },
-    Config {
-        addresses: bool,
-    },
-    Db {
-        args: Vec<OsString>,
-    },
-    Events {
-        timeout: time::Duration,
-        count: usize,
-    },
-    Routing {
-        json: bool,
-        rid: Option<RepoId>,
-        nid: Option<NodeId>,
-    },
-    Start {
-        foreground: bool,
-        verbose: bool,
-        path: PathBuf,
-        options: Vec<OsString>,
-    },
-    Logs {
-        lines: usize,
-    },
-    Status {
-        only_nid: bool,
-    },
-    Inventory {
-        nid: Option<NodeId>,
-    },
-    Debug,
-    Sessions,
-    Stop,
-}
-
-#[derive(Default, PartialEq, Eq)]
-pub enum OperationName {
-    Connect,
-    Config,
-    Db,
-    Events,
-    Routing,
-    Logs,
-    Start,
-    #[default]
-    Status,
-    Inventory,
-    Debug,
-    Sessions,
-    Stop,
-}
-
-impl Args for Options {
-    fn from_args(args: Vec<OsString>) -> anyhow::Result<(Self, Vec<OsString>)> {
-        use lexopt::prelude::*;
-
-        let mut foreground = false;
-        let mut options = vec![];
-        let mut parser = lexopt::Parser::from_args(args);
-        let mut op: Option<OperationName> = None;
-        let mut nid: Option<NodeId> = None;
-        let mut rid: Option<RepoId> = None;
-        let mut json: bool = false;
-        let mut addr: Option<Addr> = None;
-        let mut lines: usize = 60;
-        let mut count: usize = usize::MAX;
-        let mut timeout = time::Duration::MAX;
-        let mut addresses = false;
-        let mut path = None;
-        let mut verbose = false;
-        let mut only_nid = false;
-
-        while let Some(arg) = parser.next()? {
-            match arg {
-                Long("help") | Short('h') => {
-                    return Err(Error::Help.into());
-                }
-                Value(val) if op.is_none() => match val.to_string_lossy().as_ref() {
-                    "connect" => op = Some(OperationName::Connect),
-                    "db" => op = Some(OperationName::Db),
-                    "events" => op = Some(OperationName::Events),
-                    "logs" => op = Some(OperationName::Logs),
-                    "config" => op = Some(OperationName::Config),
-                    "routing" => op = Some(OperationName::Routing),
-                    "inventory" => op = Some(OperationName::Inventory),
-                    "start" => op = Some(OperationName::Start),
-                    "status" => op = Some(OperationName::Status),
-                    "stop" => op = Some(OperationName::Stop),
-                    "sessions" => op = Some(OperationName::Sessions),
-                    "debug" => op = Some(OperationName::Debug),
-
-                    unknown => anyhow::bail!("unknown operation '{}'", unknown),
-                },
-                Value(val) if matches!(op, Some(OperationName::Connect)) => {
-                    addr = Some(val.parse()?);
-                }
-                Long("rid") if matches!(op, Some(OperationName::Routing)) => {
-                    let val = parser.value()?;
-                    rid = term::args::rid(&val).ok();
-                }
-                Long("nid")
-                    if matches!(op, Some(OperationName::Routing))
-                        || matches!(op, Some(OperationName::Inventory)) =>
-                {
-                    let val = parser.value()?;
-                    nid = term::args::nid(&val).ok();
-                }
-                Long("only") if matches!(op, Some(OperationName::Status)) => {
-                    if &parser.value()? == "nid" {
-                        only_nid = true;
-                    } else {
-                        anyhow::bail!("unknown argument to --only");
-                    }
-                }
-                Long("json") if matches!(op, Some(OperationName::Routing)) => json = true,
-                Long("timeout")
-                    if op == Some(OperationName::Events) || op == Some(OperationName::Connect) =>
-                {
-                    let val = parser.value()?;
-                    timeout = term::args::seconds(&val)?;
-                }
-                Long("count") | Short('n') if matches!(op, Some(OperationName::Events)) => {
-                    let val = parser.value()?;
-                    count = term::args::number(&val)?;
-                }
-                Long("foreground") if matches!(op, Some(OperationName::Start)) => {
-                    foreground = true;
-                }
-                Long("addresses") if matches!(op, Some(OperationName::Config)) => {
-                    addresses = true;
-                }
-                Long("verbose") | Short('v') if matches!(op, Some(OperationName::Start)) => {
-                    verbose = true;
-                }
-                Long("path") if matches!(op, Some(OperationName::Start)) => {
-                    let val = parser.value()?;
-                    path = Some(PathBuf::from(val));
-                }
-                Short('n') if matches!(op, Some(OperationName::Logs)) => {
-                    lines = parser.value()?.parse()?;
-                }
-                Value(val) if matches!(op, Some(OperationName::Start)) => {
-                    options.push(val);
-                }
-                Value(val) if matches!(op, Some(OperationName::Db)) => {
-                    options.push(val);
-                }
-                _ => return Err(anyhow!(arg.unexpected())),
-            }
-        }
-
-        let op = match op.unwrap_or_default() {
-            OperationName::Connect => Operation::Connect {
-                addr: addr.ok_or_else(|| {
-                    anyhow!("an `<nid>` or an address of the form `<nid>@<host>:<port>` must be provided")
-                })?,
-                timeout,
-            },
-            OperationName::Config => Operation::Config { addresses },
-            OperationName::Db => Operation::Db { args: options },
-            OperationName::Events => Operation::Events { timeout, count },
-            OperationName::Routing => Operation::Routing { rid, nid, json },
-            OperationName::Logs => Operation::Logs { lines },
-            OperationName::Start => Operation::Start {
-                foreground,
-                verbose,
-                options,
-                path: path.unwrap_or(PathBuf::from("radicle-node")),
-            },
-            OperationName::Inventory => Operation::Inventory { nid },
-            OperationName::Status => Operation::Status { only_nid },
-            OperationName::Debug => Operation::Debug,
-            OperationName::Sessions => Operation::Sessions,
-            OperationName::Stop => Operation::Stop,
-        };
-        Ok((Options { op }, vec![]))
-    }
-}
-
-pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
+pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
     let profile = ctx.profile()?;
     let mut node = Node::new(profile.socket());
 
-    match options.op {
-        Operation::Connect { addr, timeout } => match addr {
-            Addr::Peer(addr) => control::connect(&mut node, addr.id, addr.addr, timeout)?,
-            Addr::Node(nid) => {
-                let db = profile.database()?;
-                let addresses = db
-                    .addresses_of(&nid)?
-                    .into_iter()
-                    .map(|ka| ka.addr)
-                    .collect();
-                control::connect_many(&mut node, nid, addresses, timeout)?;
+    let command = args.command.unwrap_or_default();
+
+    match command {
+        Command::Connect { addr, timeout } => {
+            let timeout = timeout
+                .map(time::Duration::from_secs)
+                .unwrap_or(time::Duration::MAX);
+            match addr {
+                Addr::Peer(addr) => control::connect(&mut node, addr.id, addr.addr, timeout)?,
+                Addr::Node(nid) => {
+                    let db = profile.database()?;
+                    let addresses = db
+                        .addresses_of(&nid)?
+                        .into_iter()
+                        .map(|ka| ka.addr)
+                        .collect();
+                    control::connect_many(&mut node, nid, addresses, timeout)?;
+                }
             }
-        },
-        Operation::Config { addresses } => {
+        }
+        Command::Config { addresses } => {
             if addresses {
                 let cfg = node.config()?;
                 for addr in cfg.external_addresses {
@@ -314,27 +56,33 @@ pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
                 control::config(&node)?;
             }
         }
-        Operation::Db { args } => {
-            commands::db(&profile, args)?;
+        Command::Db(op) => {
+            commands::db(&profile, op)?;
         }
-        Operation::Debug => {
+        Command::Debug => {
             control::debug(&mut node)?;
         }
-        Operation::Sessions => {
+        Command::Sessions => {
+            warning::deprecated("rad node sessions", "rad node status");
             let sessions = control::sessions(&node)?;
             if let Some(table) = sessions {
                 table.print();
             }
         }
-        Operation::Events { timeout, count } => {
+        Command::Events { timeout, count } => {
+            let count = count.unwrap_or(usize::MAX);
+            let timeout = timeout
+                .map(time::Duration::from_secs)
+                .unwrap_or(time::Duration::MAX);
+
             events::run(node, count, timeout)?;
         }
-        Operation::Routing { rid, nid, json } => {
+        Command::Routing { rid, nid, json } => {
             let store = profile.database()?;
             routing::run(&store, rid, nid, json)?;
         }
-        Operation::Logs { lines } => control::logs(lines, Some(time::Duration::MAX), &profile)?,
-        Operation::Start {
+        Command::Logs { lines } => control::logs(lines, Some(time::Duration::MAX), &profile)?,
+        Command::Start {
             foreground,
             options,
             path,
@@ -342,23 +90,25 @@ pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
         } => {
             control::start(node, !foreground, verbose, options, &path, &profile)?;
         }
-        Operation::Inventory { nid } => {
+        Command::Inventory { nid } => {
             let nid = nid.as_ref().unwrap_or(profile.id());
             for rid in profile.routing()?.get_inventory(nid)? {
                 println!("{}", term::format::tertiary(rid));
             }
         }
-        Operation::Status { only_nid: false } => {
-            control::status(&node, &profile)?;
-        }
-        Operation::Status { only_nid: true } => {
+        Command::Status {
+            only: Some(Only::Nid),
+        } => {
             if node.is_running() {
                 term::print(term::format::node_id_human(&node.nid()?));
             } else {
                 process::exit(2);
             }
         }
-        Operation::Stop => {
+        Command::Status { only: None } => {
+            control::status(&node, &profile)?;
+        }
+        Command::Stop => {
             control::stop(node, &profile);
         }
     }

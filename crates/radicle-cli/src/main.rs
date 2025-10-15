@@ -72,6 +72,7 @@ enum Commands {
     Init(init::Args),
     Issue(issue::Args),
     Ls(ls::Args),
+    Node(node::Args),
     Path(path::Args),
     Publish(publish::Args),
     Remote(remote::Args),
@@ -292,7 +293,9 @@ pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyho
             }
         }
         "node" => {
-            term::run_command_args::<node::Options, _>(node::HELP, node::run, args.to_vec());
+            if let Some(Commands::Node(args)) = CliArgs::parse().command {
+                term::run_command_fn(node::run, args);
+            }
         }
         "patch" => {
             term::run_command_args::<patch::Options, _>(patch::HELP, patch::run, args.to_vec());
