@@ -46,7 +46,7 @@ use crate::storage::RefUpdate;
 pub use address::KnownAddress;
 pub use command::{Command, CommandResult, ConnectOptions, Success, DEFAULT_TIMEOUT};
 pub use config::Config;
-pub use cyphernet::addr::{HostName, PeerAddr};
+pub use cyphernet::addr::{HostName, PeerAddr, PeerAddrParseError};
 pub use db::Database;
 pub use events::{Event, Events};
 pub use features::Features;
