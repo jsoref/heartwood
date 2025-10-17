@@ -52,6 +52,7 @@ enum Commands {
     Clone(clone::Args),
     #[command(hide = true)]
     Cob(cob::Args),
+    Config(config::Args),
     Debug(debug::Args),
 
     /// This command is deprecated and delegates to `git diff`.
@@ -230,7 +231,9 @@ pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyho
             }
         }
         "config" => {
-            term::run_command_args::<config::Options, _>(config::HELP, config::run, args.to_vec());
+            if let Some(Commands::Config(args)) = CliArgs::parse().command {
+                term::run_command_fn(config::run, args);
+            }
         }
         "diff" => {
             if let Some(Commands::Diff(mut args)) = CliArgs::parse().command {

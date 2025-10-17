@@ -53,7 +53,10 @@ const COMMANDS: &[CommandItem] = &[
         name: "clone",
         about: crate::commands::clone::ABOUT,
     },
-    CommandItem::Lexopt(crate::commands::config::HELP),
+    CommandItem::Clap {
+        name: "config",
+        about: crate::commands::config::ABOUT,
+    },
     CommandItem::Clap {
         name: "debug",
         about: crate::commands::debug::ABOUT,
