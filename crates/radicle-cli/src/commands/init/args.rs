@@ -16,13 +16,13 @@ pub struct Args {
     /// Directory to be initialized
     pub(super) path: Option<PathBuf>,
     /// Name of the repository
-    #[arg(long, value_name = "STRING")]
+    #[arg(long)]
     pub(super) name: Option<ProjectName>,
     /// Description of the repository
-    #[arg(long, value_name = "STRING")]
+    #[arg(long)]
     pub(super) description: Option<String>,
     /// The default branch of the repository
-    #[arg(long = "default-branch", value_name = "STRING")]
+    #[arg(long = "default-branch")]
     pub(super) branch: Option<String>,
     /// Repository follow scope
     #[arg(
