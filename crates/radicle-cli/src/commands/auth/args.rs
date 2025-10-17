@@ -12,7 +12,7 @@ methods disables the passphrase prompt.
 #[command(about = ABOUT, long_about = LONG_ABOUT, disable_version_flag = true)]
 pub struct Args {
     /// When initializing an identity, sets the node alias
-    #[arg(long, value_name = "STRING")]
+    #[arg(long)]
     pub alias: Option<Alias>,
 
     /// Read passphrase from stdin
