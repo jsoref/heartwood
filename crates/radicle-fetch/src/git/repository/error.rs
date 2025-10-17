@@ -43,14 +43,6 @@ pub struct Resolve {
 }
 
 #[derive(Debug, Error)]
-#[error("failed to scan for refs matching {pattern}")]
-pub struct Scan {
-    pub pattern: radicle::git::fmt::refspec::PatternString,
-    #[source]
-    pub err: git::raw::Error,
-}
-
-#[derive(Debug, Error)]
 pub enum Update {
     #[error(transparent)]
     Ancestry(#[from] Ancestry),

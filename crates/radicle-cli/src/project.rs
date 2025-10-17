@@ -22,7 +22,7 @@ impl SetupRemote<'_> {
         &self,
         name: impl AsRef<RefStr>,
         node: NodeId,
-    ) -> anyhow::Result<(git::Remote, Option<BranchName>)> {
+    ) -> anyhow::Result<(git::Remote<'_>, Option<BranchName>)> {
         let remote_url = radicle::git::Url::from(self.rid).with_namespace(node);
         let remote_name = name.as_ref();
 

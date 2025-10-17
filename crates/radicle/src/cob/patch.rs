@@ -561,7 +561,7 @@ impl Patch {
         author: &'a PublicKey,
     ) -> impl DoubleEndedIterator<Item = (RevisionId, &'a Revision)> {
         self.revisions()
-            .filter(move |(_, r)| (r.author.public_key() == author))
+            .filter(move |(_, r)| r.author.public_key() == author)
     }
 
     /// List of patch reviews of the given revision.
@@ -2422,7 +2422,7 @@ where
         revision: RevisionId,
         commit: git::Oid,
         signer: &Device<G>,
-    ) -> Result<Merged<R>, Error>
+    ) -> Result<Merged<'_, R>, Error>
     where
         G: crypto::signature::Signer<crypto::Signature>,
     {

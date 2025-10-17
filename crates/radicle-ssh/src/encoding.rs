@@ -167,11 +167,11 @@ impl Encoding for Buffer {
 /// A cursor-like trait to read SSH-encoded things.
 pub trait Reader {
     /// Create an SSH reader for `self`.
-    fn reader(&self, starting_at: usize) -> Cursor;
+    fn reader(&self, starting_at: usize) -> Cursor<'_>;
 }
 
 impl Reader for Buffer {
-    fn reader(&self, starting_at: usize) -> Cursor {
+    fn reader(&self, starting_at: usize) -> Cursor<'_> {
         Cursor {
             s: self,
             position: starting_at,
@@ -180,7 +180,7 @@ impl Reader for Buffer {
 }
 
 impl Reader for [u8] {
-    fn reader(&self, starting_at: usize) -> Cursor {
+    fn reader(&self, starting_at: usize) -> Cursor<'_> {
         Cursor {
             s: self,
             position: starting_at,

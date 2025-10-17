@@ -271,7 +271,7 @@ impl Identity {
 
     pub fn load_mut<R: WriteRepository + cob::Store<Namespace = NodeId>>(
         repo: &R,
-    ) -> Result<IdentityMut<R>, RepositoryError> {
+    ) -> Result<IdentityMut<'_, R>, RepositoryError> {
         let oid = repo.identity_root()?;
         let oid = ObjectId::from(oid);
 

@@ -205,7 +205,7 @@ pub fn tag(
 }
 
 /// Populate a repository with commits, branches and blobs.
-pub fn populate(repo: &git::raw::Repository, scale: usize) -> Vec<git::fmt::Qualified> {
+pub fn populate(repo: &git::raw::Repository, scale: usize) -> Vec<git::fmt::Qualified<'_>> {
     assert!(
         scale <= 8,
         "Scale parameter must be less than or equal to 8"

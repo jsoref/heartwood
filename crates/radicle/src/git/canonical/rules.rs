@@ -514,7 +514,7 @@ pub struct MatchedRule<'a> {
 
 impl MatchedRule<'_> {
     /// Return the reference name that was used for checking if it was a match.
-    pub fn refname(&self) -> &Qualified {
+    pub fn refname(&self) -> &Qualified<'_> {
         &self.refname
     }
 

@@ -360,7 +360,7 @@ impl PublicKey {
     }
 
     #[cfg(feature = "git-ref-format-core")]
-    pub fn to_component(&self) -> git_ref_format_core::Component {
+    pub fn to_component(&self) -> git_ref_format_core::Component<'_> {
         git_ref_format_core::Component::from(self)
     }
 

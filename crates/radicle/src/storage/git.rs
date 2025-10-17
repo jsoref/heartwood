@@ -667,7 +667,7 @@ impl ReadRepository for Repository {
         &self,
         commit_id: Oid,
         path: P,
-    ) -> Result<git::raw::Blob, git::raw::Error> {
+    ) -> Result<git::raw::Blob<'_>, git::raw::Error> {
         let commit = self.backend.find_commit(git::raw::Oid::from(commit_id))?;
         let tree = commit.tree()?;
         let entry = tree.get_path(path.as_ref())?;
@@ -683,7 +683,7 @@ impl ReadRepository for Repository {
         Ok(blob)
     }
 
-    fn blob(&self, oid: Oid) -> Result<git::raw::Blob, git::raw::Error> {
+    fn blob(&self, oid: Oid) -> Result<git::raw::Blob<'_>, git::raw::Error> {
         self.backend.find_blob(oid.into())
     }
 
@@ -691,7 +691,7 @@ impl ReadRepository for Repository {
         &self,
         remote: &RemoteId,
         name: &git::fmt::Qualified,
-    ) -> Result<git::raw::Reference, git::raw::Error> {
+    ) -> Result<git::raw::Reference<'_>, git::raw::Error> {
         let name = name.with_namespace(remote.into());
         self.backend.find_reference(&name)
     }
@@ -707,11 +707,11 @@ impl ReadRepository for Repository {
         Ok(oid.into())
     }
 
-    fn commit(&self, oid: Oid) -> Result<git::raw::Commit, git::raw::Error> {
+    fn commit(&self, oid: Oid) -> Result<git::raw::Commit<'_>, git::raw::Error> {
         self.backend.find_commit(oid.into())
     }
 
-    fn revwalk(&self, head: Oid) -> Result<git::raw::Revwalk, git::raw::Error> {
+    fn revwalk(&self, head: Oid) -> Result<git::raw::Revwalk<'_>, git::raw::Error> {
         let mut revwalk = self.backend.revwalk()?;
         revwalk.push(head.into())?;
 
@@ -760,7 +760,7 @@ impl ReadRepository for Repository {
     fn references_glob(
         &self,
         pattern: &PatternStr,
-    ) -> Result<Vec<(Qualified, Oid)>, crate::git::raw::Error> {
+    ) -> Result<Vec<(Qualified<'_>, Oid)>, crate::git::raw::Error> {
         let mut refs = Vec::new();
 
         for r in self.backend.references_glob(pattern)? {
@@ -785,7 +785,7 @@ impl ReadRepository for Repository {
         Doc::load_at(head, self)
     }
 
-    fn head(&self) -> Result<(Qualified, Oid), RepositoryError> {
+    fn head(&self) -> Result<(Qualified<'_>, Oid), RepositoryError> {
         // If `HEAD` is already set locally, just return that.
         if let Ok(head) = self.backend.head() {
             if let Ok((name, oid)) = git::refs::qualified_from(&head) {
@@ -795,7 +795,7 @@ impl ReadRepository for Repository {
         self.canonical_head()
     }
 
-    fn canonical_head(&self) -> Result<(Qualified, Oid), RepositoryError> {
+    fn canonical_head(&self) -> Result<(Qualified<'_>, Oid), RepositoryError> {
         let doc = self.identity_doc()?;
         let refname = git::refs::branch(doc.project()?.default_branch());
         let crefs = match doc.canonical_refs()? {

@@ -277,11 +277,11 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
         self.repo.is_empty()
     }
 
-    fn head(&self) -> Result<(Qualified, Oid), RepositoryError> {
+    fn head(&self) -> Result<(Qualified<'_>, Oid), RepositoryError> {
         self.repo.head()
     }
 
-    fn canonical_head(&self) -> Result<(Qualified, Oid), RepositoryError> {
+    fn canonical_head(&self) -> Result<(Qualified<'_>, Oid), RepositoryError> {
         self.repo.canonical_head()
     }
 
@@ -289,11 +289,11 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
         self.repo.path()
     }
 
-    fn commit(&self, oid: Oid) -> Result<git::raw::Commit, git::raw::Error> {
+    fn commit(&self, oid: Oid) -> Result<git::raw::Commit<'_>, git::raw::Error> {
         self.repo.commit(oid)
     }
 
-    fn revwalk(&self, head: Oid) -> Result<git::raw::Revwalk, git::raw::Error> {
+    fn revwalk(&self, head: Oid) -> Result<git::raw::Revwalk<'_>, git::raw::Error> {
         self.repo.revwalk(head)
     }
 
@@ -309,11 +309,11 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
         &self,
         oid: Oid,
         path: P,
-    ) -> Result<git::raw::Blob, git::raw::Error> {
+    ) -> Result<git::raw::Blob<'_>, git::raw::Error> {
         self.repo.blob_at(oid, path)
     }
 
-    fn blob(&self, oid: Oid) -> Result<crate::git::raw::Blob, crate::git::raw::Error> {
+    fn blob(&self, oid: Oid) -> Result<crate::git::raw::Blob<'_>, crate::git::raw::Error> {
         self.repo.blob(oid)
     }
 
@@ -321,7 +321,7 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
         &self,
         remote: &RemoteId,
         reference: &git::fmt::Qualified,
-    ) -> Result<git::raw::Reference, git::raw::Error> {
+    ) -> Result<git::raw::Reference<'_>, git::raw::Error> {
         self.repo.reference(remote, reference)
     }
 
@@ -340,7 +340,7 @@ impl<R: storage::ReadRepository> ReadRepository for DraftStore<'_, R> {
     fn references_glob(
         &self,
         pattern: &git::fmt::refspec::PatternStr,
-    ) -> Result<Vec<(fmt::Qualified, Oid)>, crate::git::raw::Error> {
+    ) -> Result<Vec<(fmt::Qualified<'_>, Oid)>, crate::git::raw::Error> {
         self.repo.references_glob(pattern)
     }
 

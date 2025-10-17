@@ -455,7 +455,7 @@ impl FileReviewBuilder {
         }
     }
 
-    fn item_diff(&mut self, item: ReviewItem) -> Result<git::raw::Diff, Error> {
+    fn item_diff(&mut self, item: ReviewItem) -> Result<git::raw::Diff<'_>, Error> {
         let mut buf = Vec::new();
         let mut writer = unified_diff::Writer::new(&mut buf);
         writer.encode(&self.header)?;

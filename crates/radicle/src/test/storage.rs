@@ -204,11 +204,11 @@ impl ReadRepository for MockRepository {
         Ok(self.remotes.is_empty())
     }
 
-    fn head(&self) -> Result<(fmt::Qualified, Oid), RepositoryError> {
+    fn head(&self) -> Result<(fmt::Qualified<'_>, Oid), RepositoryError> {
         Ok((fmt::qualified!("refs/heads/master"), arbitrary::oid()))
     }
 
-    fn canonical_head(&self) -> Result<(fmt::Qualified, Oid), RepositoryError> {
+    fn canonical_head(&self) -> Result<(fmt::Qualified<'_>, Oid), RepositoryError> {
         todo!()
     }
 
@@ -216,7 +216,7 @@ impl ReadRepository for MockRepository {
         todo!()
     }
 
-    fn commit(&self, oid: Oid) -> Result<git::raw::Commit, git::raw::Error> {
+    fn commit(&self, oid: Oid) -> Result<git::raw::Commit<'_>, git::raw::Error> {
         Err(git::raw::Error::new(
             git::raw::ErrorCode::NotFound,
             git::raw::ErrorClass::None,
@@ -224,7 +224,7 @@ impl ReadRepository for MockRepository {
         ))
     }
 
-    fn revwalk(&self, _head: Oid) -> Result<git::raw::Revwalk, git::raw::Error> {
+    fn revwalk(&self, _head: Oid) -> Result<git::raw::Revwalk<'_>, git::raw::Error> {
         todo!()
     }
 
@@ -239,7 +239,7 @@ impl ReadRepository for MockRepository {
         Ok(true)
     }
 
-    fn blob(&self, _oid: Oid) -> Result<git::raw::Blob, git::raw::Error> {
+    fn blob(&self, _oid: Oid) -> Result<git::raw::Blob<'_>, git::raw::Error> {
         todo!()
     }
 
@@ -247,7 +247,7 @@ impl ReadRepository for MockRepository {
         &self,
         _oid: Oid,
         _path: P,
-    ) -> Result<git::raw::Blob, git::raw::Error> {
+    ) -> Result<git::raw::Blob<'_>, git::raw::Error> {
         todo!()
     }
 
@@ -255,7 +255,7 @@ impl ReadRepository for MockRepository {
         &self,
         _remote: &RemoteId,
         _reference: &git::fmt::Qualified,
-    ) -> Result<git::raw::Reference, git::raw::Error> {
+    ) -> Result<git::raw::Reference<'_>, git::raw::Error> {
         todo!()
     }
 
@@ -287,7 +287,7 @@ impl ReadRepository for MockRepository {
     fn references_glob(
         &self,
         _pattern: &crate::git::fmt::refspec::PatternStr,
-    ) -> Result<Vec<(fmt::Qualified, Oid)>, crate::git::raw::Error> {
+    ) -> Result<Vec<(fmt::Qualified<'_>, Oid)>, crate::git::raw::Error> {
         todo!()
     }
 

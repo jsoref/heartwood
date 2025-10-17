@@ -241,7 +241,7 @@ impl Peers {
         self.0.get_mut(token)
     }
 
-    fn entry(&mut self, token: Token) -> Entry<Token, Peer> {
+    fn entry(&mut self, token: Token) -> Entry<'_, Token, Peer> {
         self.0.entry(token)
     }
 

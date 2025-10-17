@@ -99,7 +99,7 @@ pub fn branches(target: &Oid, repo: &git::raw::Repository) -> anyhow::Result<Vec
 }
 
 #[inline]
-pub fn try_branch(reference: git::raw::Reference<'_>) -> anyhow::Result<git::raw::Branch> {
+pub fn try_branch(reference: git::raw::Reference<'_>) -> anyhow::Result<git::raw::Branch<'_>> {
     let branch = if reference.is_branch() {
         git::raw::Branch::wrap(reference)
     } else {

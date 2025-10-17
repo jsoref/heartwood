@@ -505,10 +505,10 @@ pub trait ReadRepository: Sized + ValidateRepository {
         &self,
         commit: Oid,
         path: P,
-    ) -> Result<crate::git::raw::Blob, crate::git::raw::Error>;
+    ) -> Result<crate::git::raw::Blob<'_>, crate::git::raw::Error>;
 
     /// Get a blob in this repository, given its id.
-    fn blob(&self, oid: Oid) -> Result<crate::git::raw::Blob, crate::git::raw::Error>;
+    fn blob(&self, oid: Oid) -> Result<crate::git::raw::Blob<'_>, crate::git::raw::Error>;
 
     /// Get the head of this repository.
     ///
@@ -516,14 +516,14 @@ pub trait ReadRepository: Sized + ValidateRepository {
     /// head using [`ReadRepository::canonical_head`].
     ///
     /// Returns the [`Oid`] as well as the qualified reference name.
-    fn head(&self) -> Result<(Qualified, Oid), RepositoryError>;
+    fn head(&self) -> Result<(Qualified<'_>, Oid), RepositoryError>;
 
     /// Compute the canonical head of this repository.
     ///
     /// Ignores any existing `HEAD` reference.
     ///
     /// Returns the [`Oid`] as well as the qualified reference name.
-    fn canonical_head(&self) -> Result<(Qualified, Oid), RepositoryError>;
+    fn canonical_head(&self) -> Result<(Qualified<'_>, Oid), RepositoryError>;
 
     /// Get the head of the `rad/id` reference in this repository.
     ///
@@ -568,15 +568,15 @@ pub trait ReadRepository: Sized + ValidateRepository {
         &self,
         remote: &RemoteId,
         reference: &Qualified,
-    ) -> Result<crate::git::raw::Reference, crate::git::raw::Error>;
+    ) -> Result<crate::git::raw::Reference<'_>, crate::git::raw::Error>;
 
     /// Get the [`crate::git::raw::Commit`] found using its `oid`.
     ///
     /// Returns `Err` if the commit did not exist.
-    fn commit(&self, oid: Oid) -> Result<crate::git::raw::Commit, crate::git::raw::Error>;
+    fn commit(&self, oid: Oid) -> Result<crate::git::raw::Commit<'_>, crate::git::raw::Error>;
 
     /// Perform a revision walk of a commit history starting from the given head.
-    fn revwalk(&self, head: Oid) -> Result<crate::git::raw::Revwalk, crate::git::raw::Error>;
+    fn revwalk(&self, head: Oid) -> Result<crate::git::raw::Revwalk<'_>, crate::git::raw::Error>;
 
     /// Check if the underlying ODB contains the given `oid`.
     fn contains(&self, oid: Oid) -> Result<bool, crate::git::raw::Error>;
@@ -602,7 +602,7 @@ pub trait ReadRepository: Sized + ValidateRepository {
     fn references_glob(
         &self,
         pattern: &crate::git::fmt::refspec::PatternStr,
-    ) -> Result<Vec<(Qualified, Oid)>, crate::git::raw::Error>;
+    ) -> Result<Vec<(Qualified<'_>, Oid)>, crate::git::raw::Error>;
 
     /// Get repository delegates.
     fn delegates(&self) -> Result<NonEmpty<Did>, RepositoryError> {

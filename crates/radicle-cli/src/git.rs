@@ -251,7 +251,7 @@ pub fn is_signing_configured(repo: &Path) -> Result<bool, anyhow::Error> {
 }
 
 /// Return the list of radicle remotes for the given repository.
-pub fn rad_remotes(repo: &Repository) -> anyhow::Result<Vec<Remote>> {
+pub fn rad_remotes(repo: &Repository) -> anyhow::Result<Vec<Remote<'_>>> {
     let remotes: Vec<_> = repo
         .remotes()?
         .iter()
@@ -273,7 +273,7 @@ pub fn is_remote(repo: &Repository, alias: &str) -> anyhow::Result<bool> {
 }
 
 /// Get the repository's "rad" remote.
-pub fn rad_remote(repo: &Repository) -> anyhow::Result<(git::raw::Remote, RepoId)> {
+pub fn rad_remote(repo: &Repository) -> anyhow::Result<(git::raw::Remote<'_>, RepoId)> {
     match radicle::rad::remote(repo) {
         Ok((remote, id)) => Ok((remote, id)),
         Err(radicle::rad::RemoteError::NotFound(_)) => Err(anyhow!(

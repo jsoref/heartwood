@@ -1086,7 +1086,7 @@ where
         from: &NodeId,
         refs_at: Vec<RefsAt>,
         timeout: time::Duration,
-    ) -> Result<&mut FetchState, TryFetchError> {
+    ) -> Result<&mut FetchState, TryFetchError<'_>> {
         let from = *from;
         let Some(session) = self.sessions.get_mut(&from) else {
             return Err(TryFetchError::SessionNotConnected);

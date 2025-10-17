@@ -81,7 +81,7 @@ impl<Tree, Parent> CommitData<Tree, Parent> {
 
     /// The [`Signature`]s found in this commit, i.e. the headers corresponding
     /// to `gpgsig`.
-    pub fn signatures(&self) -> impl Iterator<Item = Signature> + '_ {
+    pub fn signatures(&self) -> impl Iterator<Item = Signature<'_>> + '_ {
         self.headers.signatures()
     }
 

@@ -398,7 +398,7 @@ impl RefsAt {
         SignedRefsAt::load_at(self.at, self.remote, repo)
     }
 
-    pub fn path(&self) -> &git::fmt::Qualified {
+    pub fn path(&self) -> &git::fmt::Qualified<'_> {
         &SIGREFS_BRANCH
     }
 }

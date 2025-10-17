@@ -1390,7 +1390,7 @@ mod test {
             .create(
                 cob::Title::new("My first issue").unwrap(),
                 "Blah blah blah.",
-                &[ux_label.clone()],
+                std::slice::from_ref(&ux_label),
                 &[],
                 [],
                 &node.signer,

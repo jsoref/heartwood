@@ -287,7 +287,7 @@ pub mod refs {
         ///
         /// `refs/namespaces/<remote>/refs/rad/id`
         ///
-        pub fn id(remote: &RemoteId) -> Namespaced {
+        pub fn id(remote: &RemoteId) -> Namespaced<'_> {
             IDENTITY_BRANCH.with_namespace(remote.into())
         }
 
@@ -295,7 +295,7 @@ pub mod refs {
         ///
         /// `refs/namespaces/<remote>/refs/rad/root`
         ///
-        pub fn id_root(remote: &RemoteId) -> Namespaced {
+        pub fn id_root(remote: &RemoteId) -> Namespaced<'_> {
             IDENTITY_ROOT.with_namespace(remote.into())
         }
 
@@ -304,7 +304,7 @@ pub mod refs {
         ///
         /// `refs/namespaces/<remote>/refs/rad/sigrefs`
         ///
-        pub fn sigrefs(remote: &RemoteId) -> Namespaced {
+        pub fn sigrefs(remote: &RemoteId) -> Namespaced<'_> {
             SIGREFS_BRANCH.with_namespace(remote.into())
         }
 
@@ -488,7 +488,7 @@ pub fn remote_refs(url: &Url) -> Result<RandomMap<RemoteId, Refs>, ListRefsError
 /// The `T` can be specified when calling the function. For example, if you
 /// wanted to parse the namespace as a `PublicKey`, then you would the function
 /// like so, `parse_ref_namespaced::<PublicKey>(s)`.
-pub fn parse_ref_namespaced<T>(s: &str) -> Result<(T, fmt::Qualified), RefError>
+pub fn parse_ref_namespaced<T>(s: &str) -> Result<(T, fmt::Qualified<'_>), RefError>
 where
     T: FromStr,
     T::Err: std::error::Error + Send + Sync + 'static,
@@ -517,7 +517,7 @@ where
 /// The `T` can be specified when calling the function. For example, if you
 /// wanted to parse the namespace as a `PublicKey`, then you would the function
 /// like so, `parse_ref::<PublicKey>(s)`.
-pub fn parse_ref<T>(s: &str) -> Result<(Option<T>, fmt::Qualified), RefError>
+pub fn parse_ref<T>(s: &str) -> Result<(Option<T>, fmt::Qualified<'_>), RefError>
 where
     T: FromStr,
     T::Err: std::error::Error + Send + Sync + 'static,
@@ -590,7 +590,7 @@ pub fn empty_commit<'a>(
 }
 
 /// Get the repository head.
-pub fn head(repo: &raw::Repository) -> Result<raw::Commit, raw::Error> {
+pub fn head(repo: &raw::Repository) -> Result<raw::Commit<'_>, raw::Error> {
     let head = repo.head()?.peel_to_commit()?;
 
     Ok(head)

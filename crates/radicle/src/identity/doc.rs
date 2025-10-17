@@ -42,7 +42,7 @@ pub const MAX_STRING_LENGTH: usize = 255;
 pub const MAX_DELEGATES: usize = 255;
 /// The current, most recent version of the identity document.
 // SAFETY: identity version should never be 0, so we can use `unsafe` here
-pub const IDENTITY_VERSION: Version = Version(unsafe { NonZeroU32::new_unchecked(1) });
+pub const IDENTITY_VERSION: Version = Version(NonZeroU32::new(1).unwrap());
 
 #[derive(Error, Debug)]
 pub enum DocError {
@@ -827,7 +827,7 @@ impl Doc {
     pub(crate) fn blob_at<R: ReadRepository>(
         commit: Oid,
         repo: &R,
-    ) -> Result<git::raw::Blob, DocError> {
+    ) -> Result<git::raw::Blob<'_>, DocError> {
         let path = Path::new("embeds").join(*PATH);
         repo.blob_at(commit, path.as_path()).map_err(DocError::from)
     }
