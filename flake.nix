@@ -69,14 +69,12 @@
           ".md" # testing
           ".adoc" # man pages
           ".json" # testing samples
+          ".txt" # might be included with `include_str!`
           "rad-cob-multiset" # testing external COBs
         ]
         ||
         # Default filter from crane (allow .rs files)
-        (rustup.craneLib.filterCargoSources path type)
-        ||
-        # *.txt files might be included with `include_str!`
-        (builtins.isList (builtins.match ''/?crates/(.*/.*\.txt)'' path));
+        (rustup.craneLib.filterCargoSources path type);
 
       src = lib.cleanSourceWith {
         src = ./.;
