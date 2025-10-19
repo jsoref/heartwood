@@ -70,6 +70,7 @@ enum Commands {
     Fork(fork::Args),
     Id(id::Args),
     Init(init::Args),
+    Inspect(inspect::Args),
     Issue(issue::Args),
     Ls(ls::Args),
     Node(node::Args),
@@ -276,11 +277,20 @@ pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyho
             }
         }
         "inspect" => {
-            term::run_command_args::<inspect::Options, _>(
-                inspect::HELP,
-                inspect::run,
-                args.to_vec(),
-            );
+            let reconstructed_args = {
+                // This is a horrible workaround to reconstruct the original
+                // args after having them mangled by our `lexopt`-style parser
+                // in `parse_args()` in case they were `rad .`.
+                // TODO: Remove this, when `rad` is fully migrated to `clap`.
+                vec!["rad", "inspect"]
+                    .into_iter()
+                    .map(OsString::from)
+                    .chain(args.iter().cloned())
+            };
+
+            if let Some(Commands::Inspect(args)) = CliArgs::parse_from(reconstructed_args).command {
+                term::run_command_fn(inspect::run, args);
+            }
         }
         "issue" => {
             if let Some(Commands::Issue(args)) = CliArgs::parse().command {

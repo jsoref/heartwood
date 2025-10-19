@@ -75,7 +75,10 @@ const COMMANDS: &[CommandItem] = &[
         about: crate::commands::init::ABOUT,
     },
     CommandItem::Lexopt(crate::commands::inbox::HELP),
-    CommandItem::Lexopt(crate::commands::inspect::HELP),
+    CommandItem::Clap {
+        name: "inspect",
+        about: crate::commands::inspect::ABOUT,
+    },
     CommandItem::Clap {
         name: "issue",
         about: crate::commands::issue::ABOUT,

@@ -1,6 +1,8 @@
 #![allow(clippy::or_fun_call)]
+
+mod args;
+
 use std::collections::HashMap;
-use std::ffi::OsString;
 use std::path::Path;
 use std::str::FromStr;
 
@@ -16,134 +18,40 @@ use radicle::storage::refs::RefsAt;
 use radicle::storage::{ReadRepository, ReadStorage};
 
 use crate::terminal as term;
-use crate::terminal::args::{Args, Error, Help};
 use crate::terminal::json;
 use crate::terminal::Element;
 
-pub const HELP: Help = Help {
-    name: "inspect",
-    description: "Inspect a Radicle repository",
-    version: env!("RADICLE_VERSION"),
-    usage: r#"
-Usage
+pub use args::Args;
+use args::Target;
+pub(crate) use args::ABOUT;
 
-    rad inspect <path> [<option>...]
-    rad inspect <rid>  [<option>...]
-    rad inspect [<option>...]
-
-    Inspects the given path or RID. If neither is specified,
-    the current repository is inspected.
-
-Options
-
-    --rid        Return the repository identifier (RID)
-    --payload    Inspect the repository's identity payload
-    --refs       Inspect the repository's refs on the local device
-    --sigrefs    Inspect the values of `rad/sigrefs` for all remotes of this repository
-    --identity   Inspect the identity document
-    --visibility Inspect the repository's visibility
-    --delegates  Inspect the repository's delegates
-    --policy     Inspect the repository's seeding policy
-    --history    Show the history of the repository identity document
-    --help       Print help
-"#,
-};
-
-#[derive(Default, Debug, Eq, PartialEq)]
-pub enum Target {
-    Refs,
-    Payload,
-    Delegates,
-    Identity,
-    Visibility,
-    Sigrefs,
-    Policy,
-    History,
-    #[default]
-    RepoId,
-}
-
-#[derive(Default, Debug, Eq, PartialEq)]
-pub struct Options {
-    pub rid: Option<RepoId>,
-    pub target: Target,
-}
-
-impl Args for Options {
-    fn from_args(args: Vec<OsString>) -> anyhow::Result<(Self, Vec<OsString>)> {
-        use lexopt::prelude::*;
-
-        let mut parser = lexopt::Parser::from_args(args);
-        let mut rid: Option<RepoId> = None;
-        let mut target = Target::default();
-
-        while let Some(arg) = parser.next()? {
-            match arg {
-                Long("help") | Short('h') => {
-                    return Err(Error::Help.into());
-                }
-                Long("refs") => {
-                    target = Target::Refs;
-                }
-                Long("payload") => {
-                    target = Target::Payload;
-                }
-                Long("policy") => {
-                    target = Target::Policy;
-                }
-                Long("delegates") => {
-                    target = Target::Delegates;
-                }
-                Long("history") => {
-                    target = Target::History;
-                }
-                Long("identity") => {
-                    target = Target::Identity;
-                }
-                Long("sigrefs") => {
-                    target = Target::Sigrefs;
-                }
-                Long("rid") => {
-                    target = Target::RepoId;
-                }
-                Long("visibility") => {
-                    target = Target::Visibility;
-                }
-                Value(val) if rid.is_none() => {
-                    let val = val.to_string_lossy();
-
-                    if let Ok(val) = RepoId::from_str(&val) {
-                        rid = Some(val);
-                    } else {
-                        rid = radicle::rad::at(Path::new(val.as_ref()))
-                            .map(|(_, id)| Some(id))
-                            .context("Supplied argument is not a valid path")?;
-                    }
-                }
-                _ => anyhow::bail!(arg.unexpected()),
+pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
+    let rid = match args.repo {
+        Some(rid) => {
+            if let Ok(val) = RepoId::from_str(&rid) {
+                val
+            } else {
+                radicle::rad::at(Path::new(&rid))
+                    .map(|(_, id)| id)
+                    .context("Supplied argument is not a valid path")?
             }
         }
-
-        Ok((Options { rid, target }, vec![]))
-    }
-}
-
-pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
-    let rid = match options.rid {
-        Some(rid) => rid,
         None => radicle::rad::cwd()
             .map(|(_, rid)| rid)
             .context("Current directory is not a Radicle repository")?,
     };
 
-    if options.target == Target::RepoId {
+    let target = args.target.into();
+
+    if matches!(target, Target::RepoId) {
         term::info!("{}", term::format::highlight(rid.urn()));
         return Ok(());
     }
+
     let profile = ctx.profile()?;
     let storage = &profile.storage;
 
-    match options.target {
+    match target {
         Target::Refs => {
             let (repo, _) = repo(rid, storage)?;
             refs(&repo)?;
