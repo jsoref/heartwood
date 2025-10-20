@@ -74,6 +74,7 @@ enum Commands {
     Ls(ls::Args),
     Path(path::Args),
     Publish(publish::Args),
+    Remote(remote::Args),
     Seed(seed::Args),
     #[command(name = "self")]
     RadSelf(rad_self::Args),
@@ -340,7 +341,9 @@ pub(crate) fn run_other(exe: &str, args: &[OsString]) -> Result<(), Option<anyho
             }
         }
         "remote" => {
-            term::run_command_args::<remote::Options, _>(remote::HELP, remote::run, args.to_vec())
+            if let Some(Commands::Remote(args)) = CliArgs::parse().command {
+                term::run_command_fn(remote::run, args);
+            }
         }
         "stats" => {
             if let Some(Commands::Stats(args)) = CliArgs::parse().command {
