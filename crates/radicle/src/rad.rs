@@ -388,7 +388,7 @@ pub enum CwdError {
 
 /// Get the RID of the repository in current working directory
 ///
-/// It will atempt to search parent directories if `path` did not find
+/// It will attempt to search parent directories if `path` did not find
 /// a git repository.
 ///
 /// # Safety
