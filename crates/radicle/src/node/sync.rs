@@ -11,6 +11,8 @@ use crate::prelude::Doc;
 
 use super::NodeId;
 
+pub const DEFAULT_REPLICATION_FACTOR: usize = 3;
+
 /// A set of nodes that form a private network for fetching from.
 ///
 /// This could be the set of allowed nodes for a private repository, using
@@ -72,7 +74,7 @@ pub struct ReplicationRange {
 
 impl Default for ReplicationFactor {
     fn default() -> Self {
-        Self::must_reach(3)
+        Self::must_reach(DEFAULT_REPLICATION_FACTOR)
     }
 }
 
