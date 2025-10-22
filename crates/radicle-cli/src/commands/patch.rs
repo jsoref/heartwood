@@ -962,6 +962,41 @@ pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
                 &profile,
             )?;
         }
+        Operation::CommentEdit {
+            revision_id,
+            comment_id,
+            message,
+        } => {
+            let comment = comment_id.resolve(&repository.backend)?;
+            comment::edit::run(
+                revision_id,
+                comment,
+                message,
+                options.quiet,
+                &repository,
+                &profile,
+            )?;
+        }
+        Operation::CommentRedact {
+            revision_id,
+            comment_id,
+        } => {
+            let comment = comment_id.resolve(&repository.backend)?;
+            comment::redact::run(revision_id, comment, &repository, &profile)?;
+        }
+        Operation::CommentReact {
+            revision_id,
+            comment_id,
+            reaction,
+            undo,
+        } => {
+            let comment = comment_id.resolve(&repository.backend)?;
+            if undo {
+                comment::react::run(revision_id, comment, reaction, false, &repository, &profile)?;
+            } else {
+                comment::react::run(revision_id, comment, reaction, true, &repository, &profile)?;
+            }
+        }
         Operation::Review {
             patch_id,
             revision_id,
@@ -1057,41 +1092,6 @@ pub fn run(options: Options, ctx: impl term::Context) -> anyhow::Result<()> {
                 )
             };
             cache::run(mode, &profile)?;
-        }
-        Operation::CommentEdit {
-            revision_id,
-            comment_id,
-            message,
-        } => {
-            let comment = comment_id.resolve(&repository.backend)?;
-            comment::edit::run(
-                revision_id,
-                comment,
-                message,
-                options.quiet,
-                &repository,
-                &profile,
-            )?;
-        }
-        Operation::CommentRedact {
-            revision_id,
-            comment_id,
-        } => {
-            let comment = comment_id.resolve(&repository.backend)?;
-            comment::redact::run(revision_id, comment, &repository, &profile)?;
-        }
-        Operation::CommentReact {
-            revision_id,
-            comment_id,
-            reaction,
-            undo,
-        } => {
-            let comment = comment_id.resolve(&repository.backend)?;
-            if undo {
-                comment::react::run(revision_id, comment, reaction, false, &repository, &profile)?;
-            } else {
-                comment::react::run(revision_id, comment, reaction, true, &repository, &profile)?;
-            }
         }
         Operation::React {
             revision_id,
