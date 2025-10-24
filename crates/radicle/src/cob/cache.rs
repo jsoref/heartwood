@@ -28,6 +28,7 @@ const DB_WRITE_TIMEOUT: time::Duration = time::Duration::from_secs(6);
 const MIGRATIONS: &[Migration] = &[
     Migration::Sql(include_str!("cache/migrations/1.sql")),
     Migration::Native(migrations::_2::run),
+    Migration::Sql(include_str!("cache/migrations/3.sql")),
 ];
 
 /// Function signature for native migrations.
@@ -466,10 +467,13 @@ mod tests {
         assert_eq!(db.migrate_to(2, migrate::ignore).unwrap(), 2); // 1 -> 2
         assert_eq!(db.version().unwrap(), 2);
 
-        assert_eq!(db.migrate_to(1, migrate::ignore).unwrap(), 2); // No-op.
-        assert_eq!(db.version().unwrap(), 2);
+        assert_eq!(db.migrate_to(3, migrate::ignore).unwrap(), 3); // 2 -> 3
+        assert_eq!(db.version().unwrap(), 3);
 
-        assert_eq!(db.migrate_to(99, migrate::ignore).unwrap(), 2); // No-op.
-        assert_eq!(db.version().unwrap(), 2);
+        assert_eq!(db.migrate_to(1, migrate::ignore).unwrap(), 3); // No-op.
+        assert_eq!(db.version().unwrap(), 3);
+
+        assert_eq!(db.migrate_to(99, migrate::ignore).unwrap(), 3); // No-op.
+        assert_eq!(db.version().unwrap(), 3);
     }
 }
