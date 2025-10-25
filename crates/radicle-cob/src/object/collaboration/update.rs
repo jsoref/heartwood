@@ -50,11 +50,11 @@ pub struct Update {
 /// The `parents` are other the parents of this object, for example a
 /// code commit.
 ///
-/// The `identifier` is a unqiue id that is passed through to the
+/// The `identifier` is a unique id that is passed through to the
 /// [`crate::object::Storage`].
 ///
 /// The `args` are the metadata for this [`CollaborativeObject`]
-/// udpate. See [`Update`] for further information.
+/// update. See [`Update`] for further information.
 pub fn update<T, S, G>(
     storage: &S,
     signer: &G,

@@ -660,7 +660,7 @@ where
             Ok(Some(last)) => Some(last.to_local_time()),
             Ok(None) => None,
             Err(e) => {
-                error!(target: "service", "Error getting the lastest gossip message from db: {e}");
+                error!(target: "service", "Error getting the latest gossip message from db: {e}");
                 None
             }
         };
@@ -2069,7 +2069,7 @@ where
 
     /// Get our local inventory.
     ///
-    /// A node's inventory is the advertized list of repositories offered by a node.
+    /// A node's inventory is the advertised list of repositories offered by a node.
     ///
     /// A node's inventory consists of *public* repositories that are seeded and available locally
     /// in the node's storage. We use the routing table as the canonical state of all inventories,
@@ -2749,7 +2749,7 @@ where
 /// Disconnect reason.
 #[derive(Debug)]
 pub enum DisconnectReason {
-    /// Error while dialing the remote. This error occures before a connection is
+    /// Error while dialing the remote. This error occurs before a connection is
     /// even established. Errors of this kind are usually not transient.
     Dial(Arc<dyn std::error::Error + Sync + Send>),
     /// Error with an underlying established connection. Sometimes, reconnecting

@@ -167,7 +167,7 @@ where
         let local_addr = net::SocketAddr::new(ip, config.rng.u16(..));
         let inventory = storage.repositories().unwrap();
 
-        // Make sure the peer address is advertized.
+        // Make sure the peer address is advertised.
         config.config.external_addresses.push(local_addr.into());
         for repo in &inventory {
             policies.seed(&repo.rid, Scope::Followed).unwrap();

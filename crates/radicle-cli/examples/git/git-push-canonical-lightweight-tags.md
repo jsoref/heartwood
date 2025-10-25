@@ -118,7 +118,7 @@ From rad://z42hL2jL4XNk6K8oHQaSWfMgCL7ji
  * [new tag]         v1.0-hotfix -> v1.0-hotfix
 ```
 
-Since Alice crated a lightweight tag, resolving the reference on Bob's end yields an object of type 'commit'.
+Since Alice created a lightweight tag, resolving the reference on Bob's end yields an object of type 'commit'.
 
 ``` ~bob
 $ git cat-file -t v1.0-hotfix

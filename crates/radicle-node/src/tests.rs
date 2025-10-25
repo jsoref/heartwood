@@ -734,7 +734,7 @@ fn test_refs_announcement_relay_public() {
         .elapse(service::GOSSIP_INTERVAL);
     assert!(
         alice.messages(eve.id()).next().is_none(),
-        "The same ref announement is not relayed"
+        "The same ref announcement is not relayed"
     );
 
     alice

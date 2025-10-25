@@ -1,4 +1,4 @@
-If we initialize a public repository without seeding it, it won't be advertized:
+If we initialize a public repository without seeding it, it won't be advertised:
 ```
 $ rad init --name heartwood --description "radicle heartwood protocol & stack" --no-confirm --public --no-seed
 
@@ -17,7 +17,7 @@ To push changes, run `git push`.
 $ rad node inventory
 ```
 
-If we then seed it, it becomes advertized in our inventory:
+If we then seed it, it becomes advertised in our inventory:
 ```
 $ rad seed rad:zhbMU4DUXrzB8xT6qAJh6yZ7bFMK
 ✓ Inventory updated with rad:zhbMU4DUXrzB8xT6qAJh6yZ7bFMK

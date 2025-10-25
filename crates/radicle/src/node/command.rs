@@ -54,7 +54,7 @@ pub enum Command {
     /// Update node's inventory.
     AddInventory { rid: RepoId },
 
-    /// Get the current node condiguration.
+    /// Get the current node configuration.
     Config,
 
     /// Get the node's listen addresses.
@@ -203,7 +203,7 @@ impl Default for ConnectOptions {
 pub enum CommandResult<T> {
     /// Response on node socket indicating that a command was carried out successfully.
     Okay(T),
-    /// Response on node socket indicating that an error occured.
+    /// Response on node socket indicating that an error occurred.
     Error {
         /// The reason for the error.
         #[serde(rename = "error")]

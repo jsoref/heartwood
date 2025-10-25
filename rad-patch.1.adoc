@@ -152,10 +152,10 @@ Any other Revision ID will comment on the revision specified.
 
 *--message*, *-m <string>*::
 Comment message. If omitted, Radicle will prompt for a comment string via
-*$EDITOR*. Multiple messages will be concatinated with a blank line in between.
+*$EDITOR*. Multiple messages will be concatenated with a blank line in between.
 
 *--reply-to <comment-id>*::
-Optional comment to reply to. If ommitted, the comment is a top-level comment
+Optional comment to reply to. If omitted, the comment is a top-level comment
 on the given revision.
 
 == Opening a patch

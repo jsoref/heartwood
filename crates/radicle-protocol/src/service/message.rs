@@ -50,7 +50,7 @@ impl Subscribe {
 pub struct NodeAnnouncement {
     /// Supported protocol version.
     pub version: u8,
-    /// Advertized features.
+    /// Advertised features.
     pub features: node::Features,
     /// Monotonic timestamp.
     pub timestamp: Timestamp,

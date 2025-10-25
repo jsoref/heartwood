@@ -566,7 +566,7 @@ mod tests {
         }
 
         // Now Bob checks out a copy of the `paris` repository and pushes a commit to the
-        // default branch (master). We store the OID of that commti in `bob_head`, as this
+        // default branch (master). We store the OID of that commit in `bob_head`, as this
         // is the commit we will try to get the `london` repo to point to.
         let (bob_paris_sigrefs, bob_head) = {
             let bob_working = rad::checkout(

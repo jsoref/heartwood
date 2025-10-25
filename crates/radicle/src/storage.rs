@@ -537,7 +537,7 @@ pub trait ReadRepository: Sized + ValidateRepository {
     /// Get the root commit of the canonical identity branch.
     fn identity_root(&self) -> Result<Oid, RepositoryError>;
 
-    /// Get the root commit of the identity branch of a sepcific remote.
+    /// Get the root commit of the identity branch of a specific remote.
     fn identity_root_of(&self, remote: &RemoteId) -> Result<Oid, RepositoryError>;
 
     /// Load the identity history.
@@ -598,7 +598,7 @@ pub trait ReadRepository: Sized + ValidateRepository {
     /// Skips references with names that are not parseable into [`Qualified`].
     ///
     /// This function always peels reference to the commit. For tags, this means the [`Oid`] of the
-    /// commit pointed to by the tag is returned, and not the [`Oid`] of the tag itsself.
+    /// commit pointed to by the tag is returned, and not the [`Oid`] of the tag itself.
     fn references_glob(
         &self,
         pattern: &crate::git::fmt::refspec::PatternStr,

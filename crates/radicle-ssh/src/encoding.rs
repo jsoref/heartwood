@@ -52,9 +52,9 @@ pub trait Encoding {
     fn write_empty_list(&mut self);
     /// Write the buffer length at the beginning of the buffer.
     fn write_len(&mut self);
-    /// Push a [`usize`] as an SSH-encoded unsiged 32-bit integer.
+    /// Push a [`usize`] as an SSH-encoded unsigned 32-bit integer.
     /// May panic if the argument is greater than [`u32::MAX`].
-    /// This is a convience method, to spare callers casting or converting
+    /// This is a convenience method, to spare callers casting or converting
     /// [`usize`] to [`u32`]. If callers end up in a situation where they
     /// need to push a 32-bit unisgned integer, but the value they would
     /// like to push does not fit 32 bits, then the implementation will not

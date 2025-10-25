@@ -1,7 +1,7 @@
 //! # Note on database migrations
 //!
 //! The `user_version` field in the database SQLite header is used to keep track of the database
-//! version. It starts with `0`, which means no tables exist yet, and is incremented everytime a
+//! version. It starts with `0`, which means no tables exist yet, and is incremented every time a
 //! migration is applied. In turn, migrations are named after their version numbers, so the first
 //! migration is `1.sql`, the second one is `2.sql` and so on.
 //!

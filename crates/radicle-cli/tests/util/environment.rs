@@ -238,7 +238,7 @@ impl Environment {
         radicle::test::fixtures::repository(self.work(has_alias).as_path())
     }
 
-    // Convenience method for exectuing a test formula with standard configuration.
+    // Convenience method for executing a test formula with standard configuration.
     pub fn test(
         &self,
         test_file: &'static str,

@@ -45,7 +45,7 @@ impl History {
     }
 
     /// A topological (parents before children) traversal of the dependency
-    /// graph of this history. This is analagous to
+    /// graph of this history. This is analogous to
     /// [`std::iter::Iterator::fold`] in that it folds every change into an
     /// accumulator value of type `A`. However, unlike `fold` the function `f`
     /// may prune branches from the dependency graph by returning

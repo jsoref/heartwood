@@ -31,7 +31,7 @@ pub enum UrlError {
 /// A git local transport URL.
 ///
 /// * Used to content-address a repository, eg. when sharing projects.
-/// * Used as a remore url in a git working copy.
+/// * Used as a remote url in a git working copy.
 ///
 /// `rad://<repo>[/<namespace>]`
 ///

@@ -6,7 +6,7 @@ project.
 
 For cases where `threshold > 1`, it is necessary to gather a quorum of
 signatures to update the Radicle identity. To do this, we use the `rad id`
-command. For now, since we are the only delegate, and `treshold` is `1`, we
+command. For now, since we are the only delegate, and `threshold` is `1`, we
 can update the identity ourselves.
 
 Let's add Bob as a delegate using their DID,

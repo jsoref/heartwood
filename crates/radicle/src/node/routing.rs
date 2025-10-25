@@ -21,7 +21,7 @@ pub enum InsertResult {
     SeedAdded,
 }
 
-/// An error occuring in peer-to-peer networking code.
+/// An error occurring in peer-to-peer networking code.
 #[derive(Error, Debug)]
 pub enum Error {
     /// An Internal error.

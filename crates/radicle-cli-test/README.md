@@ -18,7 +18,7 @@ ohai
 `````
 
 Say this is placed in `kind-echo.md`, this is what the corresponding test case
-would look lke:
+would look like:
 
 ``` rust
 use std::path::Path;

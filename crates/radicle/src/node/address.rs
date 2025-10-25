@@ -122,11 +122,11 @@ impl<K: hash::Hash + Eq, V> DerefMut for AddressBook<K, V> {
 pub struct Node {
     /// Protocol version.
     pub version: u8,
-    /// Advertized alias.
+    /// Advertised alias.
     pub alias: Alias,
-    /// Advertized features.
+    /// Advertised features.
     pub features: node::Features,
-    /// Advertized addresses
+    /// Advertised addresses
     pub addrs: Vec<KnownAddress>,
     /// Proof-of-work included in node announcement.
     pub pow: u32,

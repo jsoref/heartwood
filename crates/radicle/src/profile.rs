@@ -66,12 +66,12 @@ pub mod env {
     // to generate deterministic COB IDs.
     pub const GIT_COMMITTER_DATE: &str = "GIT_COMMITTER_DATE";
 
-    /// Commit timestamp to use. Can be overriden by [`RAD_COMMIT_TIME`].
+    /// Commit timestamp to use. Can be overridden by [`RAD_COMMIT_TIME`].
     pub fn commit_time() -> localtime::LocalTime {
         time(RAD_COMMIT_TIME).unwrap_or_else(local_time)
     }
 
-    /// Local time. Can be overriden by [`RAD_LOCAL_TIME`].
+    /// Local time. Can be overridden by [`RAD_LOCAL_TIME`].
     pub fn local_time() -> localtime::LocalTime {
         time(RAD_LOCAL_TIME).unwrap_or_else(localtime::LocalTime::now)
     }

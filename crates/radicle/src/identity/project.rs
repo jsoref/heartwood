@@ -172,7 +172,7 @@ impl<'de> Deserialize<'de> for Project {
                 })
             }
         }
-        const FIELDS: &[&str] = &["name", "descrption", "defaultBranch"];
+        const FIELDS: &[&str] = &["name", "description", "defaultBranch"];
         deserializer.deserialize_struct("Project", FIELDS, ProjectVisitor)
     }
 }

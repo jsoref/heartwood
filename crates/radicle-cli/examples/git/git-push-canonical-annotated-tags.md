@@ -120,7 +120,7 @@ From rad://z42hL2jL4XNk6K8oHQaSWfMgCL7ji
  * [new tag]         v1.0-hotfix -> v1.0-hotfix
 ```
 
-Since Alice crated an annotated tag, resolving the reference on Bob's end yields an object of type 'tag'.
+Since Alice created an annotated tag, resolving the reference on Bob's end yields an object of type 'tag'.
 
 ``` ~bob
 $ git cat-file -t v1.0-hotfix

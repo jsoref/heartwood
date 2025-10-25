@@ -940,7 +940,7 @@ pub enum Action {
         /// Should be the root [`CommentId`] if it's a top-level comment.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         reply_to: Option<CommentId>,
-        /// Embeded content.
+        /// Embedded content.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         embeds: Vec<Embed<Uri>>,
     },

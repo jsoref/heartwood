@@ -42,7 +42,7 @@ pub enum Error {
     /// The operation timed out.
     #[error("the operation timed out")]
     Timeout,
-    /// An I/O error occured.
+    /// An I/O error occurred.
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }

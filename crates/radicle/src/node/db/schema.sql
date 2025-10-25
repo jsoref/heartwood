@@ -15,7 +15,7 @@ create table if not exists "nodes" (
   --
 ) strict;
 
--- Node addresses. These are adresses advertized by a node.
+-- Node addresses. These are addresses advertised by a node.
 create table if not exists "addresses" (
   -- Node ID.
   "node"               text      not null references "nodes" ("id") on delete cascade,

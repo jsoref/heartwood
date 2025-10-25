@@ -139,7 +139,7 @@ pub struct Limits {
     /// Maximum number of open files.
     pub max_open_files: LimitMaxOpenFiles,
 
-    /// Rate limitter settings.
+    /// Rate limiter settings.
     pub rate: RateLimits,
 
     /// Connection limits.
@@ -251,7 +251,7 @@ pub struct ConnectionLimits {
     pub outbound: LimitConnectionsOutbound,
 }
 
-/// Rate limts for a single connection.
+/// Rate limits for a single connection.
 #[derive(Debug, Clone, Serialize, Deserialize, Display)]
 #[display("RateLimit(fill_rate={fill_rate}, capacity={capacity})")]
 #[serde(rename_all = "camelCase")]

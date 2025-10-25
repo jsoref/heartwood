@@ -214,13 +214,13 @@ impl Store<Write> {
     }
 
     /// Migrate this database to the latest version.
-    /// Returns the verison migrated to.
+    /// Returns the version migrated to.
     pub fn migrate<M: MigrateCallback>(&mut self, callback: M) -> Result<usize, Error> {
         self.migrate_to(MIGRATIONS.len(), callback)
     }
 
     /// Migrate this database to the given target version.
-    /// Returns the verison migrated to.
+    /// Returns the version migrated to.
     pub fn migrate_to<M: MigrateCallback>(
         &mut self,
         target: usize,

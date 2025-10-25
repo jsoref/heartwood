@@ -54,7 +54,7 @@ impl wire::Decode for Version {
 /// bit set to `1` for all streams she creates, while Bob will have it set to `0`.
 ///
 /// This ensures that Stream IDs never collide.
-/// Additionally, Stream IDs must never be re-used within a connection.
+/// Additionally, Stream IDs must never be reused within a connection.
 ///
 /// +=======+==================================+
 /// | Bits  | Stream Type                      |

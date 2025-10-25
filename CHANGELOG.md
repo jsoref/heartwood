@@ -112,7 +112,7 @@ confusing.
 
 ## New Features
 
-- `rad clone` now supports the flag `--bare` which works analoguously to
+- `rad clone` now supports the flag `--bare` which works analogously to
   `git clone --bare`.
 - `rad patch show` now has improved output. It does not distinguish between the
   original author's updates and other updated, each update is marked as

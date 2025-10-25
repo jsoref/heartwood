@@ -41,7 +41,7 @@
 //! +snuffing
 //! omitting
 //! ```
-//! The `DDiff` will show the what changes are being made, overlayed on to the original diff and
+//! The `DDiff` will show the what changes are being made, overlaid on to the original diff and
 //! the diff's original file as context.
 //!
 //! ```text

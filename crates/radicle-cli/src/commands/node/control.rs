@@ -105,7 +105,7 @@ pub fn start(
     } else {
         // Write a hint to the log file, but swallow any errors.
         let mut log_file = log_file;
-        let _ = log_file.write_all(format!("radicle-node started in foreground, no futher log messages are written to '{}' (this file).\n", log_path.display()).as_bytes());
+        let _ = log_file.write_all(format!("radicle-node started in foreground, no further log messages are written to '{}' (this file).\n", log_path.display()).as_bytes());
 
         let mut child = process::Command::new(cmd)
             .args(options)

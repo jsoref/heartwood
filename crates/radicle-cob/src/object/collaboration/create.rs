@@ -46,7 +46,7 @@ impl Create {
 /// software project. Its content-address is stored in the object's
 /// history.
 ///
-/// The `identifier` is a unqiue id that is passed through to the
+/// The `identifier` is a unique id that is passed through to the
 /// [`crate::object::Storage`].
 ///
 /// The `args` are the metadata for this [`CollaborativeObject`]. See

@@ -204,7 +204,7 @@ impl TestFormula {
         // Add the target dir to the beginning of the list we will use as `PATH`.
         self.bins.insert(0, bins);
 
-        // We don't need to re-build everytime the `build` function is called. Once is enough.
+        // We don't need to re-build every time the `build` function is called. Once is enough.
         BUILD.call_once(|| {
             use escargot::format::Message;
             use radicle::logger::env_level;

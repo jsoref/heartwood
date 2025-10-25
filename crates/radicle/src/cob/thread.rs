@@ -14,7 +14,7 @@ use crate::git;
 use crate::prelude::ReadRepository;
 
 /// Type name of a thread, as well as the domain for all thread operations.
-/// Note that threads are not usually used standalone. They are embeded into other COBs.
+/// Note that threads are not usually used standalone. They are embedded into other COBs.
 pub static TYPENAME: LazyLock<cob::TypeName> =
     LazyLock::new(|| FromStr::from_str("xyz.radicle.thread").expect("type name is valid"));
 

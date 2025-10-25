@@ -17,7 +17,7 @@ To make it public, run `rad publish`.
 To push changes, run `git push`.
 ```
 
-The repository does not show up in our inventory, since it is not advertized,
+The repository does not show up in our inventory, since it is not advertised,
 despite being seeded:
 ```
 $ rad node inventory

@@ -76,7 +76,7 @@ pub trait WriteAtomic: std::io::Write {
                 result.as_ref().err().map(|err| err.kind()),
                 Some(Interrupted | WouldBlock | WriteZero)
             ),
-            "WriteAtomic::write_or_buf must handle erros of kind {Interrupted:?}, {WouldBlock:?}, {WriteZero:?} by buffering",
+            "WriteAtomic::write_or_buf must handle errors of kind {Interrupted:?}, {WouldBlock:?}, {WriteZero:?} by buffering",
         );
 
         result

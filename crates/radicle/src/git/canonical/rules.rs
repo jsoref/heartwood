@@ -155,7 +155,7 @@ impl PartialOrd for Pattern {
 ///     component i of `ψ`, denoted `ψ[i]`. This is the case if:
 ///      a. `φ[i]` does not contain an asterisk and `ψ[i]` contains an asterisk,
 ///         i.e. the symbol `*`, e.g. `a < * and abc < a*`.
-///         Note that this is important to capture specificity accross
+///         Note that this is important to capture specificity across
 ///         components, i.e. to conclude that `a/b/* < a/*/c`.
 ///      b. Both `φ[i]` and `ψ[i]` contain an asterisk.
 ///          A. The asterisk in `φ[i]` is further right than the asterisk in `φ[i]`,

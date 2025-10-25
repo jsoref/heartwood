@@ -199,7 +199,7 @@ description and default branch by running:
 *~/.radicle*::
 
 The _Radicle Home_. This is the default location for Radicle configuration
-files, keys, and repository storage. Can be controlled by settting the
+files, keys, and repository storage. Can be controlled by setting the
 **RAD_HOME** environment variable.
 
 *~/.radicle/config.json*::

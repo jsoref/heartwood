@@ -128,7 +128,7 @@ mod tests {
         let other_secret = store.secret_key(None).unwrap().unwrap();
 
         assert_ne!(secret, other_secret);
-        // Note that `fp` has not changed since it was initialiazed from `secret`.
+        // Note that `fp` has not changed since it was initialized from `secret`.
         assert_eq!(fp.verify(&other_secret), FingerprintVerification::Mismatch);
     }
 }

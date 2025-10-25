@@ -886,7 +886,7 @@ fn test_non_fastforward_sigrefs() {
 
     converge([&alice, &bob, &eve]);
 
-    // Eve fetches the inital project from Bob.
+    // Eve fetches the initial project from Bob.
     eve.handle.fetch(rid, bob.id, DEFAULT_TIMEOUT).unwrap();
     // Alice fetches it too.
     let old_bob = alice.handle.fetch(rid, bob.id, DEFAULT_TIMEOUT).unwrap();
