@@ -1,0 +1,4 @@
+[codespell]
+skip = .git*,*.lock,.codespellrc
+check-hidden = true
+ignore-words-list = ser,noes

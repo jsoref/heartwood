@@ -224,6 +224,11 @@
               hooks =
                 {
                   alejandra.enable = true;
+                  codespell = {
+                    enable = true;
+                    entry = "${lib.getExe pkgs.codespell} -w";
+                    types = ["text"];
+                  };
                   rustfmt = {
                     enable = true;
                     fail_fast = true;
