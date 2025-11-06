@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `radicle::storage::git::Storage::repositories_by_id` returns
+  `impl Iterator<Item = Result<RepositoryInfo, RepositoryError>>` instead of
+  `Result<Vec<RepositoryInfo>, RepositoryError>`. Allowing callers to handle
+  failures on a per-repository basis rather than having the entire operation
+  fail if a single repository lookup fails.
 - Re-exports from `git2` at `radicle::git::raw` were limited, using
   the heartwood workspace as a filter. Dependents that require members that
   are not exported anymore will have to depend on `git2` directly.

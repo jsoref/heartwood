@@ -236,11 +236,14 @@ impl Storage {
         self.path.as_path()
     }
 
-    pub fn repositories_by_id<'a>(
+    pub fn repositories_by_id<'a, I>(
         &self,
-        mut rids: impl Iterator<Item = &'a RepoId>,
-    ) -> Result<Vec<RepositoryInfo>, RepositoryError> {
-        rids.try_fold(Vec::new(), |mut infos, rid| {
+        rids: I,
+    ) -> impl Iterator<Item = Result<RepositoryInfo, RepositoryError>> + use<'_, 'a, I>
+    where
+        I: Iterator<Item = &'a RepoId>,
+    {
+        rids.map(|rid| {
             let repo = self.repository(*rid)?;
             let (_, head) = repo.head()?;
             let refs = refs::SignedRefsAt::load(self.info.key, &repo)?;
@@ -248,15 +251,14 @@ impl Storage {
                 .as_ref()
                 .map(|r| SyncedAt::new(r.at, &repo))
                 .transpose()?;
-            let info = RepositoryInfo {
+
+            Ok(RepositoryInfo {
                 rid: *rid,
                 head,
                 doc: repo.identity_doc()?.into(),
                 refs,
                 synced_at,
-            };
-            infos.push(info);
-            Ok(infos)
+            })
         })
     }
 
