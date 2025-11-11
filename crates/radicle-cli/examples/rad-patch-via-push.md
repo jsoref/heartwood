@@ -9,7 +9,7 @@ Switched to a new branch 'feature/1'
 $ git commit -a -m "Add things" -q --allow-empty
 $ git push -o patch.message="Add things #1" -o patch.message="See commits for details." rad HEAD:refs/patches
 ✓ Patch 6035d2f582afbe01ff23ea87528ae523d76875b6 opened
-hint: to update, run `git push` or `git push rad -f HEAD:patches/6035d2f582afbe01ff23ea87528ae523d76875b6`
+hint: to update, run `git push` or `git push rad --force-with-lease HEAD:patches/6035d2f582afbe01ff23ea87528ae523d76875b6`
 hint: offline push, your node is not running
 hint: to sync with the network, run `rad node start`
 To rad://z42hL2jL4XNk6K8oHQaSWfMgCL7ji/z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
@@ -203,10 +203,10 @@ hint: See the 'Note about fast-forwards' in 'git push --help' for details.
 ```
 
 The push fails because it's not a fast-forward update. To remedy this, we can
-use `--force` to force the update.
+use `--force-with-lease` (or `--force`) to force the update.
 
 ``` (stderr)
-$ git push --force
+$ git push --force-with-lease
 ✓ Patch 9580891 updated to revision 670d02794aa05afd6e0851f4aa848bc87c4712c7
 To compare against your previous revision d7040c6, run:
 

@@ -2426,6 +2426,11 @@ fn git_push_amend() {
 }
 
 #[test]
+fn git_push_force_with_lease() {
+    Environment::alice(["rad-init", "git/git-push-force-with-lease"]);
+}
+
+#[test]
 fn git_push_rollback() {
     let mut environment = Environment::new();
     let alice = environment.node("alice");

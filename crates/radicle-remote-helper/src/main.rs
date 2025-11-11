@@ -240,6 +240,7 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
     let stdin = io::stdin();
     let mut line = String::new();
     let mut opts = Options::default();
+    let mut expected_refs = Vec::new();
 
     if let Err(e) = radicle::io::set_file_limit(4096) {
         if debug {
@@ -278,6 +279,10 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
                 push_option(args, &mut opts)?;
                 println!("ok");
             }
+            ["option", "cas", refstr] => {
+                expected_refs.push((*refstr).to_owned());
+                println!("ok");
+            }
             ["option", "progress", ..] | ["option", ..] => {
                 println!("unsupported");
             }
@@ -301,6 +306,7 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
                     &profile,
                     &stdin,
                     opts,
+                    &expected_refs,
                 )?);
             }
             ["list"] => {

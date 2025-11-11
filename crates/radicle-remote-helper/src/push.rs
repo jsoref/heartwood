@@ -251,6 +251,7 @@ pub fn run(
     profile: &Profile,
     stdin: &io::Stdin,
     opts: Options,
+    expected_refs: &[String],
 ) -> Result<(), Error> {
     // Don't allow push if either of these conditions is true:
     //
@@ -341,6 +342,7 @@ pub fn run(
                         patches,
                         &signer,
                         opts.clone(),
+                        expected_refs,
                     ),
                     PushAction::PushRef { dst } => {
                         let identity = stored.identity()?;
@@ -361,6 +363,7 @@ pub fn run(
                             patches,
                             &signer,
                             opts.verbosity,
+                            expected_refs,
                         )?;
                         // If we're trying to update the canonical head, make sure
                         // we don't diverge from the current head. This only applies
@@ -512,7 +515,14 @@ impl<'a> TempPatchRef<'a> {
     }
 
     fn push(&self, src: &git::Oid, verbosity: Verbosity) -> Result<(), Error> {
-        push_ref(src, &self.reference, false, self.stored.raw(), verbosity)
+        push_ref(
+            src,
+            &self.reference,
+            false,
+            self.stored.raw(),
+            verbosity,
+            &[],
+        )
     }
 }
 
@@ -655,7 +665,7 @@ where
                     // rad/patches/deadbeef -> patches/deadbeef
                     let name = name.split_once('/').unwrap_or_default().1;
                     hint(format!(
-                        "to update, run `git push` or `git push {upstream} -f HEAD:{name}`"
+                        "to update, run `git push` or `git push {upstream} --force-with-lease HEAD:{name}`"
                     ));
                 }
             }
@@ -681,6 +691,7 @@ fn patch_update<G>(
     >,
     signer: &Device<G>,
     opts: Options,
+    expected_refs: &[String],
 ) -> Result<Option<ExplorerResource>, Error>
 where
     G: crypto::signature::Signer<crypto::Signature>,
@@ -709,7 +720,14 @@ where
         term::patch::get_update_message(opts.message, &stored.backend, &latest, &head.into())?;
 
     let dst = dst.with_namespace(nid.into());
-    push_ref(head, &dst, force, stored.raw(), opts.verbosity)?;
+    push_ref(
+        head,
+        &dst,
+        force,
+        stored.raw(),
+        opts.verbosity,
+        expected_refs,
+    )?;
 
     let mut patch_mut = patch::PatchMut::new(patch_id, patch, &mut patches);
     let revision = patch_mut.update(message, base, *head, signer)?;
@@ -758,6 +776,7 @@ fn push<G>(
     >,
     signer: &Device<G>,
     verbosity: Verbosity,
+    expected_refs: &[String],
 ) -> Result<Option<ExplorerResource>, Error>
 where
     G: crypto::signature::Signer<crypto::Signature>,
@@ -767,7 +786,7 @@ where
     // It's ok for the destination reference to be unknown, eg. when pushing a new branch.
     let old = stored.backend.find_reference(dst.as_str()).ok();
 
-    push_ref(src, &dst, force, stored.raw(), verbosity)?;
+    push_ref(src, &dst, force, stored.raw(), verbosity, expected_refs)?;
 
     if let Some(old) = old {
         let proj = stored.project()?;
@@ -950,6 +969,7 @@ fn push_ref(
     force: bool,
     stored: &git::raw::Repository,
     verbosity: Verbosity,
+    expected_refs: &[String],
 ) -> Result<(), Error> {
     let path = dunce::canonicalize(stored.path())?.display().to_string();
     // Nb. The *force* indicator (`+`) is processed by Git tooling before we even reach this code.
@@ -962,6 +982,13 @@ fn push_ref(
     args.extend(verbosity.into_flag());
 
     args.extend([path.to_string(), refspec.to_string()]);
+
+    for expected in expected_refs {
+        args.push(format!(
+            "--force-with-lease=refs/namespaces/{}/{expected}",
+            dst.namespace()
+        ));
+    }
 
     // Rely on the environment variable `GIT_DIR`.
     let working = None;
