@@ -281,7 +281,10 @@ pub fn fetch(
             let candidates = connected
                 .into_iter()
                 .map(|seed| seed.nid)
-                .chain(disconnected.into_iter().map(|seed| seed.nid))
+                .chain(disconnected.into_iter().filter_map(|seed| {
+                    // Only consider seeds that have at least one known address.
+                    (!seed.addrs.is_empty()).then_some(seed.nid)
+                }))
                 .map(sync::fetch::Candidate::new);
             sync::FetcherConfig::public(settings.seeds.clone(), settings.replicas, *local)
                 .with_candidates(candidates)
