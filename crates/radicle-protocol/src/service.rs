@@ -2490,6 +2490,7 @@ where
                     .filter(|entry| !self.sessions.contains_key(&entry.node))
                     .filter(|entry| !self.config.external_addresses.contains(&entry.address.addr))
                     .filter(|entry| &entry.node != self.nid())
+                    .filter(|entry| !entry.address.addr.is_onion() || self.config.onion.is_some())
                     .fold(HashMap::new(), |mut acc, entry| {
                         acc.entry(entry.node)
                             .and_modify(|e: &mut Peer| e.addresses.push(entry.address.clone()))
