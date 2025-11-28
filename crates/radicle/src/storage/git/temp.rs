@@ -23,6 +23,7 @@ pub struct TempRepository {
 impl TempRepository {
     /// Extension used for the directory
     pub(crate) const EXT: &str = "tmp";
+
     const RANDOMNESS_LENGTH: usize = 6;
 
     pub(super) fn new<P>(root: P, rid: RepoId, info: &UserInfo) -> Result<Self, RepositoryError>

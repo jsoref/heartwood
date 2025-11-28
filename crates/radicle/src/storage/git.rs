@@ -126,12 +126,22 @@ impl ReadStorage for Storage {
             if path.file_name().to_string_lossy().starts_with('.') {
                 continue;
             }
-            // Skip temporary repositories
-            if let Some(ext) = path.path().extension() {
+
+            if let Some(ext) = path.path().extension().and_then(|s| s.to_str()) {
                 if ext == TempRepository::EXT {
+                    // Skip temporary repositories
+                    log::debug!(target: "storage", "Skipping temporary repository at '{}'", path.path().display());
                     continue;
+                } else if "lock" == ext {
+                    // In previous versions, the extension ".lock" was used for temporary repositories.
+                    // This is to handle those names in a backward-compatible way.
+                    log::debug!(target: "storage", "Skipping locked repository at '{}'", path.path().display());
+                    continue;
+                } else {
+                    log::warn!(target: "storage", "Found path '{}' with unexpected extension '{ext}'", path.path().display());
                 }
             }
+
             let rid = RepoId::try_from(path.file_name())
                 .map_err(|_| Error::InvalidId(path.file_name()))?;
 
