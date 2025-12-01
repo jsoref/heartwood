@@ -17,11 +17,7 @@ pub type ProtocolVersion = u8;
 
 /// Configured public seeds.
 pub mod seeds {
-    use std::{
-        net::{Ipv4Addr, Ipv6Addr},
-        str::FromStr,
-        sync::LazyLock,
-    };
+    use std::{str::FromStr, sync::LazyLock};
 
     use cyphernet::addr::{tor::OnionAddrV3, HostName, NetAddr};
 
@@ -42,8 +38,6 @@ pub mod seeds {
             NodeId::from_str("z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7").unwrap(),
             vec![
                 HostName::Dns("iris.radicle.xyz".to_owned()),
-                Ipv6Addr::new(0x2a01, 0x4f9, 0xc010, 0xdfaa, 0, 0, 0, 1).into(),
-                Ipv4Addr::new(95, 217, 156, 6).into(),
                 #[allow(clippy::unwrap_used)] // Value is manually verified.
                 OnionAddrV3::from_str(
                     "irisradizskwweumpydlj4oammoshkxxjur3ztcmo7cou5emc6s5lfid.onion",
@@ -61,8 +55,6 @@ pub mod seeds {
             NodeId::from_str("z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo").unwrap(),
             vec![
                 HostName::Dns("rosa.radicle.xyz".to_owned()),
-                Ipv6Addr::new(0x2a01, 0x4ff, 0xf0, 0xabd3, 0, 0, 0, 1).into(),
-                Ipv4Addr::new(5, 161, 85, 124).into(),
                 #[allow(clippy::unwrap_used)] // Value is manually verified.
                 OnionAddrV3::from_str(
                     "rosarad5bxgdlgjnzzjygnsxrwxmoaj4vn7xinlstwglxvyt64jlnhyd.onion",
