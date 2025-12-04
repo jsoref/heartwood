@@ -211,7 +211,7 @@ pub trait ReactionHandler: Send + Iterator<Item = Action<Self::Listener, Self::T
     type Transport: EventHandler + Source + Send + Debug + WriteAtomic;
 
     /// Method called by the reactor on the start of each event loop once the poll has returned.
-    fn tick(&mut self, instant: Instant);
+    fn tick(&mut self);
 
     /// Method called by the reactor when a previously set timeout is fired.
     ///
@@ -387,8 +387,8 @@ impl<H: ReactionHandler> Runtime<H> {
             // Blocking
             let res = self.poll.poll(&mut events, Some(timeout));
 
+            self.service.tick();
             let tick = Instant::now();
-            self.service.tick(tick);
 
             // The way this is currently used basically ignores which keys have
             // timed out. So as long as *something* timed out, we wake the service.

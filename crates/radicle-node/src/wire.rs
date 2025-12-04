@@ -291,35 +291,6 @@ impl Peers {
     }
 }
 
-/// The epoch time of when the node started.
-struct Epoch {
-    /// The system time when the node started.
-    started_time: SystemTime,
-    /// The instant when the node started.
-    started_at: Instant,
-}
-
-impl Epoch {
-    /// Construct a new [`Epoch`].
-    fn new(started_time: SystemTime, started_at: Instant) -> Self {
-        Self {
-            started_time,
-            started_at,
-        }
-    }
-
-    /// Construct an [`Epoch`] where both values are recorded using their
-    /// equivalent `now` constructors.
-    fn now() -> Self {
-        Self::new(SystemTime::now(), Instant::now())
-    }
-
-    /// Get the elapsed [`SystemTime`] given a later [`Instant`].
-    fn elapsed_time(&self, later: Instant) -> SystemTime {
-        self.started_time + (later - self.started_at)
-    }
-}
-
 /// Wire protocol implementation for a set of peers.
 pub(crate) struct Wire<D, S, G: crypto::signature::Signer<crypto::Signature> + Ecdh> {
     /// Backing service instance.
@@ -342,8 +313,6 @@ pub(crate) struct Wire<D, S, G: crypto::signature::Signer<crypto::Signature> + E
     peers: Peers,
     /// A (practically) infinite source of tokens to identify transports and listeners.
     tokens: Tokens,
-    /// Record of system time and instant when the node started.
-    epoch: Epoch,
 }
 
 impl<D, S, G> Wire<D, S, G>
@@ -366,12 +335,7 @@ where
             listening: RandomMap::default(),
             peers: Peers(RandomMap::default()),
             tokens: Tokens::default(),
-            epoch: Epoch::now(),
         }
-    }
-
-    fn time(&self, instant: Instant) -> SystemTime {
-        self.epoch.elapsed_time(instant)
     }
 
     pub fn listen(&mut self, socket: Listener) {
@@ -532,7 +496,7 @@ where
     type Listener = Listener;
     type Transport = Transport<WireSession<G>>;
 
-    fn tick(&mut self, time: Instant) {
+    fn tick(&mut self) {
         self.metrics.open_channels = self
             .peers
             .iter()
@@ -546,7 +510,7 @@ where
             .sum();
         self.metrics.worker_queue_size = self.worker.len();
 
-        self.service.tick(self.time(time).into(), &self.metrics);
+        self.service.tick(SystemTime::now().into(), &self.metrics);
     }
 
     fn timer_reacted(&mut self) {
