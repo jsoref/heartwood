@@ -1124,9 +1124,9 @@ checksum = "07e28edb80900c19c28f1072f2e8aeca7fa06b23cd4169cefe1af5aa3260783f"
 
 [[package]]
 name = "git-ref-format"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76314f6eb43910ebc5eb89a1f0728724a6b9144dabd18bca4e7cc7c01c3804e3"
+checksum = "ed6913a77cee9e231cab93577c9a5eea84a1344ab39294d91dc075b3c24499d0"
 dependencies = [
  "git-ref-format-core",
  "git-ref-format-macro",
@@ -1134,9 +1134,9 @@ dependencies = [
 
 [[package]]
 name = "git-ref-format-core"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae6d9ee666ca7d4ad49cbf7174f785f299a18b37565694f665e8c7df24999cdd"
+checksum = "1955ef3abddd586f24c834d28f959d610157ab5cb71f2200911932a0018d0364"
 dependencies = [
  "bstr",
  "serde",
@@ -1145,9 +1145,9 @@ dependencies = [
 
 [[package]]
 name = "git-ref-format-macro"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2dc2ded12a6ea2b6e63afaf09415e4c15bf4baa74e530acd9daed9ff47e7dd41"
+checksum = "4e730f09c82961c28f5465b83da0aa5c2716156ce57da33a1fa51bbd560aa5f7"
 dependencies = [
  "git-ref-format-core",
  "proc-macro-error2",
@@ -2955,9 +2955,9 @@ dependencies = [
 
 [[package]]
 name = "radicle-git-ext"
-version = "0.10.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb3de6999a8ff570e0dd92a04ba3132853dd08a3bcfc2f7faf56de7b1bd36053"
+checksum = "71a5fbca2ee3fc61a6b467e0b85da7c092421afc2538feb0023ad6792d6e39d0"
 dependencies = [
  "git-ref-format",
  "git2",
@@ -3099,15 +3099,15 @@ dependencies = [
 
 [[package]]
 name = "radicle-std-ext"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5310e7a04506b6ce92dc9c47b26bd24c1c680937a3dcd13cd20847f89dbda32a"
+checksum = "fb935931bdd2a2966f3b584f3031d9d54ec0713ddbc563a0193d54e62a88ec73"
 
 [[package]]
 name = "radicle-surf"
-version = "0.25.0"
+version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f08adc954d4a49287d86bd1ce14ca7e34a11a3acd904044db30551ca8f4e46a"
+checksum = "4c814514d0bf56fbec811099eaa14da1349639b04b8317746c9cd9e6b0f02196"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
