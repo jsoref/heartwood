@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 /// The typename of an object. Valid typenames MUST be sequences of
-/// alphanumeric characters separated by a period. The name must start
-/// and end with an alphanumeric character
+/// alphanumeric characters or hyphens separated by a period. Each
+/// component must start and end with an alphanumeric character.
 ///
 /// # Examples
 ///
@@ -47,7 +47,18 @@ impl FromStr for TypeName {
                     invalid: s.to_string(),
                 });
             }
-            if !component.chars().all(char::is_alphanumeric) {
+            if !component
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-')
+            {
+                return Err(TypeNameParse {
+                    invalid: s.to_string(),
+                });
+            }
+
+            let first = component.chars().next().expect("component is not empty");
+            let last = component.chars().last().expect("component is not empty");
+            if !first.is_ascii_alphanumeric() || !last.is_ascii_alphanumeric() {
                 return Err(TypeNameParse {
                     invalid: s.to_string(),
                 });
@@ -77,7 +88,13 @@ mod test {
         assert!(TypeName::from_str("abc.def.ghi").is_ok());
         assert!(TypeName::from_str("abc.123.ghi").is_ok());
         assert!(TypeName::from_str("1bc.123.ghi").is_ok());
+        assert!(TypeName::from_str("1bc-123.ghi").is_ok());
+        assert!(TypeName::from_str("").is_err());
+        assert!(TypeName::from_str(".").is_err());
         assert!(TypeName::from_str(".abc.123.ghi").is_err());
         assert!(TypeName::from_str("abc.123.ghi.").is_err());
+        assert!(TypeName::from_str("abc..ghi").is_err());
+        assert!(TypeName::from_str("abc.-123.ghi").is_err());
+        assert!(TypeName::from_str("abc.123-.ghi").is_err());
     }
 }
