@@ -138,7 +138,14 @@ where
                 // N.b. mark this commit as seen, so that it is not walked again
                 self.walk.inner.hide(commit.id()).ok();
                 // Skip any Op that do not match the manifest
-                self.load(entry).transpose().or_else(|| self.next())
+                match self.load(entry) {
+                    Ok(entry) => entry.map(Ok).or_else(|| self.next()),
+                    Err(err) => match err {
+                        // This is a parent commit that is not an Op
+                        error::Ops::Manifest { source: _ } => self.next(),
+                        err => Some(Err(err)),
+                    },
+                }
             }
             // Something was wrong with the commit
             Err(err) => Some(Err(error::Ops::Commit { source: err })),
