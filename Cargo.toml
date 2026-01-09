@@ -65,7 +65,7 @@ signature = "2.2"
 snapbox = "0.4.3"
 sqlite = "0.32.0"
 tempfile = "3.3.0"
-thiserror = "1.0"
+thiserror = "2"
 winpipe = "0.1.1"
 zeroize = "1.5.7"
 
