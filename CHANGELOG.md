@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## New Features
 
+- The set of references returned by `references_of` were restricted to `heads`,
+  `tags`, `notes`, `rad`, and `cobs`. The restriction is lifted, and the only
+  references filtered out are `refs/tmp/heads` – used by `radicle-remote-helper`
+  to create temporary patches.
+
 ## Fixed Bugs
 
 ## Deprecations

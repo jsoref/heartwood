@@ -739,6 +739,17 @@ impl ReadRepository for Repository {
             .graph_descendant_of(head.into(), ancestor.into())
     }
 
+    /// The published references of the given `remote`.
+    ///
+    /// Note that this includes all references, including `refs/rad/sigrefs`.
+    /// This reference must be removed before signing the payload.
+    ///
+    /// # Skipped References
+    ///
+    /// References created by [`staging::patch`], i.e. references that begin
+    /// with `refs/tmp/heads`, are skipped.
+    ///
+    /// [`staging::patch`]: crate::git::refs::storage::staging::patch
     fn references_of(&self, remote: &RemoteId) -> Result<Refs, Error> {
         let entries = self
             .backend
@@ -750,20 +761,13 @@ impl ReadRepository for Repository {
             let name = e.name().ok_or(Error::InvalidRef)?;
             let (_, refname) = git::parse_ref::<RemoteId>(name)?;
             let oid = e.resolve()?.target().ok_or(Error::InvalidRef)?;
-            let (_, category, _, _) = refname.non_empty_components();
+            let (_, category, subcategory, _) = refname.non_empty_components();
 
-            use git::fmt::{component, name};
-
-            if [
-                name::HEADS,
-                name::TAGS,
-                name::NOTES,
-                &component!("rad"),
-                &component!("cobs"),
-            ]
-            .contains(&category.as_ref())
-            {
-                refs.insert(refname.into(), oid.into());
+            match (category.as_str(), subcategory.as_str()) {
+                ("tmp", "heads") => continue,
+                _ => {
+                    refs.insert(refname.into(), oid.into());
+                }
             }
         }
         Ok(refs.into())
