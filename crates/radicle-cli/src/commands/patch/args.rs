@@ -415,7 +415,7 @@ impl From<CommentArgs> for CommentAction {
             (None, Some(react), None) => CommentAction::React {
                 revision,
                 comment: react,
-                emoji: emoji.unwrap(),
+                emoji: emoji.expect("emoji must be Some when react is Some"),
                 undo,
             },
             (None, None, Some(redact)) => CommentAction::Redact {

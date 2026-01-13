@@ -30,15 +30,22 @@ impl LocalTime {
     pub fn now() -> Self {
         static LAST: atomic::AtomicU64 = atomic::AtomicU64::new(0);
 
-        let now = Self::from(SystemTime::now()).as_secs();
-        let last = LAST.load(atomic::Ordering::SeqCst);
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| Self {
+                millis: duration.as_millis(),
+            })
+            .expect("should run after 1970-01-01");
+
+        let last_in_secs = LAST.load(atomic::Ordering::SeqCst);
+        let now_in_secs = now.as_secs();
 
         // If the current time is in the past, return the last recorded time instead.
-        if now < last {
-            Self::from_secs(last)
+        if now_in_secs < last_in_secs {
+            Self::from_secs(last_in_secs)
         } else {
-            LAST.store(now, atomic::Ordering::SeqCst);
-            LocalTime::from_secs(now)
+            LAST.store(now_in_secs, atomic::Ordering::SeqCst);
+            now
         }
     }
 
@@ -91,15 +98,6 @@ impl LocalTime {
     /// Adds the given duration to the time.
     pub fn elapse(&mut self, duration: LocalDuration) {
         self.millis += duration.as_millis()
-    }
-}
-
-/// Convert a `SystemTime` into a local time.
-impl From<SystemTime> for LocalTime {
-    fn from(system: SystemTime) -> Self {
-        let millis = system.duration_since(UNIX_EPOCH).unwrap().as_millis();
-
-        Self { millis }
     }
 }
 
