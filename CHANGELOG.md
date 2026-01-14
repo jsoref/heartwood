@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tags`, `notes`, `rad`, and `cobs`. The restriction is lifted, and the only
   references filtered out are `refs/tmp/heads` – used by `radicle-remote-helper`
   to create temporary patches.
+- The `rad id` command will provide a better error message when a non-delegate
+  attempts to modify the identity document.
 
 ## Fixed Bugs
 
