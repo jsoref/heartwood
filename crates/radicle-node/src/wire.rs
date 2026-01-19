@@ -362,7 +362,7 @@ where
             }
             Entry::Occupied(mut e) => match e.get_mut() {
                 Peer::Disconnecting { nid, link, .. } => {
-                    log::error!(target: "wire", token=token.0; "Peer is already disconnecting");
+                    log::debug!(target: "wire", token=token.0; "Peer is already disconnecting");
 
                     nid.map(|n| (n, *link))
                 }
@@ -528,7 +528,7 @@ where
             Ok((connection, peer)) => {
                 let remote = NetAddr::from(peer);
                 let InetHost::Ip(ip) = remote.host else {
-                    log::error!(target: "wire", "Unexpected host type for inbound connection {remote}; dropping..");
+                    log::debug!(target: "wire", "Unexpected host type for inbound connection {remote}; dropping..");
                     drop(connection);
 
                     return;
@@ -552,7 +552,7 @@ where
                 let transport = match Transport::with_session(session, Link::Inbound) {
                     Ok(transport) => transport,
                     Err(err) => {
-                        log::error!(target: "wire", "Failed to create transport for accepted connection: {err}");
+                        log::warn!(target: "wire", "Failed to create transport for accepted connection: {err}");
                         return;
                     }
                 };
@@ -593,7 +593,7 @@ where
                 let nid: NodeId = state.remote_static_key.unwrap();
                 // Make sure we don't try to connect to ourselves by mistake.
                 if &nid == self.signer.public_key() {
-                    log::error!(target: "wire", "Self-connection detected, disconnecting..");
+                    log::warn!(target: "wire", "Self-connection detected, disconnecting..");
                     self.disconnect(token, DisconnectReason::SelfConnection);
 
                     return;
@@ -607,7 +607,7 @@ where
                     assert_eq!(nid, peer.nid);
                     (peer.addr, Link::Outbound)
                 } else {
-                    log::error!(target: "wire", token=token.0; "Session for {nid} not found");
+                    log::debug!(target: "wire", token=token.0; "Session for {nid} not found");
                     return;
                 };
                 log::debug!(
@@ -702,8 +702,8 @@ where
                     metrics.received_bytes += data.len();
 
                     if inbox.input(&data).is_err() {
-                        log::error!(target: "wire", "Maximum inbox size ({MAX_INBOX_SIZE}) reached for peer {nid}");
-                        log::error!(target: "wire", "Unable to process messages fast enough for peer {nid}; disconnecting..");
+                        log::warn!(target: "wire", "Maximum inbox size ({MAX_INBOX_SIZE}) reached for peer {nid}");
+                        log::warn!(target: "wire", "Unable to process messages fast enough for peer {nid}; disconnecting..");
                         self.disconnect(
                             token,
                             DisconnectReason::Session(session::Error::Misbehavior),
@@ -740,7 +740,7 @@ where
                                     channels,
                                 };
                                 if let Err(e) = self.worker.try_send(task) {
-                                    log::error!(
+                                    log::warn!(
                                         target: "wire",
                                         "Worker pool failed to accept incoming fetch request: {e}"
                                     );
@@ -754,7 +754,7 @@ where
                                     log::debug!(target: "wire", "Received `end-of-file` on stream {stream} from {nid}");
 
                                     if s.channels.send(ChannelEvent::Eof).is_err() {
-                                        log::error!(target: "wire", "Worker is disconnected; cannot send `EOF`");
+                                        log::debug!(target: "wire", "Worker is disconnected; cannot send `EOF`");
                                     }
                                 } else {
                                     log::debug!(target: "wire", "Ignoring frame on closed or unknown stream {stream}");
@@ -791,7 +791,7 @@ where
                                     metrics.received_git_bytes += data.len();
 
                                     if s.channels.send(ChannelEvent::Data(data)).is_err() {
-                                        log::error!(target: "wire", "Worker is disconnected; cannot send data");
+                                        log::warn!(target: "wire", "Worker is disconnected; cannot send data");
                                     }
                                 } else {
                                     log::debug!(target: "wire", "Ignoring frame on closed or unknown stream {stream}");
@@ -802,7 +802,7 @@ where
                                 break;
                             }
                             Err(e) => {
-                                log::error!(target: "wire", "Invalid gossip message from {nid}: {e}");
+                                log::warn!(target: "wire", "Invalid gossip message from {nid}: {e}");
 
                                 if !inbox.is_empty() {
                                     log::debug!(target: "wire", "Dropping read buffer for {nid} with {} bytes", inbox.len());
@@ -875,7 +875,7 @@ where
     }
 
     fn handover_listener(&mut self, token: Token, _listener: Self::Listener) {
-        log::error!(target: "wire", token=token.0; "Listener handover is not supported");
+        log::warn!(target: "wire", token=token.0; "Listener handover is not supported");
     }
 
     fn handover_transport(&mut self, token: Token, transport: Self::Transport) {
@@ -933,7 +933,7 @@ where
                             continue;
                         }
                         None => {
-                            log::error!(target: "wire", "Dropping {} message(s) to {node_id}: unknown peer", msgs.len());
+                            log::debug!(target: "wire", "Dropping {} message(s) to {node_id}: unknown peer", msgs.len());
                             continue;
                         }
                     };
@@ -953,7 +953,7 @@ where
                 }
                 Io::Connect(node_id, addr) => {
                     if self.peers.connected().any(|(_, id)| id == &node_id) {
-                        log::error!(
+                        log::debug!(
                             target: "wire",
                             "Attempt to connect to already connected peer {node_id}"
                         );
@@ -1029,7 +1029,7 @@ where
                         // is in the service's i/o buffer. Since the service may not purge the
                         // buffer on disconnect, we should just ignore i/o actions that don't
                         // have a connected peer.
-                        log::error!(target: "wire", "Peer {remote} is not connected: dropping fetch");
+                        log::debug!(target: "wire", "Peer {remote} is not connected: dropping fetch");
                         continue;
                     };
                     let (stream, channels) =
@@ -1055,7 +1055,7 @@ where
                         );
                     }
                     if let Err(e) = self.worker.try_send(task) {
-                        log::error!(
+                        log::warn!(
                             target: "wire",
                             "Worker pool failed to accept outgoing fetch request: {e}"
                         );
@@ -1232,7 +1232,7 @@ mod logger {
             | NotConnected => {
                 log::info!(target: "wire", "Could not establish connection to {addr}: {err}")
             }
-            _ => log::error!(target: "wire", "Error establishing connection to {addr}: {err}"),
+            _ => log::warn!(target: "wire", "Failed to establish connection to {addr}: {err}"),
         }
     }
 }
