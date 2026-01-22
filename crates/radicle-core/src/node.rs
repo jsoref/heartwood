@@ -2,11 +2,11 @@
 //! is a Ed25519 public key.
 //!
 //! The human-readable format is a multibase-encoded format of the underlying Ed25519 public key, i.e.
-//! ```
+//! ```text
 //! MULTIBASE(base58-btc, MULTICODEC(public-key-type, raw-public-key-bytes))
 //! ```
 //! which results in strings that look like:
-//! ```
+//! ```text
 //! z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi
 //! ```
 
