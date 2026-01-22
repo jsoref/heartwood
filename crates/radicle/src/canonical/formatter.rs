@@ -25,7 +25,7 @@ use unicode_normalization::UnicodeNormalization;
 /// for distribution convenience. We expressly license the original code under
 /// the term of the MIT licence.
 ///
-/// [Canonical JSON]: http://wiki.laptop.org/go/Canonical_JSON
+/// [Canonical JSON]: https://web.archive.org/web/20250207154955/https://wiki.laptop.org/go/Canonical_JSON
 /// [RFC 8259]: https://www.rfc-editor.org/rfc/rfc8259.txt
 #[derive(Debug, Default)]
 pub struct CanonicalFormatter {

@@ -10,7 +10,7 @@
 //! > serde_json cannot necessarily deserialize JSON produced by this
 //! > formatter.
 //!
-//! [Canonical JSON]: http://wiki.laptop.org/go/Canonical_JSON
+//! [Canonical JSON]: https://web.archive.org/web/20250207154955/https://wiki.laptop.org/go/Canonical_JSON
 //! [olpc-json]: https://docs.rs/olpc-cjson/0.1.2/olpc_cjson
 
 pub mod formatter;
