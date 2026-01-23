@@ -20,7 +20,6 @@ Commands:
   config    Manage your local Radicle configuration
   debug     Write out information to help debug your Radicle node remotely
   follow    Manage node follow policies
-  fork      Create a fork of a repository
   id        Manage repository identities
   inbox     Manage your Radicle notifications
   init      Initialize a Radicle repository

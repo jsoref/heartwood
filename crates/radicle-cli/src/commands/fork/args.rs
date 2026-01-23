@@ -1,6 +1,16 @@
 use radicle::identity::RepoId;
 
-const ABOUT: &str = "Create a fork of a repository";
+const ABOUT: &str = "Create a fork of a repository
+
+This command is deprecated and will be removed.
+
+Instead of using `rad fork`, use `git push` to push any references to
+your own namespace of a Radicle repository. Usually
+
+    git push rad main
+
+would suffice to push the default branch (here named 'main').
+";
 
 #[derive(Debug, clap::Parser)]
 #[command(about = ABOUT, disable_version_flag = true)]

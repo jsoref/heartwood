@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Deprecations
 
+- The `rad fork` command was confusing, and mislead users as to what its purpose
+  was. Many believed it to create a hard-fork of the repository. Instead, it
+  pushed the default branch to the local user's namespace. The command is now
+  deprecated, and the user should use `git push` instead.
+
 ## 1.6.1
 
 ## Fixed Bugs

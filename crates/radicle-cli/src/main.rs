@@ -68,6 +68,7 @@ enum Command {
     Config(config::Args),
     Debug(debug::Args),
     Follow(follow::Args),
+    #[command(hide = true)] // `rad fork` command is deprecated
     Fork(fork::Args),
     Id(id::Args),
     Inbox(inbox::Args),
