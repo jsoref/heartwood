@@ -1198,16 +1198,14 @@ where
                     rid,
                     updated: updated.clone(),
                 });
-                self.emitter.emit_all(
-                    canonical
-                        .into_iter()
-                        .map(|(refname, target)| Event::CanonicalRefUpdated {
+                self.emitter
+                    .emit_all(canonical.into_iter().map(|(refname, target)| {
+                        Event::CanonicalRefUpdated {
                             rid,
                             refname,
                             target,
-                        })
-                        .collect(),
-                );
+                        }
+                    }));
 
                 // Announce our new inventory if this fetch was a full clone.
                 // Only update and announce inventory for public repositories.

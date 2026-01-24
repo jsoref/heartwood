@@ -228,15 +228,13 @@ impl<T: Clone> Emitter<T> {
     /// Emit a batch of events to subscribers and drop those who can't receive
     /// them.
     /// N.b. subscribers are also dropped if their channel is full.
-    pub fn emit_all(&self, events: Vec<T>) {
+    pub fn emit_all(&self, events: impl IntoIterator<Item = T>) {
         // SAFETY: We deliberately propagate panics from other threads holding the lock.
         #[allow(clippy::unwrap_used)]
-        self.subscribers.lock().unwrap().retain(|s| {
-            events
-                .clone()
-                .into_iter()
-                .all(|event| s.try_send(event).is_ok())
-        });
+        let mut subscribers = self.subscribers.lock().unwrap();
+        for event in events {
+            subscribers.retain(|s| s.try_send(event.clone()).is_ok());
+        }
     }
 
     /// Subscribe to events stream.
