@@ -2097,6 +2097,7 @@ where
     ) -> Result<SyncedRouting, Error> {
         let mut synced = SyncedRouting::default();
         let included = inventory.into_iter().collect::<BTreeSet<_>>();
+        let mut events = Vec::new();
 
         for (rid, result) in
             self.db
@@ -2106,7 +2107,7 @@ where
             match result {
                 InsertResult::SeedAdded => {
                     debug!(target: "service", "Routing table updated for {rid} with seed {from}");
-                    self.emitter.emit(Event::SeedDiscovered { rid, nid: from });
+                    events.push(Event::SeedDiscovered { rid, nid: from });
 
                     if self
                         .policies
@@ -2124,14 +2125,26 @@ where
                 InsertResult::NotUpdated => {}
             }
         }
-        for rid in self.db.routing().get_inventory(&from)?.into_iter() {
-            if !included.contains(&rid) {
-                if self.db.routing_mut().remove_inventory(&rid, &from)? {
-                    synced.removed.push(rid);
-                    self.emitter.emit(Event::SeedDropped { rid, nid: from });
-                }
-            }
-        }
+
+        synced.removed.extend(
+            self.db
+                .routing()
+                .get_inventory(&from)?
+                .into_iter()
+                .filter(|rid| !included.contains(rid)),
+        );
+        self.db
+            .routing_mut()
+            .remove_inventories(&synced.removed, &from)?;
+        events.extend(
+            synced
+                .removed
+                .iter()
+                .map(|&rid| Event::SeedDropped { rid, nid: from }),
+        );
+
+        self.emitter.emit_all(events);
+
         Ok(synced)
     }
 
