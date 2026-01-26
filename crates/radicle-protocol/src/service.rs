@@ -221,6 +221,8 @@ pub enum ConnectError {
     SelfConnection,
     #[error("outbound connection limit reached when attempting {nid} ({addr})")]
     LimitReached { nid: NodeId, addr: Address },
+    #[error("attempted connection to {nid}, via {addr} but addresses of this kind are not supported")]
+    UnsupportedAddress { nid: NodeId, addr: Address },
 }
 
 /// A store for all node data.
@@ -2265,6 +2267,9 @@ where
         if nid == self.node_id() {
             return Err(ConnectError::SelfConnection);
         }
+        if !self.is_supported_address(&addr) {
+            return Err(ConnectError::UnsupportedAddress { nid, addr });
+        }
         if self.sessions.contains_key(&nid) {
             return Err(ConnectError::SessionExists { nid });
         }
@@ -2503,7 +2508,7 @@ where
                     .filter(|entry| !self.sessions.contains_key(&entry.node))
                     .filter(|entry| !self.config.external_addresses.contains(&entry.address.addr))
                     .filter(|entry| &entry.node != self.nid())
-                    .filter(|entry| !entry.address.addr.is_onion() || self.config.onion.is_some())
+                    .filter(|entry| self.is_supported_address(&entry.address.addr))
                     .fold(HashMap::new(), |mut acc, entry| {
                         acc.entry(entry.node)
                             .and_modify(|e: &mut Peer| e.addresses.push(entry.address.clone()))
@@ -2641,11 +2646,7 @@ where
                     })
                     .map(|ka| (peer.nid, ka))
             })
-            .filter(|(_, ka)| match AddressType::from(&ka.addr) {
-                // Only consider onion addresses if configured.
-                AddressType::Onion => self.config.onion.is_some(),
-                AddressType::Dns | AddressType::Ipv4 | AddressType::Ipv6 => true,
-            });
+            .filter(|(_, ka)| self.is_supported_address(&ka.addr));
 
         // Peers we are going to attempt connections to.
         let connect = available.take(wanted).collect::<Vec<_>>();
@@ -2687,6 +2688,24 @@ where
             if self.reconnect(nid, addr) {
                 debug!(target: "service", "Reconnecting to {nid} (attempts={attempts})...");
             }
+        }
+    }
+
+    /// Checks if the given [`Address`] is supported for connecting to.
+    ///
+    /// # IPv4/IPv6/DNS
+    ///
+    /// Always returns `true`.
+    ///
+    /// # Tor
+    ///
+    /// If the [`Address`] is an `.onion` address and the service supports onion
+    /// routing then this will return `true`.
+    fn is_supported_address(&self, address: &Address) -> bool {
+        match AddressType::from(address) {
+            // Only consider onion addresses if configured.
+            AddressType::Onion => self.config.onion.is_some(),
+            AddressType::Dns | AddressType::Ipv4 | AddressType::Ipv6 => true,
         }
     }
 }
