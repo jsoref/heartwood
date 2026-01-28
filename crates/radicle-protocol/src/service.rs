@@ -221,7 +221,9 @@ pub enum ConnectError {
     SelfConnection,
     #[error("outbound connection limit reached when attempting {nid} ({addr})")]
     LimitReached { nid: NodeId, addr: Address },
-    #[error("attempted connection to {nid}, via {addr} but addresses of this kind are not supported")]
+    #[error(
+        "attempted connection to {nid}, via {addr} but addresses of this kind are not supported"
+    )]
     UnsupportedAddress { nid: NodeId, addr: Address },
 }
 
