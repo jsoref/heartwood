@@ -39,7 +39,7 @@ fn nodes_renamed_for_option(
 pub(crate) fn nodes_renamed(config: &Config) -> Vec<String> {
     let mut warnings = nodes_renamed_for_option("node.connect", config.node.connect.clone());
     warnings.extend(nodes_renamed_for_option(
-        "preferred_seeds",
+        "preferredSeeds",
         config.preferred_seeds.clone(),
     ));
     warnings
