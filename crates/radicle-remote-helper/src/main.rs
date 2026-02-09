@@ -18,13 +18,15 @@
 
 mod fetch;
 mod list;
+mod protocol;
 mod push;
 mod service;
 
+use std::io::{self, BufRead, Write};
 use std::path::PathBuf;
 use std::process;
 use std::str::FromStr;
-use std::{env, fmt, io};
+use std::{env, fmt};
 
 use thiserror::Error;
 
@@ -35,6 +37,8 @@ use radicle::version::Version;
 use radicle::{cob, profile};
 use radicle::{git, storage, Profile};
 use radicle_cli::terminal as cli;
+
+use crate::protocol::{Command, Line, LineReader};
 
 pub const VERSION: Version = Version {
     name: env!("CARGO_BIN_NAME"),
@@ -85,9 +89,6 @@ pub enum Error {
     /// Remote repository not found (or empty).
     #[error("remote repository `{0}` not found")]
     RepositoryNotFound(PathBuf),
-    /// Invalid command received.
-    #[error("invalid command `{0}`")]
-    InvalidCommand(String),
     /// Invalid arguments received.
     #[error("invalid arguments: {0:?}")]
     InvalidArguments(Vec<String>),
@@ -121,6 +122,9 @@ pub enum Error {
     /// Invalid object ID.
     #[error("invalid oid: {0}")]
     InvalidOid(#[from] radicle::git::ParseOidError),
+    /// Protocol error.
+    #[error(transparent)]
+    Protocol(#[from] protocol::Error),
 }
 
 /// Models values for the `verbosity` option, see
@@ -239,9 +243,7 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
     let debug = radicle::profile::env::debug();
 
     let stdin = io::stdin();
-    let mut line = String::new();
-    let mut opts = Options::default();
-    let mut expected_refs = Vec::new();
+    let stdout = io::stdout();
     let git = service::RealGitService;
     let mut node = service::RealNodeSession::new(&profile);
 
@@ -251,98 +253,152 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
         }
     }
 
-    loop {
-        let tokens = read_line(&stdin, &mut line)?;
+    run_loop(
+        stdin.lock(),
+        stdout.lock(),
+        &git,
+        &mut node,
+        &stored,
+        &profile,
+        remote,
+        url,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_loop<R: BufRead, W: Write, G: service::GitService, N: service::NodeSession>(
+    mut input: R,
+    mut output: W,
+    git: &G,
+    node: &mut N,
+    stored: &storage::git::Repository,
+    profile: &Profile,
+    remote: Option<git::fmt::RefString>,
+    url: Url,
+) -> Result<(), Error> {
+    let mut opts = Options::default();
+    let mut expected_refs = Vec::new();
+    let debug = radicle::profile::env::debug();
+
+    let mut command_reader = LineReader::new(&mut input);
+
+    while let Some(line) = command_reader.next() {
+        let line = line??;
 
         if debug {
-            eprintln!("{}: {}", VERSION.name, &tokens.join(" "));
+            eprintln!("{}: {:?}", VERSION.name, line);
         }
 
-        match tokens.as_slice() {
-            ["capabilities"] => {
-                println!("option");
-                println!("push"); // Implies `list` command.
-                println!("fetch");
-                println!();
+        match line {
+            Line::Valid(Command::Capabilities) => {
+                writeln!(output, "option")?;
+                writeln!(output, "push")?; // Implies `list` command.
+                writeln!(output, "fetch")?;
+                writeln!(output)?;
             }
-            ["option", "verbosity", verbosity] => match verbosity.parse::<Verbosity>() {
-                Ok(verbosity) => {
-                    opts.verbosity = verbosity;
-                    println!("ok");
+            Line::Valid(Command::Option { key, value }) => match key.as_str() {
+                "verbosity" => {
+                    if let Some(val) = value {
+                        match val.parse::<Verbosity>() {
+                            Ok(verbosity) => {
+                                opts.verbosity = verbosity;
+                                writeln!(output, "ok")?;
+                            }
+                            Err(err) => {
+                                writeln!(output, "error {err}")?;
+                            }
+                        }
+                    } else {
+                        writeln!(output, "error missing value for verbosity")?;
+                    }
                 }
-                Err(err) => {
-                    println!("error {err}");
+                "push-option" => {
+                    if let Some(val) = value {
+                        let args = val.split(' ').collect::<Vec<_>>();
+                        // Nb. Git documentation says that we can print `error <msg>` or `unsupported`
+                        // for options that are not supported, but this results in Git saying that
+                        // "push-option" itself is an unsupported option, which is not helpful or correct.
+                        // Hence, we just exit with an error in this case.
+                        push_option(&args, &mut opts)?;
+                        writeln!(output, "ok")?;
+                    } else {
+                        writeln!(output, "error missing value for push-option")?;
+                    }
+                }
+                "cas" => {
+                    if let Some(val) = value {
+                        expected_refs.push(val);
+                        writeln!(output, "ok")?;
+                    } else {
+                        writeln!(output, "error missing value for cas")?;
+                    }
+                }
+                "progress" => {
+                    writeln!(output, "unsupported")?;
+                }
+                _ => {
+                    writeln!(output, "unsupported")?;
                 }
             },
-            ["option", "push-option", args @ ..] => {
-                // Nb. Git documentation says that we can print `error <msg>` or `unsupported`
-                // for options that are not supported, but this results in Git saying that
-                // "push-option" itself is an unsupported option, which is not helpful or correct.
-                // Hence, we just exit with an error in this case.
-                push_option(args, &mut opts)?;
-                println!("ok");
-            }
-            ["option", "cas", refstr] => {
-                expected_refs.push((*refstr).to_owned());
-                println!("ok");
-            }
-            ["option", "progress", ..] | ["option", ..] => {
-                println!("unsupported");
-            }
-            ["fetch", oid, refstr] => {
-                let oid = git::Oid::from_str(oid)?;
-                let refstr = git::fmt::RefString::try_from(*refstr)?;
+            Line::Valid(Command::Fetch { oid, refstr }) => {
+                let oid = git::Oid::from_str(&oid)?;
+                let refstr = git::fmt::RefString::try_from(refstr.as_str())?;
 
-                fetch::run(vec![(oid, refstr)], stored, &git, &stdin, opts.verbosity)?;
-
-                // Nb. An empty line means we're done
-                println!();
-
-                return Ok(());
-            }
-            ["push", refspec] => {
-                let output = push::run(
-                    vec![refspec.to_string()],
-                    remote,
-                    url,
-                    &stored,
-                    &profile,
-                    &stdin,
-                    opts,
-                    &expected_refs,
-                    &git,
-                    &mut node,
+                fetch::run(
+                    vec![(oid, refstr)],
+                    stored,
+                    git,
+                    &mut command_reader,
+                    opts.verbosity,
                 )?;
 
-                for line in output {
-                    println!("{line}");
-                }
-                println!();
+                // Nb. An empty line means we're done
+                writeln!(output)?;
 
                 return Ok(());
             }
-            ["list"] => {
-                let refs = list::for_fetch(&url, &profile, &stored)?;
-                for line in refs {
-                    println!("{line}");
+            Line::Valid(Command::Push(refspec)) => {
+                let result = push::run(
+                    vec![refspec],
+                    remote.clone(),
+                    url.clone(),
+                    stored,
+                    profile,
+                    &mut command_reader,
+                    opts.clone(),
+                    &expected_refs,
+                    git,
+                    node,
+                )?;
+
+                for line in result {
+                    writeln!(output, "{line}")?;
                 }
-                println!();
-            }
-            ["list", "for-push"] => {
-                let refs = list::for_push(&profile, &stored)?;
-                for line in refs {
-                    println!("{line}");
-                }
-                println!();
-            }
-            [] => {
+                writeln!(output)?;
+
                 return Ok(());
             }
-            _ => {
-                return Err(Error::InvalidCommand(line.trim().to_owned()));
+            Line::Valid(Command::List) => {
+                let refs = list::for_fetch(&url, profile, stored)?;
+                for line in refs {
+                    writeln!(output, "{line}")?;
+                }
+                writeln!(output)?;
+            }
+            Line::Valid(Command::ListForPush) => {
+                let refs = list::for_push(profile, stored)?;
+                for line in refs {
+                    writeln!(output, "{line}")?;
+                }
+                writeln!(output)?;
+            }
+            Line::Blank => {
+                break;
             }
         }
     }
+
+    Ok(())
 }
 
 /// Parse a single push option. Returns `Ok` if it was successful.
@@ -392,20 +448,6 @@ fn push_option(args: &[&str], opts: &mut Options) -> Result<(), Error> {
         }
     }
     Ok(())
-}
-
-/// Read one line from stdin, and split it into tokens.
-pub(crate) fn read_line<'a>(stdin: &io::Stdin, line: &'a mut String) -> io::Result<Vec<&'a str>> {
-    line.clear();
-
-    let read = stdin.read_line(line)?;
-    if read == 0 {
-        return Ok(vec![]);
-    }
-    let line = line.trim();
-    let tokens = line.split(' ').filter(|t| !t.is_empty()).collect();
-
-    Ok(tokens)
 }
 
 /// Write a hint to the user.

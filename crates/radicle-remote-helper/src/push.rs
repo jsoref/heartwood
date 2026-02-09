@@ -31,7 +31,7 @@ use radicle_cli::terminal as term;
 
 use crate::service::GitService;
 use crate::service::NodeSession;
-use crate::{hint, read_line, warn, Options, Verbosity};
+use crate::{hint, warn, Options, Verbosity};
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -50,9 +50,9 @@ pub enum Error {
     /// Identity payload error.
     #[error("payload: {0}")]
     Payload(#[from] radicle::identity::doc::PayloadError),
-    /// Invalid command received.
-    #[error("invalid command `{0}`")]
-    InvalidCommand(String),
+    /// Protocol error.
+    #[error("protocol error: {0}")]
+    Protocol(#[from] crate::protocol::Error),
     /// I/O error.
     #[error("i/o error: {0}")]
     Io(#[from] io::Error),
@@ -128,6 +128,13 @@ pub enum Error {
         stderr: String,
         stdout: String,
     },
+
+    /// Received an unexpected command after the first `push` command.
+    #[error("unexpected command after first `push`: {0:?}")]
+    UnexpectedCommand(crate::protocol::Command),
+
+    #[error(transparent)]
+    CommandError(#[from] CommandError),
 }
 
 /// Push command.
@@ -139,7 +146,7 @@ enum Command {
 }
 
 #[derive(Debug, thiserror::Error)]
-enum CommandError {
+pub(super) enum CommandError {
     #[error("expected refspec of the form `[<src>]:<dst>`, got {rev}")]
     Empty { rev: String },
     #[error("failed to parse destination reference ({rev}): {err}")]
@@ -249,7 +256,7 @@ pub fn run(
     url: Url,
     stored: &storage::git::Repository,
     profile: &Profile,
-    stdin: &io::Stdin,
+    command_reader: &mut crate::protocol::LineReader<impl io::Read>,
     opts: Options,
     expected_refs: &[String],
     git: &impl GitService,
@@ -267,7 +274,6 @@ pub fn run(
             .ok_or(Error::KeyMismatch(ns.into()))
     })?;
     let signer = profile.signer()?;
-    let mut line = String::new();
     let mut ok = HashMap::new();
     let hints = opts.hints || profile.hints();
     let mut output = Vec::new();
@@ -275,16 +281,16 @@ pub fn run(
     assert_eq!(signer.public_key(), &nid);
 
     // Read all the `push` lines.
-    loop {
-        let tokens = read_line(stdin, &mut line)?;
-        match tokens.as_slice() {
-            ["push", spec] => {
-                specs.push(spec.to_string());
+    for line in command_reader.by_ref() {
+        match line?? {
+            crate::protocol::Line::Blank => {
+                // An empty line means end of input.
+                break;
             }
-            // An empty line means end of input.
-            [] => break,
-            // Once the first `push` command is received, we don't expect anything else.
-            _ => return Err(Error::InvalidCommand(line.trim().to_owned())),
+            crate::protocol::Line::Valid(crate::protocol::Command::Push(spec)) => {
+                specs.push(spec);
+            }
+            crate::protocol::Line::Valid(command) => return Err(Error::UnexpectedCommand(command)),
         }
     }
     let delegates = stored.delegates()?;
@@ -299,9 +305,7 @@ pub fn run(
 
     // For each refspec, push a ref or delete a ref.
     for spec in specs {
-        let Ok(cmd) = Command::parse(&spec, &working) else {
-            return Err(Error::InvalidCommand(format!("push {spec}")));
-        };
+        let cmd = Command::parse(&spec, &working)?;
         let result = match &cmd {
             Command::Delete(dst) => {
                 // Delete refs.
