@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Fixed Bugs
 
+- When preparing commands to execute, the `shlex` crate was used on all platforms.
+  The semantics on Windows are different (e.g. '\' is a path separator on Windows
+  but marks an escape sequence on Unix-like systems), which lead to issues when
+  attempting to execute child processes.
+  This is fixed by using `winsplit` on Windows instead.
+
 ## Deprecations
 
 - The `rad fork` command was confusing, and mislead users as to what its purpose
