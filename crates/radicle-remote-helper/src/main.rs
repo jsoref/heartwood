@@ -243,6 +243,7 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
     let mut opts = Options::default();
     let mut expected_refs = Vec::new();
     let git = service::RealGitService;
+    let mut node = service::RealNodeSession::new(&profile);
 
     if let Err(e) = radicle::io::set_file_limit(4096) {
         if debug {
@@ -310,6 +311,7 @@ pub fn run(profile: radicle::Profile) -> Result<(), Error> {
                     opts,
                     &expected_refs,
                     &git,
+                    &mut node,
                 )?;
 
                 for line in output {
