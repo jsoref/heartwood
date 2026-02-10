@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   but marks an escape sequence on Unix-like systems), which lead to issues when
   attempting to execute child processes.
   This is fixed by using `winsplit` on Windows instead.
+- On Windows, zombie `git-upload-pack` processes are now prevented by using the
+  "Job" API of the operating system to group child processes and their children.
 
 ## Deprecations
 
