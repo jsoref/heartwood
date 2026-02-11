@@ -5,9 +5,9 @@ use std::sync::Arc;
 use std::{fmt, io, time};
 
 #[cfg(unix)]
-use std::os::unix::net::UnixStream as Stream;
+use std::os::unix::net::UnixStream;
 #[cfg(windows)]
-use winpipe::WinStream as Stream;
+use uds_windows::UnixStream;
 
 use crossbeam_channel as chan;
 use radicle::crypto::PublicKey;
@@ -338,7 +338,7 @@ impl radicle::node::Handle for Handle {
         // Send a shutdown request to our own control socket. This is the only way to kill the
         // control thread gracefully. Since the control thread may have called this function,
         // the control socket may already be disconnected. Ignore errors.
-        Stream::connect(self.home.socket())
+        UnixStream::connect(self.home.socket())
             .and_then(|sock| Command::Shutdown.to_writer(sock))
             .ok();
 

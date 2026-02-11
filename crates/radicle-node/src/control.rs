@@ -6,9 +6,9 @@ use std::path::PathBuf;
 use std::{io, net, time};
 
 #[cfg(unix)]
-use std::os::unix::net::{UnixListener as Listener, UnixStream as Stream};
+use std::os::unix::net::{UnixListener, UnixStream};
 #[cfg(windows)]
-use winpipe::{WinListener as Listener, WinStream as Stream};
+use uds_windows::{UnixListener, UnixStream};
 
 use radicle::node::Handle;
 use serde_json as json;
@@ -33,7 +33,7 @@ pub enum Error {
 }
 
 /// Listen for commands on the control socket, and process them.
-pub fn listen<E, H>(listener: Listener, handle: H) -> Result<(), Error>
+pub fn listen<E, H>(listener: UnixListener, handle: H) -> Result<(), Error>
 where
     H: Handle<Error = runtime::HandleError> + 'static,
     H::Sessions: serde::Serialize,
@@ -45,11 +45,11 @@ where
 
     for incoming in listener.incoming() {
         match incoming {
-            Ok(stream) => {
+            Ok(mut stream) => {
                 let handle = handle.clone();
 
                 thread::spawn(&nid, "control", move || {
-                    if let Err((e, mut stream)) = command(stream, handle) {
+                    if let Err(e) = command(&stream, handle) {
                         log::debug!(target: "control", "Command returned error: {e}");
 
                         CommandResult::error(e).to_writer(&mut stream).ok();
@@ -77,63 +77,16 @@ enum CommandError {
     Io(#[from] io::Error),
 }
 
-#[cfg(unix)]
-fn command<E, H>(stream: Stream, handle: H) -> Result<(), (CommandError, Stream)>
+fn command<E, H>(stream: &UnixStream, mut handle: H) -> Result<(), CommandError>
 where
     H: Handle<Error = runtime::HandleError> + 'static,
     H::Sessions: serde::Serialize,
     CommandResult<E>: From<H::Event>,
     E: serde::Serialize,
 {
-    let reader = BufReader::new(&stream);
-    let writer = LineWriter::new(&stream);
+    let mut reader = BufReader::new(stream);
+    let mut writer = LineWriter::new(stream);
 
-    command_internal(reader, writer, handle).map_err(|e| (e, stream))
-}
-
-/// Due to different mutability requirements between Unix and Windows,
-/// we are forced to clone the stream on Windows.
-///
-/// # Errors
-///
-/// As of winpipe 0.1.1, [`WinStream::try_clone`] is actually infallible.
-#[cfg(windows)]
-fn command<E, H>(stream: Stream, handle: H) -> Result<(), (CommandError, Stream)>
-where
-    H: Handle<Error = runtime::HandleError> + 'static,
-    H::Sessions: serde::Serialize,
-    CommandResult<E>: From<H::Event>,
-    E: serde::Serialize,
-{
-    let mut reader = match stream.try_clone() {
-        Ok(reader) => reader,
-        Err(err) => return Err((err.into(), stream)),
-    };
-    let reader = BufReader::new(&mut reader);
-
-    let mut writer = match stream.try_clone() {
-        Ok(writer) => writer,
-        Err(err) => return Err((err.into(), stream)),
-    };
-    let writer = LineWriter::new(&mut writer);
-
-    command_internal(reader, writer, handle).map_err(|e| (e, stream))
-}
-
-#[inline(always)]
-fn command_internal<E, H, R, W>(
-    mut reader: BufReader<R>,
-    mut writer: LineWriter<W>,
-    mut handle: H,
-) -> Result<(), CommandError>
-where
-    H: Handle<Error = runtime::HandleError> + 'static,
-    H::Sessions: serde::Serialize,
-    CommandResult<E>: From<H::Event>,
-    E: serde::Serialize,
-    R: io::Read,
-    W: io::Write,
-{
     let mut line = String::new();
 
     reader.read_line(&mut line)?;
@@ -319,7 +272,7 @@ mod tests {
         let handle = test::handle::Handle::default();
         let socket = tmp.path().join("alice.sock");
         let rids = test::arbitrary::set::<RepoId>(1..3);
-        let listener = Listener::bind(&socket).unwrap();
+        let listener = UnixListener::bind(&socket).unwrap();
         let nid = handle.nid().unwrap();
 
         thread::spawn({
@@ -330,7 +283,7 @@ mod tests {
 
         for rid in &rids {
             let mut stream = loop {
-                if let Ok(stream) = Stream::connect(&socket) {
+                if let Ok(stream) = UnixStream::connect(&socket) {
                     break stream;
                 }
             };
@@ -369,7 +322,7 @@ mod tests {
         let socket = tmp.path().join("node.sock");
         let proj = test::arbitrary::gen::<RepoId>(1);
         let peer = test::arbitrary::gen::<NodeId>(1);
-        let listener = Listener::bind(&socket).unwrap();
+        let listener = UnixListener::bind(&socket).unwrap();
         let mut handle = Node::new(&socket);
 
         thread::spawn({

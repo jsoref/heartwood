@@ -63,7 +63,7 @@ unicode-normalization = { version = "0.1" }
 libc = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-winpipe = { workspace = true }
+uds_windows = { workspace = true }
 
 [dev-dependencies]
 emojis = "0.6"

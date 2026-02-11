@@ -25,9 +25,9 @@ use std::str::FromStr;
 use std::{fmt, io, net, thread, time};
 
 #[cfg(unix)]
-use std::os::unix::net::UnixStream as Stream;
+use std::os::unix::net::UnixStream;
 #[cfg(windows)]
-use winpipe::WinStream as Stream;
+use uds_windows::UnixStream;
 
 use amplify::WrapperMut;
 use cyphernet::addr::NetAddr;
@@ -948,7 +948,7 @@ pub trait Handle: Clone + Sync + Send {
 /// The iterator blocks for a `timeout` duration, returning [`Error::TimedOut`]
 /// if the duration is reached.
 pub struct LineIter<T> {
-    stream: BufReader<Stream>,
+    stream: BufReader<UnixStream>,
     timeout: time::Duration,
     witness: PhantomData<T>,
 }
@@ -1009,7 +1009,7 @@ impl Node {
         cmd: Command,
         timeout: time::Duration,
     ) -> Result<LineIter<T>, Error> {
-        let mut stream = Stream::connect(&self.socket)
+        let mut stream = UnixStream::connect(&self.socket)
             .map_err(|e| Error::Connect(self.socket.clone(), e.kind()))?;
         cmd.to_writer(&mut stream)?;
         Ok(LineIter {

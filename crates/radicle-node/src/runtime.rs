@@ -6,9 +6,9 @@ use std::path::PathBuf;
 use std::{fs, io, net};
 
 #[cfg(unix)]
-use std::os::unix::net::UnixListener as Listener;
+use std::os::unix::net::UnixListener;
 #[cfg(windows)]
-use winpipe::WinListener as Listener;
+use uds_windows::UnixListener;
 
 use crossbeam_channel as chan;
 use cyphernet::Ecdh;
@@ -99,12 +99,12 @@ impl From<service::Error> for Error {
     }
 }
 
-/// Wraps a [`Listener`] but tracks its origin.
+/// Wraps a [`UnixListener`] but tracks its origin.
 pub enum ControlSocket {
     /// The listener was created by binding to it.
-    Bound(Listener, PathBuf),
+    Bound(UnixListener, PathBuf),
     /// The listener was received via socket activation.
-    Received(Listener),
+    Received(UnixListener),
 }
 
 /// Holds join handles to the client threads, as well as a client handle.
@@ -323,7 +323,7 @@ impl Runtime {
     }
 
     #[cfg(all(feature = "systemd", target_os = "linux"))]
-    fn receive_listener() -> Option<Listener> {
+    fn receive_listener() -> Option<UnixListener> {
         let fd = match radicle_systemd::listen::fd("control") {
             Ok(Some(fd)) => fd,
             Ok(None) => return None,
@@ -348,7 +348,7 @@ impl Runtime {
             return None;
         }
 
-        Some(Listener::from(socket))
+        Some(UnixListener::from(socket))
     }
 
     fn bind(path: PathBuf) -> Result<ControlSocket, Error> {
@@ -361,7 +361,7 @@ impl Runtime {
         }
 
         log::info!(target: "node", "Binding control socket {}..", &path.display());
-        match Listener::bind(&path) {
+        match UnixListener::bind(&path) {
             Ok(sock) => Ok(ControlSocket::Bound(sock, path)),
             Err(err) if err.kind() == io::ErrorKind::AddrInUse => Err(Error::AlreadyRunning(path)),
             Err(err) => Err(err.into()),
