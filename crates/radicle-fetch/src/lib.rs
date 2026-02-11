@@ -12,7 +12,7 @@ mod state;
 use std::io;
 use std::time::Instant;
 
-use gix_protocol::handshake;
+use gix_protocol::{handshake, Handshake};
 
 pub use gix_protocol::{transport::bstr::ByteSlice, RemoteProgress};
 pub use handle::Handle;
@@ -131,7 +131,7 @@ where
     result
 }
 
-fn perform_handshake<R, S>(handle: &mut Handle<R, S>) -> Result<handshake::Outcome, Error>
+fn perform_handshake<R, S>(handle: &mut Handle<R, S>) -> Result<Handshake, Error>
 where
     S: transport::ConnectionStream,
 {

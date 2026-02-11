@@ -10,6 +10,7 @@ use std::sync::Arc;
 use bstr::BString;
 use gix_features::progress::prodash::progress;
 use gix_protocol::handshake;
+use gix_protocol::Handshake;
 use gix_transport::client;
 use gix_transport::Protocol;
 use gix_transport::Service;
@@ -91,11 +92,12 @@ where
 
     /// Perform the handshake with the server side.
     #[allow(clippy::result_large_err)]
-    pub(crate) fn handshake(&mut self) -> Result<handshake::Outcome, handshake::Error> {
+    pub(crate) fn handshake(&mut self) -> Result<Handshake, handshake::Error> {
         log::trace!("Performing handshake for {}", self.repo);
         let (read, write) = self.stream.open();
-        gix_protocol::fetch::handshake(
+        gix_protocol::handshake(
             &mut Connection::new(read, write, self.repo.clone()),
+            Service::UploadPack,
             |_| Ok(None),
             vec![],
             &mut progress::Discard,
@@ -106,7 +108,7 @@ where
     pub(crate) fn ls_refs(
         &mut self,
         prefixes: impl IntoIterator<Item = RefPrefix>,
-        handshake: &handshake::Outcome,
+        handshake: &Handshake,
     ) -> Result<Vec<handshake::Ref>, Error> {
         let prefixes = prefixes.into_iter().collect::<BTreeSet<_>>();
         let (read, write) = self.stream.open();
@@ -126,7 +128,7 @@ where
         &mut self,
         wants_haves: WantsHaves,
         interrupt: Arc<AtomicBool>,
-        handshake: &handshake::Outcome,
+        handshake: &Handshake,
     ) -> Result<Option<Keepfile>, Error> {
         log::trace!(
             "Running fetch wants={:?}, haves={:?}",
@@ -179,7 +181,7 @@ where
 }
 
 pub(crate) struct Connection<R, W> {
-    inner: client::git::Connection<R, W>,
+    inner: client::git::blocking_io::Connection<R, W>,
 }
 
 impl<R, W> Connection<R, W>
@@ -189,7 +191,7 @@ where
 {
     pub fn new(read: R, write: W, repo: BString) -> Self {
         Self {
-            inner: client::git::Connection::new(
+            inner: client::git::blocking_io::Connection::new(
                 read,
                 write,
                 Protocol::V2,
@@ -202,21 +204,7 @@ where
     }
 }
 
-impl<R, W> client::Transport for Connection<R, W>
-where
-    R: std::io::Read,
-    W: std::io::Write,
-{
-    fn handshake<'b>(
-        &mut self,
-        service: Service,
-        extra_parameters: &'b [(&'b str, Option<&'b str>)],
-    ) -> Result<client::SetServiceResponse<'_>, client::Error> {
-        self.inner.handshake(service, extra_parameters)
-    }
-}
-
-impl<R, W> client::TransportWithoutIO for Connection<R, W>
+impl<R, W> client::blocking_io::Transport for Connection<R, W>
 where
     R: std::io::Read,
     W: std::io::Write,
@@ -226,10 +214,24 @@ where
         write_mode: client::WriteMode,
         on_into_read: client::MessageKind,
         trace: bool,
-    ) -> Result<client::RequestWriter<'_>, client::Error> {
+    ) -> Result<client::blocking_io::RequestWriter<'_>, client::Error> {
         self.inner.request(write_mode, on_into_read, trace)
     }
 
+    fn handshake<'b>(
+        &mut self,
+        service: Service,
+        extra_parameters: &'b [(&'b str, Option<&'b str>)],
+    ) -> Result<client::blocking_io::SetServiceResponse<'_>, client::Error> {
+        self.inner.handshake(service, extra_parameters)
+    }
+}
+
+impl<R, W> client::TransportWithoutIO for Connection<R, W>
+where
+    R: std::io::Read,
+    W: std::io::Write,
+{
     fn to_url(&self) -> std::borrow::Cow<'_, bstr::BStr> {
         self.inner.to_url()
     }

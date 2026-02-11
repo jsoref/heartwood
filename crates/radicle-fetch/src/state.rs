@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::time::Instant;
 
-use gix_protocol::handshake;
+use gix_protocol::Handshake;
 use radicle::crypto::PublicKey;
 use radicle::git::{fmt::Qualified, Oid};
 use radicle::identity::{Did, Doc, DocError};
@@ -214,7 +214,7 @@ impl FetchState {
     pub(super) fn run_stage<R, S, F>(
         &mut self,
         handle: &mut Handle<R, S>,
-        handshake: &handshake::Outcome,
+        handshake: &Handshake,
         step: &F,
     ) -> Result<BTreeSet<PublicKey>, error::Step>
     where
@@ -231,7 +231,7 @@ impl FetchState {
                 .collect::<Vec<_>>(),
             None => vec![],
         };
-        log::trace!("Received refs {refs:?}");
+        log::trace!("Received refs {refs:#?}");
         step.pre_validate(&refs)?;
 
         let wants_haves = step.wants_haves(handle.repository(), &refs)?;
@@ -288,7 +288,7 @@ impl FetchState {
     fn run_special_refs<R, S>(
         &mut self,
         handle: &mut Handle<R, S>,
-        handshake: &handshake::Outcome,
+        handshake: &Handshake,
         delegates: BTreeSet<PublicKey>,
         threshold: usize,
         limit: &FetchLimit,
@@ -357,7 +357,7 @@ impl FetchState {
     pub(super) fn run<R, S>(
         mut self,
         handle: &mut Handle<R, S>,
-        handshake: &handshake::Outcome,
+        handshake: &Handshake,
         limit: FetchLimit,
         remote: PublicKey,
         refs_at: Option<Vec<RefsAt>>,

@@ -3,10 +3,10 @@ use std::collections::BTreeSet;
 use std::io;
 
 use gix_features::progress::Progress;
-use gix_protocol::handshake::{self, Ref};
-use gix_protocol::ls_refs;
+use gix_protocol::handshake::Ref;
 use gix_protocol::transport::Protocol;
-use gix_transport::bstr::{BString, ByteVec};
+use gix_protocol::{ls_refs, Handshake};
+use gix_transport::bstr::BString;
 
 use crate::stage::RefPrefix;
 
@@ -33,7 +33,7 @@ pub struct Config {
 /// the `config`.
 pub(crate) fn run<R, W>(
     config: Config,
-    handshake: &handshake::Outcome,
+    handshake: &Handshake,
     mut conn: Connection<R, W>,
     progress: &mut impl Progress,
 ) -> Result<Vec<Ref>, ls_refs::Error>
@@ -42,7 +42,7 @@ where
     W: io::Write,
 {
     log::trace!("Performing ls-refs: {:?}", config.prefixes);
-    let handshake::Outcome {
+    let Handshake {
         server_protocol_version: protocol,
         capabilities,
         ..
@@ -54,32 +54,32 @@ where
         )));
     }
 
-    let prefixes = config
-        .prefixes
-        .into_iter()
-        .map(|prefix| prefix.into_bstring())
-        .collect::<BTreeSet<_>>();
+    let (refspecs, prefixes) = {
+        let n = config.prefixes.len();
+        config.prefixes.into_iter().fold(
+            (Vec::with_capacity(n), Vec::with_capacity(n)),
+            |(mut specs, mut prefixes), prefix| {
+                specs.push(prefix.as_refspec());
+                prefixes.push(prefix.into_bstring());
+                (specs, prefixes)
+            },
+        )
+    };
 
-    let refs = gix_protocol::ls_refs(
-        &mut conn,
+    log::trace!("ls-refs prefixes: {:#?}", refspecs);
+
+    let ls_refs = gix_protocol::LsRefsCommand::new(
+        Some(&refspecs),
         capabilities,
-        |_caps, args, features| {
-            for prefix in &prefixes {
-                let mut arg = BString::from("ref-prefix ");
-                arg.push_str(prefix);
-                args.push(arg)
-            }
-            features.push(("agent", Some(Cow::Owned(agent_name()))));
-            Ok(gix_protocol::ls_refs::Action::Continue)
-        },
-        progress,
-        false, /* trace packetlines */
-    )?;
+        ("agent", Some(Cow::Owned(agent_name()))),
+    );
 
-    // Even though we sent `ref-prefix`, listed refs must still be
-    // filtered, since `ref-prefix` is just an optimization hint.
-    // See <https://git-scm.com/docs/protocol-v2#_ls_refs>.
-    let refs = refs
+    // According to [1], in the section on `ls-refs`, we must still filter on
+    // this side, since `ref-prefix` is simply an optimization.
+    //
+    // [1]: https://mirrors.edge.kernel.org/pub/software/scm/git/docs/gitprotocol-v2.html
+    let refs = ls_refs
+        .invoke_blocking(&mut conn, progress, false)?
         .into_iter()
         .filter(|r| {
             let (refname, _, _) = r.unpack();
@@ -87,5 +87,6 @@ where
         })
         .collect();
 
+    log::trace!("ls-refs received: {refs:#?}");
     Ok(refs)
 }

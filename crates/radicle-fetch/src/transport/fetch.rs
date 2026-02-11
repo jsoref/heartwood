@@ -4,10 +4,9 @@ use std::sync::{atomic::AtomicBool, Arc};
 
 use gix_features::progress::{DynNestedProgress, NestedProgress};
 use gix_pack as pack;
-use gix_protocol::fetch;
 use gix_protocol::fetch::negotiate::one_round::State;
-use gix_protocol::handshake;
 use gix_protocol::handshake::Ref;
+use gix_protocol::{fetch, Handshake};
 
 use crate::git::packfile;
 
@@ -149,7 +148,7 @@ impl fetch::Negotiate for Negotiate {
 pub(crate) fn run<P, R, W>(
     wants_haves: WantsHaves,
     pack_writer: PackWriter,
-    handshake: &handshake::Outcome,
+    handshake: &Handshake,
     mut conn: Connection<R, W>,
     progress: &mut P,
 ) -> Result<FetchOut, Error>
