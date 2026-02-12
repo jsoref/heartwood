@@ -844,7 +844,7 @@ where
                 log::error!(target: "wire", token=token.0; "Listener disconnected");
             }
             reactor::Error::TransportDisconnect(token, transport) => {
-                log::error!(target: "wire", token=token.0; "Peer disconnected");
+                log::trace!(target: "wire", token=token.0; "Peer disconnected");
 
                 // We're dropping the TCP connection here.
                 drop(transport);
