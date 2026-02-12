@@ -68,7 +68,7 @@ pub struct Fetch {
 pub struct Fetched {
     /// The node from which the repository was fetched from.
     pub from: NodeId,
-    /// The repository that was fetch.
+    /// The repository that was fetched.
     pub rid: RepoId,
 }
 
