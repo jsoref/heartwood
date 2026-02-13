@@ -350,7 +350,7 @@ pub struct Service<D, S, G> {
     inventory: InventoryAnnouncement,
     /// Source of entropy.
     rng: Rng,
-    fetcher: FetcherService<chan::Sender<FetchResult>>,
+    fetcher: FetcherService<command::Responder<FetchResult>>,
     /// Request/connection rate limiter.
     limiter: RateLimiter,
     /// Current seeded repositories bloom filter.
@@ -800,10 +800,10 @@ where
                 self.outbox.disconnect(nid, DisconnectReason::Command);
             }
             Command::Config(resp) => {
-                resp.send(self.config.clone()).ok();
+                resp.ok(self.config.clone()).ok();
             }
             Command::ListenAddrs(resp) => {
-                resp.send(self.listening.clone()).ok();
+                resp.ok(self.listening.clone()).ok();
             }
             Command::Seeds(rid, namespaces, resp) => match self.seeds(&rid, namespaces) {
                 Ok(seeds) => {
@@ -813,10 +813,11 @@ where
                         "Found {} connected seed(s) and {} disconnected seed(s) for {}",
                         connected.len(), disconnected.len(),  rid
                     );
-                    resp.send(seeds).ok();
+                    resp.ok(seeds).ok();
                 }
                 Err(e) => {
                     warn!(target: "service", "Failed to get seeds for {rid}: {e}");
+                    resp.err(e).ok();
                 }
             },
             Command::Fetch(rid, seed, timeout, resp) => {
@@ -827,7 +828,7 @@ where
                 let seeded = self
                     .seed(&rid, scope)
                     .expect("Service::command: error seeding repository");
-                resp.send(seeded).ok();
+                resp.ok(seeded).ok();
 
                 // Let all our peers know that we're interested in this repo from now on.
                 self.outbox.broadcast(
@@ -839,31 +840,34 @@ where
                 let updated = self
                     .unseed(&id)
                     .expect("Service::command: error unseeding repository");
-                resp.send(updated).ok();
+                resp.ok(updated).ok();
             }
             Command::Follow(id, alias, resp) => {
                 let seeded = self
                     .policies
                     .follow(&id, alias.as_ref())
                     .expect("Service::command: error following node");
-                resp.send(seeded).ok();
+                resp.ok(seeded).ok();
             }
             Command::Unfollow(id, resp) => {
                 let updated = self
                     .policies
                     .unfollow(&id)
                     .expect("Service::command: error unfollowing node");
-                resp.send(updated).ok();
+                resp.ok(updated).ok();
             }
             Command::AnnounceRefs(id, namespaces, resp) => {
                 let doc = match self.storage.get(id) {
                     Ok(Some(doc)) => doc,
                     Ok(None) => {
                         warn!(target: "service", "Failed to announce refs: repository {id} not found");
+                        resp.err(command::Error::custom(format!("repository {id} not found")))
+                            .ok();
                         return;
                     }
                     Err(e) => {
                         warn!(target: "service", "Failed to announce refs: doc error: {e}");
+                        resp.err(e).ok();
                         return;
                     }
                 };
@@ -871,11 +875,12 @@ where
                 match self.announce_own_refs(id, doc, namespaces) {
                     Ok((refs, _timestamp)) => {
                         for r in refs {
-                            resp.send(r).ok();
+                            resp.ok(r).ok();
                         }
                     }
                     Err(err) => {
                         warn!(target: "service", "Failed to announce refs: {err}");
+                        resp.err(err).ok();
                     }
                 }
             }
@@ -884,10 +889,11 @@ where
             }
             Command::AddInventory(rid, resp) => match self.add_inventory(rid) {
                 Ok(updated) => {
-                    resp.send(updated).ok();
+                    resp.ok(updated).ok();
                 }
                 Err(e) => {
                     warn!(target: "service", "Failed to add {rid} to inventory: {e}");
+                    resp.err(e).ok();
                 }
             },
             Command::QueryState(query, sender) => {
@@ -929,19 +935,19 @@ where
         from: NodeId,
         refs_at: Vec<RefsAt>,
         timeout: time::Duration,
-        channel: Option<chan::Sender<FetchResult>>,
+        channel: Option<command::Responder<FetchResult>>,
     ) {
         let session = {
             let reason = format!("peer {from} is not connected; cannot initiate fetch");
             let Some(session) = self.sessions.get_mut(&from) else {
                 if let Some(c) = channel {
-                    c.send(FetchResult::Failed { reason }).ok();
+                    c.ok(FetchResult::Failed { reason }).ok();
                 }
                 return;
             };
             if !session.is_connected() {
                 if let Some(c) = channel {
-                    c.send(FetchResult::Failed { reason }).ok();
+                    c.ok(FetchResult::Failed { reason }).ok();
                 }
                 return;
             }
@@ -957,7 +963,7 @@ where
         let fetcher::service::FetchInitiated { event, rejected } = self.fetcher.fetch(cmd, channel);
 
         if let Some(c) = rejected {
-            c.send(FetchResult::Failed {
+            c.ok(FetchResult::Failed {
                 reason: "fetch queue at capacity".to_string(),
             })
             .ok();
@@ -1020,7 +1026,7 @@ where
                     },
                 };
                 for responder in subscribers {
-                    responder.send(fetch_result.clone()).ok();
+                    responder.ok(fetch_result.clone()).ok();
                 }
                 match result {
                     Ok(crate::worker::fetch::FetchResult {
@@ -1293,7 +1299,7 @@ where
         // Notify orphaned responders
         for (rid, responder) in orphaned {
             responder
-                .send(FetchResult::Failed {
+                .ok(FetchResult::Failed {
                     reason: format!("failed fetch to {rid}, peer disconnected: {reason}"),
                 })
                 .ok();

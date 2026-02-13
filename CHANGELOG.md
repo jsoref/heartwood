@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   "Job" API of the operating system to group child processes and their children.
 - On Windows, signal handling was not supported. The `radicle-node` executable
   will now respect signal handling on Windows.
+- Commands sent to the `Service` would never respond when it encountered errors.
+  This would result in timeouts when commands are run from the `rad` CLI.
+  The `Service` has now learned to return results when an error occurs which
+  will be reported back to the user.
 
 ## Deprecations
 
