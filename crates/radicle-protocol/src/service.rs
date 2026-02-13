@@ -971,14 +971,13 @@ where
         refs: NonEmpty<RefsAt>,
         scope: Scope,
         timeout: time::Duration,
-        channel: Option<chan::Sender<FetchResult>>,
     ) -> bool {
         match self.refs_status_of(rid, refs, &scope) {
             Ok(status) => {
                 if status.want.is_empty() {
                     debug!(target: "service", "Skipping fetch for {rid}, all refs are already in storage");
                 } else {
-                    self.fetch(rid, from, status.want, timeout, channel);
+                    self.fetch(rid, from, status.want, timeout, None);
                     return true;
                 }
             }
@@ -1206,11 +1205,11 @@ where
 
             debug!(target: "service", "Dequeued fetch for {} from {}", rid, from);
 
-            // Channel is `None` in both cases since they will already be
-            // registered with the fetcher service.
             if let Some(refs) = NonEmpty::from_vec(refs_at.clone()) {
-                self.fetch_refs_at(rid, from, refs, scope, timeout, None);
+                self.fetch_refs_at(rid, from, refs, scope, timeout);
             } else {
+                // Channel is `None` since they will already be
+                // registered with the fetcher service.
                 self.fetch(rid, from, refs_at, timeout, None);
             }
         }
@@ -1664,7 +1663,7 @@ where
                     return Ok(relay);
                 };
                 // Finally, start the fetch.
-                self.fetch_refs_at(message.rid, remote.id, refs, scope, FETCH_TIMEOUT, None);
+                self.fetch_refs_at(message.rid, remote.id, refs, scope, FETCH_TIMEOUT);
 
                 return Ok(relay);
             }
