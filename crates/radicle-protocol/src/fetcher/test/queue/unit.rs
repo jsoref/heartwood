@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use radicle::test::arbitrary;
-use radicle_core::{NodeId, RepoId};
+use radicle_core::RepoId;
 
 use crate::fetcher::state::Enqueue;
 use crate::fetcher::test::queue::helpers::*;
@@ -12,7 +12,6 @@ fn zero_timeout_accepted() {
     let mut queue = create_queue(10);
     let item = QueuedFetch {
         rid: arbitrary::gen(1),
-        from: arbitrary::gen(1),
         refs_at: vec![],
         timeout: Duration::ZERO,
     };
@@ -24,7 +23,6 @@ fn max_timeout_accepted() {
     let mut queue = create_queue(10);
     let item = QueuedFetch {
         rid: arbitrary::gen(1),
-        from: arbitrary::gen(1),
         refs_at: vec![],
         timeout: Duration::MAX,
     };
@@ -34,18 +32,15 @@ fn max_timeout_accepted() {
 #[test]
 fn empty_refs_at_items_can_be_equal() {
     let rid: RepoId = arbitrary::gen(1);
-    let from: NodeId = arbitrary::gen(1);
     let timeout = Duration::from_secs(30);
 
     let item1 = QueuedFetch {
         rid,
-        from,
         refs_at: vec![],
         timeout,
     };
     let item2 = QueuedFetch {
         rid,
-        from,
         refs_at: vec![],
         timeout,
     };
@@ -64,19 +59,16 @@ fn merge_preserves_position_in_queue() {
     // Enqueue three items
     let _ = queue.enqueue(QueuedFetch {
         rid: rid_first,
-        from: arbitrary::gen(1),
         refs_at: vec![],
         timeout: Duration::from_secs(30),
     });
     let _ = queue.enqueue(QueuedFetch {
         rid: rid_second,
-        from: arbitrary::gen(1),
         refs_at: vec![],
         timeout: Duration::from_secs(30),
     });
     let _ = queue.enqueue(QueuedFetch {
         rid: rid_third,
-        from: arbitrary::gen(1),
         refs_at: vec![],
         timeout: Duration::from_secs(30),
     });
@@ -84,7 +76,6 @@ fn merge_preserves_position_in_queue() {
     // Merge into the second item
     let result = queue.enqueue(QueuedFetch {
         rid: rid_second,
-        from: arbitrary::gen(1),
         refs_at: vec![arbitrary::gen(1)],
         timeout: Duration::from_secs(60),
     });

@@ -13,7 +13,6 @@ pub fn create_queue(capacity: usize) -> Queue {
 pub fn create_fetch() -> QueuedFetch {
     QueuedFetch {
         rid: arbitrary::gen(1),
-        from: arbitrary::gen(1),
         refs_at: vec![],
         timeout: Duration::from_secs(30),
     }

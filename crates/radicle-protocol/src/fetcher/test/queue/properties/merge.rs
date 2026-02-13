@@ -30,7 +30,6 @@ fn same_rid_merges_anywhere_in_queue(max_size: MaxQueueSize, merge_index: usize)
     let target_index = merge_index % items.len();
     let same_rid_item = QueuedFetch {
         rid: items[target_index].rid,
-        from: arbitrary::gen(1), // Different from
         refs_at: vec![arbitrary::gen(1)],
         timeout: Duration::from_secs(60),
     };
@@ -51,14 +50,12 @@ fn combines_refs(base_refs_count: u8, merge_refs_count: u8) -> bool {
 
     let base_item = QueuedFetch {
         rid,
-        from: arbitrary::gen(1),
         refs_at: base_refs.clone(),
         timeout: Duration::from_secs(30),
     };
 
     let merge_item = QueuedFetch {
         rid,
-        from: arbitrary::gen(1),
         refs_at: merge_refs.clone(),
         timeout: Duration::from_secs(30),
     };
@@ -89,7 +86,6 @@ fn empty_refs_fetches_all() -> bool {
     // First enqueue with specific refs
     let item_with_refs = QueuedFetch {
         rid,
-        from: arbitrary::gen(1),
         refs_at: vec![arbitrary::gen(1), arbitrary::gen(1)],
         timeout: Duration::from_secs(30),
     };
@@ -97,7 +93,6 @@ fn empty_refs_fetches_all() -> bool {
     // Second enqueue with empty refs (fetch everything)
     let item_empty_refs = QueuedFetch {
         rid,
-        from: arbitrary::gen(1),
         refs_at: vec![],
         timeout: Duration::from_secs(30),
     };
@@ -119,14 +114,12 @@ fn longer_timeout_preserved(short_secs: u16, long_secs: u16) -> bool {
 
     let item_short = QueuedFetch {
         rid,
-        from: arbitrary::gen(1),
         refs_at: vec![],
         timeout: short,
     };
 
     let item_long = QueuedFetch {
         rid,
-        from: arbitrary::gen(1),
         refs_at: vec![],
         timeout: long,
     };
@@ -151,14 +144,12 @@ fn does_not_increase_queue_length() -> bool {
 
     let item1 = QueuedFetch {
         rid,
-        from: arbitrary::gen(1),
         refs_at: vec![arbitrary::gen(1)],
         timeout: Duration::from_secs(30),
     };
 
     let item2 = QueuedFetch {
         rid,
-        from: arbitrary::gen(1),
         refs_at: vec![arbitrary::gen(1)],
         timeout: Duration::from_secs(60),
     };
@@ -194,21 +185,18 @@ fn succeed_when_at_capacity() -> bool {
 
     let item1 = QueuedFetch {
         rid,
-        from: arbitrary::gen(1),
         refs_at: vec![],
         timeout: Duration::from_secs(30),
     };
 
     let item2 = QueuedFetch {
         rid: arbitrary::gen(1), // Different rid
-        from: arbitrary::gen(1),
         refs_at: vec![],
         timeout: Duration::from_secs(30),
     };
 
     let merge_item = QueuedFetch {
         rid, // Same as item1
-        from: arbitrary::gen(1),
         refs_at: vec![arbitrary::gen(1)],
         timeout: Duration::from_secs(60),
     };

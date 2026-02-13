@@ -81,7 +81,6 @@ fn complete_then_dequeue_fifo() {
     assert!(queued.is_some());
     let queued = queued.unwrap();
     assert_eq!(queued.rid, repo_2);
-    assert_eq!(queued.from, node_a);
     assert_eq!(queued.refs_at, refs_at_2);
 }
 

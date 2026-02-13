@@ -1184,7 +1184,6 @@ where
 
             let Some(fetcher::QueuedFetch {
                 rid,
-                from,
                 refs_at,
                 timeout,
             }) = self.fetcher.dequeue(&nid)
@@ -1203,14 +1202,14 @@ where
                 continue;
             };
 
-            debug!(target: "service", "Dequeued fetch for {} from {}", rid, from);
+            debug!(target: "service", "Dequeued fetch for {} from {}", rid, nid);
 
             if let Some(refs) = NonEmpty::from_vec(refs_at.clone()) {
-                self.fetch_refs_at(rid, from, refs, scope, timeout);
+                self.fetch_refs_at(rid, nid, refs, scope, timeout);
             } else {
                 // Channel is `None` since they will already be
                 // registered with the fetcher service.
-                self.fetch(rid, from, refs_at, timeout, None);
+                self.fetch(rid, nid, refs_at, timeout, None);
             }
         }
     }

@@ -191,13 +191,11 @@ impl FetcherState {
             .or_insert(Queue::new(self.config.maximum_queue_size));
         match queue.enqueue(QueuedFetch {
             rid,
-            from,
             refs_at,
             timeout,
         }) {
             Enqueue::CapacityReached(QueuedFetch {
                 rid,
-                from,
                 refs_at,
                 timeout,
             }) => event::Fetch::QueueAtCapacity {
@@ -301,9 +299,6 @@ impl ActiveFetch {
 pub struct QueuedFetch {
     /// The repository that will be fetched.
     pub rid: RepoId,
-    // TODO(finto): this might be redundant, since queues are per node
-    /// The peer from which the repository will be fetched from.
-    pub from: NodeId,
     /// The references that the fetch is being performed for.
     pub refs_at: Vec<RefsAt>,
     /// The timeout given for the fetch request.

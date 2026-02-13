@@ -41,7 +41,6 @@ fn cannot_dequeue_while_node_at_capacity() {
     let result = state.dequeue(&node_a);
     let queued = result.unwrap();
     assert_eq!(queued.rid, repo_2);
-    assert_eq!(queued.from, node_a);
     assert_eq!(queued.refs_at, refs_at_2);
     assert_eq!(queued.timeout, timeout_2);
 }

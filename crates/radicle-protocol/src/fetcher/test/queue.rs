@@ -8,7 +8,7 @@ use std::time::Duration;
 use qcheck::Arbitrary;
 
 use radicle::storage::refs::RefsAt;
-use radicle_core::{NodeId, RepoId};
+use radicle_core::RepoId;
 
 use crate::fetcher::state::{MaxQueueSize, QueuedFetch};
 
@@ -20,7 +20,6 @@ impl Arbitrary for QueuedFetch {
 
         QueuedFetch {
             rid: RepoId::arbitrary(g),
-            from: NodeId::arbitrary(g),
             refs_at,
             timeout: Duration::from_secs(u64::arbitrary(g) % 3600),
         }

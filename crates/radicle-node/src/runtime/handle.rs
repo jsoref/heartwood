@@ -368,7 +368,6 @@ impl radicle::node::Handle for Handle {
                         "queue": queue.iter().map(|fetch| {
                             json!({
                                 "rid": fetch.rid,
-                                "from": fetch.from,
                                 "refsAt": fetch.refs_at,
                             })
                         }).collect::<Vec<_>>()
