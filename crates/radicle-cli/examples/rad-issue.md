@@ -98,9 +98,11 @@ $ rad issue show d87dcfe8c2b3200e78b128d9b959cfdf7063fefe
 │ Flux capacitor power requirements exceed current supply │
 ├─────────────────────────────────────────────────────────┤
 │ alice (you) now 2193e87                                 │
+│                                                         │
 │ The flux capacitor needs 1.21 Gigawatts                 │
 ├─────────────────────────────────────────────────────────┤
 │ alice (you) now 880fdcd                                 │
+│                                                         │
 │ More power!                                             │
 ╰─────────────────────────────────────────────────────────╯
 ```

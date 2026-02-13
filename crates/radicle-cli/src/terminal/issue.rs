@@ -123,6 +123,7 @@ pub fn show(
 
             widget = widget.divider();
             widget.push(hstack);
+            widget.push(radicle_term::Label::blank());
             widget.push(term::textarea(comment.body()).wrap(60));
         }
     }
