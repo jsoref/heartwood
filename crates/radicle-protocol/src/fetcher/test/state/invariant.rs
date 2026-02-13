@@ -13,21 +13,21 @@ fn queue_integrity_after_merge() {
     let node_a: NodeId = arbitrary::gen(1);
     let repo_1: RepoId = arbitrary::gen(1);
     let repo_2: RepoId = arbitrary::gen(1);
-    let refs_at_2a = helpers::gen_refs_at(1);
-    let refs_at_2b = helpers::gen_refs_at(1);
+    let refs_2a = helpers::gen_refs(1);
+    let refs_2b = helpers::gen_refs(1);
     let timeout = Duration::from_secs(30);
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
-        refs_at: refs_at_2a.clone(),
+        refs: refs_2a.clone(),
         timeout,
     });
 
@@ -35,7 +35,7 @@ fn queue_integrity_after_merge() {
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
-        refs_at: refs_at_2b.clone(),
+        refs: refs_2b.clone(),
         timeout,
     });
 

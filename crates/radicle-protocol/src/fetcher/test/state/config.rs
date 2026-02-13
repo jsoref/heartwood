@@ -18,7 +18,7 @@ fn high_concurrency() {
         let event = state.fetch(command::Fetch {
             from: node_a,
             rid: repo,
-            refs_at: helpers::gen_refs_at(1),
+            refs: helpers::gen_refs(1),
             timeout,
         });
         assert!(
@@ -50,14 +50,14 @@ fn min_queue_size() {
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
 
     let event1 = state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
     assert!(matches!(event1, event::Fetch::Queued { .. }));
@@ -65,7 +65,7 @@ fn min_queue_size() {
     let event2 = state.fetch(command::Fetch {
         from: node_a,
         rid: repo_3,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
     assert!(matches!(event2, event::Fetch::QueueAtCapacity { .. }));

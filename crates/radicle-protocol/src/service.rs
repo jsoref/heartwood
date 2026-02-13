@@ -41,6 +41,7 @@ use radicle_fetch::policy::SeedingPolicy;
 use crate::fetcher;
 use crate::fetcher::service::FetcherService;
 use crate::fetcher::FetcherState;
+use crate::fetcher::RefsToFetch;
 use crate::service::gossip::Store as _;
 use crate::service::message::{
     Announcement, AnnouncementMessage, Info, NodeAnnouncement, Ping, RefsAnnouncement, RefsStatus,
@@ -1017,7 +1018,7 @@ where
         let cmd = fetcher::state::command::Fetch {
             from,
             rid,
-            refs_at,
+            refs: refs_at.into(),
             timeout,
         };
         let fetcher::service::FetchInitiated { event, rejected } = self.fetcher.fetch(cmd, channel);
@@ -1033,14 +1034,14 @@ where
             fetcher::state::event::Fetch::Started {
                 rid,
                 from,
-                refs_at,
+                refs: refs_at,
                 timeout,
             } => {
                 debug!(target: "service", "Starting fetch for {rid} from {from}");
                 self.outbox.fetch(
                     session,
                     rid,
-                    refs_at,
+                    refs_at.into(),
                     timeout,
                     self.config.limits.fetch_pack_receive,
                 );
@@ -1073,11 +1074,7 @@ where
             fetcher::state::event::Fetched::NotFound { from, rid } => {
                 debug!(target: "service", "Unexpected fetch result for {rid} from {from}");
             }
-            fetcher::state::event::Fetched::Completed {
-                from,
-                rid,
-                refs_at: _,
-            } => {
+            fetcher::state::event::Fetched::Completed { from, rid, refs: _ } => {
                 // Notify responders
                 let fetch_result = match &result {
                     Ok(success) => FetchResult::Success {
@@ -1184,7 +1181,7 @@ where
 
             let Some(fetcher::QueuedFetch {
                 rid,
-                refs_at,
+                refs: refs_at,
                 timeout,
             }) = self.fetcher.dequeue(&nid)
             else {
@@ -1204,12 +1201,15 @@ where
 
             debug!(target: "service", "Dequeued fetch for {} from {}", rid, nid);
 
-            if let Some(refs) = NonEmpty::from_vec(refs_at.clone()) {
-                self.fetch_refs_at(rid, nid, refs, scope, timeout);
-            } else {
-                // Channel is `None` since they will already be
-                // registered with the fetcher service.
-                self.fetch(rid, nid, refs_at, timeout, None);
+            match refs_at {
+                RefsToFetch::Refs(refs) => {
+                    self.fetch_refs_at(rid, nid, refs, scope, timeout);
+                }
+                RefsToFetch::All => {
+                    // Channel is `None` since they will already be
+                    // registered with the fetcher service.
+                    self.fetch(rid, nid, vec![], timeout, None);
+                }
             }
         }
     }

@@ -21,7 +21,7 @@ fn interleaved_operations() {
     let e1 = state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
     assert!(matches!(e1, event::Fetch::Started { .. }));
@@ -30,7 +30,7 @@ fn interleaved_operations() {
     let e2 = state.fetch(command::Fetch {
         from: node_b,
         rid: repo_2,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
     assert!(matches!(e2, event::Fetch::Started { .. }));
@@ -46,7 +46,7 @@ fn interleaved_operations() {
     let e4 = state.fetch(command::Fetch {
         from: node_a,
         rid: repo_3,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
     assert!(matches!(e4, event::Fetch::Started { .. }));
@@ -75,13 +75,13 @@ fn fetched_then_cancel() {
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
 

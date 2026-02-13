@@ -22,13 +22,13 @@ fn independent_queues() {
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_a_active,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
     state.fetch(command::Fetch {
         from: node_b,
         rid: repo_b_active,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
 
@@ -36,13 +36,13 @@ fn independent_queues() {
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_a_queued,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
     state.fetch(command::Fetch {
         from: node_b,
         rid: repo_b_queued,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
 
@@ -73,7 +73,7 @@ fn high_count() {
         let event = state.fetch(command::Fetch {
             from: node,
             rid: repo,
-            refs_at: helpers::gen_refs_at(1),
+            refs: helpers::gen_refs(1),
             timeout,
         });
         assert!(matches!(event, event::Fetch::Started { .. }));

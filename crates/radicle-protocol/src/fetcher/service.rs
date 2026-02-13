@@ -1,9 +1,14 @@
 use std::collections::HashMap;
 
-use radicle::storage::refs::RefsAt;
 use radicle_core::{NodeId, RepoId};
 
-use crate::fetcher::state::{command, event, Config, FetcherState, QueuedFetch};
+use crate::fetcher::{
+    state::{
+        command::{self},
+        event, Config, FetcherState, QueuedFetch,
+    },
+    RefsToFetch,
+};
 
 /// Service layer that wraps [`FetcherState`] and manages subscriber coalescing.
 ///
@@ -38,12 +43,12 @@ impl<S> FetcherService<S> {
 struct FetchKey {
     rid: RepoId,
     node: NodeId,
-    refs_at: Vec<RefsAt>,
+    refs: RefsToFetch,
 }
 
 impl FetchKey {
-    fn new(rid: RepoId, node: NodeId, refs_at: Vec<RefsAt>) -> Self {
-        Self { rid, node, refs_at }
+    fn new(rid: RepoId, node: NodeId, refs: RefsToFetch) -> Self {
+        Self { rid, node, refs }
     }
 }
 
@@ -88,7 +93,7 @@ impl<S> FetcherService<S> {
     ///
     /// See [`FetcherState::fetch`].
     pub fn fetch(&mut self, cmd: command::Fetch, subscriber: Option<S>) -> FetchInitiated<S> {
-        let key = FetchKey::new(cmd.rid, cmd.from, cmd.refs_at.clone());
+        let key = FetchKey::new(cmd.rid, cmd.from, cmd.refs.clone());
         let event = self.state.fetch(cmd);
 
         let rejected = match &event {
@@ -115,8 +120,8 @@ impl<S> FetcherService<S> {
                 event: e,
                 subscribers: vec![],
             },
-            ref e @ event::Fetched::Completed { ref refs_at, .. } => {
-                let key = FetchKey::new(cmd.rid, cmd.from, refs_at.clone());
+            ref e @ event::Fetched::Completed { ref refs, .. } => {
+                let key = FetchKey::new(cmd.rid, cmd.from, refs.clone());
                 let subscribers = self.subscribers.remove(&key).unwrap_or_default();
                 FetchCompleted {
                     event: e.clone(),
@@ -157,6 +162,7 @@ impl<S> FetcherService<S> {
 
 #[cfg(test)]
 mod tests {
+    use radicle::storage::refs::RefsAt;
     use radicle::test::arbitrary;
     use std::num::NonZeroUsize;
     use std::time::Duration;
@@ -182,7 +188,7 @@ mod tests {
             command::Fetch {
                 from: node,
                 rid: repo,
-                refs_at: refs_specific.clone(),
+                refs: refs_specific.clone().into(),
                 timeout,
             },
             Some(1),
@@ -195,7 +201,7 @@ mod tests {
             command::Fetch {
                 from: node,
                 rid: repo,
-                refs_at: refs_all.clone(),
+                refs: refs_all.clone().into(),
                 timeout,
             },
             Some(2),
@@ -213,8 +219,8 @@ mod tests {
         });
 
         match completed.event {
-            event::Fetched::Completed { ref refs_at, .. } => {
-                assert_eq!(refs_at, &refs_specific);
+            event::Fetched::Completed { ref refs, .. } => {
+                assert_eq!(refs, &refs_specific.into());
             }
             _ => panic!("Expected Completed event"),
         }
@@ -223,11 +229,13 @@ mod tests {
         assert_eq!(completed.subscribers, vec![1]);
 
         // subscriber 2 should still be waiting
-        assert!(service
-            .subscribers
-            .contains_key(&FetchKey::new(repo, node, refs_all.clone())));
+        assert!(service.subscribers.contains_key(&FetchKey::new(
+            repo,
+            node,
+            refs_all.clone().into()
+        )));
 
-        let remaining = &service.subscribers[&FetchKey::new(repo, node, refs_all)];
+        let remaining = &service.subscribers[&FetchKey::new(repo, node, refs_all.into())];
         assert_eq!(remaining.len(), 1);
         assert_eq!(remaining[0], 2);
     }

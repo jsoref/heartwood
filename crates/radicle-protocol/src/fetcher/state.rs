@@ -15,8 +15,9 @@ use std::collections::{BTreeMap, VecDeque};
 use std::num::NonZeroUsize;
 use std::time;
 
-use radicle::storage::refs::RefsAt;
 use radicle_core::{NodeId, RepoId};
+
+use crate::fetcher::RefsToFetch;
 
 /// Default for the maximum items per fetch queue.
 pub const MAX_FETCH_QUEUE_SIZE: usize = 128;
@@ -96,32 +97,32 @@ impl FetcherState {
         command::Fetch {
             from,
             rid,
-            refs_at,
+            refs,
             timeout,
         }: command::Fetch,
     ) -> event::Fetch {
         if let Some(active) = self.active.get(&rid) {
-            if active.refs_at == refs_at && active.from == from {
+            if active.refs == refs && active.from == from {
                 return event::Fetch::AlreadyFetching { rid, from };
             } else {
-                return self.enqueue(rid, from, refs_at, timeout);
+                return self.enqueue(rid, from, refs, timeout);
             }
         }
 
         if self.is_at_node_capacity(&from) {
-            self.enqueue(rid, from, refs_at, timeout)
+            self.enqueue(rid, from, refs, timeout)
         } else {
             self.active.insert(
                 rid,
                 ActiveFetch {
                     from,
-                    refs_at: refs_at.clone(),
+                    refs: refs.clone(),
                 },
             );
             event::Fetch::Started {
                 rid,
                 from,
-                refs_at,
+                refs,
                 timeout,
             }
         }
@@ -136,7 +137,7 @@ impl FetcherState {
     pub fn fetched(&mut self, command::Fetched { from, rid }: command::Fetched) -> event::Fetched {
         match self.active.remove(&rid) {
             None => event::Fetched::NotFound { from, rid },
-            Some(ActiveFetch { from, refs_at }) => event::Fetched::Completed { from, rid, refs_at },
+            Some(ActiveFetch { from, refs }) => event::Fetched::Completed { from, rid, refs },
         }
     }
 
@@ -182,29 +183,23 @@ impl FetcherState {
         &mut self,
         rid: RepoId,
         from: NodeId,
-        refs_at: Vec<RefsAt>,
+        refs: RefsToFetch,
         timeout: time::Duration,
     ) -> event::Fetch {
         let queue = self
             .queues
             .entry(from)
             .or_insert(Queue::new(self.config.maximum_queue_size));
-        match queue.enqueue(QueuedFetch {
-            rid,
-            refs_at,
-            timeout,
-        }) {
-            Enqueue::CapacityReached(QueuedFetch {
-                rid,
-                refs_at,
-                timeout,
-            }) => event::Fetch::QueueAtCapacity {
-                rid,
-                from,
-                refs_at,
-                timeout,
-                capacity: queue.len(),
-            },
+        match queue.enqueue(QueuedFetch { rid, refs, timeout }) {
+            Enqueue::CapacityReached(QueuedFetch { rid, refs, timeout }) => {
+                event::Fetch::QueueAtCapacity {
+                    rid,
+                    from,
+                    refs,
+                    timeout,
+                    capacity: queue.len(),
+                }
+            }
             Enqueue::Queued => event::Fetch::Queued { rid, from },
             Enqueue::Merged => event::Fetch::Queued { rid, from },
         }
@@ -279,7 +274,7 @@ impl Default for Config {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ActiveFetch {
     pub from: NodeId,
-    pub refs_at: Vec<RefsAt>,
+    pub refs: RefsToFetch,
 }
 
 impl ActiveFetch {
@@ -289,8 +284,8 @@ impl ActiveFetch {
     }
 
     /// The set of references that fetch is being performed for.
-    pub fn refs_at(&self) -> &[RefsAt] {
-        &self.refs_at
+    pub fn refs(&self) -> &RefsToFetch {
+        &self.refs
     }
 }
 
@@ -300,7 +295,7 @@ pub struct QueuedFetch {
     /// The repository that will be fetched.
     pub rid: RepoId,
     /// The references that the fetch is being performed for.
-    pub refs_at: Vec<RefsAt>,
+    pub refs: RefsToFetch,
     /// The timeout given for the fetch request.
     pub timeout: time::Duration,
 }
@@ -379,12 +374,7 @@ impl Queue {
     /// the queue has not reached capacity and if the item is unique.
     pub(super) fn enqueue(&mut self, fetch: QueuedFetch) -> Enqueue {
         if let Some(existing) = self.queue.iter_mut().find(|qf| qf.rid == fetch.rid) {
-            if existing.refs_at.is_empty() || fetch.refs_at.is_empty() {
-                // We fetch everything
-                existing.refs_at = vec![]
-            } else {
-                existing.refs_at.extend(fetch.refs_at);
-            }
+            existing.refs = existing.refs.clone().merge(fetch.refs);
             // Take the longer timeout (more generous)
             existing.timeout = existing.timeout.max(fetch.timeout);
             return Enqueue::Merged;

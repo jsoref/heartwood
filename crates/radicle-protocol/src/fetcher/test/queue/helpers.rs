@@ -2,7 +2,7 @@ use std::{num::NonZeroUsize, time::Duration};
 
 use radicle::test::arbitrary;
 
-use crate::fetcher::{MaxQueueSize, Queue, QueuedFetch};
+use crate::fetcher::{MaxQueueSize, Queue, QueuedFetch, RefsToFetch};
 
 pub fn create_queue(capacity: usize) -> Queue {
     Queue::new(MaxQueueSize::new(
@@ -13,7 +13,7 @@ pub fn create_queue(capacity: usize) -> Queue {
 pub fn create_fetch() -> QueuedFetch {
     QueuedFetch {
         rid: arbitrary::gen(1),
-        refs_at: vec![],
+        refs: RefsToFetch::All,
         timeout: Duration::from_secs(30),
     }
 }

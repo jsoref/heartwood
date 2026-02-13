@@ -6,13 +6,14 @@ use radicle_core::RepoId;
 use crate::fetcher::state::Enqueue;
 use crate::fetcher::test::queue::helpers::*;
 use crate::fetcher::QueuedFetch;
+use crate::fetcher::RefsToFetch;
 
 #[test]
 fn zero_timeout_accepted() {
     let mut queue = create_queue(10);
     let item = QueuedFetch {
         rid: arbitrary::gen(1),
-        refs_at: vec![],
+        refs: RefsToFetch::All,
         timeout: Duration::ZERO,
     };
     assert_eq!(queue.enqueue(item), Enqueue::Queued);
@@ -23,25 +24,25 @@ fn max_timeout_accepted() {
     let mut queue = create_queue(10);
     let item = QueuedFetch {
         rid: arbitrary::gen(1),
-        refs_at: vec![],
+        refs: RefsToFetch::All,
         timeout: Duration::MAX,
     };
     assert_eq!(queue.enqueue(item), Enqueue::Queued);
 }
 
 #[test]
-fn empty_refs_at_items_can_be_equal() {
+fn empty_refs_items_can_be_equal() {
     let rid: RepoId = arbitrary::gen(1);
     let timeout = Duration::from_secs(30);
 
     let item1 = QueuedFetch {
         rid,
-        refs_at: vec![],
+        refs: RefsToFetch::All,
         timeout,
     };
     let item2 = QueuedFetch {
         rid,
-        refs_at: vec![],
+        refs: RefsToFetch::All,
         timeout,
     };
 
@@ -59,24 +60,24 @@ fn merge_preserves_position_in_queue() {
     // Enqueue three items
     let _ = queue.enqueue(QueuedFetch {
         rid: rid_first,
-        refs_at: vec![],
+        refs: RefsToFetch::All,
         timeout: Duration::from_secs(30),
     });
     let _ = queue.enqueue(QueuedFetch {
         rid: rid_second,
-        refs_at: vec![],
+        refs: RefsToFetch::All,
         timeout: Duration::from_secs(30),
     });
     let _ = queue.enqueue(QueuedFetch {
         rid: rid_third,
-        refs_at: vec![],
+        refs: RefsToFetch::All,
         timeout: Duration::from_secs(30),
     });
 
     // Merge into the second item
     let result = queue.enqueue(QueuedFetch {
         rid: rid_second,
-        refs_at: vec![arbitrary::gen(1)],
+        refs: vec![arbitrary::gen(1)].into(),
         timeout: Duration::from_secs(60),
     });
     assert_eq!(result, Enqueue::Merged);

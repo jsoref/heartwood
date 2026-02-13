@@ -359,7 +359,7 @@ impl radicle::node::Handle for Handle {
                         json!({
                             "rid": rid,
                             "from": active.from(),
-                            "refsAt": active.refs_at(),
+                            "refsAt": active.refs(),
                         })
                     }).collect::<Vec<_>>(),
                 "queue": fetcher_state.queued_fetches().iter().map(|(node, queue)| {
@@ -368,7 +368,7 @@ impl radicle::node::Handle for Handle {
                         "queue": queue.iter().map(|fetch| {
                             json!({
                                 "rid": fetch.rid,
-                                "refsAt": fetch.refs_at,
+                                "refsAt": fetch.refs,
                             })
                         }).collect::<Vec<_>>()
                     })

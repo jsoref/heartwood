@@ -1,8 +1,8 @@
 use std::num::NonZeroUsize;
 
-use radicle::{storage::refs::RefsAt, test::arbitrary};
+use radicle::test::arbitrary;
 
-use crate::fetcher::{Config, MaxQueueSize};
+use crate::fetcher::{Config, MaxQueueSize, RefsToFetch};
 
 pub fn config(max_concurrency: usize, max_queue_size: usize) -> Config {
     Config::new()
@@ -12,6 +12,7 @@ pub fn config(max_concurrency: usize, max_queue_size: usize) -> Config {
         ))
 }
 
-pub fn gen_refs_at(count: usize) -> Vec<RefsAt> {
-    (0..count).map(|_| arbitrary::gen(1)).collect()
+pub fn gen_refs(count: usize) -> RefsToFetch {
+    let refs: Vec<_> = (0..count).map(|_| arbitrary::gen(1)).collect();
+    refs.into()
 }

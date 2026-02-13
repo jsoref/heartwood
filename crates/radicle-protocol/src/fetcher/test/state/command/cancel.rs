@@ -12,13 +12,13 @@ fn single_ongoing() {
     let mut state = FetcherState::new(helpers::config(1, 10));
     let node_a: NodeId = arbitrary::gen(1);
     let repo_1: RepoId = arbitrary::gen(1);
-    let refs_at_1 = helpers::gen_refs_at(1);
+    let refs_1 = helpers::gen_refs(1);
     let timeout = Duration::from_secs(30);
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
-        refs_at: refs_at_1.clone(),
+        refs: refs_1.clone(),
         timeout,
     });
 
@@ -36,7 +36,7 @@ fn single_ongoing() {
                 ongoing.get(&repo_1),
                 Some(&ActiveFetch {
                     from: node_a,
-                    refs_at: refs_at_1,
+                    refs: refs_1,
                 })
             );
             assert!(queued.is_empty());
@@ -58,19 +58,19 @@ fn ongoing_and_queued() {
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_3,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
 
@@ -112,13 +112,13 @@ fn cancellation_is_isolated() {
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
     state.fetch(command::Fetch {
         from: node_b,
         rid: repo_2,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
 

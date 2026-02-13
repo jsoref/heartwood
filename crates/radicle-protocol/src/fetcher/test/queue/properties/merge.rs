@@ -1,3 +1,4 @@
+use std::num::NonZeroUsize;
 use std::time::Duration;
 
 use qcheck_macros::quickcheck;
@@ -7,6 +8,7 @@ use radicle_core::RepoId;
 
 use crate::fetcher::state::Enqueue;
 use crate::fetcher::test::queue::helpers::*;
+use crate::fetcher::RefsToFetch;
 use crate::fetcher::{MaxQueueSize, Queue, QueuedFetch};
 
 #[quickcheck]
@@ -30,7 +32,7 @@ fn same_rid_merges_anywhere_in_queue(max_size: MaxQueueSize, merge_index: usize)
     let target_index = merge_index % items.len();
     let same_rid_item = QueuedFetch {
         rid: items[target_index].rid,
-        refs_at: vec![arbitrary::gen(1)],
+        refs: vec![arbitrary::gen(1)].into(),
         timeout: Duration::from_secs(60),
     };
 
@@ -50,13 +52,13 @@ fn combines_refs(base_refs_count: u8, merge_refs_count: u8) -> bool {
 
     let base_item = QueuedFetch {
         rid,
-        refs_at: base_refs.clone(),
+        refs: base_refs.clone().into(),
         timeout: Duration::from_secs(30),
     };
 
     let merge_item = QueuedFetch {
         rid,
-        refs_at: merge_refs.clone(),
+        refs: merge_refs.clone().into(),
         timeout: Duration::from_secs(30),
     };
 
@@ -71,10 +73,10 @@ fn combines_refs(base_refs_count: u8, merge_refs_count: u8) -> bool {
 
     // If either was empty, result should be empty (fetch everything)
     if base_refs.is_empty() || merge_refs.is_empty() {
-        dequeued.refs_at.is_empty()
+        dequeued.refs == RefsToFetch::All
     } else {
         // Otherwise refs should be combined
-        dequeued.refs_at.len() == base_refs_count + merge_refs_count
+        dequeued.refs.len() == Some(NonZeroUsize::new(base_refs_count + merge_refs_count).unwrap())
     }
 }
 
@@ -86,14 +88,14 @@ fn empty_refs_fetches_all() -> bool {
     // First enqueue with specific refs
     let item_with_refs = QueuedFetch {
         rid,
-        refs_at: vec![arbitrary::gen(1), arbitrary::gen(1)],
+        refs: vec![arbitrary::gen(1), arbitrary::gen(1)].into(),
         timeout: Duration::from_secs(30),
     };
 
     // Second enqueue with empty refs (fetch everything)
     let item_empty_refs = QueuedFetch {
         rid,
-        refs_at: vec![],
+        refs: RefsToFetch::All,
         timeout: Duration::from_secs(30),
     };
 
@@ -101,7 +103,7 @@ fn empty_refs_fetches_all() -> bool {
     let _ = queue.enqueue(item_empty_refs);
 
     let dequeued = queue.dequeue().unwrap();
-    dequeued.refs_at.is_empty() // Should fetch everything
+    dequeued.refs == RefsToFetch::All // Should fetch everything
 }
 
 #[quickcheck]
@@ -114,13 +116,13 @@ fn longer_timeout_preserved(short_secs: u16, long_secs: u16) -> bool {
 
     let item_short = QueuedFetch {
         rid,
-        refs_at: vec![],
+        refs: RefsToFetch::All,
         timeout: short,
     };
 
     let item_long = QueuedFetch {
         rid,
-        refs_at: vec![],
+        refs: RefsToFetch::All,
         timeout: long,
     };
 
@@ -144,13 +146,13 @@ fn does_not_increase_queue_length() -> bool {
 
     let item1 = QueuedFetch {
         rid,
-        refs_at: vec![arbitrary::gen(1)],
+        refs: vec![arbitrary::gen(1)].into(),
         timeout: Duration::from_secs(30),
     };
 
     let item2 = QueuedFetch {
         rid,
-        refs_at: vec![arbitrary::gen(1)],
+        refs: vec![arbitrary::gen(1)].into(),
         timeout: Duration::from_secs(60),
     };
 
@@ -185,19 +187,19 @@ fn succeed_when_at_capacity() -> bool {
 
     let item1 = QueuedFetch {
         rid,
-        refs_at: vec![],
+        refs: RefsToFetch::All,
         timeout: Duration::from_secs(30),
     };
 
     let item2 = QueuedFetch {
         rid: arbitrary::gen(1), // Different rid
-        refs_at: vec![],
+        refs: RefsToFetch::All,
         timeout: Duration::from_secs(30),
     };
 
     let merge_item = QueuedFetch {
         rid, // Same as item1
-        refs_at: vec![arbitrary::gen(1)],
+        refs: vec![arbitrary::gen(1)].into(),
         timeout: Duration::from_secs(60),
     };
 

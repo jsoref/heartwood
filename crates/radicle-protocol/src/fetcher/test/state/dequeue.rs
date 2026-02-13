@@ -13,20 +13,20 @@ fn cannot_dequeue_while_node_at_capacity() {
     let node_a: NodeId = arbitrary::gen(1);
     let repo_1: RepoId = arbitrary::gen(1);
     let repo_2: RepoId = arbitrary::gen(1);
-    let refs_at_2 = helpers::gen_refs_at(3);
+    let refs_2 = helpers::gen_refs(3);
     let timeout_2 = Duration::from_secs(42);
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout: Duration::from_secs(10),
     });
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
-        refs_at: refs_at_2.clone(),
+        refs: refs_2.clone(),
         timeout: timeout_2,
     });
 
@@ -41,7 +41,7 @@ fn cannot_dequeue_while_node_at_capacity() {
     let result = state.dequeue(&node_a);
     let queued = result.unwrap();
     assert_eq!(queued.rid, repo_2);
-    assert_eq!(queued.refs_at, refs_at_2);
+    assert_eq!(queued.refs, refs_2);
     assert_eq!(queued.timeout, timeout_2);
 }
 
@@ -58,7 +58,7 @@ fn maintains_fifo_order() {
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
 
@@ -66,19 +66,19 @@ fn maintains_fifo_order() {
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_3,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_4,
-        refs_at: helpers::gen_refs_at(1),
+        refs: helpers::gen_refs(1),
         timeout,
     });
 

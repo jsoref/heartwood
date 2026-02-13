@@ -1,8 +1,9 @@
 use std::collections::{BTreeMap, VecDeque};
 use std::time;
 
-use radicle::storage::refs::RefsAt;
 use radicle_core::{NodeId, RepoId};
+
+use crate::fetcher::RefsToFetch;
 
 use super::{ActiveFetch, QueuedFetch};
 
@@ -44,7 +45,7 @@ pub enum Fetch {
         /// The node to fetch from.
         from: NodeId,
         /// The references to be fetched.
-        refs_at: Vec<RefsAt>,
+        refs: RefsToFetch,
         /// The timeout for the fetch process.
         timeout: time::Duration,
     },
@@ -63,7 +64,7 @@ pub enum Fetch {
         /// The node who's queue is at capacity.
         from: NodeId,
         /// The references expected to be fetched.
-        refs_at: Vec<RefsAt>,
+        refs: RefsToFetch,
         /// The timeout for the fetch process.
         timeout: time::Duration,
         /// The capacity of the queue.
@@ -91,7 +92,7 @@ pub enum Fetched {
         /// The repository that was fetched.
         rid: RepoId,
         /// The references that were fetched.
-        refs_at: Vec<RefsAt>,
+        refs: RefsToFetch,
     },
 }
 

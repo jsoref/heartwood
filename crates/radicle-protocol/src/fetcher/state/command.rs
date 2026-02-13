@@ -1,7 +1,8 @@
 use std::time;
 
-use radicle::storage::refs::RefsAt;
 use radicle_core::{NodeId, RepoId};
+
+use crate::fetcher::RefsToFetch;
 
 /// Commands for transitioning the [`FetcherState`].
 ///
@@ -32,11 +33,11 @@ impl From<Cancel> for Command {
 }
 
 impl Command {
-    pub fn fetch(from: NodeId, rid: RepoId, refs_at: Vec<RefsAt>, timeout: time::Duration) -> Self {
+    pub fn fetch(from: NodeId, rid: RepoId, refs: RefsToFetch, timeout: time::Duration) -> Self {
         Self::from(Fetch {
             from,
             rid,
-            refs_at,
+            refs,
             timeout,
         })
     }
@@ -58,7 +59,7 @@ pub struct Fetch {
     /// The repository to fetch.
     pub rid: RepoId,
     /// The references to fetch.
-    pub refs_at: Vec<RefsAt>,
+    pub refs: RefsToFetch,
     /// The timeout for the fetch process.
     pub timeout: time::Duration,
 }

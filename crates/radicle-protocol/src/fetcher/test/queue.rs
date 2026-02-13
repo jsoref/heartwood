@@ -20,7 +20,7 @@ impl Arbitrary for QueuedFetch {
 
         QueuedFetch {
             rid: RepoId::arbitrary(g),
-            refs_at,
+            refs: refs_at.into(),
             timeout: Duration::from_secs(u64::arbitrary(g) % 3600),
         }
     }
