@@ -247,14 +247,7 @@ $ rad config schema
         },
         "onion": {
           "description": "Onion address config.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/AddressConfig"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/AddressConfig"
         },
         "network": {
           "description": "Peer-to-peer network.",
@@ -405,6 +398,19 @@ $ rad config schema
             "mode": {
               "type": "string",
               "const": "forward"
+            }
+          },
+          "required": [
+            "mode"
+          ]
+        },
+        {
+          "description": "Drop connections to this address type.",
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "const": "drop"
             }
           },
           "required": [
