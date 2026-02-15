@@ -5,8 +5,8 @@ use std::str::FromStr;
 use std::{iter, net};
 
 use crypto::PublicKey;
-use cyphernet::EcPk;
-use cyphernet::addr::tor::OnionAddrV3;
+#[cfg(feature = "tor")]
+use cyphernet::{EcPk, addr::tor::OnionAddrV3};
 use qcheck::Arbitrary;
 
 use crate::identity::doc::Visibility;
@@ -229,6 +229,7 @@ impl Arbitrary for Address {
                     .unwrap()
                     .to_string(),
             ),
+            #[cfg(feature = "tor")]
             AddressType::Onion => {
                 let pk = PublicKey::arbitrary(g);
                 let addr = OnionAddrV3::from(
