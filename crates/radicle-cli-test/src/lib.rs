@@ -417,6 +417,7 @@ impl TestFormula {
                         *arg = arg.replace(format!("${k}").as_str(), &v);
                     }
                 }
+
                 let location = assertion
                     .path
                     .file_name()
@@ -425,9 +426,7 @@ impl TestFormula {
                     .map(|f| f + ":" + assertion.line.to_string().as_str())
                     .unwrap_or(String::from("<none>"));
 
-                let (cmd, cmd_display) = if assertion.command == "rad" {
-                    (snapbox::cmd::cargo_bin("rad"), "rad".to_string())
-                } else if assertion.command == "cd" {
+                if assertion.command == "cd" {
                     let arg = assertion.args.first().unwrap();
                     let dir: PathBuf = arg.into();
                     let dir = run.path().join(dir);
@@ -446,9 +445,7 @@ impl TestFormula {
                     run.cd(dir);
 
                     continue;
-                } else {
-                    (PathBuf::from(&assertion.command), assertion.command.clone())
-                };
+                }
 
                 if !run.path().exists() {
                     log::warn!(target: "test", "{location}: Directory {} does not exist. Creating..", run.path().display());
@@ -467,7 +464,7 @@ impl TestFormula {
 
                 let bins = std::env::join_paths(bins(self.cwd.clone())).unwrap();
 
-                let command = Command::new(cmd.clone())
+                let command = Command::new(assertion.command.clone())
                     .env_clear()
                     .env("PATH", &bins)
                     .env("RUST_BACKTRACE", "1")
@@ -477,7 +474,7 @@ impl TestFormula {
                     .args(args.clone())
                     .with_assert(assert.clone());
 
-                log::debug!(target: "test", "{location}: `{} {}` @ {}", cmd_display, args.join(" "), run.path().display());
+                log::debug!(target: "test", "{location}: `{} {}` @ {}", assertion.command, args.join(" "), run.path().display());
                 log::trace!(target: "test", "{location}: {}", run.envs().map(|(k, v)| format!("{}={}", k, v)).collect::<Vec<_>>().join(", "));
                 log::logger().flush();
 
@@ -515,11 +512,11 @@ impl TestFormula {
                     }
                     Err(err) => {
                         if err.kind() == io::ErrorKind::NotFound {
-                            log::error!(target: "test", "{location}: Command `{}` does not exist..", cmd.display());
+                            log::error!(target: "test", "{location}: Command `{}` does not exist..", assertion.command);
                         }
                         return Err(io::Error::new(
                             err.kind(),
-                            format!("{location}: {err}: `{}`", cmd.display()),
+                            format!("{location}: {err}: `{}`", assertion.command),
                         ));
                     }
                 }
