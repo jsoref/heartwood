@@ -225,7 +225,7 @@ impl FetchState {
         let refs = match step.ls_refs() {
             Some(refs) => handle
                 .transport
-                .ls_refs(refs.into(), handshake)?
+                .ls_refs(refs, handshake)?
                 .into_iter()
                 .filter_map(|r| step.ref_filter(r))
                 .collect::<Vec<_>>(),

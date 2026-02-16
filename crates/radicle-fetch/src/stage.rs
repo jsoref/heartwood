@@ -89,6 +89,42 @@ pub mod error {
     }
 }
 
+/// A `ref-prefix` used in the `ls-refs` step of the fetch protocol.
+///
+/// Since the Radicle protocol only wants to filter by very specific references,
+/// this type captures the possible reference prefixes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) enum RefPrefix {
+    /// Represents `refs/rad/id`.
+    RadId,
+    /// Represents `"refs/namespaces/<namespace>/refs/rad/id"`.
+    NamespacedRadId { namespace: PublicKey },
+    /// Represents `"refs/namespaces/<namespace>/refs/rad/sigrefs"`.
+    NamespacedRadSigrefs { namespace: PublicKey },
+    /// Represents `"refs/namespaces"`
+    AllNamespaces,
+}
+
+impl RefPrefix {
+    /// Convert the [`RefPrefix`] into its equivalent [`BString`].
+    ///
+    /// See the [`RefPrefix`] variants for their [`BString`] values.
+    pub fn into_bstring(self) -> BString {
+        match self {
+            RefPrefix::RadId => refs::REFS_RAD_ID.as_bstr().into(),
+            RefPrefix::NamespacedRadId { namespace } => {
+                radicle::git::refs::storage::id(&namespace).as_bstr().into()
+            }
+            RefPrefix::NamespacedRadSigrefs { namespace } => {
+                radicle::git::refs::storage::sigrefs(&namespace)
+                    .as_bstr()
+                    .into()
+            }
+            RefPrefix::AllNamespaces => "refs/namespaces".into(),
+        }
+    }
+}
+
 /// A [`ProtocolStage`] describes a single roundtrip with the Radicle
 /// node that is serving the data.
 ///
@@ -107,7 +143,7 @@ pub mod error {
 ///      refdb (in-memory and production).
 pub(crate) trait ProtocolStage {
     /// If and how to perform `ls-refs`.
-    fn ls_refs(&self) -> Option<NonEmpty<BString>>;
+    fn ls_refs(&self) -> Option<NonEmpty<RefPrefix>>;
 
     /// Filter a remote-advertised [`Ref`].
     ///
@@ -163,8 +199,8 @@ pub struct CanonicalId {
 }
 
 impl ProtocolStage for CanonicalId {
-    fn ls_refs(&self) -> Option<NonEmpty<BString>> {
-        Some(NonEmpty::new(refs::REFS_RAD_ID.as_bstr().into()))
+    fn ls_refs(&self) -> Option<NonEmpty<RefPrefix>> {
+        Some(NonEmpty::new(RefPrefix::RadId))
     }
 
     fn ref_filter(&self, r: Ref) -> Option<ReceivedRef> {
@@ -250,17 +286,17 @@ pub struct SpecialRefs {
 }
 
 impl ProtocolStage for SpecialRefs {
-    fn ls_refs(&self) -> Option<NonEmpty<BString>> {
+    fn ls_refs(&self) -> Option<NonEmpty<RefPrefix>> {
         match &self.followed {
-            policy::Allowed::All => Some(NonEmpty::new("refs/namespaces".into())),
+            policy::Allowed::All => Some(NonEmpty::new(RefPrefix::AllNamespaces)),
             policy::Allowed::Followed { remotes } => NonEmpty::collect(
                 remotes
                     .iter()
                     .chain(self.delegates.iter())
                     .flat_map(|remote| {
                         [
-                            BString::from(radicle::git::refs::storage::id(remote).to_string()),
-                            BString::from(radicle::git::refs::storage::sigrefs(remote).to_string()),
+                            RefPrefix::NamespacedRadSigrefs { namespace: *remote },
+                            RefPrefix::NamespacedRadId { namespace: *remote },
                         ]
                     }),
             ),
@@ -331,12 +367,16 @@ pub struct SigrefsAt {
 }
 
 impl ProtocolStage for SigrefsAt {
-    fn ls_refs(&self) -> Option<NonEmpty<BString>> {
+    fn ls_refs(&self) -> Option<NonEmpty<RefPrefix>> {
         // N.b. the `Oid`s are known but the `rad/sigrefs` are still
         // asked for to mark them for updating the fetch state.
-        NonEmpty::collect(self.refs_at.iter().map(|refs_at| {
-            BString::from(radicle::git::refs::storage::sigrefs(&refs_at.remote).to_string())
-        }))
+        NonEmpty::collect(
+            self.refs_at
+                .iter()
+                .map(|refs_at| RefPrefix::NamespacedRadSigrefs {
+                    namespace: refs_at.remote,
+                }),
+        )
     }
 
     // We only asked for `rad/sigrefs` so we should only get
@@ -421,7 +461,7 @@ pub struct DataRefs {
 impl ProtocolStage for DataRefs {
     // We don't need to ask for refs since we have all reference names
     // and `Oid`s in `rad/sigrefs`.
-    fn ls_refs(&self) -> Option<NonEmpty<BString>> {
+    fn ls_refs(&self) -> Option<NonEmpty<RefPrefix>> {
         None
     }
 

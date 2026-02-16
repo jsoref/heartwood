@@ -20,6 +20,7 @@ use thiserror::Error;
 
 use crate::git::packfile::Keepfile;
 use crate::git::repository;
+use crate::stage::RefPrefix;
 
 /// Open a reader and writer stream to pass to the ls-refs and fetch
 /// processes for communicating during their respective protocols.
@@ -104,11 +105,10 @@ where
     /// Perform ls-refs with the server side.
     pub(crate) fn ls_refs(
         &mut self,
-        mut prefixes: Vec<BString>,
+        prefixes: impl IntoIterator<Item = RefPrefix>,
         handshake: &handshake::Outcome,
     ) -> Result<Vec<handshake::Ref>, Error> {
-        prefixes.sort();
-        prefixes.dedup();
+        let prefixes = prefixes.into_iter().collect::<BTreeSet<_>>();
         let (read, write) = self.stream.open();
         Ok(ls_refs::run(
             ls_refs::Config {

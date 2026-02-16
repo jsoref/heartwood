@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::collections::BTreeSet;
 use std::io;
 
 use gix_features::progress::Progress;
@@ -6,6 +7,8 @@ use gix_protocol::handshake::{self, Ref};
 use gix_protocol::ls_refs;
 use gix_protocol::transport::Protocol;
 use gix_transport::bstr::{BString, ByteVec};
+
+use crate::stage::RefPrefix;
 
 use super::{agent_name, Connection};
 
@@ -17,7 +20,7 @@ pub struct Config {
     #[allow(dead_code)]
     pub repo: BString,
     /// Ref prefixes for filtering the output of the ls-refs process.
-    pub prefixes: Vec<BString>,
+    pub prefixes: BTreeSet<RefPrefix>,
 }
 
 /// Run the ls-refs process using the provided `config`.
@@ -51,11 +54,17 @@ where
         )));
     }
 
+    let prefixes = config
+        .prefixes
+        .into_iter()
+        .map(|prefix| prefix.into_bstring())
+        .collect::<BTreeSet<_>>();
+
     let refs = gix_protocol::ls_refs(
         &mut conn,
         capabilities,
         |_caps, args, features| {
-            for prefix in &config.prefixes {
+            for prefix in &prefixes {
                 let mut arg = BString::from("ref-prefix ");
                 arg.push_str(prefix);
                 args.push(arg)
@@ -74,10 +83,7 @@ where
         .into_iter()
         .filter(|r| {
             let (refname, _, _) = r.unpack();
-            config
-                .prefixes
-                .iter()
-                .any(|prefix| refname.starts_with(prefix))
+            prefixes.iter().any(|prefix| refname.starts_with(prefix))
         })
         .collect();
 
