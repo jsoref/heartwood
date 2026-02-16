@@ -410,14 +410,6 @@ impl TestFormula {
 
             // For each command.
             for (i, assertion) in test.assertions.iter().enumerate() {
-                // Expand environment variables.
-                let mut args = assertion.args.clone();
-                for arg in &mut args {
-                    for (k, v) in run.envs() {
-                        *arg = arg.replace(format!("${k}").as_str(), &v);
-                    }
-                }
-
                 let location = assertion
                     .path
                     .file_name()
@@ -445,6 +437,14 @@ impl TestFormula {
                     run.cd(dir);
 
                     continue;
+                }
+
+                // Expand environment variables.
+                let mut args = assertion.args.clone();
+                for arg in &mut args {
+                    for (k, v) in run.envs() {
+                        *arg = arg.replace(format!("${k}").as_str(), &v);
+                    }
                 }
 
                 if !run.path().exists() {
