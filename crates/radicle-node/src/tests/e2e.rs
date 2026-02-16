@@ -454,7 +454,7 @@ fn test_fetch_followed_remotes() {
         .collect::<Result<HashSet<_>, _>>()
         .unwrap();
 
-    assert!(bob_remotes.len() == followed.len() + 1);
+    assert_eq!(bob_remotes.len(), followed.len() + 1);
     assert!(bob_remotes.is_superset(&followed));
     assert!(bob_remotes.contains(&alice.id));
 }
