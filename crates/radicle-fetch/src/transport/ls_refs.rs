@@ -67,5 +67,19 @@ where
         false, /* trace packetlines */
     )?;
 
+    // Even though we sent `ref-prefix`, listed refs must still be
+    // filtered, since `ref-prefix` is just an optimization hint.
+    // See <https://git-scm.com/docs/protocol-v2#_ls_refs>.
+    let refs = refs
+        .into_iter()
+        .filter(|r| {
+            let (refname, _, _) = r.unpack();
+            config
+                .prefixes
+                .iter()
+                .any(|prefix| refname.starts_with(prefix))
+        })
+        .collect();
+
     Ok(refs)
 }
