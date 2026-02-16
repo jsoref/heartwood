@@ -10,6 +10,10 @@ use snapbox::cmd::{Command, OutputAssert};
 use snapbox::{Assert, Substitutions};
 use thiserror::Error;
 
+const CARGO_TARGET_DIR_DIRNAME: &str = "target";
+
+const CARGO_PROFILE: &str = "debug";
+
 /// Used to ensure the build task is only run once.
 static BUILD: sync::Once = sync::Once::new();
 
@@ -195,9 +199,13 @@ impl TestFormula {
             for (package, binary) in binaries {
                 log::debug!(target: "test", "Building binaries for package `{package}`..");
 
+                let cargo_manifest_dir = cargo_manifest_dir();
+
                 let results = escargot::CargoBuild::new()
                     .package(package)
                     .bin(binary)
+                    .manifest_path(cargo_manifest_dir.clone().join("Cargo.toml"))
+                    .target_dir(cargo_manifest_dir.join(CARGO_TARGET_DIR_DIRNAME))
                     .exec()
                     .unwrap();
 
@@ -522,6 +530,10 @@ impl TestFormula {
     }
 }
 
+fn cargo_manifest_dir() -> PathBuf {
+    env::var("CARGO_MANIFEST_DIR").map(PathBuf::from).unwrap()
+}
+
 /// Get the list of binary paths to use as `$PATH` for the tests,
 /// starting with the current working directory.
 fn bins(cwd: PathBuf) -> Vec<PathBuf> {
@@ -531,18 +543,11 @@ fn bins(cwd: PathBuf) -> Vec<PathBuf> {
     // this makes it more convenient to execute scripts during testing.
     bins.push(cwd);
 
-    if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
-        let profile = cfg!(debug_assertions)
-            .then_some("debug")
-            .unwrap_or("release");
-        let target_dir = env::var("CARGO_TARGET_DIR").unwrap_or("target".to_string());
-
-        bins.push(
-            PathBuf::from(manifest_dir.as_str())
-                .join(&target_dir)
-                .join(profile),
-        )
-    }
+    bins.push(
+        cargo_manifest_dir()
+            .join(CARGO_TARGET_DIR_DIRNAME)
+            .join(CARGO_PROFILE),
+    );
 
     // Add the "real" `$PATH`.
     if let Ok(path) = env::var("PATH") {
