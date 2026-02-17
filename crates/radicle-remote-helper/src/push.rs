@@ -56,9 +56,6 @@ pub(super) enum Error {
     /// I/O error.
     #[error("i/o error: {0}")]
     Io(#[from] io::Error),
-    /// A command exited with an error code.
-    #[error("command '{0}' failed with status {1}")]
-    CommandFailed(String, i32),
     /// Invalid reference name.
     #[error("invalid ref: {0}")]
     InvalidRef(#[from] radicle::git::fmt::Error),
@@ -98,9 +95,6 @@ pub(super) enum Error {
     /// Patch is empty.
     #[error("patch commits are already included in the base branch")]
     EmptyPatch,
-    /// Missing canonical head.
-    #[error("the canonical head is missing from your working copy; please pull before pushing")]
-    MissingCanonicalHead(git::Oid),
     /// COB store error.
     #[error(transparent)]
     Cob(#[from] radicle::cob::store::Error),

@@ -14,8 +14,6 @@ pub(crate) enum CanonicalUnrecoverable {
     FindObjects(#[from] canonical::error::FindObjectsError),
     #[error(transparent)]
     HeadsDiverge(#[from] HeadsDiverge),
-    #[error("failure while computing canonical reference: {source}")]
-    Git { source: git::raw::Error },
 }
 
 #[derive(Debug, Error)]
