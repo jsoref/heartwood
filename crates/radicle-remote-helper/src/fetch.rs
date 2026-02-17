@@ -9,7 +9,7 @@ use crate::service::GitService;
 use crate::Verbosity;
 
 #[derive(Debug, Error)]
-pub enum Error {
+pub(super) enum Error {
     /// Protocol error.
     #[error("protocol error: {0}")]
     Protocol(#[from] crate::protocol::Error),

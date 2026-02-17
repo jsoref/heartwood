@@ -34,7 +34,7 @@ use crate::service::NodeSession;
 use crate::{hint, warn, Options, Verbosity};
 
 #[derive(Debug, Error)]
-pub enum Error {
+pub(super) enum Error {
     /// Public key doesn't match the remote namespace we're pushing to.
     #[error("cannot push to remote namespace owned by {0}")]
     KeyMismatch(Did),
@@ -250,7 +250,7 @@ impl PushAction {
 }
 
 /// Run a git push command.
-pub fn run(
+pub(super) fn run(
     mut specs: Vec<String>,
     remote: Option<git::fmt::RefString>,
     url: Url,

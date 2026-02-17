@@ -10,7 +10,7 @@ use radicle::storage::ReadRepository;
 use radicle::Profile;
 
 #[derive(Debug, Error)]
-pub enum Error {
+pub(super) enum Error {
     /// Storage error.
     #[error(transparent)]
     Storage(#[from] radicle::storage::Error),
@@ -35,7 +35,7 @@ pub enum Error {
 }
 
 /// List refs for fetching (`git fetch` and `git ls-remote`).
-pub fn for_fetch<R: ReadRepository + cob::Store<Namespace = NodeId> + 'static>(
+pub(super) fn for_fetch<R: ReadRepository + cob::Store<Namespace = NodeId> + 'static>(
     url: &Url,
     profile: &Profile,
     stored: &R,

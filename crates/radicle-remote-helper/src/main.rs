@@ -40,7 +40,7 @@ use radicle_cli::terminal as cli;
 
 use crate::protocol::{Command, Line, LineReader};
 
-pub const VERSION: Version = Version {
+const VERSION: Version = Version {
     name: env!("CARGO_BIN_NAME"),
     commit: env!("GIT_HEAD"),
     version: env!("RADICLE_VERSION"),
@@ -79,7 +79,7 @@ fn main() {
 }
 
 #[derive(Debug, Error)]
-pub enum Error {
+enum Error {
     /// Failed to parse `base`.
     #[error("failed to parse base revision: {0}")]
     Base(#[source] git::raw::Error),
@@ -163,7 +163,7 @@ impl FromStr for Verbosity {
 
 /// Branch creation options when creating a patch.
 #[derive(Debug, Default, Clone)]
-pub enum Branch {
+enum Branch {
     /// Don't create a new branch.
     #[default]
     None,
@@ -176,10 +176,7 @@ pub enum Branch {
 impl Branch {
     /// Return the branch name to be used for the local branch when creating a
     /// patch.
-    pub fn to_branch_name(
-        self,
-        object: &radicle::patch::PatchId,
-    ) -> Option<git::fmt::Qualified<'_>> {
+    fn to_branch_name(self, object: &radicle::patch::PatchId) -> Option<git::fmt::Qualified<'_>> {
         match self {
             Self::None => None,
             Self::MirrorUpstream => Some(git::refs::patch(object)),
@@ -194,7 +191,7 @@ impl Branch {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct Options {
+struct Options {
     /// Don't sync after push.
     no_sync: bool,
     /// Sync debugging.
@@ -213,7 +210,7 @@ pub struct Options {
 }
 
 /// Run the radicle remote helper using the given profile.
-pub fn run(profile: radicle::Profile) -> Result<(), Error> {
+fn run(profile: radicle::Profile) -> Result<(), Error> {
     // Since we're going to be writing user output to `stderr`, make sure the paint
     // module is aware of that.
     cli::Paint::set_terminal(cli::TerminalFile::Stderr);

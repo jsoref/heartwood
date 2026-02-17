@@ -14,7 +14,7 @@ impl<'a, 'b, 'r, R> Canonical<'a, 'b, 'r, R>
 where
     R: effects::Ancestry + effects::FindMergeBase + effects::FindObjects,
 {
-    pub fn new(
+    pub(super) fn new(
         me: Did,
         object: canonical::Object,
         canonical: canonical::Canonical<'a, 'b, 'r, R, canonical::Initial>,
@@ -40,7 +40,9 @@ where
     /// copy, and that checks that any two commits are related in the graph.
     ///
     /// Ensures that the new head and the canonical commit do not diverge.
-    pub fn quorum(self) -> Result<(git::fmt::Qualified<'a>, canonical::Object), QuorumError> {
+    pub(super) fn quorum(
+        self,
+    ) -> Result<(git::fmt::Qualified<'a>, canonical::Object), QuorumError> {
         self.canonical
             .quorum()
             .map(|QuorumWithConvergence { quorum, .. }| (quorum.refname, quorum.object))
@@ -56,7 +58,7 @@ pub(crate) mod io {
     /// Handle recoverable errors, printing relevant information to the
     /// terminal. Otherwise, convert the error into an unrecoverable error
     /// [`error::CanonicalUnrecoverable`].
-    pub fn handle_error(e: QuorumError) -> Result<(), error::CanonicalUnrecoverable> {
+    pub(crate) fn handle_error(e: QuorumError) -> Result<(), error::CanonicalUnrecoverable> {
         match e {
             QuorumError::Convergence(err) => Err(err.into()),
             QuorumError::MergeBase(err) => Err(err.into()),
