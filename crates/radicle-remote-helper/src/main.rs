@@ -176,7 +176,7 @@ enum Branch {
 impl Branch {
     /// Return the branch name to be used for the local branch when creating a
     /// patch.
-    fn to_branch_name(self, object: &radicle::patch::PatchId) -> Option<git::fmt::Qualified<'_>> {
+    fn into_branch_name(self, object: &radicle::patch::PatchId) -> Option<git::fmt::Qualified<'_>> {
         match self {
             Self::None => None,
             Self::MirrorUpstream => Some(git::refs::patch(object)),

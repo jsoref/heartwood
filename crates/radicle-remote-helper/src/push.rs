@@ -637,7 +637,7 @@ where
     )?;
 
     if let Some(upstream) = upstream {
-        if let Some(local_branch) = opts.branch.to_branch_name(&patch) {
+        if let Some(local_branch) = opts.branch.into_branch_name(&patch) {
             fn strip_refs_heads(qualified: git::fmt::Qualified) -> git::fmt::RefString {
                 let (_refs, _heads, x, xs) = qualified.non_empty_components();
                 std::iter::once(x).chain(xs).collect()
