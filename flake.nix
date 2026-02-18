@@ -2,8 +2,8 @@
   description = "Radicle";
 
   inputs = {
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/release-25.05";
-    nixpkgs-stable.url = "github:NixOS/nixpkgs/release-25.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/release-25.11";
+    nixpkgs-stable.url = "github:NixOS/nixpkgs/release-25.11";
     nixpkgs.follows = "nixpkgs-stable";
 
     crane.url = "github:ipetkov/crane";
