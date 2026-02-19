@@ -11,7 +11,7 @@ use crate::author::Author;
 
 /// A git commit in its object description form, i.e. the output of
 /// `git cat-file` for a commit object.
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct CommitData<Tree, Parent> {
     tree: Tree,
     parents: Vec<Parent>,

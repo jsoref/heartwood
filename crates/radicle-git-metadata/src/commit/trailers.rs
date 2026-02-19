@@ -85,13 +85,13 @@ impl<'a> Trailer<'a> {
 /// A version of the [`Trailer`] which owns its token and
 /// value. Useful for when you need to carry trailers around in a long
 /// lived data structure.
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct OwnedTrailer {
     pub token: OwnedToken,
     pub value: String,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct OwnedToken(String);
 
 impl Deref for OwnedToken {

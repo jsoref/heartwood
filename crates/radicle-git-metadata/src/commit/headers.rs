@@ -7,7 +7,7 @@ const BEGIN_PGP: &str = "-----BEGIN PGP SIGNATURE-----\n";
 /// A collection of headers stored in [`super::CommitData`].
 ///
 /// Note: these do not include `tree`, `parent`, `author`, and `committer`.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Headers(pub(super) Vec<(String, String)>);
 
 /// A `gpgsig` signature stored in [`super::CommitData`].
