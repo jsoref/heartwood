@@ -311,6 +311,10 @@ $ rad config schema
             "default": "block"
           }
         },
+        "database": {
+          "description": "Database configuration.",
+          "$ref": "#/$defs/Config"
+        },
         "secret": {
           "description": "Path to a file containing an Ed25519 secret key, in OpenSSH format, i.e./nwith the `-----BEGIN OPENSSH PRIVATE KEY-----` header. The corresponding/npublic key will be used as the Node ID./n/nA decryption password cannot be configured, but passed at runtime via/nthe environment variable `RAD_PASSPHRASE`.",
           "type": [
@@ -659,6 +663,62 @@ $ rad config schema
           "type": "string",
           "const": "all"
         }
+      ]
+    },
+    "Config": {
+      "description": "Database configuration.",
+      "type": "object",
+      "properties": {
+        "sqlite": {
+          "description": "SQLite configuration.",
+          "$ref": "#/$defs/SqliteConfig"
+        }
+      },
+      "required": [
+        "sqlite"
+      ]
+    },
+    "SqliteConfig": {
+      "description": "SQLite database configuration.",
+      "type": "object",
+      "properties": {
+        "pragma": {
+          "$ref": "#/$defs/Pragma"
+        }
+      }
+    },
+    "Pragma": {
+      "description": "Global SQLite pragma statements to make in order to configure SQLite itself,/nsee <https://sqlite.org/pragma.html>.",
+      "type": "object",
+      "properties": {
+        "journalMode": {
+          "$ref": "#/$defs/JournalMode"
+        },
+        "synchronous": {
+          "$ref": "#/$defs/Synchronous"
+        }
+      }
+    },
+    "JournalMode": {
+      "description": "Value for a `journal_mode` pragma statement./nFor a description of all variants please refer to/n<https://sqlite.org/pragma.html#pragma_journal_mode>./nNote that when SQLite documentation talks about /"the application/",/nthe application linked against this crate, e.g. Radicle Node, Radicle CLI,/nand others, is meant.",
+      "type": "string",
+      "enum": [
+        "DELETE",
+        "TRUNCATE",
+        "PERSIST",
+        "MEMORY",
+        "WAL",
+        "OFF"
+      ]
+    },
+    "Synchronous": {
+      "description": "Value for a `synchronous` pragma statement./nFor a description of all variants please refer to/n<https://sqlite.org/pragma.html#pragma_synchronous>.",
+      "type": "string",
+      "enum": [
+        "EXTRA",
+        "FULL",
+        "NORMAL",
+        "OFF"
       ]
     }
   }
