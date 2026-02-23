@@ -10,6 +10,7 @@ use radicle::git::raw;
 use radicle::identity::doc;
 use radicle::identity::doc::RepoId;
 use radicle::node;
+use radicle::node::policy;
 use radicle::node::policy::Scope;
 use radicle::node::{Handle as _, Node};
 use radicle::prelude::*;
@@ -121,6 +122,8 @@ enum CloneError {
     NoSeeds(RepoId),
     #[error("fetch: {0}")]
     Fetch(#[from] sync::FetchError),
+    #[error("policy store: {0}")]
+    PolicyStore(#[from] policy::store::Error),
 }
 
 struct Checkout {
@@ -203,12 +206,21 @@ impl Checkout {
 fn clone(
     id: RepoId,
     directory: Option<PathBuf>,
-    scope: Scope,
+    scope: Option<Scope>,
     settings: SyncSettings,
     node: &mut Node,
     profile: &Profile,
     bare: bool,
 ) -> Result<CloneResult, CloneError> {
+    let scope = match scope {
+        Some(scope) => scope,
+        None => profile
+            .policies()?
+            .seed_policy(&id)?
+            .scope()
+            .unwrap_or(Scope::Followed),
+    };
+
     // Seed repository.
     if node.seed(id, scope)? {
         term::success!(
