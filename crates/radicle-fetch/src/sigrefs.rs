@@ -21,7 +21,7 @@ pub mod error {
         Load(#[from] Load),
     }
 
-    pub type Load = radicle::storage::refs::Error;
+    pub type Load = radicle::storage::refs::sigrefs::read::error::Read;
 }
 
 /// A data carrier that associates that data with whether a given
@@ -57,7 +57,10 @@ impl<T> DelegateStatus<T> {
     pub fn load<R, S>(
         self,
         cached: &Cached<R, S>,
-    ) -> Result<DelegateStatus<Option<SignedRefsAt>>, radicle::storage::refs::Error>
+    ) -> Result<
+        DelegateStatus<Option<SignedRefsAt>>,
+        radicle::storage::refs::sigrefs::read::error::Read,
+    >
     where
         R: AsRef<Repository>,
     {

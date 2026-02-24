@@ -150,7 +150,7 @@ Similarly, she still does not have Bob's `rad/sigrefs`:
 
 ``` ~alice
 $ rad inspect --sigrefs
-z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi ae3c6b77dc1ed51c1c1e6a2772339c2779fa9ba8
+z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi e0e55994a9a234f0b1cd36d8812e2948e2672b7a
 ```
 
 And she can still list the project, without any worries:
@@ -198,6 +198,6 @@ Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 2 potential s
 🌱 Fetched from z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z
 🌱 Fetched from z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk
 $ rad inspect --sigrefs
-z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi ae3c6b77dc1ed51c1c1e6a2772339c2779fa9ba8
+z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi e0e55994a9a234f0b1cd36d8812e2948e2672b7a
 z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk dace6fe948548168a2bb687718949d9b5d9076ee
 ```

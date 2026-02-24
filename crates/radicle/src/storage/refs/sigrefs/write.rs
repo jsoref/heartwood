@@ -3,9 +3,11 @@ pub mod error;
 #[cfg(test)]
 mod test;
 
+use std::marker::PhantomData;
 use std::path::Path;
 
 use crypto::signature::Signer;
+use crypto::PublicKey;
 use radicle_core::NodeId;
 use radicle_git_metadata::author::Author;
 use radicle_git_metadata::commit::{headers::Headers, trailers::OwnedTrailer, CommitData};
@@ -16,6 +18,7 @@ use crate::storage::refs::sigrefs::git::{object, reference, Committer};
 use crate::storage::refs::{
     Refs, IDENTITY_ROOT, REFS_BLOB_PATH, SIGNATURE_BLOB_PATH, SIGREFS_BRANCH, SIGREFS_PARENT,
 };
+use crate::storage::refs::{SignedRefs, SignedRefsAt};
 
 /// The result of calling [`SignedRefsWriter::write`].
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -160,10 +163,22 @@ pub struct Commit {
     signature: crypto::Signature,
 }
 
-#[cfg(test)]
 impl Commit {
+    #[cfg(test)]
     pub(super) fn into_refs(self) -> Refs {
         self.refs
+    }
+
+    pub(crate) fn into_sigrefs_at(self, id: PublicKey) -> SignedRefsAt {
+        SignedRefsAt {
+            at: self.oid,
+            sigrefs: SignedRefs {
+                id,
+                signature: self.signature,
+                refs: self.refs,
+                _verified: PhantomData,
+            },
+        }
     }
 }
 

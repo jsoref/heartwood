@@ -410,7 +410,7 @@ impl<V> Deref for Remote<V> {
 
 /// Read-only operations on a storage instance.
 pub trait ReadStorage {
-    type Repository: ReadRepository;
+    type Repository: ReadRepository + self::refs::sigrefs::git::reference::Reader;
 
     /// Get user info for this storage.
     fn info(&self) -> &UserInfo;

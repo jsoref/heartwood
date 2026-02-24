@@ -3,6 +3,16 @@ $ rad id update --repo rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji --title "Add Bob" --des
 069e7d58faa9a7473d27f5510d676af33282796f
 ```
 
+A note for test authors:
+> The following `rad watch` command will time out if the target given via `-t` changes.
+> This happens for example when the generation of sigrefs changes.
+> To recover, temporarily change from `rad watch` to something like
+>
+>     $ sleep 5
+>     $ rad inspect --sigrefs rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji
+>
+> And pick out the result for `z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z`.
+
 ``` ~bob
 $ rad watch --repo rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji --node z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z -r 'refs/rad/sigrefs' -t c9a828fc2fb01f893d6e6e9e17b9092dea2b3aba -i 500 --timeout 5000ms
 $ rad sync --fetch rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji

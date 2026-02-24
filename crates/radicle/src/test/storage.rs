@@ -4,6 +4,8 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
+use crypto::PublicKey;
+
 pub use crate::git;
 use crate::git::fmt;
 
@@ -148,6 +150,30 @@ impl MockRepository {
                 doc,
             },
             remotes: HashMap::default(),
+        }
+    }
+}
+
+impl self::refs::sigrefs::git::reference::Reader for MockRepository {
+    fn find_reference(
+        &self,
+        reference: &git::fmt::Namespaced,
+    ) -> Result<Option<Oid>, refs::sigrefs::git::reference::error::FindReference> {
+        use refs::sigrefs::git::reference::error::FindReference;
+        let ns = reference.namespace();
+
+        let remote: PublicKey = ns.as_str().parse().map_err(FindReference::other)?;
+        let reference = reference.strip_namespace();
+
+        match self.remotes.get(&remote) {
+            None => Ok(None),
+            Some(refs) => {
+                if reference == *refs::SIGREFS_BRANCH {
+                    Ok(Some(refs.at))
+                } else {
+                    Ok(refs.sigrefs.get(&reference))
+                }
+            }
         }
     }
 }

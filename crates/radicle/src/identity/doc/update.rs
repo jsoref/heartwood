@@ -8,7 +8,7 @@ use crate::{
     git,
     identity::crefs::GetCanonicalRefs as _,
     prelude::Did,
-    storage::{refs, ReadRepository, RepositoryError},
+    storage::{self, refs, ReadRepository, RepositoryError},
 };
 
 use super::{Doc, PayloadError, PayloadId, RawDoc, Visibility};
@@ -114,15 +114,12 @@ pub fn privacy_allow_list(
 /// # Errors
 ///
 /// This will fail if an operation using the repository fails.
-pub fn delegates<S>(
+pub fn delegates(
     mut raw: RawDoc,
     additions: Vec<Did>,
     removals: Vec<Did>,
-    repo: &S,
-) -> Result<Result<RawDoc, Vec<error::DelegateVerification>>, RepositoryError>
-where
-    S: ReadRepository,
-{
+    repo: &storage::git::Repository,
+) -> Result<Result<RawDoc, Vec<error::DelegateVerification>>, RepositoryError> {
     if additions.is_empty() && removals.is_empty() {
         return Ok(Ok(raw));
     }
@@ -243,20 +240,19 @@ pub fn verify(raw: RawDoc) -> Result<Doc, error::DocVerification> {
     Ok(proposal)
 }
 
-fn verify_delegates<S>(
+fn verify_delegates(
     proposal: &RawDoc,
-    repo: &S,
-) -> Result<Option<Vec<error::DelegateVerification>>, RepositoryError>
-where
-    S: ReadRepository,
-{
+    repo: &storage::git::Repository,
+) -> Result<Option<Vec<error::DelegateVerification>>, RepositoryError> {
     let dids = &proposal.delegates;
     let threshold = proposal.threshold;
     let (canonical, _) = repo.canonical_head()?;
     let mut missing = Vec::with_capacity(dids.len());
 
     for did in dids {
-        match refs::SignedRefsAt::load((*did).into(), repo)? {
+        match refs::SignedRefsAt::load((*did).into(), repo)
+            .map_err(|err| storage::Error::Refs(storage::refs::Error::Read(err)))?
+        {
             None => {
                 missing.push(error::DelegateVerification::MissingDelegate { did: *did });
             }

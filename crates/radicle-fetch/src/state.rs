@@ -68,7 +68,7 @@ pub mod error {
         #[error(transparent)]
         Resolve(#[from] repository::error::Resolve),
         #[error(transparent)]
-        Refs(#[from] radicle::storage::refs::Error),
+        Refs(#[from] radicle::storage::refs::sigrefs::read::error::Read),
         #[error(transparent)]
         RemoteRefs(#[from] sigrefs::error::RemoteRefs),
         #[error("failed to get remote namespaces: {0}")]
@@ -683,7 +683,10 @@ where
         self.verified(oid).map(Some).map_err(error::Canonical::from)
     }
 
-    pub fn load(&self, remote: &PublicKey) -> Result<Option<SignedRefsAt>, sigrefs::error::Load> {
+    pub fn load(
+        &self,
+        remote: &PublicKey,
+    ) -> Result<Option<SignedRefsAt>, radicle::storage::refs::sigrefs::read::error::Read> {
         match self.state.sigrefs.get(remote) {
             None => SignedRefsAt::load(*remote, self.handle.repository()),
             Some(tip) => SignedRefsAt::load_at(*tip, *remote, self.handle.repository()).map(Some),

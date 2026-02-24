@@ -36,7 +36,7 @@ use crate::git::RefError;
 use crate::git::UserInfo;
 pub use crate::storage::{Error, RepositoryError};
 
-use super::refs::RefsAt;
+use super::refs::{sigrefs, RefsAt};
 use super::{RemoteId, RemoteRepository, ValidateRepository};
 
 pub static NAMESPACES_GLOB: LazyLock<PatternString> =
@@ -169,7 +169,8 @@ impl ReadStorage for Storage {
                 }
             };
             // Nb. This will be `None` if they were not found.
-            let refs = refs::SignedRefsAt::load(self.info.key, &repo)?;
+            let refs = refs::SignedRefsAt::load(self.info.key, &repo)
+                .map_err(|err| Error::Refs(refs::Error::Read(err)))?;
             let synced_at = refs
                 .as_ref()
                 .map(|r| node::SyncedAt::new(r.at, &repo))
@@ -202,7 +203,9 @@ impl WriteStorage for Storage {
         let repo = self.repository(rid)?;
         // N.b. we remove the repository if the `local` peer has no
         // `rad/sigrefs`. There's no risk of them corrupting data.
-        let has_sigrefs = SignedRefsAt::load(self.info.key, &repo)?.is_some();
+        let has_sigrefs = SignedRefsAt::load(self.info.key, &repo)
+            .map_err(|err| RepositoryError::Storage(Error::Refs(refs::Error::Read(err))))?
+            .is_some();
         if has_sigrefs {
             repo.clean(&self.info.key)
         } else {
@@ -256,7 +259,8 @@ impl Storage {
         rids.map(|rid| {
             let repo = self.repository(*rid)?;
             let (_, head) = repo.head()?;
-            let refs = refs::SignedRefsAt::load(self.info.key, &repo)?;
+            let refs = refs::SignedRefsAt::load(self.info.key, &repo)
+                .map_err(|err| RepositoryError::Refs(refs::Error::Read(err)))?;
             let synced_at = refs
                 .as_ref()
                 .map(|r| SyncedAt::new(r.at, &repo))
@@ -989,15 +993,72 @@ impl SignRepository for Repository {
     ) -> Result<SignedRefs<Verified>, RepositoryError> {
         let remote = signer.public_key();
         // Ensure the root reference is set, which is checked during sigref verification.
-        if self.identity_root_of(remote).is_err() {
+        if self
+            .reference_oid(remote, &git::refs::storage::IDENTITY_ROOT)
+            .is_err()
+        {
             self.set_remote_identity_root(remote)?;
         }
-        let mut refs = self.references_of(remote)?;
-        refs.remove_sigrefs();
-        let signed = refs.signed(signer)?.verified(self)?;
-        signed.save(self)?;
 
-        Ok(signed)
+        let committer = refs::sigrefs::git::committer(remote, &self.backend.signature()?)?;
+        let signed = self
+            .references_of(remote)?
+            .save(*remote, committer, self, signer)?;
+
+        Ok(signed.sigrefs)
+    }
+}
+
+impl sigrefs::git::object::Reader for Repository {
+    fn read_commit(
+        &self,
+        oid: &Oid,
+    ) -> Result<Option<Vec<u8>>, sigrefs::git::object::error::ReadCommit> {
+        self.backend.read_commit(oid)
+    }
+
+    fn read_blob(
+        &self,
+        commit: &Oid,
+        path: &Path,
+    ) -> Result<Option<sigrefs::git::object::Blob>, sigrefs::git::object::error::ReadBlob> {
+        self.backend.read_blob(commit, path)
+    }
+}
+
+impl sigrefs::git::object::Writer for Repository {
+    fn write_tree(
+        &self,
+        refs: sigrefs::git::object::RefsEntry,
+        signature: sigrefs::git::object::SignatureEntry,
+    ) -> Result<Oid, sigrefs::git::object::error::WriteTree> {
+        self.backend.write_tree(refs, signature)
+    }
+
+    fn write_commit(&self, bytes: &[u8]) -> Result<Oid, sigrefs::git::object::error::WriteCommit> {
+        self.backend.write_commit(bytes)
+    }
+}
+
+impl sigrefs::git::reference::Reader for Repository {
+    fn find_reference(
+        &self,
+        reference: &git::fmt::Namespaced,
+    ) -> Result<Option<Oid>, sigrefs::git::reference::error::FindReference> {
+        sigrefs::git::reference::Reader::find_reference(&self.backend, reference)
+    }
+}
+
+impl sigrefs::git::reference::Writer for Repository {
+    fn write_reference(
+        &self,
+        reference: &git::fmt::Namespaced,
+        commit: Oid,
+        parent: Option<Oid>,
+        reflog: String,
+    ) -> Result<(), sigrefs::git::reference::error::WriteReference> {
+        self.backend
+            .write_reference(reference, commit, parent, reflog)
     }
 }
 
