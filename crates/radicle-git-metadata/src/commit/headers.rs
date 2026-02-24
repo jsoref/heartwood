@@ -70,6 +70,10 @@ impl Headers {
     pub fn push(&mut self, name: &str, value: &str) {
         self.0.push((name.to_owned(), value.trim().to_owned()));
     }
+
+    pub(crate) fn strip_signatures(&mut self) {
+        self.0.retain(|(key, _)| key != "gpgsig");
+    }
 }
 
 #[derive(Debug, thiserror::Error)]

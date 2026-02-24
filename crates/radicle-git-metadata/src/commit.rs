@@ -85,6 +85,11 @@ impl<Tree, Parent> CommitData<Tree, Parent> {
         self.headers.signatures()
     }
 
+    pub fn strip_signatures(mut self) -> Self {
+        self.headers.strip_signatures();
+        self
+    }
+
     /// The [`Headers`] found in this commit.
     ///
     /// Note: these do not include `tree`, `parent`, `author`, and `committer`.
