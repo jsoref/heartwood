@@ -772,7 +772,8 @@ impl ReadRepository for Repository {
         let entries = self
             .backend
             .references_glob(format!("refs/namespaces/{remote}/*").as_str())?;
-        let mut refs = BTreeMap::new();
+
+        let mut refs = Refs::new();
 
         for e in entries {
             let e = e?;
@@ -788,7 +789,7 @@ impl ReadRepository for Repository {
                 }
             }
         }
-        Ok(refs.into())
+        Ok(refs)
     }
 
     fn references_glob(
@@ -992,10 +993,7 @@ impl SignRepository for Repository {
             self.set_remote_identity_root(remote)?;
         }
         let mut refs = self.references_of(remote)?;
-        // Don't sign the `rad/sigrefs` ref itself, and don't sign invalid OIDs.
-        refs.retain(|name, oid| {
-            name.as_refstr() != refs::SIGREFS_BRANCH.as_ref() && !oid.is_zero()
-        });
+        refs.remove_sigrefs();
         let signed = refs.signed(signer)?.verified(self)?;
         signed.save(self)?;
 
@@ -1062,7 +1060,7 @@ mod tests {
 
     use super::*;
     use crate::git;
-    use crate::storage::refs::SIGREFS_BRANCH;
+
     use crate::storage::{ReadRepository, ReadStorage};
     use crate::test::fixtures;
 
@@ -1129,8 +1127,7 @@ mod tests {
         let mut unsigned = stored.references_of(&alice).unwrap();
 
         // The signed refs doesn't contain the signature ref itself.
-        let sigref = (*SIGREFS_BRANCH).to_ref_string();
-        unsigned.remove(&sigref).unwrap();
+        unsigned.remove_sigrefs().unwrap();
 
         assert_eq!(remote.refs, signed);
         assert_eq!(*remote.refs, unsigned);

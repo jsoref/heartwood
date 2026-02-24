@@ -5,7 +5,6 @@ pub mod varint;
 pub use frame::StreamId;
 pub use message::{AddressType, MessageType};
 
-use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::mem;
@@ -318,7 +317,7 @@ impl Decode for PublicKey {
 impl Decode for Refs {
     fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
         let len = Size::decode(buf)?;
-        let mut refs = BTreeMap::new();
+        let mut refs = Refs::new();
 
         for _ in 0..len {
             let name = String::decode(buf)?;
@@ -327,7 +326,7 @@ impl Decode for Refs {
 
             refs.insert(name, oid);
         }
-        Ok(refs.into())
+        Ok(refs)
     }
 }
 

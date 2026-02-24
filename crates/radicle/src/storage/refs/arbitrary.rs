@@ -27,7 +27,6 @@ where
 
 impl Arbitrary for Refs {
     fn arbitrary(g: &mut qcheck::Gen) -> Self {
-        let mut refs: BTreeMap<git::fmt::RefString, storage::Oid> = BTreeMap::new();
         let mut bytes: [u8; 20] = [0; 20];
         let names = &[
             "heads/master",
@@ -40,6 +39,7 @@ impl Arbitrary for Refs {
             "notes/1",
         ];
 
+        let mut refs = Self::new();
         for _ in 0..g.size().min(names.len()) {
             if let Some(name) = g.choose(names) {
                 for byte in &mut bytes {
@@ -51,7 +51,7 @@ impl Arbitrary for Refs {
                 refs.insert(name, oid);
             }
         }
-        Self::from(refs)
+        refs
     }
 }
 

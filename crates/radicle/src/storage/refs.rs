@@ -6,7 +6,7 @@ use std::fmt::Debug;
 use std::io;
 use std::io::{BufRead, BufReader};
 use std::marker::PhantomData;
-use std::ops::{Deref, DerefMut};
+use std::ops::Deref;
 use std::path::Path;
 use std::str::FromStr;
 
@@ -79,6 +79,10 @@ impl Error {
 pub struct Refs(BTreeMap<git::fmt::RefString, Oid>);
 
 impl Refs {
+    pub fn new() -> Self {
+        Self(BTreeMap::new())
+    }
+
     /// Verify the given signature on these refs, and return [`SignedRefs`] on success.
     pub fn verified<R: ReadRepository>(
         self,
@@ -126,9 +130,10 @@ impl Refs {
             let name = git::fmt::RefString::try_from(name)?;
             let oid = Oid::from_str(oid).map_err(|_| canonical::Error::InvalidFormat)?;
 
-            if oid.is_zero() {
+            if oid.is_zero() || name.as_refstr() == SIGREFS_BRANCH.as_ref() {
                 continue;
             }
+
             refs.insert(name, oid);
         }
         Ok(Self(refs))
@@ -137,13 +142,54 @@ impl Refs {
     fn canonical(&self) -> Vec<u8> {
         let mut buf = String::new();
 
-        for (name, oid) in self.iter() {
+        for (name, oid) in self.0.iter() {
+            debug_assert_ne!(oid, &Oid::sha1_zero());
+            debug_assert_ne!(name, &SIGREFS_BRANCH.to_ref_string());
+
             buf.push_str(&oid.to_string());
             buf.push(' ');
             buf.push_str(name);
             buf.push('\n');
         }
+
         buf.into_bytes()
+    }
+
+    pub fn insert(&mut self, refname: git::fmt::RefString, target: Oid) -> Option<Oid> {
+        if target.is_zero() {
+            self.0.remove(&refname)
+        } else {
+            self.0.insert(refname, target)
+        }
+    }
+
+    pub(crate) fn keys<'a>(
+        &'a self,
+    ) -> std::collections::btree_map::Keys<'a, git::fmt::RefString, Oid> {
+        self.0.keys()
+    }
+
+    #[cfg(any(test, feature = "test"))]
+    pub(crate) fn values<'a>(
+        &'a self,
+    ) -> std::collections::btree_map::Values<'a, git::fmt::RefString, Oid> {
+        self.0.values()
+    }
+
+    pub fn iter<'a>(&'a self) -> std::collections::btree_map::Iter<'a, git::fmt::RefString, Oid> {
+        self.0.iter()
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub(super) fn remove_sigrefs(&mut self) -> Option<Oid> {
+        self.0.remove(&SIGREFS_BRANCH.to_ref_string())
     }
 }
 
@@ -168,23 +214,16 @@ impl<V> From<SignedRefs<V>> for Refs {
     }
 }
 
-impl From<BTreeMap<git::fmt::RefString, Oid>> for Refs {
-    fn from(refs: BTreeMap<git::fmt::RefString, Oid>) -> Self {
-        Self(refs)
-    }
-}
-
-impl Deref for Refs {
-    type Target = BTreeMap<git::fmt::RefString, Oid>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for Refs {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+impl<I> From<I> for Refs
+where
+    I: Iterator<Item = (git::fmt::RefString, Oid)>,
+{
+    fn from(value: I) -> Self {
+        let mut refs = Self::new();
+        for (refname, target) in value {
+            refs.insert(refname, target);
+        }
+        refs
     }
 }
 
