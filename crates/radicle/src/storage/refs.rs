@@ -1,3 +1,5 @@
+pub mod sigrefs;
+
 #[cfg(any(test, feature = "test"))]
 pub mod arbitrary;
 
@@ -190,6 +192,21 @@ impl Refs {
 
     pub(super) fn remove_sigrefs(&mut self) -> Option<Oid> {
         self.0.remove(&SIGREFS_BRANCH.to_ref_string())
+    }
+
+    /// Add a reference with name [`crate::git::refs::storage::SIGREFS_PARENT`]
+    /// and given target OID to this set of refs.
+    #[inline]
+    fn add_parent(&mut self, commit: Oid) -> Option<Oid> {
+        self.0.insert(SIGREFS_PARENT.to_ref_string(), commit)
+    }
+
+    /// Removes reference with name [`crate::git::refs::storage::SIGREFS_PARENT`]
+    /// from this set of refs, if it exists.
+    /// Absence of a reference with such name is ignored.
+    #[inline]
+    fn remove_parent(&mut self) -> Option<Oid> {
+        self.0.remove(&SIGREFS_PARENT.to_ref_string())
     }
 }
 

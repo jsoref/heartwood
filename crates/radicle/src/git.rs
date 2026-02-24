@@ -239,6 +239,14 @@ pub mod refs {
             Qualified::from_components(component!("rad"), component!("sigrefs"), None)
         });
 
+        /// A reference to the parent commit.
+        ///
+        /// `refs/rad/sigrefs-parent`
+        ///
+        pub static SIGREFS_PARENT: LazyLock<Qualified> = LazyLock::new(|| {
+            Qualified::from_components(component!("rad"), component!("sigrefs-parent"), None)
+        });
+
         /// The set of special references used in the Heartwood protocol.
         #[derive(Clone, Copy, Debug)]
         pub enum Special {

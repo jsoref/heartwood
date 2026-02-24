@@ -753,7 +753,7 @@ mod tests {
     use crate::identity::Visibility;
     use crate::node::device::Device;
     use crate::rad;
-    use crate::storage::refs::{IDENTITY_BRANCH, IDENTITY_ROOT, SIGREFS_BRANCH};
+    use crate::storage::refs::{IDENTITY_BRANCH, IDENTITY_ROOT, SIGREFS_BRANCH, SIGREFS_PARENT};
     use crate::storage::{git::transport, ReadStorage};
     use crate::test::{arbitrary, fixtures};
     use crate::Storage;
@@ -1230,6 +1230,7 @@ mod tests {
     fn test_special_branches() {
         assert!(Pattern::try_from((*IDENTITY_BRANCH).clone()).is_err());
         assert!(Pattern::try_from((*SIGREFS_BRANCH).clone()).is_err());
+        assert!(Pattern::try_from((*SIGREFS_PARENT).clone()).is_err());
         assert!(Pattern::try_from((*IDENTITY_ROOT).clone()).is_err());
     }
 }

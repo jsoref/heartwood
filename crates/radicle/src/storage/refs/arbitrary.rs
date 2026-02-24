@@ -12,6 +12,12 @@ where
 {
     let mut refs = Refs::arbitrary(g);
     refs.insert(IDENTITY_ROOT.to_ref_string(), root);
+
+    if bool::arbitrary(g) {
+        let parent = Oid::from_sha1(Arbitrary::arbitrary(g));
+        refs.insert(SIGREFS_PARENT.to_ref_string(), parent);
+    }
+
     let signature = crypto::signature::Signer::sign(signer, &refs.canonical());
     let sigrefs = SignedRefs {
         refs,

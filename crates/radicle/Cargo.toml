@@ -46,6 +46,7 @@ radicle-cob = { workspace = true, features = ["git2"] }
 radicle-core = { workspace = true, features = ["git2", "serde", "sqlite"] }
 radicle-crypto = { workspace = true, features = ["git-ref-format-core", "ssh", "sqlite", "cyphernet"] }
 radicle-git-ref-format = { workspace = true, features = ["macro", "serde"] }
+radicle-git-metadata = { workspace = true }
 radicle-localtime = { workspace = true, features = ["serde"] }
 radicle-oid = { workspace = true, features = ["git2", "serde", "std", "sha1"] }
 radicle-ssh = { workspace = true }
@@ -74,5 +75,4 @@ qcheck-macros = { workspace = true }
 radicle-cob = { workspace = true, features = ["stable-commit-ids", "test"] }
 radicle-core = {workspace = true, features = ["qcheck"] }
 radicle-crypto = { workspace = true, features = ["test"] }
-radicle-git-metadata = { workspace = true }
 tempfile = { workspace = true }

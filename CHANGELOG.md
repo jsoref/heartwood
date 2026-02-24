@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Release Highlights
 
+- The "Signed References" feature was reimplemented. The commits in
+  `refs/rad/sigrefs` will now only verify if they carry an appropriate value for
+  `refs/rad/root` in the associated `refs` blob. This reference was introduced
+  in commit `989edacd564fa658358f5ccfd08c243c5ebd8cda`, which was released via
+  version 1.1.0.
+  Also, the new reference `refs/rad/sigrefs-parent` is introduced. If present,
+  its target must match the parent commit. This is to prevent replay. It is
+  optional to maintain backwards compatibility, and might become mandatory
+  (like `refs/rad/root` does in this release) in the future.
+  Further, the new implementation detects replay of `refs` blobs. In order to do
+  so, it walks the history of `refs/rad/sigrefs` backwards to the root commit,
+  if `refs/rad/sigrefs-parent` is not set.
+
 ## New Features
 
 - The block policy for `NodeId`'s is used for limiting the namespaces fetched
