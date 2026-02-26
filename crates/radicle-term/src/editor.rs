@@ -162,6 +162,9 @@ impl Editor {
                 .write(true)
                 .open("/dev/tty")?;
             process::Stdio::from(tty)
+        } else if cfg!(windows) {
+            let tty = fs::OpenOptions::new().read(true).open("CONIN$")?;
+            process::Stdio::from(tty)
         } else {
             return Err(io::Error::new(
                 io::ErrorKind::Unsupported,

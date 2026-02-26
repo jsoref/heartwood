@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   indistinguishable from `[::1]:8776`. Since a port number is always required
   along a host when providing an address, IPv6 addresses now always require
   brackets to avoid confusion.
+- On Windows, use `CONIN$` to reopen the terminal input stream, instead of refusing
+  to launch an editor for `radicle-remote-helper`
 
 ## Deprecations
 
