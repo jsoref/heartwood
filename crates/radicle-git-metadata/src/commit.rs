@@ -1,8 +1,11 @@
 pub mod headers;
 pub mod trailers;
 
+mod parse;
+pub use parse::ParseError;
+
 use core::fmt;
-use std::str;
+use std::str::{self, FromStr};
 
 use headers::{Headers, Signature};
 use trailers::{OwnedTrailer, Trailer};
@@ -154,6 +157,44 @@ impl<Tree, Parent> CommitData<Tree, Parent> {
             message: self.message,
             trailers: self.trailers,
         })
+    }
+}
+
+impl<Tree, Parent> CommitData<Tree, Parent>
+where
+    Tree: str::FromStr,
+    Parent: str::FromStr,
+    Tree::Err: std::error::Error + Send + Sync + 'static,
+    Parent::Err: std::error::Error + Send + Sync + 'static,
+{
+    /// Parse a [`CommitData`] from its raw git object bytes.
+    ///
+    /// This is the inverse of the [`fmt::Display`] implementation. The bytes
+    /// are expected to be valid UTF-8 and in the standard git commit object
+    /// format produced by `git cat-file -p <commit>`.
+    ///
+    /// Trailers are detected by scanning the last paragraph of the message
+    /// body (the section after the final blank line). If every non-empty line
+    /// in that paragraph is a valid `Token: value` pair, those lines are
+    /// parsed as trailers and stored separately; otherwise the whole body is
+    /// kept as the message with no trailers.
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, ParseError> {
+        let s = str::from_utf8(bytes).map_err(ParseError::Utf8)?;
+        parse::parse(s)
+    }
+}
+
+impl<Tree, Parent> FromStr for CommitData<Tree, Parent>
+where
+    Tree: str::FromStr,
+    Parent: str::FromStr,
+    Tree::Err: std::error::Error + Send + Sync + 'static,
+    Parent::Err: std::error::Error + Send + Sync + 'static,
+{
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        parse::parse(s)
     }
 }
 
