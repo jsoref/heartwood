@@ -17,7 +17,7 @@ use bytes::{Buf, BufMut};
 
 use cypheraddr::tor;
 
-use radicle::crypto::{PublicKey, Signature, Unverified};
+use radicle::crypto::{PublicKey, Signature};
 use radicle::git;
 use radicle::git::fmt;
 use radicle::git::raw;
@@ -29,7 +29,6 @@ use radicle::node::Timestamp;
 use radicle::node::UserAgent;
 use radicle::storage::refs::Refs;
 use radicle::storage::refs::RefsAt;
-use radicle::storage::refs::SignedRefs;
 
 use crate::bounded::BoundedVec;
 use crate::service::filter;
@@ -489,24 +488,6 @@ impl Decode for filter::Filter {
     }
 }
 
-impl<V> Encode for SignedRefs<V> {
-    fn encode(&self, buf: &mut impl BufMut) {
-        self.id.encode(buf);
-        self.refs.encode(buf);
-        self.signature.encode(buf);
-    }
-}
-
-impl Decode for SignedRefs<Unverified> {
-    fn decode(buf: &mut impl Buf) -> Result<Self, Error> {
-        let id = NodeId::decode(buf)?;
-        let refs = Refs::decode(buf)?;
-        let signature = Signature::decode(buf)?;
-
-        Ok(Self::new(refs, id, signature))
-    }
-}
-
 impl Encode for RefsAt {
     fn encode(&self, buf: &mut impl BufMut) {
         self.remote.encode(buf);
@@ -597,8 +578,6 @@ mod tests {
     use qcheck_macros::quickcheck;
 
     use radicle::assert_matches;
-    use radicle::crypto::Unverified;
-    use radicle::storage::refs::SignedRefs;
 
     prop_roundtrip!(u16);
     prop_roundtrip!(u32);
@@ -609,7 +588,6 @@ mod tests {
     prop_roundtrip!(RepoId);
     prop_roundtrip!(Refs);
     prop_roundtrip!((String, String), tuple);
-    prop_roundtrip!(SignedRefs<Unverified>, signed_refs);
 
     #[quickcheck]
     fn prop_string(input: String) -> qcheck::TestResult {
