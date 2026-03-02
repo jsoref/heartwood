@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to create temporary patches.
 - The `rad id` command will provide a better error message when a non-delegate
   attempts to modify the identity document.
+- The `journal_mode` and `synchronous` pragmas can now be configured using the
+  configuration file. The default values used are `WAL` and `NORMAL`, which
+  generates less I/O operations. On power loss, transactions might be rolled
+  back, but SQLite still guarantees consistency in this mode.
 
 ## Fixed Bugs
 
