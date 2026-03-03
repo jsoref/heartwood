@@ -336,16 +336,6 @@ impl<V> Remotes<V> {
     }
 }
 
-impl Remotes<Verified> {
-    pub fn unverified(self) -> Remotes<Unverified> {
-        Remotes(
-            self.into_iter()
-                .map(|(id, r)| (id, r.unverified()))
-                .collect(),
-        )
-    }
-}
-
 impl<V> Default for Remotes<V> {
     fn default() -> Self {
         Self(RandomMap::default())
@@ -387,24 +377,10 @@ impl Remote<Unverified> {
     }
 }
 
-impl Remote<Unverified> {
-    pub fn verified<R: ReadRepository>(self, repo: &R) -> Result<Remote<Verified>, Error> {
-        let refs = self.refs.verified(repo)?;
-
-        Ok(Remote { refs })
-    }
-}
-
 impl Remote<Verified> {
     /// Create a new unverified remotes object.
     pub fn new(refs: impl Into<SignedRefs<Verified>>) -> Self {
         Self { refs: refs.into() }
-    }
-
-    pub fn unverified(self) -> Remote<Unverified> {
-        Remote {
-            refs: self.refs.unverified(),
-        }
     }
 
     pub fn to_refspecs(&self) -> Vec<Refspec<PatternString, PatternString>> {
