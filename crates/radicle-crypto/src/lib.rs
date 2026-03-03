@@ -174,6 +174,14 @@ impl TryFrom<String> for Signature {
 )]
 pub struct PublicKey(pub ed25519::PublicKey);
 
+impl signature::Verifier<Signature> for PublicKey {
+    fn verify(&self, msg: &[u8], signature: &Signature) -> Result<(), signature::Error> {
+        self.0
+            .verify(msg, signature)
+            .map_err(signature::Error::from_source)
+    }
+}
+
 #[cfg(feature = "cyphernet")]
 impl cyphernet::display::MultiDisplay<cyphernet::display::Encoding> for PublicKey {
     type Display = String;
