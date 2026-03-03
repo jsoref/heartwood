@@ -8,6 +8,7 @@ use std::str::FromStr;
 use log::*;
 
 use radicle::crypto;
+use radicle::git::Oid;
 use radicle::identity::Visibility;
 use radicle::node::address::Store as _;
 use radicle::node::device::Device;
@@ -15,7 +16,8 @@ use radicle::node::Database;
 use radicle::node::UserAgent;
 use radicle::node::{address, Alias, ConnectOptions};
 use radicle::rad;
-use radicle::storage::refs::{RefsAt, SignedRefsAt, IDENTITY_ROOT};
+use radicle::storage::refs;
+use radicle::storage::refs::{RefsAt, SignedRefsAt};
 use radicle::storage::{ReadRepository, RemoteRepository};
 use radicle::Storage;
 
@@ -360,17 +362,10 @@ where
         ann.into().signed(self.signer()).into()
     }
 
-    pub fn signed_refs_at<R: ReadRepository>(
-        &self,
-        mut refs: Refs,
-        at: radicle::git::Oid,
-        repo: &R,
-    ) -> SignedRefsAt {
-        refs.insert(IDENTITY_ROOT.to_ref_string(), repo.identity_root().unwrap());
-        SignedRefsAt {
-            sigrefs: refs.signed(self.signer()).unwrap().verified(repo).unwrap(),
-            at,
-        }
+    pub fn signed_refs_at(&self, root: Oid) -> SignedRefsAt {
+        arbitrary::with_gen(8, |g| {
+            refs::arbitrary::signed_refs_at(g, root, self.signer())
+        })
     }
 
     pub fn connect_from(&mut self, peer: &Self) {

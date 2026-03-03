@@ -8,6 +8,7 @@ use std::sync::Arc;
 use std::sync::LazyLock;
 use std::time;
 
+use radicle::storage::ReadRepository;
 use test_log::test;
 
 use radicle::cob;
@@ -909,20 +910,19 @@ fn test_refs_announcement_followed() {
 
     let node_id = alice.id;
     let repo = alice.storage_mut().repo_mut(&rid);
+    let root = repo.identity_root().unwrap();
+    let sigrefs_at = bob.signed_refs_at(root);
 
-    repo.remotes.insert(
-        node_id,
-        bob.signed_refs_at(arbitrary::gen::<Refs>(8), arbitrary::oid(), repo),
-    );
+    repo.remotes.insert(node_id, sigrefs_at);
 
     // Generate some refs for Bob under their own node_id.
-    let sigrefs = bob.signed_refs_at(arbitrary::gen::<Refs>(8), arbitrary::oid(), repo);
+    let sigrefs_at = bob.signed_refs_at(root);
     let node_id = bob.id;
     bob.init();
     bob.storage_mut()
         .repo_mut(&rid)
         .remotes
-        .insert(node_id, sigrefs);
+        .insert(node_id, sigrefs_at);
 
     // Alice uses Scope::Followed, and did not track Bob yet.
     alice.connect_to(&bob);
@@ -1582,10 +1582,8 @@ fn test_queued_fetch_from_ann_same_rid() {
     // Finish the 1st fetch.
     // Ensure the ref is in the storage and cache.
     let repo = alice.storage_mut().repo_mut(&rid);
-    repo.remotes.insert(
-        carol.id(),
-        carol.signed_refs_at(arbitrary::gen::<Refs>(1), oid, repo),
-    );
+    let sigrefs_at = carol.signed_refs_at(repo.identity_root().unwrap());
+    repo.remotes.insert(carol.id(), sigrefs_at);
     alice
         .database_mut()
         .refs_mut()
