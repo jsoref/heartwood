@@ -1,3 +1,6 @@
+#[cfg(any(test, feature = "test"))]
+pub mod arbitrary;
+
 use std::collections::BTreeMap;
 use std::fmt::Debug;
 use std::io;

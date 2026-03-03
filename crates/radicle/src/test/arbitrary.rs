@@ -1,16 +1,14 @@
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::hash::Hash;
 use std::ops::RangeBounds;
 use std::str::FromStr;
 use std::{iter, net};
 
-use crypto::test::signer::MockSigner;
-use crypto::{PublicKey, Unverified};
+use crypto::PublicKey;
 use cyphernet::addr::tor::OnionAddrV3;
 use cyphernet::EcPk;
 use qcheck::Arbitrary;
 
-use crate::collections::RandomMap;
 use crate::identity::doc::Visibility;
 use crate::identity::project::ProjectName;
 use crate::identity::{
@@ -21,7 +19,6 @@ use crate::identity::{
 use crate::node::address::{AddressType, Source};
 use crate::node::{Address, Alias, KnownAddress, Timestamp, UserAgent};
 use crate::storage;
-use crate::storage::refs::{Refs, RefsAt, SignedRefs};
 use crate::test::storage::{MockRepository, MockStorage};
 use crate::{cob, git};
 
@@ -109,13 +106,12 @@ pub fn gen<T: Arbitrary>(size: usize) -> T {
     T::arbitrary(&mut gen)
 }
 
-impl Arbitrary for storage::Remotes<crypto::Unverified> {
-    fn arbitrary(g: &mut qcheck::Gen) -> Self {
-        let remotes: RandomMap<storage::RemoteId, storage::Remote<crypto::Unverified>> =
-            Arbitrary::arbitrary(g);
-
-        storage::Remotes::new(remotes)
-    }
+pub fn with_gen<T, F>(size: usize, f: F) -> T
+where
+    F: FnOnce(&mut qcheck::Gen) -> T,
+{
+    let mut gen = qcheck::Gen::new(size);
+    f(&mut gen)
 }
 
 impl Arbitrary for Did {
@@ -194,56 +190,6 @@ impl Arbitrary for DocAt {
     }
 }
 
-impl Arbitrary for SignedRefs<Unverified> {
-    fn arbitrary(g: &mut qcheck::Gen) -> Self {
-        let bytes: [u8; 64] = Arbitrary::arbitrary(g);
-        let signature = crypto::Signature::from(bytes);
-        let author = PublicKey::arbitrary(g);
-        let refs = Refs::arbitrary(g);
-
-        Self::new(refs, author, signature)
-    }
-}
-
-impl Arbitrary for Refs {
-    fn arbitrary(g: &mut qcheck::Gen) -> Self {
-        let mut refs: BTreeMap<git::fmt::RefString, storage::Oid> = BTreeMap::new();
-        let mut bytes: [u8; 20] = [0; 20];
-        let names = &[
-            "heads/master",
-            "heads/feature/1",
-            "heads/feature/2",
-            "heads/feature/3",
-            "rad/id",
-            "tags/v1.0",
-            "tags/v2.0",
-            "notes/1",
-        ];
-
-        for _ in 0..g.size().min(names.len()) {
-            if let Some(name) = g.choose(names) {
-                for byte in &mut bytes {
-                    *byte = u8::arbitrary(g);
-                }
-                let oid = storage::Oid::from_sha1(bytes);
-                let name = git::fmt::RefString::try_from(*name).unwrap();
-
-                refs.insert(name, oid);
-            }
-        }
-        Self::from(refs)
-    }
-}
-
-impl Arbitrary for RefsAt {
-    fn arbitrary(g: &mut qcheck::Gen) -> Self {
-        Self {
-            remote: PublicKey::arbitrary(g),
-            at: oid(),
-        }
-    }
-}
-
 impl Arbitrary for MockStorage {
     fn arbitrary(g: &mut qcheck::Gen) -> Self {
         let inventory = Arbitrary::arbitrary(g);
@@ -257,16 +203,6 @@ impl Arbitrary for MockRepository {
         let doc = Doc::arbitrary(g);
 
         Self::new(rid, doc)
-    }
-}
-
-impl Arbitrary for storage::Remote<crypto::Unverified> {
-    fn arbitrary(g: &mut qcheck::Gen) -> Self {
-        let refs = Refs::arbitrary(g);
-        let signer = MockSigner::arbitrary(g);
-        let signed = refs.signed(&signer.into()).unwrap();
-
-        storage::Remote::<crypto::Unverified>::new(signed)
     }
 }
 
