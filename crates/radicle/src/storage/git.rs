@@ -639,7 +639,7 @@ impl ValidateRepository for Repository {
         let mut has_sigrefs = false;
 
         // Check all repository references, making sure they are present in the signed refs map.
-        for (refname, oid) in self.references_of(&remote.id)? {
+        for (refname, oid) in self.references_of(&remote.id())? {
             // Skip validation of the signed refs branch, as it is not part of `Remote`.
             if refname == refs::SIGREFS_BRANCH.to_ref_string() {
                 has_sigrefs = true;
@@ -659,7 +659,7 @@ impl ValidateRepository for Repository {
         }
 
         if !has_sigrefs {
-            failures.push(Validation::MissingRadSigRefs(remote.id));
+            failures.push(Validation::MissingRadSigRefs(remote.id()));
         }
 
         // The refs that are left in the map, are ones that were signed, but are not
@@ -667,7 +667,7 @@ impl ValidateRepository for Repository {
         if let Some((name, _)) = signed.into_iter().next() {
             failures.push(Validation::MissingRef {
                 refname: name,
-                remote: remote.id,
+                remote: remote.id(),
             });
         }
 

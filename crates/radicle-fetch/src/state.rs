@@ -733,7 +733,7 @@ where
         let mut has_sigrefs = false;
 
         // Check all repository references, making sure they are present in the signed refs map.
-        for (refname, oid) in self.state.refs.references_of(&remote.id) {
+        for (refname, oid) in self.state.refs.references_of(&remote.id()) {
             // Skip validation of the signed refs branch, as it is not part of `Remote`.
             if refname == storage::refs::SIGREFS_BRANCH.to_ref_string() {
                 has_sigrefs = true;
@@ -753,7 +753,7 @@ where
         }
 
         if !has_sigrefs {
-            validations.push(Validation::MissingRadSigRefs(remote.id));
+            validations.push(Validation::MissingRadSigRefs(remote.id()));
         }
 
         // The refs that are left in the map, are ones that were signed, but are not
@@ -761,7 +761,7 @@ where
         for (name, _) in signed.into_iter() {
             validations.push(Validation::MissingRef {
                 refname: name,
-                remote: remote.id,
+                remote: remote.id(),
             });
         }
 

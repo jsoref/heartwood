@@ -384,7 +384,7 @@ impl Remote<Verified> {
     }
 
     pub fn to_refspecs(&self) -> Vec<Refspec<PatternString, PatternString>> {
-        let ns = self.id.to_namespace();
+        let ns = self.id().to_namespace();
         // Nb. the references in Refs are expected to be Qualified
         self.refs
             .keys()

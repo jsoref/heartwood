@@ -182,7 +182,7 @@ impl RemoteRepository for MockRepository {
             .remotes
             .values()
             .map(|s| refs::RefsAt {
-                remote: s.id,
+                remote: s.id(),
                 at: s.at,
             })
             .collect())
@@ -232,7 +232,7 @@ impl ReadRepository for MockRepository {
         Ok(self
             .remotes
             .values()
-            .any(|sigrefs| sigrefs.at == oid || sigrefs.refs.values().any(|oid_| *oid_ == oid)))
+            .any(|sigrefs| sigrefs.at == oid || sigrefs.values().any(|oid_| *oid_ == oid)))
     }
 
     fn is_ancestor_of(&self, _ancestor: Oid, _head: Oid) -> Result<bool, crate::git::raw::Error> {

@@ -12,6 +12,7 @@ use std::str::FromStr;
 
 use crypto::signature::Signer;
 use crypto::{PublicKey, Signature, Unverified, Verified};
+use radicle_core::NodeId;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -112,7 +113,7 @@ impl Refs {
     }
 
     /// Create refs from a canonical representation.
-    pub fn from_canonical(bytes: &[u8]) -> Result<Self, canonical::Error> {
+    fn from_canonical(bytes: &[u8]) -> Result<Self, canonical::Error> {
         let reader = BufReader::new(bytes);
         let mut refs = BTreeMap::new();
 
@@ -133,7 +134,7 @@ impl Refs {
         Ok(Self(refs))
     }
 
-    pub fn canonical(&self) -> Vec<u8> {
+    fn canonical(&self) -> Vec<u8> {
         let mut buf = String::new();
 
         for (name, oid) in self.iter() {
@@ -196,12 +197,12 @@ impl DerefMut for Refs {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct SignedRefs<V> {
     /// The signed refs.
-    pub refs: Refs,
+    refs: Refs,
     /// The signature of the signer over the refs.
     #[serde(skip)]
-    pub signature: Signature,
+    signature: Signature,
     /// This is the remote under which these refs exist, and the public key of the signer.
-    pub id: PublicKey,
+    id: PublicKey,
 
     #[serde(skip)]
     _verified: PhantomData<V>,
@@ -263,6 +264,16 @@ impl SignedRefs<Unverified> {
 }
 
 impl SignedRefs<Verified> {
+    /// Returns the [`NodeId`] of the [`SignedRefs`].
+    pub fn id(&self) -> NodeId {
+        self.id
+    }
+
+    /// Returns the [`Refs`] of the [`SignedRefs`].
+    pub fn refs(&self) -> &Refs {
+        &self.refs
+    }
+
     pub fn load<S>(remote: RemoteId, repo: &S) -> Result<Self, Error>
     where
         S: ReadRepository,

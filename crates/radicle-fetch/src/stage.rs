@@ -517,7 +517,7 @@ impl ProtocolStage for DataRefs {
         for (remote, loaded) in &self.remotes {
             wants_haves.add(
                 refdb,
-                loaded.refs.iter().filter_map(|(refname, tip)| {
+                loaded.refs().iter().filter_map(|(refname, tip)| {
                     let refname = Qualified::from_refstr(refname)
                         .map(|refname| refname.with_namespace(Component::from(remote)))?;
                     Some((refname, *tip))
@@ -537,7 +537,7 @@ impl ProtocolStage for DataRefs {
         let mut updates = Updates::default();
 
         for (remote, refs) in &self.remotes {
-            let mut signed = HashSet::with_capacity(refs.refs.len());
+            let mut signed = HashSet::with_capacity(refs.refs().len());
             for (name, tip) in refs.iter() {
                 let tracking: Namespaced<'_> = Qualified::from_refstr(name)
                     .and_then(|q| refs::ReceivedRefname::remote(*remote, q).to_namespaced())
