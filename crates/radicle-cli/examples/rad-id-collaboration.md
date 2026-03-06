@@ -156,7 +156,7 @@ At this point, when Alice runs `rad sync`, she will fetch Eve's fork
 since she has become a delegate:
 
 ``` ~alice
-$ rad sync --timeout 3
+$ rad sync --timeout 3s
 ✓ Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from z6MkvVv…Z1Ct4tD@[..]..
 ✓ Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from z6MkuPZ…xEuaPUp@[..]..
 ✓ Fetched repository from 2 seed(s)

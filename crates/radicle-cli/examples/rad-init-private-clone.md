@@ -5,7 +5,7 @@ Bob tries to fetch it, and even though he's connected to Alice, it fails.
 $ rad ls
 ```
 ``` ~bob (fail)
-$ rad clone rad:z2ug5mwNKZB8KGpBDRTrWHAMbvHCu --seed z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi --timeout 1
+$ rad clone rad:z2ug5mwNKZB8KGpBDRTrWHAMbvHCu --seed z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi --timeout 1s
 ✓ Seeding policy updated for rad:z2ug5mwNKZB8KGpBDRTrWHAMbvHCu with scope 'followed'
 Fetching rad:z2ug5mwNKZB8KGpBDRTrWHAMbvHCu from the network, found 1 potential seed(s).
 ✗ Target not met: could not fetch from [z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi], and required 1 more seed(s)
@@ -20,7 +20,7 @@ the refs.
 ``` ~alice
 $ rad id update --title "Allow Bob" --description "" --allow did:key:z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk -q
 ...
-$ rad sync --announce --timeout 3
+$ rad sync --announce --timeout 3s
 ✓ Synced with 1 seed(s)
 ```
 

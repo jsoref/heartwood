@@ -15,7 +15,7 @@ When she tries to clone, one of those will fail to fetch. But the clone command
 still returns successfully.
 
 ```
-$ rad clone rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji --timeout 3
+$ rad clone rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji --timeout 3s
 ✓ Seeding policy updated for rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji with scope 'followed'
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 3 potential seed(s).
 ✓ Target met: 1 seed(s)

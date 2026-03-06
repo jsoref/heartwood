@@ -29,9 +29,7 @@ pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
 
     match command {
         Command::Connect { addr, timeout } => {
-            let timeout = timeout
-                .map(time::Duration::from_secs)
-                .unwrap_or(time::Duration::MAX);
+            let timeout = timeout.unwrap_or(time::Duration::MAX);
             match addr {
                 Addr::Peer(addr) => control::connect(&mut node, addr.id, addr.addr, timeout)?,
                 Addr::Node(nid) => {
@@ -70,9 +68,7 @@ pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
         }
         Command::Events { timeout, count } => {
             let count = count.unwrap_or(usize::MAX);
-            let timeout = timeout
-                .map(time::Duration::from_secs)
-                .unwrap_or(time::Duration::MAX);
+            let timeout = timeout.unwrap_or(time::Duration::MAX);
 
             events::run(node, count, timeout)?;
         }

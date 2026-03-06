@@ -66,6 +66,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `TypeName` strings defined in `radicle-cob` are restricted to reflect the
   size limits on domain names as specified in
   [RFC-1035](https://www.rfc-editor.org/rfc/rfc1035#section-2.3.4).
+- The `--timeout` flag, which is available on a number of CLI subcommands, now
+  takes a human-readable duration as parameter, E.G. "9s" or "1min" instead of
+  "9" or "60".
 
 ## 1.6.1
 

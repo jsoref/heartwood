@@ -43,8 +43,10 @@ pub struct Args {
     interval: u64,
 
     /// Timeout, in milliseconds
-    #[arg(long, value_name = "MILLIS")]
-    timeout: Option<u64>,
+    ///
+    /// Valid arguments are for example "10s", "5min" or "2h 37min"
+    #[arg(long, value_parser = humantime::parse_duration)]
+    timeout: Option<std::time::Duration>,
 }
 
 impl Args {
@@ -55,7 +57,8 @@ impl Args {
 
     /// Provide the timeout duration in milliseconds.
     pub(super) fn timeout(&self) -> time::Duration {
-        time::Duration::from_millis(self.timeout.unwrap_or(u64::MAX))
+        self.timeout
+            .unwrap_or_else(|| time::Duration::from_millis(u64::MAX))
     }
 }
 

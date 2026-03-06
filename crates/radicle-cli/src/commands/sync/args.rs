@@ -89,15 +89,17 @@ pub(super) struct SyncArgs {
     )]
     seeds: Vec<NodeId>,
 
-    /// How many seconds to wait while synchronizing
+    /// How long to wait while synchronizing
+    ///
+    /// Valid arguments are for example "10s", "5min" or "2h 37min"
     #[arg(
         long,
         short,
-        default_value_t = 9,
-        value_name = "SECS",
+        default_value = "9s",
+        value_parser = humantime::parse_duration,
         conflicts_with = "inventory"
     )]
-    timeout: u64,
+    timeout: std::time::Duration,
 
     /// The repository to perform the synchronizing for [default: cwd]
     rid: Option<RepoId>,
@@ -146,7 +148,7 @@ impl SyncArgs {
     }
 
     fn timeout(&self) -> time::Duration {
-        time::Duration::from_secs(self.timeout)
+        self.timeout
     }
 
     fn replication(&self) -> sync::ReplicationFactor {

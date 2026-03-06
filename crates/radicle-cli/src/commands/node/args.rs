@@ -105,8 +105,10 @@ pub(super) enum Command {
         addr: Addr,
 
         /// How long to wait for the connection to be established
-        #[arg(long, value_name = "SECS")]
-        timeout: Option<u64>,
+        ///
+        /// Valid arguments are for example "10s", "5min" or "2h 37min"
+        #[arg(long, value_parser = humantime::parse_duration)]
+        timeout: Option<std::time::Duration>,
     },
 
     /// Show the config
@@ -128,8 +130,10 @@ pub(super) enum Command {
     /// If no timeout or count is specified, it will run indefinitely.
     Events {
         /// How long to wait to receive an event before giving up
-        #[arg(long, value_name = "SECS")]
-        timeout: Option<u64>,
+        ///
+        /// Valid arguments are for example "10s", "5min" or "2h 37min"
+        #[arg(long, value_parser = humantime::parse_duration)]
+        timeout: Option<std::time::Duration>,
 
         /// Exit after <COUNT> events
         #[arg(long, short = 'n')]

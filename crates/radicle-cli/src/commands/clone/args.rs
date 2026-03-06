@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use std::time;
 
 use clap::Parser;
 
@@ -31,15 +30,17 @@ pub(super) struct SyncArgs {
     #[arg(short, long = "seed", value_name = "NID", action = clap::ArgAction::Append)]
     seeds: Vec<NodeId>,
 
-    /// Timeout for fetching repository in seconds
-    #[arg(long, default_value_t = 9, value_name = "SECS")]
-    timeout: usize,
+    /// Timeout for fetching repository
+    ///
+    /// Valid arguments are for example "10s", "5min" or "2h 37min"
+    #[arg(long, value_parser = humantime::parse_duration, default_value = "9s")]
+    timeout: std::time::Duration,
 }
 
 impl From<SyncArgs> for SyncSettings {
     fn from(args: SyncArgs) -> Self {
         SyncSettings {
-            timeout: time::Duration::from_secs(args.timeout as u64),
+            timeout: args.timeout,
             seeds: args.seeds.into_iter().collect(),
             ..SyncSettings::default()
         }

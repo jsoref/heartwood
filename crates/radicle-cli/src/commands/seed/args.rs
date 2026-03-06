@@ -43,8 +43,10 @@ pub struct Args {
     pub(super) from: Vec<NodeId>,
 
     /// Fetch timeout in seconds
-    #[arg(long, short, value_name = "SECS", default_value_t = 9)]
-    timeout: u64,
+    ///
+    /// Valid arguments are for example "10s", "5min" or "2h 37min"
+    #[arg(long, short, value_parser = humantime::parse_duration, default_value = "9s")]
+    timeout: std::time::Duration,
 
     /// Peer follow scope for this repository
     #[arg(long, value_parser = terminal::args::ScopeParser)]
@@ -86,7 +88,7 @@ impl From<Args> for Operation {
 
 impl Args {
     fn timeout(&self) -> time::Duration {
-        time::Duration::from_secs(self.timeout)
+        self.timeout
     }
 
     fn should_fetch(&self) -> bool {
