@@ -377,11 +377,12 @@ impl DerefMut for Validations {
 pub enum Validation {
     #[error("found unsigned ref `{0}`")]
     UnsignedRef(RefString),
-    #[error("{refname}: expected {expected}, but found {actual}")]
+    #[error("expected `refs/namespaces/{remote}/{refname}` at {expected} but found {actual}")]
     MismatchedRef {
+        remote: RemoteId,
+        refname: RefString,
         expected: Oid,
         actual: Oid,
-        refname: RefString,
     },
     #[error("missing `refs/namespaces/{remote}/{refname}`")]
     MissingRef {
@@ -648,6 +649,7 @@ impl ValidateRepository for Repository {
             if let Some(signed_oid) = signed.remove(&refname) {
                 if oid != signed_oid {
                     failures.push(Validation::MismatchedRef {
+                        remote: remote.id(),
                         refname,
                         expected: signed_oid,
                         actual: oid,

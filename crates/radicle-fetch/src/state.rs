@@ -742,6 +742,7 @@ where
             if let Some(signed_oid) = signed.remove(&refname) {
                 if oid != signed_oid {
                     validations.push(Validation::MismatchedRef {
+                        remote: remote.id(),
                         refname,
                         expected: signed_oid,
                         actual: oid,
