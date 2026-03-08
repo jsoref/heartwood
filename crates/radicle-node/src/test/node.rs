@@ -332,6 +332,7 @@ impl<G: Signer<Signature> + cyphernet::Ecdh> NodeHandle<G> {
             )
             .env(env::RAD_PASSPHRASE, "radicle")
             .env(env::RAD_LOCAL_TIME, "1671125284")
+            .env(env::RAD_RNG_SEED, "0")
             .env("TZ", "UTC")
             .env("LANG", "C")
             .envs(git::env::GIT_DEFAULT_CONFIG)
