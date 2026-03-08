@@ -72,6 +72,16 @@ impl signature::Signer<ExtendedSignature> for AgentSigner {
     }
 }
 
+impl AsRef<PublicKey> for AgentSigner {
+    fn as_ref(&self) -> &PublicKey {
+        &self.public
+    }
+}
+
+impl signature::KeypairRef for AgentSigner {
+    type VerifyingKey = PublicKey;
+}
+
 impl AgentSigner {
     pub fn new(agent: Agent, public: PublicKey) -> Self {
         let agent = RefCell::new(agent);

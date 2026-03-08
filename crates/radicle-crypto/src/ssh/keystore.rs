@@ -265,6 +265,16 @@ impl signature::Signer<ExtendedSignature> for MemorySigner {
     }
 }
 
+impl AsRef<PublicKey> for MemorySigner {
+    fn as_ref(&self) -> &PublicKey {
+        &self.public
+    }
+}
+
+impl signature::KeypairRef for MemorySigner {
+    type VerifyingKey = PublicKey;
+}
+
 impl Signer for MemorySigner {
     fn public_key(&self) -> &PublicKey {
         &self.public

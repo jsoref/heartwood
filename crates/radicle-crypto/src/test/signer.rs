@@ -23,6 +23,16 @@ impl signature::Signer<Signature> for MockSigner {
     }
 }
 
+impl AsRef<PublicKey> for MockSigner {
+    fn as_ref(&self) -> &PublicKey {
+        &self.pk
+    }
+}
+
+impl signature::KeypairRef for MockSigner {
+    type VerifyingKey = PublicKey;
+}
+
 impl MockSigner {
     pub fn new(rng: &mut fastrand::Rng) -> Self {
         let mut seed: [u8; 32] = [0; 32];
