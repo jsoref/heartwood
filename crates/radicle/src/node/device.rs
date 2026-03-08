@@ -2,7 +2,7 @@ use std::fmt;
 use std::ops::Deref;
 
 use crypto::{
-    signature::{Signer, Verifier},
+    signature::{Keypair, KeypairRef, Signer, Verifier},
     ssh::ExtendedSignature,
     Signature,
 };
@@ -81,7 +81,7 @@ impl Device<crypto::test::signer::MockSigner> {
     }
 }
 
-impl<S: Signer<Signature> + 'static> Device<S> {
+impl<S: BoxableSigner + 'static> Device<S> {
     /// Construct a [`BoxedDevice`] from a given `Device`.
     pub fn boxed(self) -> BoxedDevice {
         BoxedDevice(Device {
@@ -89,6 +89,16 @@ impl<S: Signer<Signature> + 'static> Device<S> {
             signer: BoxedSigner(Box::new(self.signer)),
         })
     }
+}
+
+impl<S> AsRef<NodeId> for Device<S> {
+    fn as_ref(&self) -> &NodeId {
+        &self.node
+    }
+}
+
+impl<S> KeypairRef for Device<S> {
+    type VerifyingKey = NodeId;
 }
 
 impl<S> Verifier<Signature> for Device<S> {
@@ -129,12 +139,24 @@ impl<S: Signer<Signature>> Signer<ExtendedSignature> for Device<S> {
     }
 }
 
+pub trait BoxableSigner: Signer<Signature> + Keypair<VerifyingKey = crypto::PublicKey> {}
+
+impl<S: Signer<Signature> + Keypair<VerifyingKey = crypto::PublicKey>> BoxableSigner for S {}
+
 /// A `Signer<Signature>` that is packed in a [`Box`] for dynamic dispatch.
-pub struct BoxedSigner(Box<dyn Signer<Signature> + 'static>);
+pub struct BoxedSigner(Box<dyn BoxableSigner + 'static>);
 
 impl Signer<Signature> for BoxedSigner {
     fn try_sign(&self, msg: &[u8]) -> Result<Signature, crypto::signature::Error> {
         self.0.try_sign(msg)
+    }
+}
+
+impl Keypair for BoxedSigner {
+    type VerifyingKey = crypto::PublicKey;
+
+    fn verifying_key(&self) -> Self::VerifyingKey {
+        self.0.verifying_key()
     }
 }
 
@@ -171,4 +193,14 @@ impl Signer<ExtendedSignature> for BoxedDevice {
             sig: self.0.signer.try_sign(msg)?,
         })
     }
+}
+
+impl AsRef<crypto::PublicKey> for BoxedDevice {
+    fn as_ref(&self) -> &crypto::PublicKey {
+        &self.0.node
+    }
+}
+
+impl KeypairRef for BoxedDevice {
+    type VerifyingKey = crypto::PublicKey;
 }
