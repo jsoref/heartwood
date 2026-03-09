@@ -10,11 +10,9 @@ pub use radicle_oid::{str::ParseOidError, Oid};
 
 pub extern crate radicle_git_ref_format as fmt;
 
-use crate::collections::RandomMap;
 use crate::crypto::PublicKey;
 use crate::node::Alias;
 use crate::rad;
-use crate::storage::refs::Refs;
 use crate::storage::RemoteId;
 
 pub use crate::storage::git::transport::local::Url;
@@ -447,30 +445,6 @@ pub mod refs {
             )
         }
     }
-}
-
-/// List remote refs of a project, given the remote URL.
-pub fn remote_refs(url: &Url) -> Result<RandomMap<RemoteId, Refs>, ListRefsError> {
-    let url = url.to_string();
-    let mut remotes = RandomMap::default();
-    let mut remote = raw::Remote::create_detached(url)?;
-
-    remote.connect(raw::Direction::Fetch)?;
-
-    let refs = remote.list()?;
-    for r in refs {
-        // Skip the `HEAD` reference, as it is untrusted.
-        if r.name() == "HEAD" {
-            continue;
-        }
-        // Nb. skip refs that don't have a public key namespace.
-        if let (Some(id), refname) = parse_ref::<PublicKey>(r.name())? {
-            let entry = remotes.entry(id).or_insert_with(Refs::default);
-            entry.insert(refname.into(), r.oid().into());
-        }
-    }
-
-    Ok(remotes)
 }
 
 /// Parse a [`fmt::Qualified`] reference string while expecting the reference

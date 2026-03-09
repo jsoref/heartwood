@@ -1065,32 +1065,6 @@ mod tests {
     use crate::test::fixtures;
 
     #[test]
-    fn test_remote_refs() {
-        let dir = tempfile::tempdir().unwrap();
-        let signer = Device::mock();
-        let storage = fixtures::storage(dir.path(), &signer).unwrap();
-        let inv = storage.repositories().unwrap();
-        let proj = inv.first().unwrap();
-        let mut refs = git::remote_refs(&git::Url::from(proj.rid)).unwrap();
-
-        let project = storage.repository(proj.rid).unwrap();
-        let remotes = project.remotes().unwrap();
-
-        // Strip the remote refs of sigrefs so we can compare them.
-        for remote in refs.values_mut() {
-            let sigref = (*SIGREFS_BRANCH).to_ref_string();
-            remote.remove(&sigref).unwrap();
-        }
-
-        let remotes = remotes
-            .map(|remote| remote.map(|(id, r): (RemoteId, Remote<Verified>)| (id, r.refs.into())))
-            .collect::<Result<_, _>>()
-            .unwrap();
-
-        assert_eq!(refs, remotes);
-    }
-
-    #[test]
     fn test_references_of() {
         let tmp = tempfile::tempdir().unwrap();
         let signer = Device::mock();
