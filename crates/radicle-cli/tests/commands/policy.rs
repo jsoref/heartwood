@@ -10,6 +10,11 @@ fn rad_seed_and_follow() {
 }
 
 #[test]
+fn rad_seed_scope() {
+    Environment::alice(["rad-seed-scope"]);
+}
+
+#[test]
 fn rad_seed_many() {
     let mut environment = Environment::new();
     let alice = environment.node("alice");

@@ -47,12 +47,8 @@ pub struct Args {
     timeout: u64,
 
     /// Peer follow scope for this repository
-    #[arg(
-        long,
-        default_value_t = Scope::Followed,
-        value_parser = terminal::args::ScopeParser
-    )]
-    pub(super) scope: Scope,
+    #[arg(long, value_parser = terminal::args::ScopeParser)]
+    pub(super) scope: Option<Scope>,
 
     /// Verbose output
     #[arg(long, short)]
@@ -65,7 +61,7 @@ pub(super) enum Operation {
         rids: NonEmpty<RepoId>,
         should_fetch: bool,
         settings: SyncSettings,
-        scope: Scope,
+        scope: Option<Scope>,
     },
 }
 

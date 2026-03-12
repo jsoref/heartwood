@@ -41,10 +41,19 @@ pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
 
 pub fn update(
     rid: RepoId,
-    scope: Scope,
+    scope: Option<Scope>,
     node: &mut Node,
     profile: &Profile,
 ) -> Result<(), anyhow::Error> {
+    let scope = match scope {
+        Some(scope) => scope,
+        None => profile
+            .policies()?
+            .seed_policy(&rid)?
+            .scope()
+            .unwrap_or(Scope::Followed),
+    };
+
     let updated = profile.seed(rid, scope, node)?;
     let outcome = if updated { "updated" } else { "exists" };
 
