@@ -1,6 +1,4 @@
-use crate::{
-    ssh::ExtendedSignature, KeyPair, PublicKey, SecretKey, Seed, Signature, Signer, SignerError,
-};
+use crate::{ssh::ExtendedSignature, KeyPair, PublicKey, SecretKey, Seed, Signature};
 
 #[derive(Debug, Clone)]
 pub struct MockSigner {
@@ -83,20 +81,6 @@ impl Eq for MockSigner {}
 impl std::hash::Hash for MockSigner {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.pk.hash(state)
-    }
-}
-
-impl Signer for MockSigner {
-    fn public_key(&self) -> &PublicKey {
-        &self.pk
-    }
-
-    fn sign(&self, msg: &[u8]) -> Signature {
-        self.sk.sign(msg, None).into()
-    }
-
-    fn try_sign(&self, msg: &[u8]) -> Result<Signature, SignerError> {
-        Ok(self.sign(msg))
     }
 }
 

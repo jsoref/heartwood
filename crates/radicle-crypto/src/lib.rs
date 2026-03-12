@@ -42,30 +42,19 @@ impl SignerError {
     }
 }
 
-pub trait Signer: Send {
+pub trait Signer: Send + signature::Signer<Signature> {
     /// Return this signer's public/verification key.
     fn public_key(&self) -> &PublicKey;
-    /// Sign a message and return the signature.
-    fn sign(&self, msg: &[u8]) -> Signature;
-    /// Sign a message and return the signature, or fail if the signer was unable
-    /// to produce a signature.
-    fn try_sign(&self, msg: &[u8]) -> Result<Signature, SignerError>;
 }
 
-impl<T> Signer for Box<T>
+impl<S> Signer for S
 where
-    T: Signer + ?Sized,
+    S: Send,
+    S: signature::Signer<Signature>,
+    S: signature::KeypairRef<VerifyingKey = PublicKey>,
 {
     fn public_key(&self) -> &PublicKey {
-        self.deref().public_key()
-    }
-
-    fn sign(&self, msg: &[u8]) -> Signature {
-        self.deref().sign(msg)
-    }
-
-    fn try_sign(&self, msg: &[u8]) -> Result<Signature, SignerError> {
-        self.deref().try_sign(msg)
+        self.as_ref()
     }
 }
 

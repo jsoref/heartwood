@@ -4,7 +4,7 @@ use std::path::Path;
 pub use radicle_ssh as ssh;
 pub use ssh::agent::client::{AgentClient, Error};
 
-use crate::{PublicKey, SecretKey, Signature, Signer, SignerError};
+use crate::{PublicKey, SecretKey, Signature, Signer};
 
 use super::ExtendedSignature;
 
@@ -59,7 +59,12 @@ pub struct AgentSigner {
 
 impl signature::Signer<Signature> for AgentSigner {
     fn try_sign(&self, msg: &[u8]) -> Result<Signature, signature::Error> {
-        Signer::try_sign(self, msg).map_err(signature::Error::from_source)
+        let sig = self
+            .agent
+            .borrow_mut()
+            .sign(&self.public, msg)
+            .map_err(signature::Error::from_source)?;
+        Ok(Signature::from(sig))
     }
 }
 
@@ -99,25 +104,5 @@ impl AgentSigner {
     /// Box this signer into a [`Signer`].
     pub fn boxed(self) -> Box<dyn Signer> {
         Box::new(self)
-    }
-}
-
-impl Signer for AgentSigner {
-    fn public_key(&self) -> &PublicKey {
-        &self.public
-    }
-
-    fn sign(&self, msg: &[u8]) -> Signature {
-        self.try_sign(msg).unwrap()
-    }
-
-    fn try_sign(&self, msg: &[u8]) -> Result<Signature, SignerError> {
-        let sig = self
-            .agent
-            .borrow_mut()
-            .sign(&self.public, msg)
-            .map_err(SignerError::new)?;
-
-        Ok(Signature::from(sig))
     }
 }

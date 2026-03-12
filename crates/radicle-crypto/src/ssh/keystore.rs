@@ -7,7 +7,7 @@ use cyphernet::{EcSk, EcSkInvalid, Ecdh};
 use thiserror::Error;
 use zeroize::Zeroizing;
 
-use crate::{KeyPair, PublicKey, SecretKey, Signature, Signer, SignerError};
+use crate::{KeyPair, PublicKey, SecretKey, Signature, Signer};
 
 use super::ExtendedSignature;
 
@@ -252,7 +252,7 @@ pub struct MemorySigner {
 
 impl signature::Signer<Signature> for MemorySigner {
     fn try_sign(&self, msg: &[u8]) -> Result<Signature, signature::Error> {
-        Ok(Signer::sign(self, msg))
+        Ok(Signature::from(self.secret.deref().deref().sign(msg, None)))
     }
 }
 
@@ -274,20 +274,6 @@ impl AsRef<PublicKey> for MemorySigner {
 
 impl signature::KeypairRef for MemorySigner {
     type VerifyingKey = PublicKey;
-}
-
-impl Signer for MemorySigner {
-    fn public_key(&self) -> &PublicKey {
-        &self.public
-    }
-
-    fn sign(&self, msg: &[u8]) -> Signature {
-        Signature(self.secret.deref().deref().sign(msg, None))
-    }
-
-    fn try_sign(&self, msg: &[u8]) -> Result<Signature, SignerError> {
-        Ok(Signer::sign(self, msg))
-    }
 }
 
 #[cfg(feature = "cyphernet")]
