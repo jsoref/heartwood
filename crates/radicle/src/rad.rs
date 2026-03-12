@@ -165,6 +165,7 @@ pub enum ForkError {
 }
 
 /// Create a local tree for an existing project, from an existing remote.
+#[cfg(any(test, feature = "test"))]
 pub fn fork_remote<G, S>(
     proj: RepoId,
     remote: &RemoteId,
