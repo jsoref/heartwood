@@ -27,7 +27,7 @@ git-ref-format-core = { workspace = true, optional = true }
 radicle-ssh = { workspace = true, optional = true }
 schemars = { workspace = true, optional = true, features = ["derive", "std"] }
 serde = { workspace = true, features = ["derive", "std"] }
-signature = { workspace = true }
+signature = { workspace = true, features = ["std"] }
 sqlite = { workspace = true, features = ["bundled"], optional = true }
 ssh-key = { version = "0.6.3", default-features = false, features = ["std", "encryption", "getrandom"], optional = true }
 thiserror = { workspace = true, default-features = true }

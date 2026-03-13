@@ -65,9 +65,10 @@ impl signature::Signer<Signature> for AgentSigner {
 
 impl signature::Signer<ExtendedSignature> for AgentSigner {
     fn try_sign(&self, msg: &[u8]) -> Result<ExtendedSignature, signature::Error> {
+        use signature::Keypair as _;
         Ok(ExtendedSignature {
-            key: self.public,
-            sig: Signer::try_sign(self, msg).map_err(signature::Error::from_source)?,
+            key: self.verifying_key(),
+            sig: self.try_sign(msg)?,
         })
     }
 }

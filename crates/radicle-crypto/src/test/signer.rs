@@ -10,9 +10,10 @@ pub struct MockSigner {
 
 impl signature::Signer<ExtendedSignature> for MockSigner {
     fn try_sign(&self, msg: &[u8]) -> Result<ExtendedSignature, signature::Error> {
+        use signature::Keypair as _;
         Ok(ExtendedSignature {
-            key: self.pk,
-            sig: signature::Signer::<Signature>::try_sign(self, msg)?,
+            key: self.verifying_key(),
+            sig: self.try_sign(msg)?,
         })
     }
 }
