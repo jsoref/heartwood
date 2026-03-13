@@ -295,3 +295,23 @@ fn test_clone_without_seeds() {
         .rad("inspect", &[], working.join("heartwood").as_path())
         .unwrap();
 }
+
+#[test]
+fn rad_clone_scope() {
+    let mut environment = Environment::new();
+    let mut alice = environment.node("alice");
+    let working = environment.tempdir().join("working");
+
+    let rid = alice.project("heartwood", "Radicle Heartwood Protocol & Stack");
+
+    let mut alice = alice.spawn();
+    alice.handle.unseed(rid).unwrap();
+
+    test(
+        "examples/rad-clone-scope.md",
+        working,
+        Some(&alice.home),
+        [],
+    )
+    .unwrap();
+}
