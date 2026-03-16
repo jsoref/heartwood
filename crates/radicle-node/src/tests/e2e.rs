@@ -1742,3 +1742,52 @@ fn test_block_prevents_fetch() {
 
     assert_matches!(result, FetchResult::Failed { .. });
 }
+
+#[test]
+fn fetch_does_not_contain_rad_sigrefs_parent() {
+    use radicle::storage::refs::SIGREFS_PARENT;
+
+    let tmp = tempfile::tempdir().unwrap();
+
+    let mut alice = Node::init(tmp.path(), config::relay("alice"));
+    let bob = Node::init(tmp.path(), config::relay("bob"));
+
+    let rid = alice.project("acme", "");
+
+    let mut alice = alice.spawn();
+    let mut bob = bob.spawn();
+
+    bob.handle.seed(rid, Scope::All).unwrap();
+    alice.connect(&bob);
+    converge([&alice, &bob]);
+
+    bob.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap();
+    assert!(bob.storage.contains(&rid).unwrap());
+    rad::fork(rid, &bob.signer, &bob.storage).unwrap();
+
+    let issue_id = alice.issue(
+        rid,
+        Title::new("No rad/sigrefs-parent").unwrap(),
+        "sigrefs are harshing my vibes",
+    );
+    let repo = alice.storage.repository(rid).unwrap();
+    let alice_signed_refs = repo.remote(&alice.id).unwrap().refs;
+
+    log::debug!(target: "test", "Bob fetches from Alice..");
+    assert_matches!(
+        bob.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap(),
+        FetchResult::Success { .. }
+    );
+    let repo = bob.storage.repository(rid).unwrap();
+    let issues = issue::Issues::open(&repo).unwrap();
+    assert!(
+        issues.get(&issue_id).unwrap().is_some(),
+        "Bob did not fetch issue {issue_id}"
+    );
+
+    let repo = bob.storage.repository(rid).unwrap();
+    let alice_remote = repo.remote(&alice.id).unwrap();
+
+    assert_eq!(alice_signed_refs.refs(), alice_remote.refs());
+    assert!(alice_remote.refs().get(&SIGREFS_PARENT).is_none());
+}
