@@ -5,7 +5,7 @@ use localtime::LocalTime;
 
 use crate::node::KnownAddress;
 use crate::prelude::NodeId;
-use crate::storage::{refs::RefsAt, ReadRepository, RemoteId};
+use crate::storage::ReadRepository;
 
 /// Holds an oid and timestamp.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -19,17 +19,6 @@ pub struct SyncedAt {
 }
 
 impl SyncedAt {
-    /// Load a new [`SyncedAt`] for the given remote.
-    pub fn load<S: ReadRepository>(
-        repo: &S,
-        remote: RemoteId,
-    ) -> Result<Self, crate::git::raw::Error> {
-        let refs = RefsAt::new(repo, remote)?;
-        let oid = refs.at;
-
-        Self::new(oid, repo)
-    }
-
     /// Create a new [`SyncedAt`] given an OID, by looking up the timestamp in the repo.
     pub fn new<S: ReadRepository>(
         oid: crate::git::Oid,
