@@ -42,7 +42,7 @@ pub struct RepositoryInfo {
     pub doc: Doc,
     /// Local signed refs, if any.
     /// Repositories with this set to `None` are ones that are seeded but not forked.
-    pub refs: Option<refs::SignedRefsAt>,
+    pub refs: Result<Option<refs::SignedRefsAt>, refs::sigrefs::read::error::MissingIdentity>,
     /// Sync time of the repository.
     pub synced_at: Option<SyncedAt>,
 }

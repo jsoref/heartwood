@@ -167,12 +167,18 @@ impl ReadStorage for Storage {
                 }
             };
             // Nb. This will be `None` if they were not found.
-            let refs = refs::SignedRefsAt::load(self.info.key, &repo)
-                .map_err(|err| Error::Refs(refs::Error::Read(err)))?;
-            let synced_at = refs
-                .as_ref()
-                .map(|r| node::SyncedAt::new(r.at, &repo))
-                .transpose()?;
+            let refs = match refs::SignedRefsAt::load(self.info.key, &repo) {
+                Err(sigrefs::read::error::Read::Verify(
+                    sigrefs::read::error::Verify::MissingIdentity(err),
+                )) => Err(err),
+                Err(err) => return Err(Error::Refs(refs::Error::Read(err))),
+                Ok(refs) => Ok(refs),
+            };
+
+            let synced_at = match &refs {
+                Ok(Some(refs)) => Some(node::SyncedAt::new(refs.at, &repo)?),
+                _ => None,
+            };
 
             repos.push(RepositoryInfo {
                 rid,
@@ -257,12 +263,23 @@ impl Storage {
         rids.map(|rid| {
             let repo = self.repository(*rid)?;
             let (_, head) = repo.head()?;
-            let refs = refs::SignedRefsAt::load(self.info.key, &repo)
-                .map_err(|err| RepositoryError::Refs(refs::Error::Read(err)))?;
-            let synced_at = refs
-                .as_ref()
-                .map(|r| SyncedAt::new(r.at, &repo))
-                .transpose()?;
+
+            let refs = match refs::SignedRefsAt::load(self.info.key, &repo) {
+                Err(refs::sigrefs::read::error::Read::Verify(
+                    refs::sigrefs::read::error::Verify::MissingIdentity(err),
+                )) => Err(err),
+                Err(err) => {
+                    return Err(RepositoryError::Storage(Error::Refs(refs::Error::Read(
+                        err,
+                    ))))
+                }
+                Ok(refs) => Ok(refs),
+            };
+
+            let synced_at = match &refs {
+                Ok(Some(refs)) => Some(SyncedAt::new(refs.at, &repo)?),
+                _ => None,
+            };
 
             Ok(RepositoryInfo {
                 rid: *rid,
