@@ -23,7 +23,6 @@ where
         refs,
         signature,
         id: *signer.node_id(),
-        _verified: PhantomData,
     };
     SignedRefsAt {
         sigrefs,

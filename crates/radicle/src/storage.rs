@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 pub use crate::git::Oid;
-use crypto::{PublicKey, Unverified, Verified};
+use crypto::PublicKey;
 pub use git::{Validation, Validations};
 
 use crate::cob;
@@ -313,46 +313,40 @@ impl fmt::Display for RefUpdate {
 }
 
 /// Project remotes. Tracks the git state of a project.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Remotes<V>(RandomMap<RemoteId, Remote<V>>);
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct Remotes(RandomMap<RemoteId, Remote>);
 
-impl<V> FromIterator<(RemoteId, Remote<V>)> for Remotes<V> {
-    fn from_iter<T: IntoIterator<Item = (RemoteId, Remote<V>)>>(iter: T) -> Self {
+impl FromIterator<(RemoteId, Remote)> for Remotes {
+    fn from_iter<T: IntoIterator<Item = (RemoteId, Remote)>>(iter: T) -> Self {
         Self(iter.into_iter().collect())
     }
 }
 
-impl<V> Deref for Remotes<V> {
-    type Target = RandomMap<RemoteId, Remote<V>>;
+impl Deref for Remotes {
+    type Target = RandomMap<RemoteId, Remote>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<V> Remotes<V> {
-    pub fn new(remotes: RandomMap<RemoteId, Remote<V>>) -> Self {
+impl Remotes {
+    pub fn new(remotes: RandomMap<RemoteId, Remote>) -> Self {
         Self(remotes)
     }
 }
 
-impl<V> Default for Remotes<V> {
-    fn default() -> Self {
-        Self(RandomMap::default())
-    }
-}
-
-impl<V> IntoIterator for Remotes<V> {
-    type Item = (RemoteId, Remote<V>);
-    type IntoIter = hash_map::IntoIter<RemoteId, Remote<V>>;
+impl IntoIterator for Remotes {
+    type Item = (RemoteId, Remote);
+    type IntoIter = hash_map::IntoIter<RemoteId, Remote>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
     }
 }
 
-impl<V> From<Remotes<V>> for RandomMap<RemoteId, Refs> {
-    fn from(other: Remotes<V>) -> Self {
+impl From<Remotes> for RandomMap<RemoteId, Refs> {
+    fn from(other: Remotes) -> Self {
         let mut remotes = RandomMap::with_hasher(fastrand::Rng::new().into());
 
         for (k, v) in other.into_iter() {
@@ -364,22 +358,15 @@ impl<V> From<Remotes<V>> for RandomMap<RemoteId, Refs> {
 
 /// A project remote.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct Remote<V = Verified> {
+pub struct Remote {
     /// Git references published under this remote, and their hashes.
     #[serde(flatten)]
-    pub refs: SignedRefs<V>,
+    pub refs: SignedRefs,
 }
 
-impl Remote<Unverified> {
-    /// Create a new unverified remotes object.
-    pub fn new(refs: impl Into<SignedRefs<Unverified>>) -> Self {
-        Self { refs: refs.into() }
-    }
-}
-
-impl Remote<Verified> {
-    /// Create a new unverified remotes object.
-    pub fn new(refs: impl Into<SignedRefs<Verified>>) -> Self {
+impl Remote {
+    /// Create a new remotes object.
+    pub fn new(refs: impl Into<SignedRefs>) -> Self {
         Self { refs: refs.into() }
     }
 
@@ -400,8 +387,8 @@ impl Remote<Verified> {
     }
 }
 
-impl<V> Deref for Remote<V> {
-    type Target = SignedRefs<V>;
+impl Deref for Remote {
+    type Target = SignedRefs;
 
     fn deref(&self) -> &Self::Target {
         &self.refs
@@ -605,10 +592,10 @@ pub trait ReadRepository: Sized + ValidateRepository {
 /// Access the remotes of a repository.
 pub trait RemoteRepository {
     /// Get the given remote.
-    fn remote(&self, remote: &RemoteId) -> Result<Remote<Verified>, refs::Error>;
+    fn remote(&self, remote: &RemoteId) -> Result<Remote, refs::Error>;
 
     /// Get all remotes.
-    fn remotes(&self) -> Result<Remotes<Verified>, refs::Error>;
+    fn remotes(&self) -> Result<Remotes, refs::Error>;
 
     /// Get [`RefsAt`] of all remotes.
     fn remote_refs_at(&self) -> Result<Vec<RefsAt>, refs::Error>;
@@ -631,7 +618,7 @@ where
     ///
     /// Returns any ref found under that remote that isn't signed.
     /// If a signed ref is missing from the repository, an error is returned.
-    fn validate_remote(&self, remote: &Remote<Verified>) -> Result<Validations, Error>;
+    fn validate_remote(&self, remote: &Remote) -> Result<Validations, Error>;
 }
 
 /// Allows read-write access to a repository.
@@ -670,7 +657,7 @@ pub trait WriteRepository: ReadRepository + SignRepository {
 /// Allows signing refs.
 pub trait SignRepository {
     /// Sign the repository's refs under the `refs/rad/sigrefs` branch.
-    fn sign_refs<G>(&self, signer: &Device<G>) -> Result<SignedRefs<Verified>, RepositoryError>
+    fn sign_refs<G>(&self, signer: &Device<G>) -> Result<SignedRefs, RepositoryError>
     where
         G: crypto::signature::Signer<crypto::Signature>;
 }

@@ -3,7 +3,6 @@ pub mod error;
 #[cfg(test)]
 mod test;
 
-use std::marker::PhantomData;
 use std::path::Path;
 
 use crypto::signature::Signer;
@@ -176,7 +175,6 @@ impl Commit {
                 id,
                 signature: self.signature,
                 refs: self.refs,
-                _verified: PhantomData,
             },
         }
     }

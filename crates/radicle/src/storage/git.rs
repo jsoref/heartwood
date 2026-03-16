@@ -11,8 +11,6 @@ use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 use std::{fs, io};
 
-use crypto::Verified;
-
 use crate::git::canonical::Quorum;
 use crate::git::raw::ErrorExt as _;
 use crate::identity::crefs::GetCanonicalRefs as _;
@@ -590,10 +588,8 @@ impl Repository {
 
     pub fn remotes(
         &self,
-    ) -> Result<
-        impl Iterator<Item = Result<(RemoteId, Remote<Verified>), refs::Error>> + '_,
-        git::raw::Error,
-    > {
+    ) -> Result<impl Iterator<Item = Result<(RemoteId, Remote), refs::Error>> + '_, git::raw::Error>
+    {
         let remotes =
             self.backend
                 .references_glob(SIGREFS_GLOB.as_str())?
@@ -610,7 +606,7 @@ impl Repository {
 }
 
 impl RemoteRepository for Repository {
-    fn remotes(&self) -> Result<Remotes<Verified>, refs::Error> {
+    fn remotes(&self) -> Result<Remotes, refs::Error> {
         let mut remotes = Vec::new();
         for remote in Repository::remotes(self)? {
             remotes.push(remote?);
@@ -618,9 +614,9 @@ impl RemoteRepository for Repository {
         Ok(Remotes::from_iter(remotes))
     }
 
-    fn remote(&self, remote: &RemoteId) -> Result<Remote<Verified>, refs::Error> {
+    fn remote(&self, remote: &RemoteId) -> Result<Remote, refs::Error> {
         let refs = SignedRefs::load(*remote, self)?;
-        Ok(Remote::<Verified>::new(refs))
+        Ok(Remote::new(refs))
     }
 
     fn remote_refs_at(&self) -> Result<Vec<RefsAt>, refs::Error> {
@@ -637,7 +633,7 @@ impl RemoteRepository for Repository {
 }
 
 impl ValidateRepository for Repository {
-    fn validate_remote(&self, remote: &Remote<Verified>) -> Result<Validations, Error> {
+    fn validate_remote(&self, remote: &Remote) -> Result<Validations, Error> {
         // Contains a copy of the signed refs of this remote.
         let mut signed = BTreeMap::from((*remote.refs).clone());
         let mut failures = Validations::default();
@@ -990,7 +986,7 @@ impl SignRepository for Repository {
     fn sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
         &self,
         signer: &Device<G>,
-    ) -> Result<SignedRefs<Verified>, RepositoryError> {
+    ) -> Result<SignedRefs, RepositoryError> {
         let remote = signer.public_key();
         // Ensure the root reference is set, which is checked during sigref verification.
         if self

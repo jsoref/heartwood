@@ -7,12 +7,11 @@ use std::collections::BTreeMap;
 use std::fmt::Debug;
 use std::io;
 use std::io::{BufRead, BufReader};
-use std::marker::PhantomData;
 use std::ops::Deref;
 use std::str::FromStr;
 
 use crypto::signature;
-use crypto::{PublicKey, Signature, Verified};
+use crypto::{PublicKey, Signature};
 use radicle_core::NodeId;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -99,7 +98,6 @@ impl Refs {
                     refs,
                     signature,
                     id: namespace,
-                    _verified: PhantomData,
                 };
                 Ok(SignedRefsAt {
                     sigrefs,
@@ -227,8 +225,8 @@ impl From<Refs> for BTreeMap<git::fmt::RefString, Oid> {
     }
 }
 
-impl<V> From<SignedRefs<V>> for Refs {
-    fn from(signed: SignedRefs<V>) -> Self {
+impl From<SignedRefs> for Refs {
+    fn from(signed: SignedRefs) -> Self {
         signed.refs
     }
 }
@@ -249,10 +247,8 @@ where
 /// Combination of [`Refs`] and a [`Signature`]. The signature is a cryptographic
 /// signature over the refs. This allows us to easily verify if a set of refs
 /// came from a particular key.
-///
-/// The type parameter keeps track of whether the signature was [`Verified`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct SignedRefs<V> {
+pub struct SignedRefs {
     /// The signed refs.
     refs: Refs,
     /// The signature of the signer over the refs.
@@ -260,12 +256,9 @@ pub struct SignedRefs<V> {
     signature: Signature,
     /// This is the remote under which these refs exist, and the public key of the signer.
     id: PublicKey,
-
-    #[serde(skip)]
-    _verified: PhantomData<V>,
 }
 
-impl SignedRefs<Verified> {
+impl SignedRefs {
     /// Returns the [`NodeId`] of the [`SignedRefs`].
     pub fn id(&self) -> NodeId {
         self.id
@@ -290,7 +283,6 @@ impl SignedRefs<Verified> {
             refs,
             signature,
             id: remote,
-            _verified: PhantomData,
         })
     }
 
@@ -312,12 +304,11 @@ impl SignedRefs<Verified> {
             refs,
             signature,
             id: remote,
-            _verified: PhantomData,
         })
     }
 }
 
-impl<V> Deref for SignedRefs<V> {
+impl Deref for SignedRefs {
     type Target = Refs;
 
     fn deref(&self) -> &Self::Target {
@@ -379,7 +370,7 @@ impl std::fmt::Display for RefsAt {
 /// [`Oid`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SignedRefsAt {
-    pub sigrefs: SignedRefs<Verified>,
+    pub sigrefs: SignedRefs,
     pub at: Oid,
 }
 
@@ -423,7 +414,7 @@ impl SignedRefsAt {
 }
 
 impl Deref for SignedRefsAt {
-    type Target = SignedRefs<Verified>;
+    type Target = SignedRefs;
 
     fn deref(&self) -> &Self::Target {
         &self.sigrefs

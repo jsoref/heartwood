@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::str::FromStr;
 
-use crate::crypto::{PublicKey, Verified};
+use crate::crypto::PublicKey;
 use crate::git;
 use crate::identity::doc::Visibility;
 use crate::identity::RepoId;
@@ -72,15 +72,7 @@ pub fn project<P, G>(
     path: P,
     storage: &Storage,
     signer: &Device<G>,
-) -> Result<
-    (
-        RepoId,
-        SignedRefs<Verified>,
-        git::raw::Repository,
-        git::raw::Oid,
-    ),
-    rad::InitError,
->
+) -> Result<(RepoId, SignedRefs, git::raw::Repository, git::raw::Oid), rad::InitError>
 where
     P: AsRef<Path>,
     G: crypto::signature::Signer<crypto::Signature>,

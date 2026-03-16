@@ -22,7 +22,7 @@ use crate::storage;
 use crate::storage::Error;
 use crate::storage::{
     git::{Remote, Remotes, Validations},
-    ReadRepository, Verified,
+    ReadRepository,
 };
 
 use super::{RemoteId, Repository};
@@ -239,7 +239,7 @@ where
     fn sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
         &self,
         signer: &Device<G>,
-    ) -> Result<storage::refs::SignedRefs<Verified>, RepositoryError> {
+    ) -> Result<storage::refs::SignedRefs, RepositoryError> {
         // Since this is a draft store, we do not actually want to sign the refs.
         // Instead, we just return the existing signed refs.
         let remote = self.repo.remote(signer.public_key())?;
@@ -249,11 +249,11 @@ where
 }
 
 impl<R: storage::RemoteRepository> RemoteRepository for DraftStore<'_, R> {
-    fn remote(&self, id: &RemoteId) -> Result<Remote<Verified>, storage::refs::Error> {
+    fn remote(&self, id: &RemoteId) -> Result<Remote, storage::refs::Error> {
         self.repo.remote(id)
     }
 
-    fn remotes(&self) -> Result<Remotes<Verified>, storage::refs::Error> {
+    fn remotes(&self) -> Result<Remotes, storage::refs::Error> {
         RemoteRepository::remotes(self.repo)
     }
 
@@ -263,7 +263,7 @@ impl<R: storage::RemoteRepository> RemoteRepository for DraftStore<'_, R> {
 }
 
 impl<R: storage::ValidateRepository> ValidateRepository for DraftStore<'_, R> {
-    fn validate_remote(&self, remote: &Remote<Verified>) -> Result<Validations, Error> {
+    fn validate_remote(&self, remote: &Remote) -> Result<Validations, Error> {
         self.repo.validate_remote(remote)
     }
 }

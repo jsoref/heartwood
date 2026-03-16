@@ -7,7 +7,6 @@ use std::sync::LazyLock;
 use thiserror::Error;
 
 use crate::cob::ObjectId;
-use crate::crypto::Verified;
 use crate::git;
 use crate::git::BranchName;
 use crate::identity::doc;
@@ -56,7 +55,7 @@ pub fn init<G, S>(
     visibility: Visibility,
     signer: &Device<G>,
     storage: S,
-) -> Result<(RepoId, identity::Doc, SignedRefs<Verified>), InitError>
+) -> Result<(RepoId, identity::Doc, SignedRefs), InitError>
 where
     G: crypto::signature::Signer<crypto::Signature>,
     S: WriteStorage,
@@ -103,7 +102,7 @@ fn init_configure<G>(
     url: &git::Url,
     identity: git::Oid,
     signer: &Device<G>,
-) -> Result<SignedRefs<Verified>, InitError>
+) -> Result<SignedRefs, InitError>
 where
     G: crypto::signature::Signer<crypto::Signature>,
 {

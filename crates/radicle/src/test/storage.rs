@@ -9,7 +9,6 @@ use crypto::PublicKey;
 pub use crate::git;
 use crate::git::fmt;
 
-use crate::crypto::Verified;
 use crate::identity::doc::{Doc, DocAt, DocError, RawDoc, RepoId};
 use crate::node::device::Device;
 use crate::node::NodeId;
@@ -179,7 +178,7 @@ impl self::refs::sigrefs::git::reference::Reader for MockRepository {
 }
 
 impl RemoteRepository for MockRepository {
-    fn remote(&self, id: &RemoteId) -> Result<Remote<Verified>, refs::Error> {
+    fn remote(&self, id: &RemoteId) -> Result<Remote, refs::Error> {
         self.remotes
             .get(id)
             .map(|refs| Remote {
@@ -188,7 +187,7 @@ impl RemoteRepository for MockRepository {
             .ok_or(refs::Error::InvalidRef)
     }
 
-    fn remotes(&self) -> Result<Remotes<Verified>, refs::Error> {
+    fn remotes(&self) -> Result<Remotes, refs::Error> {
         Ok(self
             .remotes
             .iter()
@@ -216,7 +215,7 @@ impl RemoteRepository for MockRepository {
 }
 
 impl ValidateRepository for MockRepository {
-    fn validate_remote(&self, _remote: &Remote<Verified>) -> Result<Validations, Error> {
+    fn validate_remote(&self, _remote: &Remote) -> Result<Validations, Error> {
         Ok(Validations::default())
     }
 }
@@ -380,7 +379,7 @@ impl SignRepository for MockRepository {
     fn sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
         &self,
         _signer: &Device<G>,
-    ) -> Result<crate::storage::refs::SignedRefs<Verified>, RepositoryError> {
+    ) -> Result<crate::storage::refs::SignedRefs, RepositoryError> {
         todo!()
     }
 }

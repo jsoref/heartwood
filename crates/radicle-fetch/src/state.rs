@@ -6,7 +6,6 @@ use radicle::crypto::PublicKey;
 use radicle::git::{fmt::Qualified, Oid};
 use radicle::identity::{Did, Doc, DocError};
 
-use radicle::prelude::Verified;
 use radicle::storage;
 use radicle::storage::git::Repository;
 use radicle::storage::refs::RefsAt;
@@ -709,7 +708,7 @@ where
         self.handle.repository().remote(remote)
     }
 
-    fn remotes(&self) -> Result<Remotes<Verified>, storage::refs::Error> {
+    fn remotes(&self) -> Result<Remotes, storage::refs::Error> {
         self.state
             .sigrefs
             .keys()

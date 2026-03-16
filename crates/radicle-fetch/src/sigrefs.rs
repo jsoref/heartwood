@@ -93,7 +93,7 @@ pub(crate) fn validate(
     repo: &impl ValidateRepository,
     SignedRefsAt { sigrefs, .. }: SignedRefsAt,
 ) -> Result<Option<Validations>, radicle::storage::Error> {
-    let remote = radicle::storage::Remote::<radicle::crypto::Verified>::new(sigrefs);
+    let remote = radicle::storage::Remote::new(sigrefs);
     let validations = repo.validate_remote(&remote)?;
     Ok(validations.is_empty().not().then_some(validations))
 }
