@@ -42,7 +42,7 @@ pub use storage::git::Storage;
 pub mod prelude {
     use super::*;
 
-    pub use crypto::{PublicKey, Verified};
+    pub use crypto::PublicKey;
     pub use git::BranchName;
     pub use identity::{project::Project, Did, Doc, RawDoc, RepoId};
     pub use node::{Alias, NodeId, Timestamp};

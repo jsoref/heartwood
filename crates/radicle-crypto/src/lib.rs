@@ -15,13 +15,6 @@ pub mod ssh;
 #[cfg(any(test, feature = "test"))]
 pub mod test;
 
-/// Verified (used as type witness).
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize)]
-pub struct Verified;
-/// Unverified (used as type witness).
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct Unverified;
-
 /// Output of a Diffie-Hellman key exchange.
 pub type SharedSecret = [u8; 32];
 
