@@ -45,7 +45,7 @@ use radicle::storage::ReadRepository;
 use crate::git::refs::{Policy, Update, Updates};
 use crate::policy::BlockList;
 use crate::refs::{ReceivedRef, ReceivedRefname};
-use crate::sigrefs;
+use crate::sigrefs::RemoteRefs;
 use crate::state::FetchState;
 use crate::transport::WantsHaves;
 use crate::{policy, refs};
@@ -482,10 +482,16 @@ pub struct DataRefs {
     pub remote: PublicKey,
     /// The set of signed references from each remote that was
     /// fetched.
-    pub remotes: sigrefs::RemoteRefs,
+    pub remotes: RemoteRefs,
     /// The data limit for this stage of fetching.
     #[allow(dead_code)]
     pub limit: u64,
+}
+
+impl DataRefs {
+    pub(crate) fn into_remote_refs(self) -> RemoteRefs {
+        self.remotes
+    }
 }
 
 impl ProtocolStage for DataRefs {
@@ -514,10 +520,13 @@ impl ProtocolStage for DataRefs {
     ) -> Result<WantsHaves, error::WantsHaves> {
         let mut wants_haves = WantsHaves::default();
 
-        for (remote, loaded) in &self.remotes {
+        for (remote, result) in self.remotes.into_iter() {
+            let Ok(Some(refs)) = result else {
+                continue;
+            };
             wants_haves.add(
                 refdb,
-                loaded.refs().iter().filter_map(|(refname, tip)| {
+                refs.iter().filter_map(|(refname, tip)| {
                     let refname = Qualified::from_refstr(refname)
                         .map(|refname| refname.with_namespace(Component::from(remote)))?;
                     Some((refname, *tip))
@@ -536,7 +545,10 @@ impl ProtocolStage for DataRefs {
     ) -> Result<Updates<'a>, error::Prepare> {
         let mut updates = Updates::default();
 
-        for (remote, refs) in &self.remotes {
+        for (remote, result) in &self.remotes {
+            let Ok(Some(refs)) = result else {
+                continue;
+            };
             let mut signed = HashSet::with_capacity(refs.refs().len());
             for (name, tip) in refs.iter() {
                 let tracking: Namespaced<'_> = Qualified::from_refstr(name)

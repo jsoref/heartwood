@@ -1,5 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
-use std::ops::{Deref, Not as _};
+use std::ops::Not as _;
 
 use radicle::storage::git::Repository;
 pub use radicle::storage::refs::SignedRefsAt;
@@ -36,55 +36,12 @@ pub(crate) enum DelegateStatus<T = ()> {
     NonDelegate { remote: PublicKey, data: T },
 }
 
-impl DelegateStatus {
-    /// Construct a `DelegateStatus` without any data.
-    pub fn empty(remote: PublicKey, delegates: &BTreeSet<PublicKey>) -> Self {
-        Self::new((), remote, delegates)
-    }
-}
-
 impl<T> DelegateStatus<T> {
     pub fn new(data: T, remote: PublicKey, delegates: &BTreeSet<PublicKey>) -> Self {
         if delegates.contains(&remote) {
             Self::Delegate { remote, data }
         } else {
             Self::NonDelegate { remote, data }
-        }
-    }
-
-    /// Construct a `DelegateStatus` with [`SignedRefsAt`] signed reference
-    /// data, if it can be found in `repo`.
-    pub fn load<R, S>(
-        self,
-        cached: &Cached<R, S>,
-    ) -> Result<
-        DelegateStatus<Option<SignedRefsAt>>,
-        radicle::storage::refs::sigrefs::read::error::Read,
-    >
-    where
-        R: AsRef<Repository>,
-    {
-        let remote = *self.remote();
-        self.traverse(|_| cached.load(&remote))
-    }
-
-    fn remote(&self) -> &PublicKey {
-        match self {
-            Self::Delegate { remote, .. } => remote,
-            Self::NonDelegate { remote, .. } => remote,
-        }
-    }
-
-    fn traverse<U, E>(self, f: impl FnOnce(T) -> Result<U, E>) -> Result<DelegateStatus<U>, E> {
-        match self {
-            Self::Delegate { remote, data } => Ok(DelegateStatus::Delegate {
-                remote,
-                data: f(data)?,
-            }),
-            Self::NonDelegate { remote, data } => Ok(DelegateStatus::NonDelegate {
-                remote,
-                data: f(data)?,
-            }),
         }
     }
 }
@@ -102,45 +59,52 @@ pub(crate) fn validate(
 ///
 /// Construct using [`RemoteRefs::load`].
 #[derive(Debug, Default)]
-pub struct RemoteRefs(BTreeMap<PublicKey, SignedRefsAt>);
+pub struct RemoteRefs(
+    pub(super)  BTreeMap<
+        PublicKey,
+        Result<Option<SignedRefsAt>, radicle::storage::refs::sigrefs::read::error::Read>,
+    >,
+);
 
 impl RemoteRefs {
     /// Load the sigrefs for each remote in `remotes`.
-    ///
-    /// If the sigrefs are missing for a given remote, regardless of delegate
-    /// status, then that remote is filtered out.
     pub(crate) fn load<'a, R, S>(
         cached: &Cached<R, S>,
         remotes: impl Iterator<Item = &'a PublicKey>,
-    ) -> Result<Self, error::RemoteRefs>
+    ) -> Self
     where
         R: AsRef<Repository>,
     {
-        remotes
-            .filter_map(|id| match cached.load(id) {
-                Ok(None) => None,
-                Ok(Some(sr)) => Some(Ok((id, sr))),
-                Err(e) => Some(Err(e)),
-            })
-            .try_fold(RemoteRefs::default(), |mut acc, remote_refs| {
-                let (id, sigrefs) = remote_refs?;
-                acc.0.insert(*id, sigrefs);
-                Ok(acc)
-            })
+        Self(
+            remotes
+                .map(|remote| (*remote, cached.load(remote)))
+                .collect(),
+        )
     }
-}
 
-impl Deref for RemoteRefs {
-    type Target = BTreeMap<PublicKey, SignedRefsAt>;
+    pub(crate) fn len(&self) -> usize {
+        self.0.len()
+    }
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
+    pub(crate) fn into_inner(
+        self,
+    ) -> BTreeMap<
+        PublicKey,
+        Result<Option<SignedRefsAt>, radicle::storage::refs::sigrefs::read::error::Read>,
+    > {
+        self.0
     }
 }
 
 impl<'a> IntoIterator for &'a RemoteRefs {
-    type Item = <&'a BTreeMap<PublicKey, SignedRefsAt> as IntoIterator>::Item;
-    type IntoIter = <&'a BTreeMap<PublicKey, SignedRefsAt> as IntoIterator>::IntoIter;
+    type Item = <&'a BTreeMap<
+        PublicKey,
+        Result<Option<SignedRefsAt>, radicle::storage::refs::sigrefs::read::error::Read>,
+    > as IntoIterator>::Item;
+    type IntoIter = <&'a BTreeMap<
+        PublicKey,
+        Result<Option<SignedRefsAt>, radicle::storage::refs::sigrefs::read::error::Read>,
+    > as IntoIterator>::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()

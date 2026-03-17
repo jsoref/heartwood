@@ -410,6 +410,12 @@ pub enum Validation {
     },
     #[error("missing `refs/namespaces/{0}/refs/rad/sigrefs`")]
     MissingRadSigRefs(RemoteId),
+    #[error("failed to read `refs/namespaces/{remote}/refs/rad/sigrefs`: {source}")]
+    Read {
+        remote: RemoteId,
+        #[source]
+        source: crate::storage::refs::sigrefs::read::error::Read,
+    },
 }
 
 impl Repository {

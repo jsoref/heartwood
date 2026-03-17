@@ -313,7 +313,7 @@ impl FetchState {
                 self.run_stage(handle, handshake, &sigrefs_at)?;
                 let remotes = refs_at.iter().map(|r| &r.remote);
 
-                let signed_refs = sigrefs::RemoteRefs::load(&self.as_cached(handle), remotes)?;
+                let signed_refs = sigrefs::RemoteRefs::load(&self.as_cached(handle), remotes);
                 Ok(signed_refs)
             }
             None => {
@@ -333,7 +333,7 @@ impl FetchState {
                 let signed_refs = sigrefs::RemoteRefs::load(
                     &self.as_cached(handle),
                     fetched.iter().chain(delegates.iter()),
-                )?;
+                );
                 Ok(signed_refs)
             }
         }
@@ -418,6 +418,7 @@ impl FetchState {
             remote,
             refs_at,
         )?;
+
         log::debug!(
             "Fetched data for {} remote(s) ({}ms)",
             signed_refs.len(),
@@ -429,10 +430,10 @@ impl FetchState {
             remotes: signed_refs,
             limit: limit.refs,
         };
-        self.run_stage(handle, handshake, &data_refs)?;
+        let fetched = self.run_stage(handle, handshake, &data_refs)?;
         log::debug!(
             "Fetched data refs for {} remotes ({}ms)",
-            data_refs.remotes.len(),
+            fetched.len(),
             start.elapsed().as_millis()
         );
 
@@ -450,7 +451,8 @@ impl FetchState {
         // remotes from the tips, thus not updating the production Git
         // repository.
         let mut failures = sigrefs::Validations::default();
-        let signed_refs = data_refs.remotes;
+
+        let signed_refs = data_refs.into_remote_refs();
 
         // We may prune fetched remotes, so we keep track of
         // non-pruned, fetched remotes here.
@@ -469,21 +471,26 @@ impl FetchState {
 
         // TODO(finto): this might read better if it got its own
         // private function.
-        for remote in signed_refs.keys() {
-            if handle.is_blocked(remote) {
+        for (remote, refs) in signed_refs.into_inner() {
+            if handle.is_blocked(&remote) {
                 log::trace!("Skipping blocked remote {remote}");
                 continue;
             }
 
-            let remote = sigrefs::DelegateStatus::empty(*remote, &delegates)
-                .load(&self.as_cached(handle))?;
+            let remote = sigrefs::DelegateStatus::new(refs, remote, &delegates);
             match remote {
-                sigrefs::DelegateStatus::NonDelegate { remote, data: None } => {
+                sigrefs::DelegateStatus::NonDelegate {
+                    remote,
+                    data: Ok(None),
+                } => {
                     log::debug!("Pruning non-delegate {remote} tips, missing 'rad/sigrefs'");
                     failures.push(sigrefs::Validation::MissingRadSigRefs(remote));
                     self.prune(&remote);
                 }
-                sigrefs::DelegateStatus::Delegate { remote, data: None } => {
+                sigrefs::DelegateStatus::Delegate {
+                    remote,
+                    data: Ok(None),
+                } => {
                     log::debug!("Pruning delegate {remote} tips, missing 'rad/sigrefs'");
                     failures.push(sigrefs::Validation::MissingRadSigRefs(remote));
                     self.prune(&remote);
@@ -495,9 +502,26 @@ impl FetchState {
                     valid_delegates.remove(&remote);
                     failed_delegates.insert(remote);
                 }
+                sigrefs::DelegateStatus::Delegate {
+                    remote,
+                    data: Err(err),
+                }
+                | sigrefs::DelegateStatus::NonDelegate {
+                    remote,
+                    data: Err(err),
+                } => {
+                    log::debug!("Pruning {remote} tips due to: {err}");
+                    self.prune(&remote);
+                    valid_delegates.remove(&remote);
+                    failed_delegates.insert(remote);
+                    failures.push(sigrefs::Validation::Read {
+                        remote,
+                        source: err,
+                    });
+                }
                 sigrefs::DelegateStatus::NonDelegate {
                     remote,
-                    data: Some(sigrefs),
+                    data: Ok(Some(sigrefs)),
                 } => {
                     if let Some(SignedRefsAt { at, .. }) =
                         SignedRefsAt::load(remote, handle.repository())?
@@ -527,7 +551,7 @@ impl FetchState {
                 }
                 sigrefs::DelegateStatus::Delegate {
                     remote,
-                    data: Some(sigrefs),
+                    data: Ok(Some(sigrefs)),
                 } => {
                     if let Some(SignedRefsAt { at, .. }) =
                         SignedRefsAt::load(remote, handle.repository())?
