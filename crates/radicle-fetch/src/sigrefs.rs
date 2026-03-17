@@ -24,28 +24,6 @@ pub mod error {
     pub type Load = radicle::storage::refs::sigrefs::read::error::Read;
 }
 
-/// A data carrier that associates that data with whether a given
-/// `PublicKey` is a delegate or a non-delegate.
-///
-/// Construct a `DelegateStatus` via [`DelegateStatus::empty`], if no
-/// data is required, or [`DelegateStatus::new`] if there is data to
-/// associate.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) enum DelegateStatus<T = ()> {
-    Delegate { remote: PublicKey, data: T },
-    NonDelegate { remote: PublicKey, data: T },
-}
-
-impl<T> DelegateStatus<T> {
-    pub fn new(data: T, remote: PublicKey, delegates: &BTreeSet<PublicKey>) -> Self {
-        if delegates.contains(&remote) {
-            Self::Delegate { remote, data }
-        } else {
-            Self::NonDelegate { remote, data }
-        }
-    }
-}
-
 pub(crate) fn validate(
     repo: &impl ValidateRepository,
     SignedRefsAt { sigrefs, .. }: SignedRefsAt,

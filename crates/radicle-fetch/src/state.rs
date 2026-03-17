@@ -473,20 +473,13 @@ impl FetchState {
                 continue;
             }
 
-            let remote = sigrefs::DelegateStatus::new(refs, remote, &delegates);
-            match remote {
-                sigrefs::DelegateStatus::NonDelegate {
-                    remote,
-                    data: Ok(None),
-                } => {
+            match (refs, delegates.contains(&remote)) {
+                (Ok(None), false) => {
                     log::debug!("Pruning non-delegate {remote} tips, missing 'rad/sigrefs'");
                     failures.push(sigrefs::Validation::MissingRadSigRefs(remote));
                     self.prune(&remote);
                 }
-                sigrefs::DelegateStatus::Delegate {
-                    remote,
-                    data: Ok(None),
-                } => {
+                (Ok(None), true) => {
                     log::debug!("Pruning delegate {remote} tips, missing 'rad/sigrefs'");
                     failures.push(sigrefs::Validation::MissingRadSigRefs(remote));
                     self.prune(&remote);
@@ -498,14 +491,7 @@ impl FetchState {
                     valid_delegates.remove(&remote);
                     failed_delegates.insert(remote);
                 }
-                sigrefs::DelegateStatus::Delegate {
-                    remote,
-                    data: Err(err),
-                }
-                | sigrefs::DelegateStatus::NonDelegate {
-                    remote,
-                    data: Err(err),
-                } => {
+                (Err(err), _) => {
                     log::debug!("Pruning {remote} tips due to: {err}");
                     self.prune(&remote);
                     valid_delegates.remove(&remote);
@@ -515,10 +501,7 @@ impl FetchState {
                         source: err,
                     });
                 }
-                sigrefs::DelegateStatus::NonDelegate {
-                    remote,
-                    data: Ok(Some(sigrefs)),
-                } => {
+                (Ok(Some(refs)), false) => {
                     if let Some(SignedRefsAt { at, .. }) =
                         SignedRefsAt::load(remote, handle.repository())?
                     {
@@ -526,7 +509,7 @@ impl FetchState {
                         // diverged. A diverged case is non-fatal for
                         // delegates.
                         if matches!(
-                            repository::ancestry(handle.repository(), at, sigrefs.at)?,
+                            repository::ancestry(handle.repository(), at, refs.at)?,
                             repository::Ancestry::Behind | repository::Ancestry::Diverged
                         ) {
                             self.prune(&remote);
@@ -535,7 +518,7 @@ impl FetchState {
                     }
 
                     let cache = self.as_cached(handle);
-                    if let Some(warns) = sigrefs::validate(&cache, sigrefs)?.as_mut() {
+                    if let Some(warns) = sigrefs::validate(&cache, refs)?.as_mut() {
                         log::debug!(
                             "Pruning non-delegate {remote} tips, due to validation failures"
                         );
@@ -545,18 +528,15 @@ impl FetchState {
                         remotes.insert(remote);
                     }
                 }
-                sigrefs::DelegateStatus::Delegate {
-                    remote,
-                    data: Ok(Some(sigrefs)),
-                } => {
+                (Ok(Some(refs)), true) => {
                     if let Some(SignedRefsAt { at, .. }) =
                         SignedRefsAt::load(remote, handle.repository())?
                     {
-                        let ancestry = repository::ancestry(handle.repository(), at, sigrefs.at)?;
+                        let ancestry = repository::ancestry(handle.repository(), at, refs.at)?;
                         if matches!(ancestry, repository::Ancestry::Behind) {
                             log::trace!(
                                 "Advertised `rad/sigrefs` {} is behind {at} for {remote}",
-                                sigrefs.at
+                                refs.at
                             );
                             self.prune(&remote);
                             continue;
@@ -564,14 +544,14 @@ impl FetchState {
                             return Err(error::Protocol::Diverged {
                                 remote,
                                 current: at,
-                                received: sigrefs.at,
+                                received: refs.at,
                             });
                         }
                     }
 
                     let cache = self.as_cached(handle);
                     let mut fails =
-                        sigrefs::validate(&cache, sigrefs)?.unwrap_or(Validations::default());
+                        sigrefs::validate(&cache, refs)?.unwrap_or(Validations::default());
                     if !fails.is_empty() {
                         log::debug!("Pruning delegate {remote} tips, due to validation failures");
                         self.prune(&remote);
