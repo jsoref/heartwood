@@ -477,19 +477,17 @@ impl ProtocolStage for SigrefsAt {
 /// any that were found to exist before the latest fetch.
 #[derive(Debug)]
 pub struct DataRefs {
-    /// The node that is being fetched from.
-    #[allow(dead_code)]
-    pub remote: PublicKey,
     /// The set of signed references from each remote that was
     /// fetched.
-    pub remotes: RemoteRefs,
-    /// The data limit for this stage of fetching.
-    #[allow(dead_code)]
-    pub limit: u64,
+    remotes: RemoteRefs,
 }
 
 impl DataRefs {
-    pub(crate) fn into_remote_refs(self) -> RemoteRefs {
+    pub(crate) fn new(remotes: RemoteRefs) -> Self {
+        Self { remotes }
+    }
+
+    pub(crate) fn into_inner(self) -> RemoteRefs {
         self.remotes
     }
 }

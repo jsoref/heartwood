@@ -425,11 +425,7 @@ impl FetchState {
             start.elapsed().as_millis()
         );
 
-        let data_refs = stage::DataRefs {
-            remote,
-            remotes: signed_refs,
-            limit: limit.refs,
-        };
+        let data_refs = stage::DataRefs::new(signed_refs);
         let fetched = self.run_stage(handle, handshake, &data_refs)?;
         log::debug!(
             "Fetched data refs for {} remotes ({}ms)",
@@ -452,7 +448,7 @@ impl FetchState {
         // repository.
         let mut failures = sigrefs::Validations::default();
 
-        let signed_refs = data_refs.into_remote_refs();
+        let signed_refs = data_refs.into_inner();
 
         // We may prune fetched remotes, so we keep track of
         // non-pruned, fetched remotes here.
