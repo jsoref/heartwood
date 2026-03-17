@@ -518,7 +518,7 @@ impl ProtocolStage for DataRefs {
     ) -> Result<WantsHaves, error::WantsHaves> {
         let mut wants_haves = WantsHaves::default();
 
-        for (remote, result) in self.remotes.into_iter() {
+        for (remote, result) in self.remotes.iter() {
             let Ok(Some(refs)) = result else {
                 continue;
             };

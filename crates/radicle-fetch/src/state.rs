@@ -300,7 +300,7 @@ impl FetchState {
         R: AsRef<Repository>,
         S: transport::ConnectionStream,
     {
-        match refs_at {
+        let remotes: Vec<_> = match refs_at {
             Some(refs_at) => {
                 let sigrefs_at = stage::SigrefsAt {
                     remote,
@@ -311,10 +311,8 @@ impl FetchState {
                 };
                 log::trace!("{sigrefs_at:?}");
                 self.run_stage(handle, handshake, &sigrefs_at)?;
-                let remotes = refs_at.iter().map(|r| &r.remote);
 
-                let signed_refs = sigrefs::RemoteRefs::load(&self.as_cached(handle), remotes);
-                Ok(signed_refs)
+                refs_at.iter().map(|r| &r.remote).cloned().collect()
             }
             None => {
                 let followed = handle.allowed();
@@ -330,13 +328,14 @@ impl FetchState {
                 log::trace!("{special_refs:?}");
                 let fetched = self.run_stage(handle, handshake, &special_refs)?;
 
-                let signed_refs = sigrefs::RemoteRefs::load(
-                    &self.as_cached(handle),
-                    fetched.iter().chain(delegates.iter()),
-                );
-                Ok(signed_refs)
+                fetched.iter().chain(delegates.iter()).cloned().collect()
             }
-        }
+        };
+
+        Ok(remotes
+            .into_iter()
+            .map(|remote| (remote, self.as_cached(handle).load(&remote)))
+            .collect())
     }
 
     /// The finalization of the protocol exchange is as follows:
@@ -467,7 +466,7 @@ impl FetchState {
 
         // TODO(finto): this might read better if it got its own
         // private function.
-        for (remote, refs) in signed_refs.into_inner() {
+        for (remote, refs) in signed_refs {
             if handle.is_blocked(&remote) {
                 log::trace!("Skipping blocked remote {remote}");
                 continue;
