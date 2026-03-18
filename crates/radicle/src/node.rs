@@ -433,21 +433,17 @@ impl TryFrom<&sqlite::Value> for Alias {
     derive(schemars::JsonSchema),
     schemars(description = "\
     An IP address, or a DNS name, or a Tor onion name, followed by the symbol ':', \
-    followed by a TCP port number.\
-")
-)]
-pub struct Address(
-    #[cfg_attr(feature = "schemars", schemars(
-        with = "String",
-        regex(pattern = r"^.+:((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))$"),
-        extend("examples" = [
+    followed by a TCP port number.",
+    extend(
+        "examples" = [
             "xmrhfasfg5suueegrnc4gsgyi2tyclcy5oz7f5drnrodmdtob6t2ioyd.onion:8776",
             "seed.example.com:8776",
             "192.0.2.0:31337",
-        ]),
-    ))]
-    NetAddr<HostName>,
-);
+        ],
+        "pattern" = "^.+:((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))$",
+    ),
+))]
+pub struct Address(NetAddr<HostName>);
 
 impl Address {
     /// Check whether this address is from the local network.
