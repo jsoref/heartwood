@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [Unreleased]
+
+### Changed
+
+- Dependency update of `radicle` to `0.22`.
+
 ## 0.5.0
 
 ### Added
