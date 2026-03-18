@@ -15,6 +15,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## 0.16.0
+
+### Changed
+
+- `radicle_crypto::Signer` now has `Signer` (from the `signature` crate) as a
+  supertrait. Downstream implementations of `radicle_crypto::Signer` must also
+  implement this supertrait.
+- The `sign` and `try_sign` methods were removed from `radicle_crypto::Signer`
+  in favor of those provided by the `signature::Signer` supertrait.
+
+### Removed
+
+- `radicle_crypto::Verified` and `radicle_crypto::Unverified` marker structs
+  were removed. Code using these types to parameterize verification state should
+  be updated accordingly.
+
 ## 0.15.0
 
 ### Changed
