@@ -9,9 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Removed
+
+### Security
+
+## 0.22.0
+
+### Added
+
 - SQLite configuration is modeled as `radicle::node::db::config::Config`
   and can be configured via `radicle::profile::config::Config`.
   The two pragmas `journal_mode` and `synchronous` are exposed this way.
+- `radicle::storage::git::Validation` has a new `Read` variant to surface
+  read errors encountered during validation.
+- `radicle::storage::refs::Error` has new `Read` and `Write` variants.
 
 ### Changed
 
@@ -24,8 +37,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   configuration from `radicle::Profile::config`.
 - The `TryFrom<PathBuf>` implementation for `Home` is removed in favor of using
   the `Home::new` and `Home::load` methods.
+- `radicle::storage::Remote`, `radicle::storage::Remotes`, and
+  `radicle::storage::refs::SignedRefs` no longer carry a generic verification
+  state type parameter. The `Verified` and `Unverified` marker types previously
+  from `radicle-crypto` have been removed; the structs now represent a single,
+  unified state.
+- `radicle::node::config::Config` has a new required `database` field. Existing
+  struct literals must be updated to include this field.
+- `radicle::storage::git::Validation::MismatchedRef` has a new `remote` field.
+  Exhaustive match arms and struct literal construction must be updated.
+- `radicle::identity::doc::update::delegates` no longer takes a generic type
+  parameter.
 
 ### Removed
+
+- `radicle::storage::refs::Updated` enum was removed.
+- `radicle::node::db::JournalMode` enum was removed. Journal mode is now
+  configured via `radicle::node::db::config::Config`.
+- `radicle::git::remote_refs` function was removed.
+- `radicle::node::seed::SyncedAt::load` method was removed.
+- `radicle::storage::Remote::verified` and `Remote::unverified` constructor
+  methods were removed following the removal of the verification state type
+  parameter.
+- `radicle::storage::Remotes::unverified` method was removed.
+- `radicle::storage::refs::SignedRefs::new`, `SignedRefs::verified`,
+  `SignedRefs::verify`, `SignedRefs::save`, and `SignedRefs::unverified` methods
+  were removed.
+- `radicle::storage::refs::Refs::verified`, `Refs::signed`,
+  `Refs::from_canonical`, and `Refs::canonical` methods were removed.
+- `radicle::storage::refs::Error` variants `InvalidSignature`, `Signer`,
+  `Canonical`, `MissingIdentityRoot`, `MissingIdentity`, and
+  `MismatchedIdentity` were removed.
+- The public fields `refs`, `signature`, and `id` of
+  `radicle::storage::refs::SignedRefs` are now `#[doc(hidden)]` and are no
+  longer part of the public API.
 
 ### Security
 
