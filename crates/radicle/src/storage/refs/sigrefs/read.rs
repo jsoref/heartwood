@@ -139,7 +139,7 @@ where
             // `head` is verified, thus we know that if the parent reference
             // exists, its target actually matches the parent OID.
             // The fact that the parent OID is a hash over all previous history
-            // makes it *incredibley unlikely* or rather *practically impossible*
+            // makes it *incredibly unlikely* or rather *practically impossible*
             // that the same `/refs` blob re-appears in previous history.
             // Thus, we can spare oureselves walking the history.
             return Ok(head);
