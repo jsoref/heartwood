@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## 0.18.0
+
+### Changed
+
+- `radicle_node::test::peer::Peer::signed_refs_at` now takes 2 parameters
+  instead of 4, and no longer takes a generic type parameter.
+
 ## 0.17.0
 
 ### Added

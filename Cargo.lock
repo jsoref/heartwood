@@ -3130,7 +3130,7 @@ dependencies = [
 
 [[package]]
 name = "radicle-node"
-version = "0.17.0"
+version = "0.18.0"
 dependencies = [
  "backtrace",
  "bloomy",
