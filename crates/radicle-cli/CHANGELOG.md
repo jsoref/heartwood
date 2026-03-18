@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## 0.19.0
+
+### Removed
+
+`radicle_cli::terminal::format::addr_compact` function was removed.
+
 ## 0.18.0
 
 ### Changed
