@@ -50,6 +50,7 @@ impl Error {
     pub fn is_not_found(&self) -> bool {
         match self {
             Self::Git(e) => e.is_not_found(),
+            Self::Read(sigrefs::read::error::Read::MissingSigrefs { .. }) => true,
             _ => false,
         }
     }
