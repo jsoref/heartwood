@@ -427,6 +427,7 @@ impl TryFrom<&sqlite::Value> for Alias {
 #[derive(Clone, Eq, PartialEq, Debug, Hash, From, Wrapper, WrapperMut, Serialize, Deserialize)]
 #[wrapper(Deref)]
 #[wrapper_mut(DerefMut)]
+#[serde(try_from = "String", into = "String")]
 #[cfg_attr(
     feature = "schemars",
     derive(schemars::JsonSchema),
@@ -436,7 +437,6 @@ impl TryFrom<&sqlite::Value> for Alias {
 ")
 )]
 pub struct Address(
-    #[serde(with = "crate::serde_ext::string")]
     #[cfg_attr(feature = "schemars", schemars(
         with = "String",
         regex(pattern = r"^.+:((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))$"),
@@ -523,6 +523,20 @@ impl Display for Address {
             }
             _ => self.0.fmt(f),
         }
+    }
+}
+
+impl TryFrom<String> for Address {
+    type Error = <Self as FromStr>::Err;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        value.parse()
+    }
+}
+
+impl From<Address> for String {
+    fn from(value: Address) -> Self {
+        value.to_string()
     }
 }
 
