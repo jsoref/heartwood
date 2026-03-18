@@ -19,4 +19,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Dependency update of `radicle-crypto` to `0.16`
+- Dependency update of `radicle-crypto` to `0.16`.
