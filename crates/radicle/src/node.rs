@@ -548,10 +548,13 @@ impl FromStr for Address {
         {
             HostName::Ip(host.parse::<Ipv6Addr>()?.into())
         } else {
-            // Require IPv6 addresses to always be enclosed in `[` and `]`.
-            host.parse().and_then(|host| match host {
-                HostName::Ip(IpAddr::V6(_)) => Err(AddrParseError::UnknownAddressFormat),
-                host => Ok(host),
+            // Warn on IPv6 addresses that are not enclosed in `[` and `]`.
+            host.parse().map(|host| match host {
+                HostName::Ip(IpAddr::V6(addr)) => {
+                    log::warn!("Address format will change in the future. '{s}' should be changed to '[{addr}]:{port}' to stay compatible. Refer to RFC 5926, Sec. 6 as well as RFC 3986, Sec. D.1. and RFC 2732, Sec. 2.");
+                    host
+                },
+                host => host,
             })?
         };
 
@@ -1525,6 +1528,7 @@ mod test {
         assert!(Address::from_str("[::1]:8776").is_ok());
         assert!(Address::from_str("[::ffff:127.0.0.1]:8776").is_ok());
         assert!(Address::from_str("localhost:8776").is_ok());
+        assert!(Address::from_str("::1:8776").is_ok()); // Backwards-compatibility
 
         assert!(Address::from_str("").is_err());
         assert!(Address::from_str(":").is_err());
@@ -1532,7 +1536,6 @@ mod test {
         assert!(Address::from_str("127.0.0.1:xyz").is_err());
         assert!(Address::from_str("[invalid]:8776").is_err());
         assert!(Address::from_str("[127.0.0.1]:8776").is_err());
-        assert!(Address::from_str("::1:8776").is_err());
     }
 
     #[test]

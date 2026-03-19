@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Fixed Bugs
+
+- The fix to ambiguous IPv6 addresses, e.g. `::1:8776` vs. `[::1]:8776`,
+  resulted in backward incompatibility. Configuration files containing addresses
+  in the ambiguous format could not be parsed anymore. Partially undo this change
+  to stay backward compatible, but log a warning in case ambiguous addresses are
+  encountered.
+
+## 1.7.0
+
 ## Release Highlights
 
 - The "Signed References" feature was reimplemented. The commits in

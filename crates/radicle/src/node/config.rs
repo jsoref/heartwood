@@ -712,7 +712,7 @@ wrapper!(
 #[allow(clippy::unwrap_used)]
 mod test {
     use super::{DefaultSeedingPolicy, Scope};
-    use crate::node::policy;
+    use crate::node::{policy, Alias};
     use serde_json::json;
 
     #[test]
@@ -832,5 +832,33 @@ mod test {
             })
             .unwrap()
         );
+    }
+
+    #[test]
+    fn regression_ipv6_address_brackets() {
+        let address = "[2001:db8::1]:5976".to_string();
+        let config = json!({
+            "alias": "radicle",
+            "externalAddresses": [address],
+        });
+        let got: super::Config = serde_json::from_value(config).unwrap();
+        let mut expected = super::Config::new(Alias::new("radicle"));
+        expected.external_addresses = vec![address.parse().unwrap()];
+        assert_eq!(got.alias, expected.alias);
+        assert_eq!(got.external_addresses, expected.external_addresses);
+    }
+
+    #[test]
+    fn regression_ipv6_address_no_brackets() {
+        let address = "2001:db8::1:5976".to_string();
+        let config = json!({
+            "alias": "radicle",
+            "externalAddresses": [address],
+        });
+        let got: super::Config = serde_json::from_value(config).unwrap();
+        let mut expected = super::Config::new(Alias::new("radicle"));
+        expected.external_addresses = vec![address.parse().unwrap()];
+        assert_eq!(got.alias, expected.alias);
+        assert_eq!(got.external_addresses, expected.external_addresses);
     }
 }
