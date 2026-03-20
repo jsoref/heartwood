@@ -165,77 +165,63 @@ fn two_commits() {
     assert_eq!(*vc.id(), head);
 }
 
-/// Commit chain:
-/// `A <- B <- A`
-/// Where A is replayed
+/// We test a handful scenarios with replayed commits (or rather, references
+/// and signatures within commits).
 ///
-/// Expected Result: B
-#[test]
-fn head_replays_root() {
-    const SIGNATURE_A: u8 = 1;
-    const SIGNATURE_B: u8 = 2;
+/// For every test we define:
+///  - A history, which is a linear history of commits,
+///    where the earliest and leftmost commit is a root commit.
+///  - Which commit we expect to be loaded, as a zero based index in the
+///    history.
+mod replay {
+    use super::*;
 
-    let a1 = mock::oid(1);
-    let b = mock::oid(2);
-    let a2 = mock::oid(3);
-    let repo = mock::setup_chain([
-        (a1, SIGNATURE_A, refs_without_parent(mock::oid(10))),
-        (b, SIGNATURE_B, refs_without_parent(mock::oid(10))),
-        (a2, SIGNATURE_A, refs_without_parent(mock::oid(10))),
-    ]);
+    /// Mocks a chain of commits, where their OID is their zero-based index
+    /// in `chain` (note that since this is only mocked, it is not an issue
+    /// that the first commit in the chain, at index zero, is identified by
+    /// the zero OID).
+    ///
+    /// Asserts that the result of [`read`] on the chain is `expected`.
+    fn replay(chain: impl IntoIterator<Item = u8>, expected: u8) {
+        let refs = refs_without_parent(mock::oid(10));
 
-    let vc = read(a2, repo).unwrap();
-    assert_eq!(*vc.id(), b);
-}
+        let chain: Vec<_> = chain.into_iter().collect();
+        let mut repo = MockRepository::new();
+        let mut parent = None;
+        for (i, signature) in chain.iter().enumerate() {
+            let i = mock::oid(i as u8);
+            repo = repo
+                .with_commit(i, mock::commit_data(parent))
+                .with_refs(i, refs.clone())
+                .with_signature(i, *signature);
+            parent = Some(i);
+        }
 
-/// Commit chain:
-/// `A <- A <- A`
-/// Where A is replayed twice
-///
-/// Expected Result: first A
-#[test]
-fn replay_chain() {
-    const SIGNATURE_A: u8 = 1;
-    let a1 = mock::oid(1);
-    let a2 = mock::oid(2);
-    let a3 = mock::oid(3);
-    let repo = mock::setup_chain([
-        (a1, SIGNATURE_A, refs_without_parent(mock::oid(10))),
-        (a2, SIGNATURE_A, refs_without_parent(mock::oid(10))),
-        (a3, SIGNATURE_A, refs_without_parent(mock::oid(10))),
-    ]);
+        assert_eq!(
+            *read(mock::oid((chain.len() - 1) as u8), repo).unwrap().id(),
+            mock::oid(expected)
+        )
+    }
 
-    let vc = read(a3, repo).unwrap();
-    assert_eq!(*vc.id(), a1);
-}
+    #[test]
+    fn root_at_head() {
+        replay([1, 2, 1], 1)
+    }
 
-/// Commit chain:
-/// `C <- C <- B <- A <- A`
-/// Where C and A are replayed twice
-///
-/// Expected Result: first A
-#[test]
-fn multiple_replays() {
-    const SIGNATURE_A: u8 = 3;
-    const SIGNATURE_B: u8 = 2;
-    const SIGNATURE_C: u8 = 1;
+    #[test]
+    fn chain() {
+        replay([1, 1, 1], 0)
+    }
 
-    let c1 = mock::oid(1);
-    let c2 = mock::oid(2);
-    let b = mock::oid(3);
-    let a1 = mock::oid(4);
-    let a2 = mock::oid(5);
-    let r = refs_without_parent(mock::oid(10));
-    let repo = mock::setup_chain([
-        (a2, SIGNATURE_C, r.clone()),
-        (a1, SIGNATURE_C, r.clone()),
-        (b, SIGNATURE_B, r.clone()),
-        (c2, SIGNATURE_A, r.clone()),
-        (c1, SIGNATURE_A, r),
-    ]);
+    #[test]
+    fn multiple() {
+        replay([1, 1, 2, 3, 3], 3)
+    }
 
-    let vc = read(c1, repo).unwrap();
-    assert_eq!(*vc.id(), b);
+    #[test]
+    fn alternating() {
+        replay([1, 2, 1, 2], 1)
+    }
 }
 
 #[test]

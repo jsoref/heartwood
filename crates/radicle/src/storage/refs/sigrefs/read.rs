@@ -101,16 +101,17 @@ where
         }
     }
 
-    /// Read a [`VerifiedCommit`] using the [`SignedRefsReader`].
+    /// Read a [`VerifiedCommit`] using the [`SignedRefsReader`], from a
+    /// linear history.
     ///
-    /// The [`VerifiedCommit`] will be the first commit, if the commit verifies
+    /// The [`VerifiedCommit`] will be the latest commit, if the commit verifies
     /// and contains its parent in its [`Refs`] entry.
+    ///
     /// If the commit does not contain a parent, but its signature is not
     /// repeated, then it is still returned.
-    /// Otherwise, the commit that is returned is either:
-    /// - The first commit which has no repeated signatures, i.e. it has no replay attacks.
-    /// - The first commit which is not a replay commit, i.e. the commit that
-    ///   replay attacks are based on.
+    ///
+    /// Otherwise, the latest commit that has no duplicate signatures in its
+    /// ancestry is returned.
     ///
     /// # Replay Attacks
     ///
@@ -145,6 +146,10 @@ where
             return Ok(head);
         }
 
+        // Note that for all sets of commits which share the same signature,
+        // the `NonEmpty` in `seen` will be in reverse order of the walk.
+        // That is, the latest commit in the set will be at the first position,
+        // and the earliest commit will be at the last position.
         let seen = iter::Walk::new(*head.id(), self.repository).try_fold(
             HashMap::<crypto::Signature, NonEmpty<Oid>>::new(),
             |mut seen, commit| {
@@ -181,7 +186,6 @@ where
 
         // The second walk can start from the parent of head. We do not need to
         // verify head twice, and we already know that the parent exists.
-        let mut last = None;
         for commit in iter::Walk::new(parent, self.repository) {
             let commit = commit
                 .map_err(error::Read::Commit)?
@@ -192,19 +196,26 @@ where
 
             if commits.len_nonzero() == ONE {
                 return Ok(commit);
-            } else {
+            }
+
+            let id = commit.id();
+
+            if id == commits.last() {
+                // If this commit is the last element of `commits`,
+                // then this means it is the earliest of all that share
+                // its signature. It thus cannot have been replayed.
+                return Ok(commit);
+            }
+
+            if id == commits.first() {
+                // We only log one warning per set of duplicates, and that is
+                // when we reach the first element of `commits`, which is the
+                // latest in the history.
                 log::warn!("Duplicate sigrefs found in commits {commits:?}");
-                last = Some(commit);
             }
         }
 
-        // In the extreme case where all commits in the walk contain duplicate
-        // signatures, return the oldest commit reached — the last one visited
-        // by the walk, which follows the chain from newest to oldest.
-        // `last` is always `Some` here because `parent` is guaranteed to exist
-        // (head had a duplicate signature, so it must have a parent), meaning
-        // the walk yields at least one commit.
-        Ok(last.unwrap_or(head))
+        unreachable!()
     }
 
     fn resolve_tip(&self) -> Result<Oid, error::Read> {
