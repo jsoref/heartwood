@@ -102,7 +102,7 @@ impl ReadStorage for MockStorage {
                 rid: *rid,
                 head: r.head().unwrap().1,
                 doc: r.doc.clone().into(),
-                refs: Ok(None),
+                refs: None,
                 synced_at: None,
             })
             .collect())

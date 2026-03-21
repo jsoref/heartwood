@@ -105,5 +105,5 @@ fn read_ok() {
         .with_signature(head, 1);
 
     let vc = read_at(head, repo).unwrap();
-    assert_eq!(vc.id(), &head);
+    assert_eq!(vc.commit.oid, head);
 }

@@ -5,11 +5,11 @@ mod iter;
 #[cfg(test)]
 mod test;
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::num::NonZeroUsize;
 use std::path::Path;
 
-use crypto::signature;
+use crypto::{signature, PublicKey};
 use nonempty::NonEmpty;
 use radicle_core::{NodeId, RepoId};
 use radicle_git_metadata::commit::CommitData;
@@ -19,7 +19,8 @@ use crate::git;
 use crate::identity::doc;
 use crate::storage::refs::sigrefs::git::{object, reference};
 use crate::storage::refs::{
-    Refs, IDENTITY_ROOT, REFS_BLOB_PATH, SIGNATURE_BLOB_PATH, SIGREFS_BRANCH,
+    FeatureLevel, Refs, SignedRefs, SignedRefsAt, IDENTITY_ROOT, REFS_BLOB_PATH,
+    SIGNATURE_BLOB_PATH, SIGREFS_BRANCH,
 };
 
 /// A `rad/sigrefs` that has passed the following verification checks:
@@ -33,30 +34,31 @@ use crate::storage::refs::{
 pub struct VerifiedCommit {
     /// The commit that was verified.
     commit: Commit,
-    /// Whether verification successfully found the correct
-    /// value for [`SIGREFS_PARENT`] in the refs of [`Self::commit`].
-    parent: bool,
+    /// The feature level that was recognized for the commit that was verified.
+    level: FeatureLevel,
 }
 
 impl VerifiedCommit {
-    /// The [`Oid`] of the commit.
-    pub fn id(&self) -> &Oid {
-        &self.commit.oid
+    /// Borrow the [`Commit`] that was verified.
+    pub(super) fn commit(&self) -> &Commit {
+        &self.commit
     }
 
-    /// The [`crypto::Signature`] found in the tree of the commit.
-    pub fn signature(&self) -> &crypto::Signature {
-        &self.commit.signature
+    // The [`FeatureLevel`] of the refs in this commit.
+    pub fn level(&self) -> FeatureLevel {
+        self.level
     }
 
-    /// The [`Refs`] found in the tree of the commit.
-    pub fn into_refs(self) -> Refs {
-        self.commit.refs
-    }
-
-    /// The parent [`Oid`] of the commit, unless it is the root commit.
-    pub fn parent(&self) -> Option<&Oid> {
-        self.commit.parent.as_ref()
+    pub(crate) fn into_sigrefs_at(self, id: PublicKey) -> SignedRefsAt {
+        SignedRefsAt {
+            sigrefs: SignedRefs {
+                refs: self.commit.refs,
+                signature: self.commit.signature,
+                id,
+                level: self.level,
+            },
+            at: self.commit.oid,
+        }
     }
 }
 
@@ -84,6 +86,44 @@ pub enum Tip {
     Reference(NodeId),
     /// Use the supplied commit [`Oid`].
     Commit(Oid),
+}
+
+/// Describes the feature levels of a history of commits.
+#[derive(Debug, PartialEq)]
+pub struct FeatureLevels(BTreeMap<FeatureLevel, Oid>);
+
+impl FeatureLevels {
+    fn new() -> Self {
+        Self(BTreeMap::new())
+    }
+
+    fn max(&self) -> FeatureLevel {
+        self.0.last_key_value().map(|(k, _)| *k).unwrap_or_default()
+    }
+
+    fn insert(&mut self, verified: &VerifiedCommit) {
+        if verified.level != FeatureLevel::None {
+            self.0.entry(verified.level).or_insert(verified.commit.oid);
+        }
+    }
+
+    #[cfg(any(test, feature = "test"))]
+    pub fn test(from: impl IntoIterator<Item = (FeatureLevel, Oid)>) -> Self {
+        Self(BTreeMap::from_iter(from))
+    }
+}
+
+impl std::fmt::Display for FeatureLevels {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(
+            &self
+                .0
+                .iter()
+                .map(|(level, at)| format!("{level}@{at}"))
+                .collect::<Vec<_>>()
+                .join(", "),
+        )
+    }
 }
 
 impl<'a, R, V> SignedRefsReader<'a, R, V>
@@ -129,14 +169,19 @@ where
         const ONE: NonZeroUsize = NonZeroUsize::new(1).expect("one is non-zero");
         const SIGNATURES_COLLECTED: &str = "all signatures were collected";
 
-        let head = CommitReader::new(self.resolve_tip()?, self.repository)
+        let mut head = CommitReader::new(self.resolve_tip()?, self.repository)
             .read()
             .map_err(error::Read::Commit)?
             .verify(self.rid, self.verifier)
             .map_err(error::Read::Verify)?;
 
-        #[cfg(not(debug_assertions))]
-        if head.parent {
+        if head.commit.parent.is_none() && head.level == FeatureLevel::Root {
+            head.level = FeatureLevel::Parent;
+        }
+
+        let head = head;
+
+        if head.level >= FeatureLevel::Parent {
             // `head` is verified, thus we know that if the parent reference
             // exists, its target actually matches the parent OID.
             // The fact that the parent OID is a hash over all previous history
@@ -146,23 +191,58 @@ where
             return Ok(head);
         }
 
-        // Note that for all sets of commits which share the same signature,
-        // the `NonEmpty` in `seen` will be in reverse order of the walk.
-        // That is, the latest commit in the set will be at the first position,
-        // and the earliest commit will be at the last position.
-        let seen = iter::Walk::new(*head.id(), self.repository).try_fold(
-            HashMap::<crypto::Signature, NonEmpty<Oid>>::new(),
-            |mut seen, commit| {
-                let current = commit.map_err(error::Read::Commit)?;
-                seen.entry(current.signature)
-                    .and_modify(|value| value.push(current.oid))
-                    .or_insert_with(|| NonEmpty::new(current.oid));
-                Ok(seen)
+        // `seen` maps from signatures to the `NonEmpty` of commits they were
+        // seen in. Note that for all sets of commits which share the same
+        // signature, the `NonEmpty` in `seen` will be in reverse order of the
+        // walk.  That is, the latest commit in the set will be at the first
+        // position, and the earliest commit will be at the last position.
+        //
+        // `level` is the feature level of the history, which is
+        // the maximum feature level over all commits in the history.
+        let (seen, levels) = iter::Walk::new(head.commit.oid, self.repository).try_fold(
+            (
+                HashMap::<crypto::Signature, NonEmpty<Oid>>::new(),
+                FeatureLevels::new(),
+            ),
+            |(mut seen, mut levels), commit| {
+                let commit = commit.map_err(error::Read::Commit)?;
+
+                seen.entry(commit.signature)
+                    .and_modify(|value| value.push(commit.oid))
+                    .or_insert_with(|| NonEmpty::new(commit.oid));
+
+                // Before `commit` can be interpreted for feature detection,
+                // it must be verified. In particular, we do not want to
+                // detect features on commits that have an invalid signature.
+                // However, if we have already reached the maximum level,
+                // this is not required anymore, since it cannot increase any
+                // further.
+                if levels.max() < FeatureLevel::LATEST {
+                    let commit = commit
+                        .verify(self.rid, self.verifier)
+                        .map_err(error::Read::Verify)?;
+
+                    if commit.level > FeatureLevel::None {
+                        levels.insert(&commit);
+                    }
+                }
+
+                Ok((seen, levels))
             },
         )?;
 
-        let parent = if seen
-            .get(head.signature())
+        let level = levels.max();
+
+        if head.level < level {
+            return Err(error::Read::Downgrade {
+                levels,
+                actual: head.level,
+                commit: head.commit.oid,
+            });
+        }
+
+        if seen
+            .get(&head.commit.signature)
             .expect(SIGNATURES_COLLECTED)
             .len_nonzero()
             == ONE
@@ -171,47 +251,47 @@ where
             // include the parent reference in the `/refs` blob. Maintains
             // backwards-compatibility.
             return Ok(head);
-        } else {
-            #[cfg(debug_assertions)]
-            {
-                if head.parent {
-                    panic!("duplicate signature found even though parent ref did verify")
-                }
-            }
+        }
 
-            // If the signature in head was seen twice, then
-            // head must have a parent.
-            *head.parent().expect("parent must exist")
-        };
+        // If the signature in `head` was seen twice, then
+        // `head` must have a parent.
+        let parent = head.commit.parent.expect("parent must exist");
 
-        // The second walk can start from the parent of head. We do not need to
-        // verify head twice, and we already know that the parent exists.
+        // The second walk can start from the parent of `head`. We do not need to
+        // verify `head` twice, and we already know that the parent exists.
         for commit in iter::Walk::new(parent, self.repository) {
-            let commit = commit
+            let verified = commit
                 .map_err(error::Read::Commit)?
                 .verify(self.rid, self.verifier)
                 .map_err(error::Read::Verify)?;
 
-            let commits = seen.get(commit.signature()).expect(SIGNATURES_COLLECTED);
-
-            if commits.len_nonzero() == ONE {
-                return Ok(commit);
+            if verified.level < level {
+                // To avoid downgrade attacks, we skip `commit`.
+                continue;
             }
 
-            let id = commit.id();
+            let commit = verified.commit();
+
+            let commits = seen.get(&commit.signature).expect(SIGNATURES_COLLECTED);
+
+            if commits.len_nonzero() == ONE {
+                return Ok(verified);
+            }
+
+            let id = &commit.oid;
 
             if id == commits.last() {
                 // If this commit is the last element of `commits`,
                 // then this means it is the earliest of all that share
                 // its signature. It thus cannot have been replayed.
-                return Ok(commit);
+                return Ok(verified);
             }
 
             if id == commits.first() {
                 // We only log one warning per set of duplicates, and that is
                 // when we reach the first element of `commits`, which is the
                 // latest in the history.
-                log::warn!("Duplicate sigrefs found in commits {commits:?}");
+                log::warn!("Duplicate signature found in commits {commits:?}");
             }
         }
 
@@ -236,7 +316,7 @@ where
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-struct Commit {
+pub(super) struct Commit {
     oid: Oid,
     parent: Option<Oid>,
     refs: Refs,
@@ -245,6 +325,11 @@ struct Commit {
 }
 
 impl Commit {
+    #[cfg(test)]
+    pub(super) fn refs(&self) -> &Refs {
+        &self.refs
+    }
+
     fn verify<V>(mut self, expected: RepoId, verifier: &V) -> Result<VerifiedCommit, error::Verify>
     where
         V: signature::Verifier<crypto::Signature>,
@@ -253,7 +338,7 @@ impl Commit {
             .verify(&self.refs.canonical(), &self.signature)
             .map_err(error::Verify::Signature)?;
 
-        if let Some(IdentityRoot {
+        let level = if let Some(IdentityRoot {
             commit: identity_commit,
             rid,
         }) = self.identity_root
@@ -266,7 +351,7 @@ impl Commit {
                     found: rid,
                 });
             } else {
-                // Identity verification succeeds.
+                FeatureLevel::Root
             }
         } else {
             let err = error::Verify::MissingIdentity(error::MissingIdentity {
@@ -279,21 +364,50 @@ impl Commit {
             // TODO: Make this return the error
             // and enable test `test::commit_reader::missing_identity`.
 
-            // Identity verification succeeds.
-        }
+            FeatureLevel::None
+        };
 
         self.refs.remove_sigrefs();
 
-        let parent = match (self.parent, self.refs.remove_parent()) {
-            (None, None) => true,
-            (Some(_), None) => false,
+        let level = match (self.parent, self.refs.remove_parent()) {
+            (None, None) | (Some(_), None) => {
+                // Pattern 1:
+                // We are looking at a root commit.
+                // This is a special case, as there is no good value
+                // for `rad/refs/sigrefs-parent` to target. The zero OID would
+                // be a candidate, but it is filtered out in [`Refs`].
+                // Upgrading to `FeatureLevel::Parent` is not a good idea
+                // either, otherwise any history containing this commit
+                // would be at that level from the root onwards.
+
+                // Pattern 2:
+                // The ref `refs/rad/sigrefs-parent` is simply absent,
+                // we remain on the same feature level.
+
+                level
+            }
             (None, Some(actual)) => {
+                // We are looking at a root commit.
+                // Any target OID is treated as dangling.
                 return Err(error::Verify::DanglingParent {
                     sigrefs_commit: self.oid,
                     actual,
-                })
+                });
             }
-            (Some(expected), Some(actual)) if expected == actual => true,
+            (Some(expected), Some(actual)) if expected == actual => {
+                // We have a good value for `refs/rad/sigrefs-parent`, however,
+                // as feature levels are monotonic, we also make sure that the
+                // earlier check of `refs/rad/root` was positive.
+                // In case the prior feature level was not `FeatureLevel::Root`,
+                // we can even error early.
+                if level == FeatureLevel::Root {
+                    FeatureLevel::Parent
+                } else {
+                    return Err(error::Verify::IdentityRootDowngrade {
+                        sigrefs_commit: self.oid,
+                    });
+                }
+            }
             (Some(expected), Some(actual)) => {
                 return Err(error::Verify::MismatchedParent {
                     sigrefs_commit: self.oid,
@@ -305,7 +419,7 @@ impl Commit {
 
         Ok(VerifiedCommit {
             commit: self,
-            parent,
+            level,
         })
     }
 }

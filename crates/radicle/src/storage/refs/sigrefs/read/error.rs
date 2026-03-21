@@ -6,8 +6,9 @@ use radicle_git_metadata::commit;
 use radicle_oid::Oid;
 use thiserror::Error;
 
-use crate::storage::refs::canonical;
 use crate::storage::refs::sigrefs::git::{object, reference};
+use crate::storage::refs::sigrefs::read::FeatureLevels;
+use crate::storage::refs::{canonical, FeatureLevel};
 
 #[derive(Debug, Error)]
 #[non_exhaustive]
@@ -22,6 +23,12 @@ pub enum Read {
     Verify(Verify),
     #[error("failed to find a valid set of signed references starting from {head}")]
     NoValidCommit { head: Oid },
+    #[error("refusing to downgrade from history '{levels}' to '{actual}' at commit {commit}")]
+    Downgrade {
+        levels: FeatureLevels,
+        actual: FeatureLevel,
+        commit: Oid,
+    },
 }
 
 #[derive(Debug, Error)]
@@ -128,6 +135,8 @@ pub enum Verify {
         expected: Oid,
         actual: Oid,
     },
+    #[error("expected identity root in refs commit '{sigrefs_commit}' but found none")]
+    IdentityRootDowngrade { sigrefs_commit: Oid },
 }
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]

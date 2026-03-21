@@ -563,7 +563,7 @@ mod tests {
                 .unwrap(),
         );
 
-        assert_eq!(remotes[&public_key].refs, refs);
+        assert_eq!(remotes[&public_key].refs.refs(), refs.refs());
         assert_eq!(project.name(), "acme");
         assert_eq!(project.description(), "Acme's repo");
         assert_eq!(project.default_branch(), &git::fmt::refname!("master"));

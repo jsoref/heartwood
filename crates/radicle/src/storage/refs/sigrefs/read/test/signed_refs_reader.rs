@@ -1,9 +1,9 @@
 use radicle_oid::Oid;
 
 use crate::storage::refs::sigrefs::read::error::{Read, Verify};
-use crate::storage::refs::sigrefs::read::{error, Commit, SignedRefsReader, Tip};
+use crate::storage::refs::sigrefs::read::{error, Commit, FeatureLevels, SignedRefsReader, Tip};
 use crate::storage::refs::sigrefs::VerifiedCommit;
-use crate::storage::refs::{IDENTITY_ROOT, SIGREFS_PARENT};
+use crate::storage::refs::{FeatureLevel, IDENTITY_ROOT, SIGREFS_PARENT};
 use crate::{assert_matches, git};
 
 use super::mock;
@@ -17,6 +17,17 @@ fn refs_without_parent(head_oid: Oid) -> Vec<(git::fmt::RefString, Oid)> {
             mock::oid(mock::MOCKED_IDENTITY),
         ),
     ]
+}
+
+fn refs_without_root(head: Oid, parent: Oid) -> Vec<(git::fmt::RefString, Oid)> {
+    vec![
+        (mock::refs_heads_main(), head),
+        (SIGREFS_PARENT.to_ref_string(), parent),
+    ]
+}
+
+fn refs_without_root_and_parent(head: Oid) -> Vec<(git::fmt::RefString, Oid)> {
+    vec![(mock::refs_heads_main(), head)]
 }
 
 fn refs(head_oid: Oid, parent_oid: Oid) -> Vec<(git::fmt::RefString, Oid)> {
@@ -149,7 +160,7 @@ fn single_commit() {
     let repo = mock::setup_chain([(head, 1, refs_without_parent(head))]);
 
     let vc = read(head, repo).unwrap();
-    assert_eq!(*vc.id(), head);
+    assert_eq!(vc.commit.oid, head);
 }
 
 #[test]
@@ -162,7 +173,7 @@ fn two_commits() {
     ]);
 
     let vc = read(head, repo).unwrap();
-    assert_eq!(*vc.id(), head);
+    assert_eq!(vc.commit.oid, head);
 }
 
 /// We test a handful scenarios with replayed commits (or rather, references
@@ -198,7 +209,10 @@ mod replay {
         }
 
         assert_eq!(
-            *read(mock::oid((chain.len() - 1) as u8), repo).unwrap().id(),
+            read(mock::oid((chain.len() - 1) as u8), repo)
+                .unwrap()
+                .commit
+                .oid,
             mock::oid(expected)
         )
     }
@@ -224,6 +238,141 @@ mod replay {
     }
 }
 
+mod downgrade {
+    use super::*;
+
+    #[test]
+    fn parent() {
+        const SIGNATURE_1: u8 = 1;
+        const SIGNATURE_2: u8 = 2;
+        const SIGNATURE_3: u8 = 3;
+
+        let c1 = mock::oid(1);
+        let c2 = mock::oid(2);
+        let c3 = mock::oid(3);
+
+        let r3 = refs_without_parent(mock::oid(10));
+        let r2 = refs(mock::oid(10), c3);
+        let r1 = refs_without_parent(mock::oid(10));
+
+        let repo = mock::setup_chain([
+            (c3, SIGNATURE_3, r3),
+            (c2, SIGNATURE_2, r2),
+            (c1, SIGNATURE_1, r1),
+        ]);
+
+        let expected_levels =
+            FeatureLevels::test([(FeatureLevel::Parent, c2), (FeatureLevel::Root, c1)]);
+
+        assert_matches!(
+            read(c1, repo),
+            Err(error::Read::Downgrade {
+                levels,
+                actual: FeatureLevel::Root,
+                ..
+            })
+            if levels == expected_levels
+        );
+    }
+
+    #[test]
+    fn root() {
+        const SIGNATURE_2: u8 = 2;
+        const SIGNATURE_3: u8 = 3;
+
+        let c2 = mock::oid(2);
+        let c3 = mock::oid(3);
+
+        let r3 = refs_without_parent(mock::oid(10));
+        let r2 = refs_without_root_and_parent(mock::oid(10));
+
+        let repo = mock::setup_chain([(c3, SIGNATURE_3, r3), (c2, SIGNATURE_2, r2)]);
+
+        let expected_levels = FeatureLevels::test([(FeatureLevel::Root, c3)]);
+
+        assert_matches!(
+            read(c2, repo),
+            Err(error::Read::Downgrade {
+                levels,
+                actual: FeatureLevel::None,
+                ..
+            })
+            if levels == expected_levels
+        );
+    }
+
+    #[test]
+    fn root_with_parent() {
+        const SIGNATURE_2: u8 = 2;
+        const SIGNATURE_3: u8 = 3;
+
+        let c2 = mock::oid(2);
+        let c3 = mock::oid(3);
+
+        let r3 = refs_without_root_and_parent(mock::oid(10));
+        let r2 = refs_without_root(mock::oid(10), c3);
+
+        let repo = mock::setup_chain([(c3, SIGNATURE_3, r3), (c2, SIGNATURE_2, r2)]);
+
+        assert_matches!(
+            read(c2, repo),
+            Err(error::Read::Verify(Verify::IdentityRootDowngrade {
+                sigrefs_commit
+            }))
+            if sigrefs_commit == c2
+        );
+    }
+
+    #[test]
+    fn restore() {
+        const SIGNATURE_1: u8 = 1;
+        const SIGNATURE_2: u8 = 2;
+        const SIGNATURE_3: u8 = 3;
+        const SIGNATURE_4: u8 = 4;
+
+        let c1 = mock::oid(1);
+        let c2 = mock::oid(2);
+        let c3 = mock::oid(3);
+        let c4 = mock::oid(4);
+
+        let r1 = refs_without_parent(mock::oid(10));
+        let r2 = refs(mock::oid(10), c1);
+        let r3 = refs_without_parent(mock::oid(10));
+        let r4 = refs(mock::oid(10), c3);
+
+        let repo = mock::setup_chain([
+            (c1, SIGNATURE_1, r1),
+            (c2, SIGNATURE_2, r2),
+            (c3, SIGNATURE_3, r3),
+            (c4, SIGNATURE_4, r4),
+        ]);
+
+        assert_eq!(read(c4, repo).unwrap().commit.oid, c4);
+    }
+}
+
+mod detect_parent {
+    use super::*;
+
+    #[test]
+    fn root_without_parent() {
+        const SIG: u8 = 3;
+        let commit = mock::oid(3);
+        let refs = refs_without_parent(mock::oid(10));
+        let repo = mock::setup_chain([(commit, SIG, refs)]);
+        assert_matches!(read(commit, repo).unwrap().level, FeatureLevel::Parent);
+    }
+
+    #[test]
+    fn root_without_root() {
+        const SIG: u8 = 3;
+        let commit = mock::oid(3);
+        let refs = refs_without_root_and_parent(mock::oid(10));
+        let repo = mock::setup_chain([(commit, SIG, refs)]);
+        assert_matches!(read(commit, repo).unwrap().level, FeatureLevel::None);
+    }
+}
+
 #[test]
 fn read_ok_no_parent() {
     const SIGNATURE_1: u8 = 1;
@@ -236,7 +385,7 @@ fn read_ok_no_parent() {
     let repo = mock::setup_chain([(c2, SIGNATURE_2, r.clone()), (c1, SIGNATURE_1, r)]);
 
     let vc = read(c1, repo).unwrap();
-    assert_eq!(*vc.id(), c1);
+    assert_eq!(vc.commit.oid, c1);
 
     assert_matches!(
         vc,
@@ -248,9 +397,35 @@ fn read_ok_no_parent() {
                 signature: _,
                 identity_root: Some(_)
             },
-            parent: false
+            level: FeatureLevel::Root,
         }
     );
+}
+
+#[test]
+fn read_ok_root() {
+    const SIGNATURE_1: u8 = 1;
+    const SIGNATURE_2: u8 = 2;
+
+    let c1 = mock::oid(1);
+    let c2 = mock::oid(2);
+
+    let repo = mock::setup_chain([
+        (c2, SIGNATURE_2, refs_without_root_and_parent(mock::oid(10))),
+        (c1, SIGNATURE_1, refs_without_parent(mock::oid(20))),
+    ]);
+
+    let vc = read(c1, repo).unwrap();
+    assert_eq!(vc.commit.oid, c1);
+    assert_eq!(vc.commit.parent, Some(c2));
+
+    assert_matches!(vc, VerifiedCommit { commit: Commit {
+        oid,
+        parent: Some(parent),
+        refs: _,
+        signature: _,
+        identity_root: Some(_)
+    }, level: FeatureLevel::Root } if parent == c2 && oid == c1);
 }
 
 #[test]
@@ -267,7 +442,7 @@ fn read_ok_parent() {
     ]);
 
     let vc = read(c1, repo).unwrap();
-    assert_eq!(*vc.id(), c1);
+    assert_eq!(vc.commit.oid, c1);
 
     assert_matches!(vc, VerifiedCommit { commit: Commit {
         oid,
@@ -275,7 +450,7 @@ fn read_ok_parent() {
         refs: _,
         signature: _,
         identity_root: Some(_)
-    }, parent: true } if parent == c2 && oid == c1);
+    }, level: FeatureLevel::Parent } if parent == c2 && oid == c1);
 }
 
 #[test]

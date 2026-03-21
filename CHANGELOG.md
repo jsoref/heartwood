@@ -7,11 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## Fixed Bugs
+## New Features
 
 - Fix the signed references reading process by correctly choosing the first,
   non-replayed commit. This only occurs if duplicate signatures are found and
   the process needs to find the first legitimate commit of the namespace.
+- Signed references now implement feature detection. The features are marked as
+  `none`, `root`, and `parent`. If the signed references are marked as `none`
+  this implies that they only contain `/refs` and `/signature` with no
+  `refs/rad/root` entry nor `refs/rad/sigrefs-parent`. The next feature is
+  `root`, which implies `none`, but includes `refs/rad/root`. Finally, `parent`
+  implies `root`, but includes `refs/rad/sigrefs-parent`.
+  This means that feature levels are monotonically increasing. This allows the
+  signed references processes to detect downgrades, preventing downgrade
+  attacks.
+  Note that this means that a node which upgrades, and subsequently downgrades
+  will appear as a downgrade attacker.
 
 ## 1.7.1
 

@@ -53,7 +53,7 @@ fn roundtrip(BoundedVec(all_refs): BoundedVec<Refs>) -> TestResult {
             Err(e) => return TestResult::error(format!("read error: {e}")),
         };
 
-        if written_refs != verified.into_refs() {
+        if written_refs != *verified.commit().refs() {
             return TestResult::failed();
         }
     }

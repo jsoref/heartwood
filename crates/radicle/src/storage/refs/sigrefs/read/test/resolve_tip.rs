@@ -63,5 +63,5 @@ fn resolve_tip_ok() {
     )
     .read()
     .unwrap();
-    assert_eq!(*vc.id(), root);
+    assert_eq!(vc.commit.oid, root);
 }

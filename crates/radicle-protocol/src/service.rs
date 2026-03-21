@@ -37,7 +37,7 @@ use radicle::node::routing::Store as _;
 use radicle::node::seed;
 use radicle::node::seed::Store as _;
 use radicle::node::{Penalty, Severity};
-use radicle::storage::refs::SIGREFS_BRANCH;
+use radicle::storage::refs::{FeatureLevel, SIGREFS_BRANCH};
 use radicle::storage::RepositoryError;
 use radicle_fetch::policy::SeedingPolicy;
 
@@ -523,14 +523,24 @@ where
     }
 
     fn upgrade_sigrefs(&mut self, info: &radicle::storage::RepositoryInfo) -> Result<(), Error> {
-        match &info.refs {
-            Ok(_) => return Ok(()),
-            Err(err) => {
-                log::info!("Migrating `rad/sigrefs` due to: {err}");
-            }
+        let Some(ref refs) = info.refs else {
+            // No refs, nothing to upgrade.
+            return Ok(());
+        };
+
+        if refs.feature_level() >= FeatureLevel::LATEST {
+            // Refs are at target level or above, nothing to upgrade.
+            return Ok(());
         }
 
+        log::info!(
+            "Migrating `rad/sigrefs` from level {} which is lower than target level {}.",
+            refs.feature_level(),
+            FeatureLevel::LATEST
+        );
+
         let repo = self.storage.repository_mut(info.rid)?;
+        // NOTE: We assume to reach `FeatureLevel::MAX` by signing refs.
         repo.sign_refs(&self.signer)?;
         Ok(())
     }

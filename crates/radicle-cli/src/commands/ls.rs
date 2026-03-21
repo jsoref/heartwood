@@ -28,14 +28,6 @@ pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
         ..
     } in repos
     {
-        let refs = match refs {
-            Ok(refs) => refs,
-            Err(_) => {
-                term::warning(format!("Repository {rid} must be migrated by starting your node (e.g. via `rad node start`)."));
-                continue;
-            }
-        };
-
         if doc.is_public() && args.private {
             continue;
         }

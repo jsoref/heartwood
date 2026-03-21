@@ -20,6 +20,7 @@ use crate::git;
 use crate::git::raw::ErrorExt as _;
 use crate::git::Oid;
 use crate::storage;
+use crate::storage::refs::sigrefs::read::Tip;
 use crate::storage::{ReadRepository, RemoteId};
 
 pub use crate::git::refs::storage::*;
@@ -81,6 +82,10 @@ impl Refs {
         R: sigrefs::git::object::Reader + sigrefs::git::object::Writer,
         R: sigrefs::git::reference::Reader + sigrefs::git::reference::Writer,
     {
+        // FIXME(lorenz): We promise this feature level to the caller, but
+        // have not actually verified it.
+        const LEVEL_PROMISED: FeatureLevel = FeatureLevel::Parent;
+
         let msg = "Update signed refs\n";
         let reflog = format!("Save {} signed references", self.len());
         let update = sigrefs::write::SignedRefsWriter::new(self, namespace, repo, signer).write(
@@ -89,7 +94,9 @@ impl Refs {
             reflog,
         )?;
         match update {
-            sigrefs::write::Update::Changed { entry } => Ok(entry.into_sigrefs_at(namespace)),
+            sigrefs::write::Update::Changed { entry } => {
+                Ok(entry.into_sigrefs_at(namespace, LEVEL_PROMISED))
+            }
             sigrefs::write::Update::Unchanged {
                 commit,
                 refs,
@@ -99,6 +106,7 @@ impl Refs {
                     refs,
                     signature,
                     id: namespace,
+                    level: LEVEL_PROMISED,
                 };
                 Ok(SignedRefsAt {
                     sigrefs,
@@ -245,6 +253,42 @@ where
     }
 }
 
+/// The Signed References feature has evolved over time.
+/// This enum captures the corresponding "feature level".
+///
+/// Feature levels are monotonic, in the sense that a greater feature level
+/// encompasses all the features of smaller ones.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
+#[non_exhaustive]
+pub enum FeatureLevel {
+    /// References are stored without additional metadata.
+    #[default]
+    None,
+    /// Introduced in Radicle 1.1.0, in commit
+    /// `989edacd564fa658358f5ccfd08c243c5ebd8cda`,
+    /// this requires [`IDENTITY_ROOT`].
+    Root,
+    /// Introduced in Radicle 1.7.0, in commit
+    /// `d3bc868e84c334f113806df1737f52cc57c5453d`,
+    /// this requires [`SIGREFS_PARENT`].
+    Parent,
+}
+
+impl FeatureLevel {
+    pub const LATEST: Self = FeatureLevel::Parent;
+}
+
+impl std::fmt::Display for FeatureLevel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match &self {
+            Self::None => "none",
+            Self::Root => "root",
+            Self::Parent => "parent",
+        };
+        f.write_str(s)
+    }
+}
+
 /// Combination of [`Refs`] and a [`Signature`]. The signature is a cryptographic
 /// signature over the refs. This allows us to easily verify if a set of refs
 /// came from a particular key.
@@ -257,6 +301,9 @@ pub struct SignedRefs {
     signature: Signature,
     /// This is the remote under which these refs exist, and the public key of the signer.
     id: PublicKey,
+
+    #[serde(skip)]
+    level: FeatureLevel,
 }
 
 impl SignedRefs {
@@ -270,21 +317,17 @@ impl SignedRefs {
         &self.refs
     }
 
+    /// Returns the [`FeatureLevel`] computed for the signed references.
+    pub fn feature_level(&self) -> FeatureLevel {
+        self.level
+    }
+
     pub fn load<R>(remote: RemoteId, repo: &R) -> Result<Self, sigrefs::read::error::Read>
     where
         R: HasRepoId,
         R: sigrefs::git::object::Reader + sigrefs::git::reference::Reader,
     {
-        let root = repo.rid();
-        let tip = sigrefs::read::Tip::Reference(remote);
-        let latest = sigrefs::SignedRefsReader::new(root, tip, repo, &remote).read()?;
-        let signature = *latest.signature();
-        let refs = latest.into_refs();
-        Ok(SignedRefs {
-            refs,
-            signature,
-            id: remote,
-        })
+        Self::load_internal(remote, repo, sigrefs::read::Tip::Reference(remote))
     }
 
     pub fn load_at<R>(
@@ -296,16 +339,21 @@ impl SignedRefs {
         R: HasRepoId,
         R: sigrefs::git::object::Reader + sigrefs::git::reference::Reader,
     {
+        Self::load_internal(remote, repo, sigrefs::read::Tip::Commit(oid))
+    }
+
+    fn load_internal<R>(
+        remote: RemoteId,
+        repo: &R,
+        tip: Tip,
+    ) -> Result<Self, sigrefs::read::error::Read>
+    where
+        R: HasRepoId,
+        R: sigrefs::git::object::Reader + sigrefs::git::reference::Reader,
+    {
         let root = repo.rid();
-        let tip = sigrefs::read::Tip::Commit(oid);
         let latest = sigrefs::SignedRefsReader::new(root, tip, repo, &remote).read()?;
-        let signature = *latest.signature();
-        let refs = latest.into_refs();
-        Ok(SignedRefs {
-            refs,
-            signature,
-            id: remote,
-        })
+        Ok(latest.into_sigrefs_at(remote).sigrefs)
     }
 }
 

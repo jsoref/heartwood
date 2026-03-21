@@ -13,7 +13,10 @@ where
     let mut refs = Refs::arbitrary(g);
     refs.insert(IDENTITY_ROOT.to_ref_string(), root);
 
+    let mut level = None;
+
     if bool::arbitrary(g) {
+        level = Some(FeatureLevel::Parent);
         let parent = Oid::from_sha1(Arbitrary::arbitrary(g));
         refs.insert(SIGREFS_PARENT.to_ref_string(), parent);
     }
@@ -23,6 +26,7 @@ where
         refs,
         signature,
         id: *signer.node_id(),
+        level: level.unwrap_or_else(|| FeatureLevel::arbitrary(g)),
     };
     SignedRefsAt {
         sigrefs,
@@ -66,5 +70,12 @@ impl Arbitrary for RefsAt {
             remote: PublicKey::arbitrary(g),
             at: Oid::from_sha1(Arbitrary::arbitrary(g)),
         }
+    }
+}
+
+impl Arbitrary for FeatureLevel {
+    fn arbitrary(g: &mut qcheck::Gen) -> Self {
+        *g.choose(&[FeatureLevel::None, FeatureLevel::Root, FeatureLevel::Parent])
+            .unwrap()
     }
 }

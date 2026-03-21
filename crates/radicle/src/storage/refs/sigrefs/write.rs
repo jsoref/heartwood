@@ -15,7 +15,8 @@ use radicle_oid::Oid;
 use crate::git;
 use crate::storage::refs::sigrefs::git::{object, reference, Committer};
 use crate::storage::refs::{
-    Refs, IDENTITY_ROOT, REFS_BLOB_PATH, SIGNATURE_BLOB_PATH, SIGREFS_BRANCH, SIGREFS_PARENT,
+    FeatureLevel, Refs, IDENTITY_ROOT, REFS_BLOB_PATH, SIGNATURE_BLOB_PATH, SIGREFS_BRANCH,
+    SIGREFS_PARENT,
 };
 use crate::storage::refs::{SignedRefs, SignedRefsAt};
 
@@ -168,13 +169,14 @@ impl Commit {
         self.refs
     }
 
-    pub(crate) fn into_sigrefs_at(self, id: PublicKey) -> SignedRefsAt {
+    pub(crate) fn into_sigrefs_at(self, id: PublicKey, level: FeatureLevel) -> SignedRefsAt {
         SignedRefsAt {
             at: self.oid,
             sigrefs: SignedRefs {
                 id,
                 signature: self.signature,
                 refs: self.refs,
+                level,
             },
         }
     }
