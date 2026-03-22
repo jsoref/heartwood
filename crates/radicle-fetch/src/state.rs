@@ -8,7 +8,7 @@ use radicle::identity::{Did, Doc, DocError};
 
 use radicle::storage;
 use radicle::storage::git::Repository;
-use radicle::storage::refs::RefsAt;
+use radicle::storage::refs::{FeatureLevel, RefsAt};
 use radicle::storage::{
     git::Validation, Remote, RemoteId, RemoteRepository, Remotes, ValidateRepository, Validations,
 };
@@ -548,6 +548,7 @@ impl FetchState {
                         }
                     }
 
+                    let level = refs.feature_level();
                     let cache = self.as_cached(handle);
                     let mut fails =
                         sigrefs::validate(&cache, refs)?.unwrap_or(Validations::default());
@@ -560,6 +561,10 @@ impl FetchState {
                     } else {
                         valid_delegates.insert(remote);
                         remotes.insert(remote);
+                    }
+
+                    if level < FeatureLevel::LATEST {
+                        log::warn!("Delegate {remote} is on feature level '{level}' which is lower than '{}', they should consider upgrading Radicle.", FeatureLevel::LATEST)
                     }
                 }
             }
