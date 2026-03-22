@@ -18,7 +18,7 @@ pub enum Fetch {
     #[error(transparent)]
     Repository(#[from] radicle::storage::RepositoryError),
     #[error(transparent)]
-    RefsDb(#[from] radicle::node::refs::Error),
+    RefsDb(Box<radicle::node::refs::Error>),
     #[error("validation of the storage repository failed: the delegates {delegates:?} failed to validate to meet a threshold of {threshold}")]
     Validation {
         threshold: usize,
@@ -26,6 +26,12 @@ pub enum Fetch {
     },
     #[error(transparent)]
     Cache(#[from] Cache),
+}
+
+impl From<radicle::node::refs::Error> for Fetch {
+    fn from(err: radicle::node::refs::Error) -> Self {
+        Self::RefsDb(Box::new(err))
+    }
 }
 
 #[derive(Debug, Error)]

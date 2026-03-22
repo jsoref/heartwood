@@ -135,12 +135,13 @@ where
         } = self;
         let reference = SIGREFS_BRANCH.with_namespace(git::fmt::Component::from(&namespace));
 
-        let head = HeadReader::new(&reference, repository, rid, self.signer)
-            .read()
-            .map_err(error::Write::Head)?;
+        let head = HeadReader::new(&reference, repository, rid, self.signer).read();
+
         let commit_writer = match head {
-            Some(head) if head.is_unchanged(&refs) => return Ok(Update::unchanged(head.verified)),
-            Some(head) => CommitWriter::with_parent(
+            Ok(Some(head)) if head.is_unchanged(&refs) => {
+                return Ok(Update::unchanged(head.verified))
+            }
+            Ok(Some(head)) => CommitWriter::with_parent(
                 refs,
                 *head.verified.commit().oid(),
                 author,
@@ -148,7 +149,12 @@ where
                 repository,
                 signer,
             ),
-            None => CommitWriter::root(refs, author, message, repository, signer),
+            Ok(None) => CommitWriter::root(refs, author, message, repository, signer),
+            Err(error::Head::Verify { commit, source }) => {
+                log::warn!("Verification of head of signed references failed: {source}");
+                CommitWriter::with_parent(refs, commit, author, message, repository, signer)
+            }
+            Err(err) => return Err(error::Write::Head(err)),
         };
         let commit = commit_writer.write().map_err(error::Write::Commit)?;
         repository
@@ -383,7 +389,10 @@ where
             .read()
             .map_err(error::Head::Commit)?
             .verify(self.rid, self.verifier)
-            .map_err(error::Head::Verify)?;
+            .map_err(|err| error::Head::Verify {
+                commit: oid,
+                source: err,
+            })?;
 
         Ok(Some(Head { verified }))
     }

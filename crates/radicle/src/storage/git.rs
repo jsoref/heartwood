@@ -202,7 +202,7 @@ impl WriteStorage for Storage {
         // N.b. we remove the repository if the `local` peer has no
         // `rad/sigrefs`. There's no risk of them corrupting data.
         let has_sigrefs = SignedRefsAt::load(self.info.key, &repo)
-            .map_err(|err| RepositoryError::Storage(Error::Refs(refs::Error::Read(err))))?
+            .map_err(|err| RepositoryError::from(refs::Error::Read(err)))?
             .is_some();
         if has_sigrefs {
             repo.clean(&self.info.key)
@@ -259,7 +259,7 @@ impl Storage {
             let (_, head) = repo.head()?;
 
             let refs = refs::SignedRefsAt::load(self.info.key, &repo)
-                .map_err(|err| RepositoryError::Refs(refs::Error::Read(err)))?;
+                .map_err(|err| RepositoryError::from(refs::Error::Read(err)))?;
             let synced_at = refs
                 .as_ref()
                 .map(|r| SyncedAt::new(r.at, &repo))

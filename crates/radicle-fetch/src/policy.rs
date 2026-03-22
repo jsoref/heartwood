@@ -129,6 +129,12 @@ pub mod error {
         Git(#[from] radicle::git::raw::Error),
 
         #[error(transparent)]
-        Refs(#[from] storage::refs::Error),
+        Refs(Box<storage::refs::Error>),
+    }
+
+    impl From<storage::refs::Error> for Policy {
+        fn from(err: storage::refs::Error) -> Self {
+            Self::Refs(Box::new(err))
+        }
     }
 }

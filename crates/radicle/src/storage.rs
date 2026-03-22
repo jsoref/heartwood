@@ -107,7 +107,7 @@ impl SetHead {
 #[derive(Error, Debug)]
 pub enum RepositoryError {
     #[error(transparent)]
-    Storage(#[from] Error),
+    Storage(Box<Error>),
     #[error(transparent)]
     Store(#[from] cob::store::Error),
     #[error(transparent)]
@@ -119,7 +119,7 @@ pub enum RepositoryError {
     #[error(transparent)]
     Quorum(#[from] canonical::error::QuorumError),
     #[error(transparent)]
-    Refs(#[from] refs::Error),
+    Refs(Box<refs::Error>),
     #[error("missing canonical reference rule for default branch")]
     MissingBranchRule,
     #[error("could not get the default branch rule: {0}")]
@@ -128,6 +128,18 @@ pub enum RepositoryError {
     CanonicalRefs(#[from] doc::CanonicalRefsError),
     #[error(transparent)]
     FindObjects(#[from] canonical::effects::FindObjectsError),
+}
+
+impl From<Error> for RepositoryError {
+    fn from(err: Error) -> Self {
+        Self::Storage(Box::new(err))
+    }
+}
+
+impl From<refs::Error> for RepositoryError {
+    fn from(err: refs::Error) -> Self {
+        Self::Refs(Box::new(err))
+    }
 }
 
 impl RepositoryError {
