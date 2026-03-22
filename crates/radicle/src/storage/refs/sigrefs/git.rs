@@ -1,21 +1,18 @@
-//! The transparency log of Radicle signed references is encoded in the Git
-//! commit graph. This module provides traits for interacting with a Git
-//! repository to read and write data for the transparency log process.
+//! Signed References are encoded in the Git commit graph.
+//! This module provides traits for interacting with a Git
+//! repository to read and write data for Signed References.
 
 pub mod object;
 pub mod reference;
 
-pub use git2_impls::committer;
-
-use crate::profile::env;
 use crypto::PublicKey;
-use radicle_git_metadata::author;
 use radicle_git_metadata::author::Author;
+use radicle_git_metadata::author::Time;
 
 /// Convenience type that corresponds to an [`Author`].
 ///
-/// If [`env::GIT_COMMITTER_DATE`] is set, then [`Committer::from_env`] can be
-/// used to construct a stable [`Author`].
+/// Most users will want to instantiate this via [`Committer::from_env_or_now`],
+/// which automatically constructs a stable [`Author`] for tests as well.
 ///
 /// Otherwise, an [`Author`] can be provided via [`Committer::new`].
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -24,37 +21,78 @@ pub struct Committer {
 }
 
 impl Committer {
-    /// Construct a [`Committer`] using [`Committer::from_env`], if possible,
-    /// using `default` if not.
-    pub fn from_env_or_else<F>(public_key: &PublicKey, default: F) -> Self
-    where
-        F: FnOnce() -> Author,
-    {
-        Self::from_env(public_key).unwrap_or_else(|| Self::new(default()))
+    /// Construct a [`Committer`] using the timestamp found at
+    /// [`GIT_COMMITTER_DATE`],
+    ///
+    /// If [`GIT_COMMITTER_DATE`] is unset, it uses the current system
+    /// time.
+    ///
+    /// The given [`PublicKey`] is always used for the email.
+    ///
+    /// In test code, [`Committer::stable`] is returned.
+    ///
+    /// [`GIT_COMMITTER_DATE`]: crate::profile::env::GIT_COMMITTER_DATE
+    pub fn from_env_or_now(public_key: &PublicKey) -> Self {
+        #[cfg(any(test, feature = "test"))]
+        return Self::stable(public_key);
+
+        #[cfg(not(any(test, feature = "test")))]
+        {
+            use crate::profile::env::GIT_COMMITTER_DATE;
+            use std::env::var;
+            use std::env::VarError;
+
+            let timestamp = match var(GIT_COMMITTER_DATE) {
+                Ok(s) => match s.trim().parse::<u64>() {
+                    Ok(timestamp) => timestamp,
+                    Err(err) => {
+                        panic!(
+                            "Value of environment variable `{}` does not parse as integer: {err}",
+                            GIT_COMMITTER_DATE
+                        );
+                    }
+                },
+                Err(VarError::NotPresent) => std::time::SystemTime::now()
+                    .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                    .expect("time is later than unix epoch")
+                    .as_secs(),
+                Err(VarError::NotUnicode(_)) => {
+                    panic!(
+                        "Value for environment variable `{}` is not valid Unicode.",
+                        GIT_COMMITTER_DATE
+                    );
+                }
+            };
+
+            let time = Time::new(
+                timestamp
+                    .try_into()
+                    .expect("seconds since unix epoch must fit i64"),
+                0,
+            );
+            let author = Author {
+                name: "radicle".to_string(),
+                email: public_key.to_human(),
+                time,
+            };
+
+            Self::new(author)
+        }
+    }
+
+    #[cfg(any(test, feature = "test"))]
+    pub fn stable(public_key: &PublicKey) -> Self {
+        let author = Author {
+            name: "radicle".to_string(),
+            email: public_key.to_human(),
+            time: Time::new(0, 0),
+        };
+        Self::new(author)
     }
 
     /// Construct a [`Committer`] with the provided [`Author`].
     pub fn new(author: Author) -> Self {
         Self { author }
-    }
-
-    /// Construct a [`Committer`] using the timestamp found at
-    /// [`env::GIT_COMMITTER_DATE`], and the given [`PublicKey`] for the email.
-    pub fn from_env(public_key: &PublicKey) -> Option<Self> {
-        let s = env::var(env::GIT_COMMITTER_DATE).ok()?;
-        let Ok(timestamp) = s.trim().parse::<i64>() else {
-            panic!(
-                "Invalid timestamp value {s:?} for `{}`",
-                env::GIT_COMMITTER_DATE
-            );
-        };
-        let time = author::Time::new(timestamp, 0);
-        let author = Author {
-            name: "radicle".to_string(),
-            email: public_key.to_human(),
-            time,
-        };
-        Some(Self::new(author))
     }
 
     pub fn into_inner(self) -> Author {
@@ -70,8 +108,6 @@ mod git2_impls {
 
     use std::path::Path;
 
-    use radicle_core::NodeId;
-    use radicle_git_metadata::author::{Author, Time};
     use radicle_oid::Oid;
 
     use crate::git;
@@ -79,38 +115,6 @@ mod git2_impls {
     use super::object;
     use super::object::{RefsEntry, SignatureEntry};
     use super::reference;
-    use super::Committer;
-
-    pub fn committer(node: &NodeId, signature: &git2::Signature) -> Result<Committer, git2::Error> {
-        let default = {
-            let name = signature
-                .name()
-                .map(|name| name.to_string())
-                .ok_or(git2::Error::new(
-                    git2::ErrorCode::Invalid,
-                    git2::ErrorClass::Invalid,
-                    "Invalid UTF-8 of Git signature name",
-                ))?;
-            let email =
-                signature
-                    .email()
-                    .map(|email| email.to_string())
-                    .ok_or(git2::Error::new(
-                        git2::ErrorCode::Invalid,
-                        git2::ErrorClass::Invalid,
-                        "Invalid UTF-8 of Git signature email",
-                    ))?;
-            Author {
-                name,
-                email,
-                time: Time::new(
-                    signature.when().seconds(),
-                    signature.when().offset_minutes(),
-                ),
-            }
-        };
-        Ok(Committer::from_env_or_else(node, || default))
-    }
 
     impl object::Reader for git2::Repository {
         fn read_commit(&self, oid: &Oid) -> Result<Option<Vec<u8>>, object::error::ReadCommit> {

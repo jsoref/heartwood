@@ -257,6 +257,9 @@ fn test_replication_ref_in_sigrefs() {
         .unwrap();
 
     let mut alice = alice.spawn();
+
+    // At this point, bob will migrate sigrefs, because there only is a
+    // root commit in his `refs/heads/sigrefs`.
     let bob = bob.spawn();
 
     alice.connect(&bob);
@@ -267,15 +270,19 @@ fn test_replication_ref_in_sigrefs() {
 
     assert_matches!(result, FetchResult::Success { .. });
 
-    // alice still sees bob's master branch since it was in his
-    // sigrefs.
+    // Before automatic migration of sigrefs was introduced,
+    // alice would still see bob's master branch at this point and we
+    // would assert `.is_ok()`.
+    // With automatic migration, refs are signed as bob's node starts
+    // up, which is after he removes his ref locally, thus we now
+    // assert `.is_err()`.
     assert!(
         alice
             .storage
             .repository(acme)
             .unwrap()
             .reference(&bob.id, &git::fmt::qualified!("refs/heads/master"))
-            .is_ok(),
+            .is_err(),
         "refs/namespaces/{}/refs/heads/master does not exist",
         bob.id
     );

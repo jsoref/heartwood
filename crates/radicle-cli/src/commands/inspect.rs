@@ -76,7 +76,20 @@ pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
                     term::format::secondary(refs.at),
                     match sigrefs {
                         Ok(refs) => {
-                            let level = refs.feature_level();
+                            let mut level = refs.feature_level();
+
+                            // For their own refs, be more strict, and interpret
+                            // `FeatureLevel::Parent` at a root commit as
+                            // `FeatureLevel::Root`. This is so that users
+                            // have a chance of detecting that automatic migration
+                            // did not run or is otherwise broken.
+                            if &remote == profile.id()
+                                && level == FeatureLevel::Parent
+                                && refs.parent().is_none()
+                            {
+                                level = FeatureLevel::Root;
+                            }
+
                             let s = level.to_string();
                             match level {
                                 FeatureLevel::None => term::format::negative(s),

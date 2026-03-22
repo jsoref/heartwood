@@ -1,7 +1,7 @@
 //! Traits for interacting with Git objects, necessary for implementing Radicle
-//! signed references.
+//! Signed References.
 // TODO(finto): I think these are more generally useful than just being used for
-// signed references. They might be worth moving into a crate,
+// Signed References. They might be worth moving into a crate,
 // `radicle-git-traits`, but for now they can live here.
 
 pub mod error;

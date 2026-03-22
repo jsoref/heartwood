@@ -246,6 +246,13 @@ where
 
         Ok(remote.refs)
     }
+
+    fn force_sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
+        &self,
+        signer: &Device<G>,
+    ) -> Result<storage::refs::SignedRefs, RepositoryError> {
+        self.sign_refs(signer)
+    }
 }
 
 impl<R: storage::RemoteRepository> RemoteRepository for DraftStore<'_, R> {

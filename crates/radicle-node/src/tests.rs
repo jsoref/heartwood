@@ -1061,16 +1061,12 @@ fn test_refs_announcement_offline() {
 
     let anns = alice
         .messages(bob.id())
-        .filter_map(|m| {
-            if let Message::Announcement(Announcement {
+        .filter_map(|m| match m {
+            Message::Announcement(Announcement {
                 message: AnnouncementMessage::Refs(ann),
                 ..
-            }) = m
-            {
-                Some(ann)
-            } else {
-                None
-            }
+            }) if ann.rid == rid => Some(ann),
+            _ => None,
         })
         .collect::<Vec<_>>();
 

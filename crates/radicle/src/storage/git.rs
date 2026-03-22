@@ -994,6 +994,23 @@ impl SignRepository for Repository {
         &self,
         signer: &Device<G>,
     ) -> Result<SignedRefs, RepositoryError> {
+        self.sign_refs_with(signer, false)
+    }
+
+    fn force_sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
+        &self,
+        signer: &Device<G>,
+    ) -> Result<SignedRefs, RepositoryError> {
+        self.sign_refs_with(signer, true)
+    }
+}
+
+impl Repository {
+    fn sign_refs_with<G: crypto::signature::Signer<crypto::Signature>>(
+        &self,
+        signer: &Device<G>,
+        force: bool,
+    ) -> Result<SignedRefs, RepositoryError> {
         let remote = signer.public_key();
         // Ensure the root reference is set, which is checked during sigref verification.
         if self
@@ -1003,10 +1020,14 @@ impl SignRepository for Repository {
             self.set_remote_identity_root(remote)?;
         }
 
-        let committer = refs::sigrefs::git::committer(remote, &self.backend.signature()?)?;
-        let signed = self
-            .references_of(remote)?
-            .save(*remote, committer, self, signer)?;
+        let committer = refs::sigrefs::git::Committer::from_env_or_now(remote);
+
+        let refs = self.references_of(remote)?;
+        let signed = if force {
+            refs.force_save(*remote, committer, self, signer)?
+        } else {
+            refs.save(*remote, committer, self, signer)?
+        };
 
         Ok(signed.sigrefs)
     }

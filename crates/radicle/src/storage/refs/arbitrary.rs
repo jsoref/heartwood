@@ -27,6 +27,7 @@ where
         signature,
         id: *signer.node_id(),
         level: level.unwrap_or_else(|| FeatureLevel::arbitrary(g)),
+        parent: Arbitrary::arbitrary(g),
     };
     SignedRefsAt {
         sigrefs,

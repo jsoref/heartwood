@@ -46,6 +46,14 @@ fn write(refs: Refs, repo: &MockRepository) -> Result<Update, error::Write> {
     )
 }
 
+fn force_write(refs: Refs, repo: &MockRepository) -> Result<Update, error::Write> {
+    SignedRefsWriter::new(refs, mock::rid(), mock::node_id(), repo, &mock::AlwaysSign).force_write(
+        Committer::new(mock::author()),
+        "msg".into(),
+        "reflog".into(),
+    )
+}
+
 #[test]
 fn head_error() {
     let repo = MockRepository::new().with_rad_sigrefs_error(&mock::node_id());
@@ -72,6 +80,28 @@ fn unchanged() {
         }
         Update::Changed { .. } => unreachable!(),
     }
+}
+
+#[test]
+fn unchanged_force_writes_new_commit() {
+    let head = mock::oid(1);
+    let commit_oid = mock::oid(42);
+    let refs = some_refs(mock::oid(99));
+    let repo = MockRepository::new()
+        .with_rad_sigrefs(&mock::node_id(), head)
+        .with_commit(head, mock::commit_data([]))
+        .with_refs(head, refs.clone())
+        .with_signature(head, 1)
+        .with_write_tree_ok(mock::oid(99))
+        .with_write_commit_ok(commit_oid)
+        .with_write_reference_ok();
+    let update = force_write(refs.clone(), &repo).unwrap();
+    let Update::Changed { entry, .. } = update else {
+        panic!("expected Update::Changed, got {update:?}");
+    };
+    assert_eq!(entry.parent, Some(head));
+    assert_eq!(entry.oid, commit_oid);
+    assert_eq!(entry.into_refs(), refs);
 }
 
 #[test]

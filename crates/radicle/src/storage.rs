@@ -672,6 +672,13 @@ pub trait SignRepository {
     fn sign_refs<G>(&self, signer: &Device<G>) -> Result<SignedRefs, RepositoryError>
     where
         G: crypto::signature::Signer<crypto::Signature>;
+
+    /// Sign the repository's refs under the `refs/rad/sigrefs` branch, even if unchanged.
+    ///
+    /// Most users will prefer [`Self::sign_refs`].
+    fn force_sign_refs<G>(&self, signer: &Device<G>) -> Result<SignedRefs, RepositoryError>
+    where
+        G: crypto::signature::Signer<crypto::Signature>;
 }
 
 impl<T, S> ReadStorage for T

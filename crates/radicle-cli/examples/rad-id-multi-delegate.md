@@ -1,20 +1,14 @@
 ``` ~alice
 $ rad id update --repo rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji --title "Add Bob" --description "" --threshold 2 --delegate did:key:z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk --no-confirm -q
 069e7d58faa9a7473d27f5510d676af33282796f
+$ rad inspect --sigrefs rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji
+z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi [..] parent
+z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk [..] parent
+z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z 82212c030fa97709a92ead14be76759732199c61 parent
 ```
 
-A note for test authors:
-> The following `rad watch` command will time out if the target given via `-t` changes.
-> This happens for example when the generation of sigrefs changes.
-> To recover, temporarily change from `rad watch` to something like
->
->     $ sleep 5
->     $ rad inspect --sigrefs rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji
->
-> And pick out the result for `z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z`.
-
 ``` ~bob
-$ rad watch --repo rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji --node z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z -r 'refs/rad/sigrefs' -t c9a828fc2fb01f893d6e6e9e17b9092dea2b3aba -i 500 --timeout 5000ms
+$ rad watch --repo rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji --node z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z -r 'refs/rad/sigrefs' -t 82212c030fa97709a92ead14be76759732199c61 -i 500 --timeout 5000ms
 $ rad sync --fetch rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji
 Fetching rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji from the network, found 1 potential seed(s).
 ✓ Target met: 1 seed(s)
@@ -28,7 +22,7 @@ $ rad id --repo rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 $ rad inspect rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji --sigrefs
 z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi [..] parent
-z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk [..] parent
+z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk [..] root
 z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z [..] parent
 $ rad inspect rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji --delegates
 did:key:z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi (alice)

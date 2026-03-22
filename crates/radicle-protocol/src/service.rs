@@ -528,20 +528,29 @@ where
             return Ok(());
         };
 
-        if refs.feature_level() >= FeatureLevel::LATEST {
+        if refs.feature_level() >= FeatureLevel::LATEST && refs.parent().is_some() {
             // Refs are at target level or above, nothing to upgrade.
             return Ok(());
         }
 
-        log::info!(
-            "Migrating `rad/sigrefs` from level {} which is lower than target level {}.",
-            refs.feature_level(),
-            FeatureLevel::LATEST
-        );
+        let rid = info.rid;
+
+        if refs.parent().is_none() {
+            log::info!(
+                "Migrating `rad/sigrefs` of {rid} to force feature level {}, as the history currently contains only a root commit.",
+                FeatureLevel::LATEST
+            );
+        } else {
+            log::info!(
+                "Migrating `rad/sigrefs` of {rid} from level {} which is lower than target level {}.",
+                refs.feature_level(),
+                FeatureLevel::LATEST
+            );
+        }
 
         let repo = self.storage.repository_mut(info.rid)?;
-        // NOTE: We assume to reach `FeatureLevel::MAX` by signing refs.
-        repo.sign_refs(&self.signer)?;
+        // NOTE: We assume to reach `FeatureLevel::LATEST` by signing refs.
+        repo.force_sign_refs(&self.signer)?;
         Ok(())
     }
 }

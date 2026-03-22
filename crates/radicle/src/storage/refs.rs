@@ -84,11 +84,51 @@ impl Refs {
         S: signature::Signer<crypto::Signature>,
         S: signature::Verifier<crypto::Signature>,
     {
+        self.save_with(namespace, committer, repo, signer, false)
+    }
+
+    /// Save the signed refs to disk, even if the refs are unchanged.
+    pub fn force_save<R, S>(
+        self,
+        namespace: NodeId,
+        committer: sigrefs::git::Committer,
+        repo: &R,
+        signer: &S,
+    ) -> Result<SignedRefsAt, Error>
+    where
+        R: sigrefs::git::object::Reader + sigrefs::git::object::Writer,
+        R: sigrefs::git::reference::Reader + sigrefs::git::reference::Writer,
+        R: HasRepoId,
+        S: signature::Signer<crypto::Signature>,
+        S: signature::Verifier<crypto::Signature>,
+    {
+        self.save_with(namespace, committer, repo, signer, true)
+    }
+
+    fn save_with<R, S>(
+        self,
+        namespace: NodeId,
+        committer: sigrefs::git::Committer,
+        repo: &R,
+        signer: &S,
+        force: bool,
+    ) -> Result<SignedRefsAt, Error>
+    where
+        R: sigrefs::git::object::Reader + sigrefs::git::object::Writer,
+        R: sigrefs::git::reference::Reader + sigrefs::git::reference::Writer,
+        R: HasRepoId,
+        S: signature::Signer<crypto::Signature>,
+        S: signature::Verifier<crypto::Signature>,
+    {
         let msg = "Update signed refs\n";
         let reflog = format!("Save {} signed references", self.len());
-        let update =
-            sigrefs::write::SignedRefsWriter::new(self, repo.rid(), namespace, repo, signer)
-                .write(committer, msg.to_string(), reflog)?;
+        let writer =
+            sigrefs::write::SignedRefsWriter::new(self, repo.rid(), namespace, repo, signer);
+        let update = if force {
+            writer.force_write(committer, msg.to_string(), reflog)?
+        } else {
+            writer.write(committer, msg.to_string(), reflog)?
+        };
         match update {
             sigrefs::write::Update::Changed { entry, level } => {
                 Ok(entry.into_sigrefs_at(namespace, level))
@@ -287,6 +327,10 @@ pub struct SignedRefs {
 
     #[serde(skip)]
     level: FeatureLevel,
+
+    /// The [`Oid`] of the parent commit of the commit in which.
+    #[serde(skip)]
+    parent: Option<Oid>,
 }
 
 impl SignedRefs {
@@ -303,6 +347,12 @@ impl SignedRefs {
     /// Returns the [`FeatureLevel`] computed for the signed references.
     pub fn feature_level(&self) -> FeatureLevel {
         self.level
+    }
+
+    /// The [`Oid`] of the parent commit, or [`None`] if these signed references
+    /// were found at a root commit.
+    pub fn parent(&self) -> Option<&Oid> {
+        self.parent.as_ref()
     }
 
     pub fn load<R>(remote: RemoteId, repo: &R) -> Result<Self, sigrefs::read::error::Read>

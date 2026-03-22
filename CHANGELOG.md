@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   will appear as a downgrade attacker.
 - The `rad inspect --sigrefs` command will now output the feature level of the
   signed references entry for each node.
+- The signed references for the local node are automatically migrated when
+  `radicle-node` first starts up. The migration occurs for each repository in
+  the node's inventory, where the node has a reference
+  `refs/namespaces/<NID>/refs/rad/sigrefs`. The migration will only take place
+  if the `rad/sigrefs` found were below the latest feature level, i.e. `parent`.
 
 ## 1.7.1
 

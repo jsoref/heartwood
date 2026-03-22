@@ -382,6 +382,13 @@ impl SignRepository for MockRepository {
     ) -> Result<crate::storage::refs::SignedRefs, RepositoryError> {
         todo!()
     }
+
+    fn force_sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
+        &self,
+        _signer: &Device<G>,
+    ) -> Result<crate::storage::refs::SignedRefs, RepositoryError> {
+        todo!()
+    }
 }
 
 impl radicle_cob::Store for MockRepository {}

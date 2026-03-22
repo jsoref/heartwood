@@ -119,11 +119,33 @@ where
     /// ```text,no_run
     /// refs/namespaces/<namespace>/refs/rad/sigrefs
     /// ```
-    pub fn write(
+    pub(in super::super::super::refs) fn write(
         self,
         committer: Committer,
         message: String,
         reflog: String,
+    ) -> Result<Update, error::Write> {
+        self.write_with(committer, message, reflog, false)
+    }
+
+    /// Write a commit even if the current sigrefs head contains identical refs.
+    ///
+    /// Most users will prefer [`Self::write`].
+    pub(in super::super::super::refs) fn force_write(
+        self,
+        committer: Committer,
+        message: String,
+        reflog: String,
+    ) -> Result<Update, error::Write> {
+        self.write_with(committer, message, reflog, true)
+    }
+
+    fn write_with(
+        self,
+        committer: Committer,
+        message: String,
+        reflog: String,
+        force: bool,
     ) -> Result<Update, error::Write> {
         let author = committer.into_inner();
         let Self {
@@ -138,7 +160,7 @@ where
         let head = HeadReader::new(&reference, repository, rid, self.signer).read();
 
         let commit_writer = match head {
-            Ok(Some(head)) if head.is_unchanged(&refs) => {
+            Ok(Some(head)) if !force && head.is_unchanged(&refs) => {
                 return Ok(Update::unchanged(head.verified))
             }
             Ok(Some(head)) => CommitWriter::with_parent(
@@ -190,6 +212,7 @@ impl Commit {
                 signature: self.signature,
                 refs: self.refs,
                 level,
+                parent: self.parent,
             },
         }
     }

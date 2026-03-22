@@ -57,6 +57,7 @@ impl VerifiedCommit {
                 signature: self.commit.signature,
                 id,
                 level: self.level,
+                parent: self.commit.parent,
             },
             at: self.commit.oid,
         }
