@@ -25,7 +25,13 @@ fn roundtrip(BoundedVec(all_refs): BoundedVec<Refs>) -> TestResult {
     for refs in all_refs {
         let refs = fixture.with_identity_root(refs);
 
-        let writer = SignedRefsWriter::new(refs.clone(), node_id, fixture.repo(), &signer);
+        let writer = SignedRefsWriter::new(
+            refs.clone(),
+            fixture.rid(),
+            node_id,
+            fixture.repo(),
+            &signer,
+        );
         let update = match writer.write(
             fixture.committer(),
             "roundtrip write".into(),
@@ -36,8 +42,8 @@ fn roundtrip(BoundedVec(all_refs): BoundedVec<Refs>) -> TestResult {
         };
 
         let written_refs = match update {
-            Update::Changed { ref entry } => entry.clone().into_refs(),
-            Update::Unchanged { ref refs, .. } => refs.clone(),
+            Update::Changed { ref entry, .. } => entry.clone().into_refs(),
+            Update::Unchanged { ref verified, .. } => verified.commit().refs().clone(),
         };
 
         assert_eq!(refs, written_refs);
@@ -68,7 +74,14 @@ fn idempotent(refs: Refs) -> TestResult {
     let signer = MockSigner::default();
     let node_id = *signer.public_key();
 
-    if let Err(e) = SignedRefsWriter::new(refs.clone(), node_id, fixture.repo(), &signer).write(
+    if let Err(e) = SignedRefsWriter::new(
+        refs.clone(),
+        fixture.rid(),
+        node_id,
+        fixture.repo(),
+        &signer,
+    )
+    .write(
         fixture.committer(),
         "first write".into(),
         "first reflog".into(),
@@ -76,7 +89,14 @@ fn idempotent(refs: Refs) -> TestResult {
         return TestResult::error(format!("first write error: {e}"));
     }
 
-    match SignedRefsWriter::new(refs.clone(), node_id, fixture.repo(), &signer).write(
+    match SignedRefsWriter::new(
+        refs.clone(),
+        fixture.rid(),
+        node_id,
+        fixture.repo(),
+        &signer,
+    )
+    .write(
         fixture.committer(),
         "second write".into(),
         "second reflog".into(),

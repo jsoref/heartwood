@@ -2,13 +2,20 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr as _;
 
-use radicle_core::NodeId;
+use radicle_core::{NodeId, RepoId};
 use radicle_git_metadata::author::{Author, Time};
+use radicle_git_metadata::commit::headers::Headers;
+use radicle_git_metadata::commit::trailers::OwnedTrailer;
+use radicle_git_metadata::commit::CommitData;
 use radicle_oid::Oid;
 
 use crate::git;
+use crate::identity::doc;
 use crate::storage::refs::sigrefs::git::{object, reference};
 use crate::storage::refs::{Refs, REFS_BLOB_PATH, SIGNATURE_BLOB_PATH, SIGREFS_BRANCH};
+use crate::storage::HasRepoId;
+
+const MOCKED_IDENTITY: u8 = 99u8;
 
 enum WriteTreeBehavior {
     /// [`object::Writer::write_tree`] returns `Ok(oid)`.
@@ -46,6 +53,7 @@ enum RefBehavior {
 }
 
 pub struct MockRepository {
+    commits: HashMap<Oid, CommitBehavior>,
     blobs: HashMap<(Oid, PathBuf), BlobBehavior>,
     references: HashMap<String, RefBehavior>,
     write_tree: Option<WriteTreeBehavior>,
@@ -53,15 +61,28 @@ pub struct MockRepository {
     write_reference: Option<WriteReferenceBehavior>,
 }
 
+enum CommitBehavior {
+    /// [`object::Reader::read_commit`] returns `Ok(Some(bytes))`.
+    Present(Box<CommitData<Oid, Oid>>),
+}
+
 impl MockRepository {
     pub fn new() -> MockRepository {
         MockRepository {
+            commits: HashMap::new(),
             blobs: HashMap::new(),
             references: HashMap::new(),
             write_tree: None,
             write_commit: None,
             write_reference: None,
         }
+        .with_identity(oid(MOCKED_IDENTITY))
+    }
+
+    pub fn with_commit(mut self, oid: Oid, data: CommitData<Oid, Oid>) -> Self {
+        self.commits
+            .insert(oid, CommitBehavior::Present(Box::new(data)));
+        self
     }
 
     pub fn with_rad_sigrefs(mut self, namespace: &NodeId, commit: Oid) -> MockRepository {
@@ -125,6 +146,10 @@ impl MockRepository {
         self.with_blob(commit, Path::new(SIGNATURE_BLOB_PATH), bytes)
     }
 
+    pub fn with_identity(self, commit: Oid) -> Self {
+        self.with_blob(commit, &identity_path(), vec![])
+    }
+
     fn with_blob(mut self, commit: Oid, path: &Path, bytes: Vec<u8>) -> Self {
         self.blobs
             .insert((commit, path.to_path_buf()), BlobBehavior::Present(bytes));
@@ -169,10 +194,18 @@ impl MockRepository {
     }
 }
 
+impl HasRepoId for MockRepository {
+    fn rid(&self) -> radicle_core::RepoId {
+        rid()
+    }
+}
+
 impl object::Reader for MockRepository {
-    fn read_commit(&self, _oid: &Oid) -> Result<Option<Vec<u8>>, object::error::ReadCommit> {
-        // HeadReader never calls read_commit; this is a no-op placeholder.
-        Ok(None)
+    fn read_commit(&self, oid: &Oid) -> Result<Option<Vec<u8>>, object::error::ReadCommit> {
+        match self.commits.get(oid) {
+            Some(CommitBehavior::Present(data)) => Ok(Some(data.to_string().as_bytes().to_vec())),
+            None => Ok(None),
+        }
     }
 
     fn read_blob(
@@ -269,6 +302,16 @@ impl crypto::signature::Signer<crypto::Signature> for AlwaysSign {
     }
 }
 
+impl crypto::signature::Verifier<crypto::Signature> for AlwaysSign {
+    fn verify(
+        &self,
+        _msg: &[u8],
+        _sig: &crypto::Signature,
+    ) -> Result<(), crypto::signature::Error> {
+        Ok(())
+    }
+}
+
 /// Always fails to sign.
 pub struct NeverSign;
 
@@ -283,6 +326,11 @@ impl crypto::signature::Signer<crypto::Signature> for NeverSign {
 /// `oid(1) != oid(2)` is guaranteed; use distinct values for distinct objects.
 pub fn oid(n: u8) -> Oid {
     Oid::from_sha1([n; 20])
+}
+
+/// A fixed [`RepoId`] for tests.
+pub fn rid() -> RepoId {
+    RepoId::from(oid(MOCKED_IDENTITY))
 }
 
 /// A fixed [`NodeId`] for tests.
@@ -303,9 +351,29 @@ pub fn author() -> Author {
     }
 }
 
+pub fn commit_data(parents: impl IntoIterator<Item = Oid>) -> CommitData<Oid, Oid> {
+    let tree = oid(0);
+    let author = author();
+    let message = "test\n".to_owned();
+
+    CommitData::new::<_, _, OwnedTrailer>(
+        tree,
+        parents,
+        author.clone(),
+        author,
+        Headers::new(),
+        message,
+        vec![],
+    )
+}
+
 fn sigrefs_ref_name(namespace: &NodeId) -> String {
     SIGREFS_BRANCH
         .with_namespace(git::fmt::Component::from(namespace))
         .as_str()
         .to_owned()
+}
+
+fn identity_path() -> PathBuf {
+    Path::new("embeds").join(*doc::PATH)
 }

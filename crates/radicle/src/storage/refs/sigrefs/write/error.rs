@@ -1,9 +1,5 @@
-use std::path::PathBuf;
-
-use radicle_oid::Oid;
 use thiserror::Error;
 
-use crate::storage::refs::canonical;
 use crate::storage::refs::sigrefs::git::{object, reference};
 
 // TODO: use commit NID (and RID?) for traceability
@@ -46,13 +42,7 @@ pub enum Head {
     #[error(transparent)]
     Reference(reference::error::FindReference),
     #[error(transparent)]
-    Blob(object::error::ReadBlob),
+    Commit(super::read::error::Commit),
     #[error(transparent)]
-    Refs(canonical::Error),
-    #[error("failed to parse refs signature in commit {commit}")]
-    Signature { commit: Oid, source: crypto::Error },
-    #[error(
-        "could not find the references blob, within the commit '{commit}', under the path {path:?}"
-    )]
-    MissingPath { commit: Oid, path: PathBuf },
+    Verify(super::read::error::Verify),
 }

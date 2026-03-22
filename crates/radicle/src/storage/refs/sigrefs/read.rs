@@ -45,7 +45,8 @@ impl VerifiedCommit {
     }
 
     // The [`FeatureLevel`] of the refs in this commit.
-    pub fn level(&self) -> FeatureLevel {
+    #[cfg(test)]
+    pub(super) fn level(&self) -> FeatureLevel {
         self.level
     }
 
@@ -273,13 +274,11 @@ where
             let commit = verified.commit();
 
             let commits = seen.get(&commit.signature).expect(SIGNATURES_COLLECTED);
-
             if commits.len_nonzero() == ONE {
                 return Ok(verified);
             }
 
             let id = &commit.oid;
-
             if id == commits.last() {
                 // If this commit is the last element of `commits`,
                 // then this means it is the earliest of all that share
@@ -325,12 +324,33 @@ pub(super) struct Commit {
 }
 
 impl Commit {
+    /// The [`Oid`] of this commit.
+    pub(super) fn oid(&self) -> &Oid {
+        &self.oid
+    }
+
+    /// The parent [`Oid`] of the commit, unless it is the root commit.
     #[cfg(test)]
+    pub(super) fn parent(&self) -> Option<&Oid> {
+        self.parent.as_ref()
+    }
+
+    /// The [`Refs`] found in the blob at `/refs` in in the tree of this commit.
     pub(super) fn refs(&self) -> &Refs {
         &self.refs
     }
 
-    fn verify<V>(mut self, expected: RepoId, verifier: &V) -> Result<VerifiedCommit, error::Verify>
+    /// The [`crypto::Signature`] found in blob at `/signature` in the tree of the commit.
+    #[cfg(test)]
+    pub(super) fn signature(&self) -> &crypto::Signature {
+        &self.signature
+    }
+
+    pub(super) fn verify<V>(
+        mut self,
+        expected: RepoId,
+        verifier: &V,
+    ) -> Result<VerifiedCommit, error::Verify>
     where
         V: signature::Verifier<crypto::Signature>,
     {
@@ -424,7 +444,7 @@ impl Commit {
     }
 }
 
-struct CommitReader<'a, R> {
+pub(super) struct CommitReader<'a, R> {
     commit: Oid,
     repository: &'a R,
 }
@@ -433,11 +453,11 @@ impl<'a, R> CommitReader<'a, R>
 where
     R: object::Reader,
 {
-    fn new(commit: Oid, repository: &'a R) -> Self {
+    pub(super) fn new(commit: Oid, repository: &'a R) -> Self {
         Self { commit, repository }
     }
 
-    fn read(self) -> Result<Commit, error::Commit> {
+    pub(super) fn read(self) -> Result<Commit, error::Commit> {
         let commit = self.read_commit_data()?;
         let Tree { refs, signature } = TreeReader::new(self.commit, self.repository)
             .read()
@@ -552,7 +572,7 @@ where
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct IdentityRoot {
+pub(super) struct IdentityRoot {
     commit: Oid,
     rid: RepoId,
 }

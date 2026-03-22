@@ -2,7 +2,7 @@ use radicle_oid::Oid;
 
 use crate::storage::refs::sigrefs::git::Committer;
 use crate::storage::refs::sigrefs::write::{error, SignedRefsWriter, Update};
-use crate::storage::refs::{Refs, IDENTITY_ROOT, SIGREFS_BRANCH};
+use crate::storage::refs::{FeatureLevel, Refs, IDENTITY_ROOT, SIGREFS_BRANCH};
 
 use super::mock;
 use super::mock::MockRepository;
@@ -18,7 +18,13 @@ fn some_refs(identity_root: Oid) -> Refs {
 }
 
 fn other_refs() -> Refs {
-    Refs::from([(mock::refs_heads_main(), mock::oid(20))].into_iter())
+    Refs::from(
+        [
+            (mock::refs_heads_main(), mock::oid(20)),
+            (IDENTITY_ROOT.to_ref_string(), mock::oid(99)),
+        ]
+        .into_iter(),
+    )
 }
 
 fn refs_with_rad_sigrefs() -> Refs {
@@ -33,7 +39,7 @@ fn refs_with_rad_sigrefs() -> Refs {
 }
 
 fn write(refs: Refs, repo: &MockRepository) -> Result<Update, error::Write> {
-    SignedRefsWriter::new(refs, mock::node_id(), repo, &mock::AlwaysSign).write(
+    SignedRefsWriter::new(refs, mock::rid(), mock::node_id(), repo, &mock::AlwaysSign).write(
         Committer::new(mock::author()),
         "msg".into(),
         "reflog".into(),
@@ -55,16 +61,17 @@ fn unchanged() {
     let refs = some_refs(mock::oid(99));
     let repo = MockRepository::new()
         .with_rad_sigrefs(&mock::node_id(), head)
+        .with_commit(head, mock::commit_data([]))
         .with_refs(head, refs.clone())
         .with_signature(head, 1);
-    assert_eq!(
-        write(refs.clone(), &repo).unwrap(),
-        Update::Unchanged {
-            commit: head,
-            refs,
-            signature: crypto::Signature::from([1; 64]),
+
+    match write(refs.clone(), &repo).unwrap() {
+        Update::Unchanged { verified } => {
+            assert_eq!(verified.commit().oid(), &head);
+            assert_eq!(verified.level(), FeatureLevel::Root);
         }
-    );
+        Update::Changed { .. } => unreachable!(),
+    }
 }
 
 #[test]
@@ -102,7 +109,7 @@ fn write_root_ok() {
         .with_write_reference_ok();
     let refs = some_refs(mock::oid(99));
     let update = write(refs.clone(), &repo).unwrap();
-    let Update::Changed { entry } = update else {
+    let Update::Changed { entry, .. } = update else {
         panic!("expected Update::Changed, got {update:?}");
     };
     assert_eq!(entry.parent, None);
@@ -116,6 +123,7 @@ fn write_with_parent_ok() {
     let commit_oid = mock::oid(42);
     let repo = MockRepository::new()
         .with_rad_sigrefs(&mock::node_id(), head)
+        .with_commit(head, mock::commit_data([]))
         .with_refs(head, other_refs())
         .with_signature(head, 1)
         .with_write_tree_ok(mock::oid(99))
@@ -123,7 +131,7 @@ fn write_with_parent_ok() {
         .with_write_reference_ok();
     let refs = some_refs(mock::oid(99));
     let update = write(refs.clone(), &repo).unwrap();
-    let Update::Changed { entry } = update else {
+    let Update::Changed { entry, .. } = update else {
         panic!("expected Update::Changed, got {update:?}");
     };
     assert_eq!(entry.parent, Some(head));
@@ -142,7 +150,7 @@ fn write_empty_refs() {
         .with_write_commit_ok(commit_oid)
         .with_write_reference_ok();
     let update = write(refs.clone(), &repo).unwrap();
-    let Update::Changed { entry } = update else {
+    let Update::Changed { entry, .. } = update else {
         panic!("expected Update::Changed, got {update:?}");
     };
     assert_eq!(entry.parent, None);
@@ -160,7 +168,7 @@ fn never_write_rad_sigrefs() {
         .with_write_reference_ok();
     let mut refs = refs_with_rad_sigrefs();
     let update = write(refs.clone(), &repo).unwrap();
-    let Update::Changed { entry } = update else {
+    let Update::Changed { entry, .. } = update else {
         panic!("expected Update::Changed, got {update:?}");
     };
     assert_eq!(entry.parent, None);

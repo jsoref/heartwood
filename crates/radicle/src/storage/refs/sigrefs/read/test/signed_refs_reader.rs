@@ -1,7 +1,7 @@
 use radicle_oid::Oid;
 
 use crate::storage::refs::sigrefs::read::error::{Read, Verify};
-use crate::storage::refs::sigrefs::read::{error, Commit, FeatureLevels, SignedRefsReader, Tip};
+use crate::storage::refs::sigrefs::read::{error, FeatureLevels, SignedRefsReader, Tip};
 use crate::storage::refs::sigrefs::VerifiedCommit;
 use crate::storage::refs::{FeatureLevel, IDENTITY_ROOT, SIGREFS_PARENT};
 use crate::{assert_matches, git};
@@ -386,20 +386,8 @@ fn read_ok_no_parent() {
 
     let vc = read(c1, repo).unwrap();
     assert_eq!(vc.commit.oid, c1);
-
-    assert_matches!(
-        vc,
-        VerifiedCommit {
-            commit: Commit {
-                oid: _,
-                parent: Some(_),
-                refs: _,
-                signature: _,
-                identity_root: Some(_)
-            },
-            level: FeatureLevel::Root,
-        }
-    );
+    assert_eq!(vc.level(), FeatureLevel::Root);
+    assert_eq!(vc.commit.parent().copied(), Some(c2));
 }
 
 #[test]
@@ -418,14 +406,7 @@ fn read_ok_root() {
     let vc = read(c1, repo).unwrap();
     assert_eq!(vc.commit.oid, c1);
     assert_eq!(vc.commit.parent, Some(c2));
-
-    assert_matches!(vc, VerifiedCommit { commit: Commit {
-        oid,
-        parent: Some(parent),
-        refs: _,
-        signature: _,
-        identity_root: Some(_)
-    }, level: FeatureLevel::Root } if parent == c2 && oid == c1);
+    assert_eq!(vc.level, FeatureLevel::Root);
 }
 
 #[test]
@@ -443,14 +424,8 @@ fn read_ok_parent() {
 
     let vc = read(c1, repo).unwrap();
     assert_eq!(vc.commit.oid, c1);
-
-    assert_matches!(vc, VerifiedCommit { commit: Commit {
-        oid,
-        parent: Some(parent),
-        refs: _,
-        signature: _,
-        identity_root: Some(_)
-    }, level: FeatureLevel::Parent } if parent == c2 && oid == c1);
+    assert_eq!(vc.level, FeatureLevel::Parent);
+    assert_eq!(vc.commit.parent, Some(c2));
 }
 
 #[test]

@@ -78,40 +78,23 @@ impl Refs {
         signer: &S,
     ) -> Result<SignedRefsAt, Error>
     where
-        S: signature::Signer<crypto::Signature>,
         R: sigrefs::git::object::Reader + sigrefs::git::object::Writer,
         R: sigrefs::git::reference::Reader + sigrefs::git::reference::Writer,
+        R: HasRepoId,
+        S: signature::Signer<crypto::Signature>,
+        S: signature::Verifier<crypto::Signature>,
     {
-        // FIXME(lorenz): We promise this feature level to the caller, but
-        // have not actually verified it.
-        const LEVEL_PROMISED: FeatureLevel = FeatureLevel::Parent;
-
         let msg = "Update signed refs\n";
         let reflog = format!("Save {} signed references", self.len());
-        let update = sigrefs::write::SignedRefsWriter::new(self, namespace, repo, signer).write(
-            committer,
-            msg.to_string(),
-            reflog,
-        )?;
+        let update =
+            sigrefs::write::SignedRefsWriter::new(self, repo.rid(), namespace, repo, signer)
+                .write(committer, msg.to_string(), reflog)?;
         match update {
-            sigrefs::write::Update::Changed { entry } => {
-                Ok(entry.into_sigrefs_at(namespace, LEVEL_PROMISED))
+            sigrefs::write::Update::Changed { entry, level } => {
+                Ok(entry.into_sigrefs_at(namespace, level))
             }
-            sigrefs::write::Update::Unchanged {
-                commit,
-                refs,
-                signature,
-            } => {
-                let sigrefs = SignedRefs {
-                    refs,
-                    signature,
-                    id: namespace,
-                    level: LEVEL_PROMISED,
-                };
-                Ok(SignedRefsAt {
-                    sigrefs,
-                    at: commit,
-                })
+            sigrefs::write::Update::Unchanged { verified } => {
+                Ok(verified.into_sigrefs_at(namespace))
             }
         }
     }

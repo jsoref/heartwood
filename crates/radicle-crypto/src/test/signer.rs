@@ -22,6 +22,12 @@ impl signature::Signer<Signature> for MockSigner {
     }
 }
 
+impl signature::Verifier<Signature> for MockSigner {
+    fn verify(&self, msg: &[u8], signature: &Signature) -> Result<(), signature::Error> {
+        self.pk.verify(msg, signature)
+    }
+}
+
 impl AsRef<PublicKey> for MockSigner {
     fn as_ref(&self) -> &PublicKey {
         &self.pk
