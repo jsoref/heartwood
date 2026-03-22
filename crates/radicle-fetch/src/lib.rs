@@ -18,7 +18,7 @@ pub use gix_protocol::{transport::bstr::ByteSlice, RemoteProgress};
 pub use handle::Handle;
 pub use policy::{Allowed, BlockList, Scope};
 use radicle::storage::git::Repository;
-pub use state::{FetchLimit, FetchResult};
+pub use state::{Config, FetchLimit, FetchResult};
 pub use transport::Transport;
 
 use radicle::crypto::PublicKey;
@@ -65,7 +65,7 @@ pub enum HandshakeError {
 /// [`clone`] should be used.
 pub fn pull<R, S>(
     handle: &mut Handle<R, S>,
-    limit: FetchLimit,
+    config: Config,
     remote: PublicKey,
     refs_at: Option<Vec<RefsAt>>,
 ) -> Result<FetchResult, Error>
@@ -84,7 +84,7 @@ where
     // N.b. ensure that we ignore the local peer's key.
     handle.blocked.extend([local]);
     let result = state
-        .run(handle, &handshake, limit, remote, refs_at)
+        .run(handle, &handshake, config, remote, refs_at)
         .map_err(Error::Protocol);
 
     log::debug!(
@@ -101,7 +101,7 @@ where
 /// they want to populate with the `remote`'s view of the project.
 pub fn clone<R, S>(
     handle: &mut Handle<R, S>,
-    limit: FetchLimit,
+    config: Config,
     remote: PublicKey,
 ) -> Result<FetchResult, Error>
 where
@@ -115,7 +115,7 @@ where
     let handshake = perform_handshake(handle)?;
     let state = FetchState::default();
     let result = state
-        .run(handle, &handshake, limit, remote, None)
+        .run(handle, &handshake, config, remote, None)
         .map_err(Error::Protocol);
     let elapsed = start.elapsed().as_millis();
     let rid = handle.repository().id();

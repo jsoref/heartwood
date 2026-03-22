@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the node's inventory, where the node has a reference
   `refs/namespaces/<NID>/refs/rad/sigrefs`. The migration will only take place
   if the `rad/sigrefs` found were below the latest feature level, i.e. `parent`.
+- The fetch process, between nodes, can reject `refs/namespaces` that have a
+  signed references feature level that is below an expected minimum. This
+  minimum can be configured in the Radicle configuration file under
+  `node.fetch.signedReferences.featureLevel.minimum`.
 
 ## 1.7.1
 

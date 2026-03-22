@@ -315,6 +315,10 @@ $ rad config schema
           "description": "Database configuration.",
           "$ref": "#/$defs/Config"
         },
+        "fetch": {
+          "description": "Configuration for fetching from other nodes.",
+          "$ref": "#/$defs/Fetch"
+        },
         "secret": {
           "description": "Path to a file containing an Ed25519 secret key, in OpenSSH format, i.e./nwith the `-----BEGIN OPENSSH PRIVATE KEY-----` header. The corresponding/npublic key will be used as the Node ID./n/nA decryption password cannot be configured, but passed at runtime via/nthe environment variable `RAD_PASSPHRASE`.",
           "type": [
@@ -719,6 +723,52 @@ $ rad config schema
         "FULL",
         "NORMAL",
         "OFF"
+      ]
+    },
+    "Fetch": {
+      "description": "Configuration for fetching repositories from/nother nodes.",
+      "type": "object",
+      "properties": {
+        "signedReferences": {
+          "$ref": "#/$defs/SignedReferencesConfig"
+        }
+      }
+    },
+    "SignedReferencesConfig": {
+      "type": "object",
+      "properties": {
+        "featureLevel": {
+          "$ref": "#/$defs/FeatureLevelConfig"
+        }
+      }
+    },
+    "FeatureLevelConfig": {
+      "type": "object",
+      "properties": {
+        "minimum": {
+          "description": "The minimum feature level required to accept incoming/nreferences from other users. This value is compared/nagainst the feature level detected on refs as they are/nfetched./n/nNote that by increasing this value, security can be/ntraded for compatibility. The higher the value,/nthe less backward compatible, but the more secure, fetches will be.",
+          "$ref": "#/$defs/FeatureLevel"
+        }
+      }
+    },
+    "FeatureLevel": {
+      "description": "The Signed References feature has evolved over time./nThis enum captures the corresponding /"feature level/"./n/nFeature levels are monotonic, in the sense that a greater feature level/nencompasses all the features of smaller ones.",
+      "oneOf": [
+        {
+          "description": "The lowest feature level, with least security. It is vulnerable to/ngraft attacks and replay attacks.",
+          "type": "string",
+          "const": "none"
+        },
+        {
+          "description": "An intermediate feature level, which protects against graft attacks but is vulnerable to replay attacks. Introduced in Radicle 1.1.0, in commit `989edacd564fa658358f5ccfd08c243c5ebd8cda`.",
+          "type": "string",
+          "const": "root"
+        },
+        {
+          "description": "The highest feature level known, which protects against graft attacks and replay attacks. Introduced in Radicle 1.7.0, in commit `d3bc868e84c334f113806df1737f52cc57c5453d`.",
+          "type": "string",
+          "const": "parent"
+        }
       ]
     }
   }

@@ -11,6 +11,7 @@ use serde_json as json;
 use crate::node;
 use crate::node::policy::SeedingPolicy;
 use crate::node::{Address, Alias, NodeId};
+use crate::storage::refs::FeatureLevel;
 
 use super::policy;
 
@@ -460,6 +461,56 @@ impl From<DefaultSeedingPolicy> for SeedingPolicy {
     }
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct FeatureLevelConfig {
+    /// The minimum feature level required to accept incoming
+    /// references from other users. This value is compared
+    /// against the feature level detected on refs as they are
+    /// fetched.
+    ///
+    /// Note that by increasing this value, security can be
+    /// traded for compatibility. The higher the value,
+    /// the less backward compatible, but the more secure, fetches will be.
+    #[serde(
+        default,
+        rename = "minimum",
+        skip_serializing_if = "crate::serde_ext::is_default"
+    )]
+    min: FeatureLevel,
+}
+
+impl FeatureLevelConfig {
+    pub fn min(&self) -> FeatureLevel {
+        self.min
+    }
+}
+
+/// Configuration for fetching repositories from
+/// other nodes.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct Fetch {
+    #[serde(default, skip_serializing_if = "crate::serde_ext::is_default")]
+    signed_references: SignedReferencesConfig,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub struct SignedReferencesConfig {
+    #[serde(default, skip_serializing_if = "crate::serde_ext::is_default")]
+    feature_level: FeatureLevelConfig,
+}
+
+impl Fetch {
+    pub fn feature_level_min(&self) -> FeatureLevel {
+        self.signed_references.feature_level.min()
+    }
+}
+
 /// Service configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -512,6 +563,9 @@ pub struct Config {
     /// Database configuration.
     #[serde(default, skip_serializing_if = "crate::serde_ext::is_default")]
     pub database: node::db::config::Config,
+    /// Configuration for fetching from other nodes.
+    #[serde(default, skip_serializing_if = "crate::serde_ext::is_default")]
+    pub fetch: Fetch,
     /// Extra fields that aren't supported.
     #[serde(flatten, skip_serializing)]
     pub extra: json::Map<String, json::Value>,
@@ -550,6 +604,7 @@ impl Config {
             seeding_policy: DefaultSeedingPolicy::default(),
             database: node::db::config::Config::default(),
             extra: json::Map::default(),
+            fetch: Fetch::default(),
             secret: None,
         }
     }
@@ -860,5 +915,26 @@ mod test {
         expected.external_addresses = vec![address.parse().unwrap()];
         assert_eq!(got.alias, expected.alias);
         assert_eq!(got.external_addresses, expected.external_addresses);
+    }
+
+    #[test]
+    fn fetch_level_min() {
+        let config = json!({
+            "alias": "radicle",
+            "fetch": {
+                "signedReferences": {
+                    "featureLevel": {
+                        "minimum": "parent"
+                    }
+                }
+            },
+        });
+        let got: super::Config = serde_json::from_value(config).unwrap();
+        let expected = super::Config::new(Alias::new("radicle"));
+        assert_eq!(got.alias, expected.alias);
+        assert_eq!(
+            got.fetch.feature_level_min(),
+            crate::storage::refs::FeatureLevel::Parent
+        );
     }
 }

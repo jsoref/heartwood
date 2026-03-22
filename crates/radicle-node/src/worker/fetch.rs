@@ -21,7 +21,7 @@ use radicle::storage::{
 };
 use radicle::{cob, git, node, Storage};
 use radicle_fetch::git::refs::Applied;
-use radicle_fetch::{Allowed, BlockList, FetchLimit};
+use radicle_fetch::{Allowed, BlockList};
 pub use radicle_protocol::worker::fetch::{FetchResult, UpdatedCanonicalRefs};
 
 use super::channels::ChannelsFlush;
@@ -67,20 +67,24 @@ impl Handle {
         storage: &Storage,
         cache: &mut cob::cache::StoreWriter,
         refsdb: &mut D,
-        limit: FetchLimit,
+        config: radicle_fetch::Config,
         remote: PublicKey,
         refs_at: Option<Vec<RefsAt>>,
     ) -> Result<FetchResult, error::Fetch> {
         let (result, clone, notifs) = match self {
             Self::Clone { mut handle } => {
                 log::debug!(target: "worker", "{} cloning from {remote}", handle.local());
-                match radicle_fetch::clone(&mut handle, limit, remote) {
+                match radicle_fetch::clone(&mut handle, config, remote) {
                     Err(err) => {
                         handle.into_inner().cleanup();
                         return Err(err.into());
                     }
                     Ok(result) => {
-                        handle.into_inner().mv(storage.path_of(&rid))?;
+                        if result.is_success() {
+                            handle.into_inner().mv(storage.path_of(&rid))?;
+                        } else {
+                            handle.into_inner().cleanup();
+                        }
                         (result, true, None)
                     }
                 }
@@ -90,7 +94,7 @@ impl Handle {
                 notifications,
             } => {
                 log::debug!(target: "worker", "{} pulling from {remote}", handle.local());
-                let result = radicle_fetch::pull(&mut handle, limit, remote, refs_at)?;
+                let result = radicle_fetch::pull(&mut handle, config, remote, refs_at)?;
                 (result, false, Some(notifications))
             }
         };

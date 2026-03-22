@@ -15,7 +15,6 @@ use cyphernet::Ecdh;
 use radicle::cob::migrate;
 use radicle::crypto;
 use radicle::node::device::Device;
-use radicle_fetch::FetchLimit;
 use radicle_signals::Signal;
 use thiserror::Error;
 
@@ -236,7 +235,10 @@ impl Runtime {
 
         let nid = *signer.public_key();
         let fetch = worker::FetchConfig {
-            limit: FetchLimit::default(),
+            config: radicle_fetch::Config {
+                limit: radicle_fetch::FetchLimit::default(),
+                level_min: config.fetch.feature_level_min(),
+            },
             local: nid,
             expiry: worker::garbage::Expiry::default(),
         };

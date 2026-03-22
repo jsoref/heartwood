@@ -17,7 +17,6 @@ use radicle::prelude::NodeId;
 use radicle::storage::refs::RefsAt;
 use radicle::storage::{ReadRepository, ReadStorage};
 use radicle::{cob, crypto, Storage};
-use radicle_fetch::FetchLimit;
 
 pub use radicle_protocol::worker::{
     AuthorizationError, FetchError, FetchRequest, FetchResult, UploadError,
@@ -60,8 +59,8 @@ pub struct TaskResult {
 
 #[derive(Debug, Clone)]
 pub struct FetchConfig {
-    /// Data limits when fetching from a remote.
-    pub limit: FetchLimit,
+    /// Configuration passed to the fetch protocol.
+    pub config: radicle_fetch::Config,
     /// Public key of the local peer.
     pub local: crypto::PublicKey,
     /// Configuration for `git gc` garbage collection. Defaults to `1
@@ -243,7 +242,7 @@ impl Worker {
         notifs: notifications::StoreWriter,
     ) -> Result<fetch::FetchResult, FetchError> {
         let FetchConfig {
-            limit,
+            config,
             local,
             expiry,
         } = &self.fetch_config;
@@ -267,7 +266,7 @@ impl Worker {
             &self.storage,
             &mut cache,
             &mut self.db,
-            *limit,
+            *config,
             remote,
             refs_at,
         )?;

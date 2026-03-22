@@ -100,6 +100,12 @@ pub struct FetchLimit {
     pub refs: u64,
 }
 
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Config {
+    pub limit: FetchLimit,
+    pub level_min: FeatureLevel,
+}
+
 impl Default for FetchLimit {
     fn default() -> Self {
         Self {
@@ -358,7 +364,7 @@ impl FetchState {
         mut self,
         handle: &mut Handle<R, S>,
         handshake: &Handshake,
-        limit: FetchLimit,
+        config: Config,
         remote: PublicKey,
         refs_at: Option<Vec<RefsAt>>,
     ) -> Result<FetchResult, error::Protocol>
@@ -375,7 +381,7 @@ impl FetchState {
             handshake,
             &stage::CanonicalId {
                 remote,
-                limit: limit.special,
+                limit: config.limit.special,
             },
         )?;
         log::debug!("Fetched rad/id ({}ms)", start.elapsed().as_millis());
@@ -413,7 +419,7 @@ impl FetchState {
             handshake,
             delegates.clone(),
             threshold,
-            &limit,
+            &config.limit,
             remote,
             refs_at,
         )?;
@@ -499,6 +505,26 @@ impl FetchState {
                         remote,
                         source: err,
                     });
+                }
+                (Ok(Some(refs)), delegate) if refs.feature_level() < config.level_min => {
+                    log::debug!(
+                        "Pruning {remote} tips due to insufficient feature level '{}' < '{}'",
+                        refs.feature_level(),
+                        config.level_min
+                    );
+
+                    failures.push(sigrefs::Validation::InsufficientFeatureLevel {
+                        remote,
+                        actual: refs.feature_level(),
+                        minimum: config.level_min,
+                    });
+
+                    if delegate {
+                        valid_delegates.remove(&remote);
+                        failed_delegates.insert(remote);
+                    }
+
+                    self.prune(&remote);
                 }
                 (Ok(Some(refs)), false) => {
                     if let Some(SignedRefsAt { at, .. }) =

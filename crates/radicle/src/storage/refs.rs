@@ -281,19 +281,38 @@ where
 ///
 /// Feature levels are monotonic, in the sense that a greater feature level
 /// encompasses all the features of smaller ones.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[non_exhaustive]
 pub enum FeatureLevel {
-    /// References are stored without additional metadata.
+    /// The lowest feature level, with least security. It is vulnerable to
+    /// graft attacks and replay attacks.
     #[default]
     None,
-    /// Introduced in Radicle 1.1.0, in commit
-    /// `989edacd564fa658358f5ccfd08c243c5ebd8cda`,
-    /// this requires [`IDENTITY_ROOT`].
+
+    #[cfg_attr(
+        feature = "schemars",
+        schemars(description = "\
+        An intermediate feature level, which protects against graft attacks \
+        but is vulnerable to replay attacks. \
+        Introduced in Radicle 1.1.0, in commit \
+        `989edacd564fa658358f5ccfd08c243c5ebd8cda`.\
+    ")
+    )]
+    /// Requires [`IDENTITY_ROOT`].
     Root,
-    /// Introduced in Radicle 1.7.0, in commit
-    /// `d3bc868e84c334f113806df1737f52cc57c5453d`,
-    /// this requires [`SIGREFS_PARENT`].
+
+    #[cfg_attr(
+        feature = "schemars",
+        schemars(description = "\
+        The highest feature level known, which protects against graft attacks \
+        and replay attacks. \
+        Introduced in Radicle 1.7.0, in commit \
+        `d3bc868e84c334f113806df1737f52cc57c5453d`.\
+    ")
+    )]
+    /// Requires [`SIGREFS_PARENT`].
     Parent,
 }
 

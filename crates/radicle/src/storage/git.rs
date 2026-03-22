@@ -20,7 +20,7 @@ use crate::identity::{Identity, Project};
 use crate::node::device::Device;
 use crate::node::SyncedAt;
 use crate::storage::refs;
-use crate::storage::refs::{Refs, SignedRefs, SignedRefsAt};
+use crate::storage::refs::{FeatureLevel, Refs, SignedRefs, SignedRefsAt};
 use crate::storage::{
     ReadRepository, ReadStorage, Remote, Remotes, RepositoryInfo, SetHead, SignRepository,
     WriteRepository, WriteStorage,
@@ -399,6 +399,14 @@ pub enum Validation {
         remote: RemoteId,
         #[source]
         source: crate::storage::refs::sigrefs::read::error::Read,
+    },
+    #[error(
+        "rejecting `refs/namespaces/{remote}/refs/rad/sigrefs` on feature level '{actual}', below required minimum '{minimum}'"
+    )]
+    InsufficientFeatureLevel {
+        remote: RemoteId,
+        actual: FeatureLevel,
+        minimum: FeatureLevel,
     },
 }
 
