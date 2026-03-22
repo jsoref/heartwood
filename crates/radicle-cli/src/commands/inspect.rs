@@ -14,7 +14,7 @@ use radicle::identity::{DocAt, Identity};
 use radicle::node::policy::SeedingPolicy;
 use radicle::node::AliasStore as _;
 use radicle::storage::git::{Repository, Storage};
-use radicle::storage::refs::RefsAt;
+use radicle::storage::refs::{FeatureLevel, RefsAt};
 use radicle::storage::{ReadRepository, ReadStorage};
 
 use crate::terminal as term;
@@ -68,11 +68,27 @@ pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
             for remote in repo.remote_ids()? {
                 let remote = remote?;
                 let refs = RefsAt::new(&repo, remote)?;
+                let sigrefs = refs.load(&repo);
 
                 println!(
-                    "{:<48} {}",
+                    "{:<48} {} {}",
                     term::format::tertiary(remote.to_human()),
-                    term::format::secondary(refs.at)
+                    term::format::secondary(refs.at),
+                    match sigrefs {
+                        Ok(refs) => {
+                            let level = refs.feature_level();
+                            let s = level.to_string();
+                            match level {
+                                FeatureLevel::None => term::format::negative(s),
+                                FeatureLevel::Root => term::format::yellow(s),
+                                FeatureLevel::Parent => term::format::positive(s),
+                                _ => term::format::faint(s),
+                            }
+                        }
+                        Err(err) => {
+                            term::format::negative(err.to_string())
+                        }
+                    }
                 );
             }
         }

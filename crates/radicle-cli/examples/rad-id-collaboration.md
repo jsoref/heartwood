@@ -162,9 +162,9 @@ $ rad sync --timeout 3s
 ✓ Fetched repository from 2 seed(s)
 ✓ Synced with 3 node(s)
 $ rad inspect rad:z42hL2jL4XNk6K8oHQaSWfMgCL7ji --sigrefs
-z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi 1f716870f890be0c13fdd0af9f527af849fec792
-z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk c40018821dc1b41cad75e91e0c9d00827e815324
-z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z 95cd447c57de8d232c6154f5dba0451aa593520e
+z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi 1f716870f890be0c13fdd0af9f527af849fec792 parent
+z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk c40018821dc1b41cad75e91e0c9d00827e815324 parent
+z6Mkux1aUQD2voWWukVb5nNUR7thrHveQG4pDQua8nVhib7Z 95cd447c57de8d232c6154f5dba0451aa593520e parent
 ```
 
 Since the network is eventually consistent, if Eve decides to `sync`

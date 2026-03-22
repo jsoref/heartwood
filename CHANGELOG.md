@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   attacks.
   Note that this means that a node which upgrades, and subsequently downgrades
   will appear as a downgrade attacker.
+- The `rad inspect --sigrefs` command will now output the feature level of the
+  signed references entry for each node.
 
 ## 1.7.1
 
