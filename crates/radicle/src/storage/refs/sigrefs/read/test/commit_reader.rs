@@ -73,23 +73,6 @@ fn missing_commit() {
 }
 
 #[test]
-#[ignore = "strict verification of `refs/rad/root` reverted due to compatibility issues"]
-fn missing_identity() {
-    let head = mock::oid(1);
-    let refs = [(mock::refs_heads_main(), mock::oid(10))];
-    let repo = MockRepository::new()
-        .with_commit(head, mock::commit_data([]))
-        .with_refs(head, refs)
-        .with_signature(head, 1);
-
-    let err = read_at(head, repo).unwrap_err();
-    assert!(matches!(
-        err,
-        error::Read::Verify(error::Verify::MissingIdentity { .. })
-    ));
-}
-
-#[test]
 fn read_ok() {
     let head = mock::oid(1);
     let refs = [

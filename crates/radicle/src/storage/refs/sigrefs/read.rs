@@ -374,16 +374,6 @@ impl Commit {
                 FeatureLevel::Root
             }
         } else {
-            let err = error::Verify::MissingIdentity(error::MissingIdentity {
-                sigrefs_commit: self.oid,
-                expected,
-            });
-
-            log::debug!("Reading sigrefs will error in the future: {err}");
-
-            // TODO: Make this return the error
-            // and enable test `test::commit_reader::missing_identity`.
-
             FeatureLevel::None
         };
 

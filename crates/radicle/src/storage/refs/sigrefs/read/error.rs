@@ -121,8 +121,6 @@ pub enum Verify {
         expected: RepoId,
         found: RepoId,
     },
-    #[error(transparent)]
-    MissingIdentity(MissingIdentity),
     #[error(
         "expected no parent reference in refs commit '{sigrefs_commit}', but found target '{actual}'"
     )]
@@ -137,11 +135,4 @@ pub enum Verify {
     },
     #[error("expected identity root in refs commit '{sigrefs_commit}' but found none")]
     IdentityRootDowngrade { sigrefs_commit: Oid },
-}
-
-#[derive(Debug, Error, Clone, PartialEq, Eq)]
-#[error("expected repository identity {expected}, but found none under commit '{sigrefs_commit}'")]
-pub struct MissingIdentity {
-    pub(super) sigrefs_commit: Oid,
-    pub(super) expected: RepoId,
 }
