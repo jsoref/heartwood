@@ -15,6 +15,7 @@ default = ["std"]
 git2 = ["dep:git2", "radicle-oid/git2"]
 gix = ["dep:gix-hash", "radicle-oid/gix"]
 std = ["radicle-oid/std", "thiserror/std", "schemars/std", "serde/std"]
+qcheck = ["dep:qcheck", "radicle-oid/qcheck"]
 
 [dependencies]
 git2 = { workspace = true, optional = true }
