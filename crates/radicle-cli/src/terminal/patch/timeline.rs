@@ -209,7 +209,9 @@ impl Update<'_> {
                             line.pad(
                                 2 // alignment
                                     + 2 // parens
-                                    + LENGTH_OF_SHORT_COMMIT_HASH
+                                    + LENGTH_OF_SHORT_COMMIT_HASH // base
+                                    + 2 // ..
+                                    + LENGTH_OF_SHORT_COMMIT_HASH // head
                                     + LENGTH_OF_SPACES,
                             );
                         }
