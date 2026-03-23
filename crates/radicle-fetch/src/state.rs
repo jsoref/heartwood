@@ -527,18 +527,38 @@ impl FetchState {
                     self.prune(&remote);
                 }
                 (Ok(Some(refs)), false) => {
-                    if let Some(SignedRefsAt { at, .. }) =
-                        SignedRefsAt::load(remote, handle.repository())?
-                    {
-                        // Prune non-delegates if they're behind or
-                        // diverged. A diverged case is non-fatal for
-                        // delegates.
-                        if matches!(
-                            repository::ancestry(handle.repository(), at, refs.at)?,
-                            repository::Ancestry::Behind | repository::Ancestry::Diverged
-                        ) {
-                            self.prune(&remote);
-                            continue;
+                    let level_reachable = refs.feature_level();
+
+                    match SignedRefsAt::load(remote, handle.repository()) {
+                        Ok(Some(SignedRefsAt { at, .. })) => {
+                            // Prune non-delegates if they're behind or
+                            // diverged. A diverged case is non-fatal for
+                            // delegates.
+                            if matches!(
+                                repository::ancestry(handle.repository(), at, refs.at)?,
+                                repository::Ancestry::Behind | repository::Ancestry::Diverged
+                            ) {
+                                self.prune(&remote);
+                                continue;
+                            }
+                        }
+                        Err(radicle::storage::refs::sigrefs::read::error::Read::Downgrade {
+                            levels,
+                            actual,
+                            ..
+                        }) => {
+                            let level_required = levels.max();
+                            if level_reachable >= level_required {
+                                log::info!("Non-delegate {remote} has downgraded history, currently stuck at '{actual}', expects to be upgraded to '{level_required}' and will be upgraded to '{level_reachable}'.")
+                            } else {
+                                log::debug!("Non-delegate {remote} has downgraded history, currently stuck at '{actual}', expects to be upgraded to '{level_required}' but only level '{level_reachable}' was advertised.");
+                                self.prune(&remote);
+                                continue;
+                            }
+                        }
+                        Err(err) => return Err(error::Protocol::Refs(err)),
+                        Ok(None) => {
+                            // We see signed references for this non-delegate for the first time.
                         }
                     }
 
@@ -554,27 +574,46 @@ impl FetchState {
                     }
                 }
                 (Ok(Some(refs)), true) => {
-                    if let Some(SignedRefsAt { at, .. }) =
-                        SignedRefsAt::load(remote, handle.repository())?
-                    {
-                        let ancestry = repository::ancestry(handle.repository(), at, refs.at)?;
-                        if matches!(ancestry, repository::Ancestry::Behind) {
-                            log::trace!(
-                                "Advertised `rad/sigrefs` {} is behind {at} for {remote}",
-                                refs.at
-                            );
-                            self.prune(&remote);
-                            continue;
-                        } else if matches!(ancestry, repository::Ancestry::Diverged) {
-                            return Err(error::Protocol::Diverged {
-                                remote,
-                                current: at,
-                                received: refs.at,
-                            });
+                    let level_reachable = refs.feature_level();
+
+                    match SignedRefsAt::load(remote, handle.repository()) {
+                        Ok(Some(SignedRefsAt { at, .. })) => {
+                            let ancestry = repository::ancestry(handle.repository(), at, refs.at)?;
+                            if matches!(ancestry, repository::Ancestry::Behind) {
+                                log::trace!(
+                                    "Advertised `rad/sigrefs` {} is behind {at} for {remote}",
+                                    refs.at
+                                );
+                                self.prune(&remote);
+                                continue;
+                            } else if matches!(ancestry, repository::Ancestry::Diverged) {
+                                return Err(error::Protocol::Diverged {
+                                    remote,
+                                    current: at,
+                                    received: refs.at,
+                                });
+                            }
+                        }
+                        Err(radicle::storage::refs::sigrefs::read::error::Read::Downgrade {
+                            levels,
+                            actual,
+                            ..
+                        }) => {
+                            let level_required = levels.max();
+                            if level_reachable >= level_required {
+                                log::info!("Delegate {remote} has downgraded history, currently stuck at '{actual}', expects to be upgraded to '{level_required}' and will be upgraded to '{level_reachable}'.")
+                            } else {
+                                log::info!("Delegate {remote} has downgraded history, currently stuck at '{actual}', expects to be upgraded to '{level_required}' but only level '{level_reachable}' was advertised.");
+                                self.prune(&remote);
+                                continue;
+                            }
+                        }
+                        Err(err) => return Err(error::Protocol::Refs(err)),
+                        Ok(None) => {
+                            // We see signed references for this delegate for the first time.
                         }
                     }
 
-                    let level = refs.feature_level();
                     let cache = self.as_cached(handle);
                     let mut fails =
                         sigrefs::validate(&cache, refs)?.unwrap_or(Validations::default());
@@ -589,8 +628,8 @@ impl FetchState {
                         remotes.insert(remote);
                     }
 
-                    if level < FeatureLevel::LATEST {
-                        log::warn!("Delegate {remote} is on feature level '{level}' which is lower than '{}', they should consider upgrading Radicle.", FeatureLevel::LATEST)
+                    if level_reachable < FeatureLevel::LATEST {
+                        log::warn!("Delegate {remote} is on feature level '{level_reachable}' which is lower than '{}', they should consider upgrading Radicle.", FeatureLevel::LATEST)
                     }
                 }
             }

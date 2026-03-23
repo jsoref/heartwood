@@ -99,7 +99,7 @@ impl FeatureLevels {
         Self(BTreeMap::new())
     }
 
-    fn max(&self) -> FeatureLevel {
+    pub fn max(&self) -> FeatureLevel {
         self.0.last_key_value().map(|(k, _)| *k).unwrap_or_default()
     }
 
