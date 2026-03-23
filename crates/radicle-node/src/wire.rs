@@ -388,12 +388,6 @@ where
     }
 
     fn worker_result(&mut self, task: TaskResult) {
-        log::debug!(
-            target: "wire",
-            "Received fetch result from worker for stream {}, remote {}: {:?}",
-            task.stream, task.remote, task.result
-        );
-
         let nid = task.remote;
         let Some((fd, peer)) = self.peers.lookup_mut(&nid) else {
             log::debug!(target: "wire", "Peer {nid} not found; ignoring fetch result");
