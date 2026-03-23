@@ -62,21 +62,21 @@ $ jj bookmark create flux-capacitor-power
 
 ```
 $ rad patch show 1e31055 -p
-╭───────────────────────────────────────────────────╮
-│ Title    Define power requirements                │
-│ Patch    1e31055[..                             ] │
-│ Author   alice (you)                              │
-│ Head     a6ea7b7[..                             ] │
-│ Base     f2de534[..                             ] │
-│ Commits  ahead 1, behind 0                        │
-│ Status   open                                     │
-│                                                   │
-│ See details.                                      │
-├───────────────────────────────────────────────────┤
-│ a6ea7b7 Define power requirements                 │
-├───────────────────────────────────────────────────┤
-│ ● Revision 1e31055 @ a6ea7b7 by alice (you) now   │
-╰───────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────╮
+│ Title    Define power requirements                       │
+│ Patch    1e31055[..                             ]        │
+│ Author   alice (you)                                     │
+│ Head     a6ea7b7[..                             ]        │
+│ Base     f2de534[..                             ]        │
+│ Commits  ahead 1, behind 0                               │
+│ Status   open                                            │
+│                                                          │
+│ See details.                                             │
+├──────────────────────────────────────────────────────────┤
+│ a6ea7b7 Define power requirements                        │
+├──────────────────────────────────────────────────────────┤
+│ ● Revision 1e31055 @ [..   ]..a6ea7b7 by alice (you) now │
+╰──────────────────────────────────────────────────────────╯
 
 commit a6ea7b7[..]
 Author: Test User <test.user@example.com>

@@ -41,22 +41,22 @@ $ rad patch
 │ ●  e4934b6  Define power requirements  bob     (you)  -        3e674d1  +0  -0  now     │
 ╰─────────────────────────────────────────────────────────────────────────────────────────╯
 $ rad patch show e4934b6d9dbe01ce3c7fbb5b77a80d5f1dacdc46
-╭────────────────────────────────────────────────────╮
-│ Title     Define power requirements                │
-│ Patch     e4934b6d9dbe01ce3c7fbb5b77a80d5f1dacdc46 │
-│ Author    bob (you)                                │
-│ Head      3e674d1a1df90807e934f9ae5da2591dd6848a33 │
-│ Base      [..                                    ] │
-│ Branches  flux-capacitor-power                     │
-│ Commits   ahead 1, behind 0                        │
-│ Status    open                                     │
-│                                                    │
-│ See details.                                       │
-├────────────────────────────────────────────────────┤
-│ 3e674d1 Define power requirements                  │
-├────────────────────────────────────────────────────┤
-│ ● Revision e4934b6 @ 3e674d1 by bob (you) now      │
-╰────────────────────────────────────────────────────╯
+╭────────────────────────────────────────────────────────╮
+│ Title     Define power requirements                    │
+│ Patch     e4934b6d9dbe01ce3c7fbb5b77a80d5f1dacdc46     │
+│ Author    bob (you)                                    │
+│ Head      3e674d1a1df90807e934f9ae5da2591dd6848a33     │
+│ Base      [..                                    ]     │
+│ Branches  flux-capacitor-power                         │
+│ Commits   ahead 1, behind 0                            │
+│ Status    open                                         │
+│                                                        │
+│ See details.                                           │
+├────────────────────────────────────────────────────────┤
+│ 3e674d1 Define power requirements                      │
+├────────────────────────────────────────────────────────┤
+│ ● Revision e4934b6 @ [..   ]..3e674d1 by bob (you) now │
+╰────────────────────────────────────────────────────────╯
 ```
 
 We can also confirm that the patch branch is in storage:

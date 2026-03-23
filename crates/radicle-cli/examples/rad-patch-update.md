@@ -13,20 +13,20 @@ To rad://z42hL2jL4XNk6K8oHQaSWfMgCL7ji/z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkE
 
 ```
 $ rad patch show b6a23eb08656de0ef1fcc0b5fe8820841e5cb2e5
-╭────────────────────────────────────────────────────╮
-│ Title     Not a real change                        │
-│ Patch     b6a23eb08656de0ef1fcc0b5fe8820841e5cb2e5 │
-│ Author    alice (you)                              │
-│ Head      51b2f0f77b9849bfaa3e9d3ff68ee2f57771d20c │
-│ Base      [..                                    ] │
-│ Branches  feature/1                                │
-│ Commits   ahead 1, behind 0                        │
-│ Status    open                                     │
-├────────────────────────────────────────────────────┤
-│ 51b2f0f Not a real change                          │
-├────────────────────────────────────────────────────┤
-│ ● Revision b6a23eb @ 51b2f0f by alice (you) now    │
-╰────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────╮
+│ Title     Not a real change                              │
+│ Patch     b6a23eb08656de0ef1fcc0b5fe8820841e5cb2e5       │
+│ Author    alice (you)                                    │
+│ Head      51b2f0f77b9849bfaa3e9d3ff68ee2f57771d20c       │
+│ Base      [..                                    ]       │
+│ Branches  feature/1                                      │
+│ Commits   ahead 1, behind 0                              │
+│ Status    open                                           │
+├──────────────────────────────────────────────────────────┤
+│ 51b2f0f Not a real change                                │
+├──────────────────────────────────────────────────────────┤
+│ ● Revision b6a23eb @ [..   ]..51b2f0f by alice (you) now │
+╰──────────────────────────────────────────────────────────╯
 ```
 
 We can make some changes to the repository:
@@ -55,20 +55,20 @@ The command outputs the new Revision ID, which we can now see here:
 
 ```
 $ rad patch show b6a23eb08656de0ef1fcc0b5fe8820841e5cb2e5
-╭────────────────────────────────────────────────────╮
-│ Title     Not a real change                        │
-│ Patch     b6a23eb08656de0ef1fcc0b5fe8820841e5cb2e5 │
-│ Author    alice (you)                              │
-│ Head      4d272148458a17620541555b1f0905c01658aa9f │
-│ Base      [..                                    ] │
-│ Branches  feature/1                                │
-│ Commits   ahead 2, behind 0                        │
-│ Status    open                                     │
-├────────────────────────────────────────────────────┤
-│ 4d27214 Rename readme file                         │
-│ 51b2f0f Not a real change                          │
-├────────────────────────────────────────────────────┤
-│ ● Revision b6a23eb @ 51b2f0f by alice (you) now    │
-│ ↑ Revision ea7def3 @ 4d27214 by alice (you) now    │
-╰────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────╮
+│ Title     Not a real change                              │
+│ Patch     b6a23eb08656de0ef1fcc0b5fe8820841e5cb2e5       │
+│ Author    alice (you)                                    │
+│ Head      4d272148458a17620541555b1f0905c01658aa9f       │
+│ Base      [..                                    ]       │
+│ Branches  feature/1                                      │
+│ Commits   ahead 2, behind 0                              │
+│ Status    open                                           │
+├──────────────────────────────────────────────────────────┤
+│ 4d27214 Rename readme file                               │
+│ 51b2f0f Not a real change                                │
+├──────────────────────────────────────────────────────────┤
+│ ● Revision b6a23eb @ [..   ]..51b2f0f by alice (you) now │
+│ ↑ Revision ea7def3 @ [..   ]..4d27214 by alice (you) now │
+╰──────────────────────────────────────────────────────────╯
 ```

@@ -44,21 +44,21 @@ Our second patch looks like the following:
 
 ```
 $ rad patch show 183d343ab47d7fe18baf1b24b7209ad033d7fe5c
-╭────────────────────────────────────────────────────╮
-│ Title     Add README, just for the fun             │
-│ Patch     183d343ab47d7fe18baf1b24b7209ad033d7fe5c │
-│ Author    alice (you)                              │
-│ Head      27857ec9eb04c69cacab516e8bf4b5fd36090f66 │
-│ Base      f2de534b5e81d7c6e2dcaf58c3dd91573c0a0354 │
-│ Branches  add-readme                               │
-│ Commits   ahead 2, behind 0                        │
-│ Status    open                                     │
-├────────────────────────────────────────────────────┤
-│ 27857ec Add README, just for the fun               │
-│ 3e674d1 Define power requirements                  │
-├────────────────────────────────────────────────────┤
-│ ● Revision 183d343 @ 27857ec by alice (you) now    │
-╰────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────╮
+│ Title     Add README, just for the fun                   │
+│ Patch     183d343ab47d7fe18baf1b24b7209ad033d7fe5c       │
+│ Author    alice (you)                                    │
+│ Head      27857ec9eb04c69cacab516e8bf4b5fd36090f66       │
+│ Base      f2de534b5e81d7c6e2dcaf58c3dd91573c0a0354       │
+│ Branches  add-readme                                     │
+│ Commits   ahead 2, behind 0                              │
+│ Status    open                                           │
+├──────────────────────────────────────────────────────────┤
+│ 27857ec Add README, just for the fun                     │
+│ 3e674d1 Define power requirements                        │
+├──────────────────────────────────────────────────────────┤
+│ ● Revision 183d343 @ f2de534..27857ec by alice (you) now │
+╰──────────────────────────────────────────────────────────╯
 ```
 
 But wait, we meant to stack them and so we don't want to see the
@@ -75,19 +75,19 @@ we have a single commit:
 
 ```
 $ rad patch show 183d343
-╭────────────────────────────────────────────────────╮
-│ Title     Add README, just for the fun             │
-│ Patch     183d343ab47d7fe18baf1b24b7209ad033d7fe5c │
-│ Author    alice (you)                              │
-│ Head      27857ec9eb04c69cacab516e8bf4b5fd36090f66 │
-│ Base      3e674d1a1df90807e934f9ae5da2591dd6848a33 │
-│ Branches  add-readme                               │
-│ Commits   ahead 2, behind 0                        │
-│ Status    open                                     │
-├────────────────────────────────────────────────────┤
-│ 27857ec Add README, just for the fun               │
-├────────────────────────────────────────────────────┤
-│ ● Revision 183d343 @ 27857ec by alice (you) now    │
-│ ↑ Revision ebe76f9 @ 27857ec by alice (you) now    │
-╰────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────╮
+│ Title     Add README, just for the fun                   │
+│ Patch     183d343ab47d7fe18baf1b24b7209ad033d7fe5c       │
+│ Author    alice (you)                                    │
+│ Head      27857ec9eb04c69cacab516e8bf4b5fd36090f66       │
+│ Base      3e674d1a1df90807e934f9ae5da2591dd6848a33       │
+│ Branches  add-readme                                     │
+│ Commits   ahead 2, behind 0                              │
+│ Status    open                                           │
+├──────────────────────────────────────────────────────────┤
+│ 27857ec Add README, just for the fun                     │
+├──────────────────────────────────────────────────────────┤
+│ ● Revision 183d343 @ f2de534..27857ec by alice (you) now │
+│ ↑ Revision ebe76f9 @ 3e674d1..27857ec by alice (you) now │
+╰──────────────────────────────────────────────────────────╯
 ```

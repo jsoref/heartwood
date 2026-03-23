@@ -15,26 +15,26 @@ We can see the list of revisions of the patch by `show`ing it:
 
 ```
 $ rad patch show aa45913
-╭────────────────────────────────────────────────────╮
-│ Title     Define power requirements                │
-│ Patch     aa45913e757cacd46972733bddee5472c78fa32a │
-│ Author    alice (you)                              │
-│ Head      639f44a25145a37f747f3c84265037a9461e44c5 │
-│ Base      [..                                    ] │
-│ Branches  patch/aa45913                            │
-│ Commits   ahead 3, behind 0                        │
-│ Status    open                                     │
-│                                                    │
-│ See details.                                       │
-├────────────────────────────────────────────────────┤
-│ 639f44a Add LICENSE, just for the business         │
-│ 27857ec Add README, just for the fun               │
-│ 3e674d1 Define power requirements                  │
-├────────────────────────────────────────────────────┤
-│ ● Revision aa45913 @ 3e674d1 by alice (you) now    │
-│ ↑ Revision 3156bed @ 27857ec by alice (you) now    │
-│ ↑ Revision 2f5324f @ 639f44a by alice (you) now    │
-╰────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────╮
+│ Title     Define power requirements                      │
+│ Patch     aa45913e757cacd46972733bddee5472c78fa32a       │
+│ Author    alice (you)                                    │
+│ Head      639f44a25145a37f747f3c84265037a9461e44c5       │
+│ Base      [..                                    ]       │
+│ Branches  patch/aa45913                                  │
+│ Commits   ahead 3, behind 0                              │
+│ Status    open                                           │
+│                                                          │
+│ See details.                                             │
+├──────────────────────────────────────────────────────────┤
+│ 639f44a Add LICENSE, just for the business               │
+│ 27857ec Add README, just for the fun                     │
+│ 3e674d1 Define power requirements                        │
+├──────────────────────────────────────────────────────────┤
+│ ● Revision aa45913 @ [..   ]..3e674d1 by alice (you) now │
+│ ↑ Revision 3156bed @ [..   ]..27857ec by alice (you) now │
+│ ↑ Revision 2f5324f @ [..   ]..639f44a by alice (you) now │
+╰──────────────────────────────────────────────────────────╯
 ```
 
 So, let's checkout the previous revision, `0c0942e2`:

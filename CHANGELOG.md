@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## New Features
+
+- Teach `rad patch show` to show the full commit range for each revision.
+  Previously, it would only show the head of the range, but not the base.
+  It now shows `<base>..<head>`, where the shortened OID is used when not
+  using `--verbose`, and the full OID when using `--verbose`.
+  These ranges make using `git range-diff` a lot easier, since you can copy
+  the range from each revision you want to compare.
+
 ## 1.8.0
 
 ## New Features
