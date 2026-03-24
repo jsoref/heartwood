@@ -26,7 +26,7 @@ use crate::identity::{Identity, RepoId};
 use crate::node::device::Device;
 use crate::node::SyncedAt;
 use crate::storage::git::NAMESPACES_GLOB;
-use crate::storage::refs::{FeatureLevel, Refs, SignedRefsAt};
+use crate::storage::refs::{FeatureLevel, Refs, SignedRefs};
 
 use self::refs::RefsAt;
 use crate::git::UserInfo;
@@ -36,13 +36,13 @@ pub enum SignedRefsInfo {
     /// Repositories with this set to `None` are ones that are seeded but not forked.
     None,
     /// Local signed refs, if any.
-    Some(refs::SignedRefsAt),
+    Some(refs::SignedRefs),
     NeedsMigration,
 }
 
 impl SignedRefsInfo {
     pub(crate) fn new(
-        result: Result<Option<SignedRefsAt>, refs::sigrefs::read::error::Read>,
+        result: Result<Option<SignedRefs>, refs::sigrefs::read::error::Read>,
     ) -> Result<Self, refs::sigrefs::read::error::Read> {
         Ok(match result {
             Ok(Some(refs))
@@ -385,7 +385,7 @@ impl IntoIterator for Remotes {
     }
 }
 
-impl From<Remotes> for RandomMap<RemoteId, SignedRefsAt> {
+impl From<Remotes> for RandomMap<RemoteId, SignedRefs> {
     fn from(other: Remotes) -> Self {
         let mut remotes = RandomMap::with_hasher(fastrand::Rng::new().into());
 
@@ -401,12 +401,12 @@ impl From<Remotes> for RandomMap<RemoteId, SignedRefsAt> {
 pub struct Remote {
     /// Git references published under this remote, and their hashes.
     #[serde(flatten)]
-    pub refs: SignedRefsAt,
+    pub refs: SignedRefs,
 }
 
 impl Remote {
     /// Create a new remotes object.
-    pub fn new(refs: impl Into<SignedRefsAt>) -> Self {
+    pub fn new(refs: impl Into<SignedRefs>) -> Self {
         Self { refs: refs.into() }
     }
 
@@ -428,7 +428,7 @@ impl Remote {
 }
 
 impl Deref for Remote {
-    type Target = SignedRefsAt;
+    type Target = SignedRefs;
 
     fn deref(&self) -> &Self::Target {
         &self.refs
@@ -697,14 +697,14 @@ pub trait WriteRepository: ReadRepository + SignRepository {
 /// Allows signing refs.
 pub trait SignRepository {
     /// Sign the repository's refs under the `refs/rad/sigrefs` branch.
-    fn sign_refs<G>(&self, signer: &Device<G>) -> Result<SignedRefsAt, RepositoryError>
+    fn sign_refs<G>(&self, signer: &Device<G>) -> Result<SignedRefs, RepositoryError>
     where
         G: crypto::signature::Signer<crypto::Signature>;
 
     /// Sign the repository's refs under the `refs/rad/sigrefs` branch, even if unchanged.
     ///
     /// Most users will prefer [`Self::sign_refs`].
-    fn force_sign_refs<G>(&self, signer: &Device<G>) -> Result<SignedRefsAt, RepositoryError>
+    fn force_sign_refs<G>(&self, signer: &Device<G>) -> Result<SignedRefs, RepositoryError>
     where
         G: crypto::signature::Signer<crypto::Signature>;
 }

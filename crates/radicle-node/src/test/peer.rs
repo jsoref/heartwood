@@ -17,7 +17,7 @@ use radicle::node::UserAgent;
 use radicle::node::{address, Alias, ConnectOptions};
 use radicle::rad;
 use radicle::storage::refs;
-use radicle::storage::refs::{RefsAt, SignedRefsAt};
+use radicle::storage::refs::{RefsAt, SignedRefs};
 use radicle::storage::{ReadRepository, RemoteRepository};
 use radicle::Storage;
 
@@ -362,7 +362,7 @@ where
         ann.into().signed(self.signer()).into()
     }
 
-    pub fn signed_refs_at(&self, root: Oid) -> SignedRefsAt {
+    pub fn signed_refs_at(&self, root: Oid) -> SignedRefs {
         arbitrary::with_gen(8, |g| {
             refs::arbitrary::signed_refs_at(g, root, self.signer())
         })

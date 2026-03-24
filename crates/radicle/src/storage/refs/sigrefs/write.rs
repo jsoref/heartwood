@@ -16,11 +16,11 @@ use crate::git;
 use crate::storage::refs::sigrefs::git::{object, reference, Committer};
 use crate::storage::refs::sigrefs::read::CommitReader;
 use crate::storage::refs::sigrefs::{read, VerifiedCommit};
+use crate::storage::refs::SignedRefs;
 use crate::storage::refs::{
     FeatureLevel, Refs, IDENTITY_ROOT, REFS_BLOB_PATH, SIGNATURE_BLOB_PATH, SIGREFS_BRANCH,
     SIGREFS_PARENT,
 };
-use crate::storage::refs::{SignedRefs, SignedRefsAt};
 
 /// The result of attempting to write signed references using
 /// [`SignedRefsWriter`].
@@ -204,16 +204,14 @@ impl Commit {
         self.refs
     }
 
-    pub(crate) fn into_sigrefs_at(self, id: PublicKey, level: FeatureLevel) -> SignedRefsAt {
-        SignedRefsAt {
+    pub(crate) fn into_sigrefs_at(self, id: PublicKey, level: FeatureLevel) -> SignedRefs {
+        SignedRefs {
             at: self.oid,
-            sigrefs: SignedRefs {
-                id,
-                signature: self.signature,
-                refs: self.refs,
-                level,
-                parent: self.parent,
-            },
+            id,
+            signature: self.signature,
+            refs: self.refs,
+            level,
+            parent: self.parent,
         }
     }
 }

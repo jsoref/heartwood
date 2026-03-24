@@ -17,7 +17,7 @@ use crate::git;
 use crate::git::packfile::Keepfile;
 use crate::git::refs::{Applied, Update};
 use crate::git::repository;
-use crate::sigrefs::SignedRefsAt;
+use crate::sigrefs::SignedRefs;
 use crate::stage;
 use crate::stage::ProtocolStage;
 use crate::{refs, sigrefs, transport, Handle};
@@ -529,8 +529,8 @@ impl FetchState {
                 (Ok(Some(refs)), false) => {
                     let level_reachable = refs.feature_level();
 
-                    match SignedRefsAt::load(remote, handle.repository()) {
-                        Ok(Some(SignedRefsAt { at, .. })) => {
+                    match SignedRefs::load(remote, handle.repository()) {
+                        Ok(Some(SignedRefs { at, .. })) => {
                             // Prune non-delegates if they're behind or
                             // diverged. A diverged case is non-fatal for
                             // delegates.
@@ -576,8 +576,8 @@ impl FetchState {
                 (Ok(Some(refs)), true) => {
                     let level_reachable = refs.feature_level();
 
-                    match SignedRefsAt::load(remote, handle.repository()) {
-                        Ok(Some(SignedRefsAt { at, .. })) => {
+                    match SignedRefs::load(remote, handle.repository()) {
+                        Ok(Some(SignedRefs { at, .. })) => {
                             let ancestry = repository::ancestry(handle.repository(), at, refs.at)?;
                             if matches!(ancestry, repository::Ancestry::Behind) {
                                 log::trace!(
@@ -754,10 +754,10 @@ where
     pub fn load(
         &self,
         remote: &PublicKey,
-    ) -> Result<Option<SignedRefsAt>, radicle::storage::refs::sigrefs::read::error::Read> {
+    ) -> Result<Option<SignedRefs>, radicle::storage::refs::sigrefs::read::error::Read> {
         match self.state.sigrefs.get(remote) {
-            None => SignedRefsAt::load(*remote, self.handle.repository()),
-            Some(tip) => SignedRefsAt::load_at(*tip, *remote, self.handle.repository()).map(Some),
+            None => SignedRefs::load(*remote, self.handle.repository()),
+            Some(tip) => SignedRefs::load_at(*tip, *remote, self.handle.repository()),
         }
     }
 
@@ -799,7 +799,7 @@ where
     // with it.
     fn validate_remote(&self, remote: &Remote) -> Result<Validations, storage::Error> {
         // Contains a copy of the signed refs of this remote.
-        let mut signed = BTreeMap::from((*remote.refs.sigrefs).clone());
+        let mut signed = BTreeMap::from((*remote.refs).clone());
         let mut validations = Validations::default();
         let mut has_sigrefs = false;
 

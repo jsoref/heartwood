@@ -6,7 +6,7 @@ use crate::node::device::Device;
 
 use super::*;
 
-pub fn signed_refs_at<S>(g: &mut qcheck::Gen, root: Oid, signer: &Device<S>) -> SignedRefsAt
+pub fn signed_refs_at<S>(g: &mut qcheck::Gen, root: Oid, signer: &Device<S>) -> SignedRefs
 where
     S: crypto::signature::Signer<crypto::Signature>,
 {
@@ -22,15 +22,12 @@ where
     }
 
     let signature = crypto::signature::Signer::sign(signer, &refs.canonical());
-    let sigrefs = SignedRefs {
+    SignedRefs {
         refs,
         signature,
         id: *signer.node_id(),
         level: level.unwrap_or_else(|| FeatureLevel::arbitrary(g)),
         parent: Arbitrary::arbitrary(g),
-    };
-    SignedRefsAt {
-        sigrefs,
         at: Oid::from_sha1(Arbitrary::arbitrary(g)),
     }
 }

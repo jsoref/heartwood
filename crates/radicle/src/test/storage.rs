@@ -134,7 +134,7 @@ impl WriteStorage for MockStorage {
 pub struct MockRepository {
     pub id: RepoId,
     pub doc: DocAt,
-    pub remotes: HashMap<NodeId, refs::SignedRefsAt>,
+    pub remotes: HashMap<NodeId, refs::SignedRefs>,
 }
 
 impl MockRepository {
@@ -170,7 +170,7 @@ impl self::refs::sigrefs::git::reference::Reader for MockRepository {
                 if reference == *refs::SIGREFS_BRANCH {
                     Ok(Some(refs.at))
                 } else {
-                    Ok(refs.sigrefs.get(&reference))
+                    Ok(refs.get(&reference))
                 }
             }
         }
@@ -292,7 +292,7 @@ impl ReadRepository for MockRepository {
         if reference == &*refs::SIGREFS_BRANCH {
             Ok(refs.at)
         } else {
-            refs.sigrefs.get(reference).ok_or_else(not_found)
+            refs.get(reference).ok_or_else(not_found)
         }
     }
 
@@ -370,14 +370,14 @@ impl SignRepository for MockRepository {
     fn sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
         &self,
         _signer: &Device<G>,
-    ) -> Result<crate::storage::refs::SignedRefsAt, RepositoryError> {
+    ) -> Result<crate::storage::refs::SignedRefs, RepositoryError> {
         todo!()
     }
 
     fn force_sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
         &self,
         _signer: &Device<G>,
-    ) -> Result<crate::storage::refs::SignedRefsAt, RepositoryError> {
+    ) -> Result<crate::storage::refs::SignedRefs, RepositoryError> {
         todo!()
     }
 }

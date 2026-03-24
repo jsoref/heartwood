@@ -18,7 +18,7 @@ use crate::identity::doc::DocError;
 use crate::identity::{CanonicalRefs, Doc, DocAt, RepoId};
 use crate::identity::{Identity, Project};
 use crate::node::device::Device;
-use crate::storage::refs::{FeatureLevel, Refs, SignedRefsAt};
+use crate::storage::refs::{FeatureLevel, Refs, SignedRefs};
 use crate::storage::{refs, SignedRefsInfo};
 use crate::storage::{
     ReadRepository, ReadStorage, Remote, Remotes, RepositoryInfo, SetHead, SignRepository,
@@ -166,7 +166,7 @@ impl ReadStorage for Storage {
                 }
             };
             // Nb. This will be `None` if they were not found.
-            let refs = SignedRefsInfo::new(refs::SignedRefsAt::load(self.info.key, &repo))
+            let refs = SignedRefsInfo::new(refs::SignedRefs::load(self.info.key, &repo))
                 .map_err(|err| Error::Refs(refs::Error::Read(err)))?;
 
             let synced_at = match &refs {
@@ -201,7 +201,7 @@ impl WriteStorage for Storage {
         let repo = self.repository(rid)?;
         // N.b. we remove the repository if the `local` peer has no
         // `rad/sigrefs`. There's no risk of them corrupting data.
-        let has_sigrefs = SignedRefsAt::load(self.info.key, &repo)
+        let has_sigrefs = SignedRefs::load(self.info.key, &repo)
             .map_err(|err| RepositoryError::from(refs::Error::Read(err)))?
             .is_some();
         if has_sigrefs {
@@ -258,7 +258,7 @@ impl Storage {
             let repo = self.repository(*rid)?;
             let (_, head) = repo.head()?;
 
-            let refs = SignedRefsInfo::new(refs::SignedRefsAt::load(self.info.key, &repo))
+            let refs = SignedRefsInfo::new(refs::SignedRefs::load(self.info.key, &repo))
                 .map_err(|err| Error::Refs(refs::Error::Read(err)))?;
 
             let synced_at = match &refs {
@@ -631,7 +631,7 @@ impl RemoteRepository for Repository {
     }
 
     fn remote(&self, remote: &RemoteId) -> Result<Remote, refs::Error> {
-        let refs = SignedRefsAt::load(*remote, self)?;
+        let refs = SignedRefs::load(*remote, self)?;
         let refs = refs.ok_or_else(|| {
             refs::Error::Read(refs::sigrefs::read::error::Read::MissingSigrefs {
                 namespace: *remote,
@@ -656,7 +656,7 @@ impl RemoteRepository for Repository {
 impl ValidateRepository for Repository {
     fn validate_remote(&self, remote: &Remote) -> Result<Validations, Error> {
         // Contains a copy of the signed refs of this remote.
-        let mut signed = BTreeMap::from((*remote.refs.sigrefs).clone());
+        let mut signed = BTreeMap::from((*remote.refs).clone());
         let mut failures = Validations::default();
         let mut has_sigrefs = false;
 
@@ -1007,14 +1007,14 @@ impl SignRepository for Repository {
     fn sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
         &self,
         signer: &Device<G>,
-    ) -> Result<SignedRefsAt, RepositoryError> {
+    ) -> Result<SignedRefs, RepositoryError> {
         self.sign_refs_with(signer, false)
     }
 
     fn force_sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
         &self,
         signer: &Device<G>,
-    ) -> Result<SignedRefsAt, RepositoryError> {
+    ) -> Result<SignedRefs, RepositoryError> {
         self.sign_refs_with(signer, true)
     }
 }
@@ -1024,7 +1024,7 @@ impl Repository {
         &self,
         signer: &Device<G>,
         force: bool,
-    ) -> Result<SignedRefsAt, RepositoryError> {
+    ) -> Result<SignedRefs, RepositoryError> {
         let remote = signer.public_key();
         // Ensure the root reference is set, which is checked during sigref verification.
         if self

@@ -10,7 +10,7 @@ use crate::node::Alias;
 use crate::rad;
 use crate::storage::git::transport;
 use crate::storage::git::Storage;
-use crate::storage::refs::SignedRefsAt;
+use crate::storage::refs::SignedRefs;
 
 /// The birth of the radicle project, January 1st, 2018.
 pub const RADICLE_EPOCH: i64 = 1514817556;
@@ -72,7 +72,7 @@ pub fn project<P, G>(
     path: P,
     storage: &Storage,
     signer: &Device<G>,
-) -> Result<(RepoId, SignedRefsAt, git::raw::Repository, git::raw::Oid), rad::InitError>
+) -> Result<(RepoId, SignedRefs, git::raw::Repository, git::raw::Oid), rad::InitError>
 where
     P: AsRef<Path>,
     G: crypto::signature::Signer<crypto::Signature>,

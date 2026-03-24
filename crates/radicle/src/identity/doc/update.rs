@@ -250,13 +250,13 @@ fn verify_delegates(
     let mut missing = Vec::with_capacity(dids.len());
 
     for did in dids {
-        match refs::SignedRefsAt::load((*did).into(), repo)
+        match refs::SignedRefs::load((*did).into(), repo)
             .map_err(|err| storage::Error::Refs(storage::refs::Error::Read(err)))?
         {
             None => {
                 missing.push(error::DelegateVerification::MissingDelegate { did: *did });
             }
-            Some(refs::SignedRefsAt { sigrefs, .. }) => {
+            Some(sigrefs) => {
                 if sigrefs.get(&canonical).is_none() {
                     missing.push(error::DelegateVerification::MissingDefaultBranch {
                         branch: canonical.to_ref_string(),

@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::ops::Not as _;
 
-pub use radicle::storage::refs::SignedRefsAt;
+pub use radicle::storage::refs::SignedRefs;
 pub use radicle::storage::{git::Validation, Validations};
 use radicle::{crypto::PublicKey, storage::ValidateRepository};
 
@@ -23,7 +23,7 @@ pub mod error {
 
 pub(crate) fn validate(
     repo: &impl ValidateRepository,
-    sigrefs: SignedRefsAt,
+    sigrefs: SignedRefs,
 ) -> Result<Option<Validations>, radicle::storage::Error> {
     let remote = radicle::storage::Remote::new(sigrefs);
     let validations = repo.validate_remote(&remote)?;
@@ -33,5 +33,5 @@ pub(crate) fn validate(
 /// The sigrefs found for each remote.
 pub(crate) type RemoteRefs = BTreeMap<
     PublicKey,
-    Result<Option<SignedRefsAt>, radicle::storage::refs::sigrefs::read::error::Read>,
+    Result<Option<SignedRefs>, radicle::storage::refs::sigrefs::read::error::Read>,
 >;

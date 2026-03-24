@@ -75,7 +75,7 @@ pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
                     term::format::tertiary(remote.to_human()),
                     term::format::secondary(refs.at),
                     match sigrefs {
-                        Ok(refs) => {
+                        Ok(Some(refs)) => {
                             let mut level = refs.feature_level();
 
                             // For their own refs, be more strict, and interpret
@@ -100,6 +100,9 @@ pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
                         }
                         Err(err) => {
                             term::format::negative(err.to_string())
+                        }
+                        Ok(None) => {
+                            term::format::negative("missing".to_string())
                         }
                     }
                 );

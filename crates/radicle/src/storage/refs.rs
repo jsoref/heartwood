@@ -21,7 +21,7 @@ use crate::git::raw::ErrorExt as _;
 use crate::git::Oid;
 use crate::storage;
 use crate::storage::refs::sigrefs::read::Tip;
-use crate::storage::{ReadRepository, RemoteId};
+use crate::storage::RemoteId;
 
 pub use crate::git::refs::storage::*;
 
@@ -76,7 +76,7 @@ impl Refs {
         committer: sigrefs::git::Committer,
         repo: &R,
         signer: &S,
-    ) -> Result<SignedRefsAt, Error>
+    ) -> Result<SignedRefs, Error>
     where
         R: sigrefs::git::object::Reader + sigrefs::git::object::Writer,
         R: sigrefs::git::reference::Reader + sigrefs::git::reference::Writer,
@@ -94,7 +94,7 @@ impl Refs {
         committer: sigrefs::git::Committer,
         repo: &R,
         signer: &S,
-    ) -> Result<SignedRefsAt, Error>
+    ) -> Result<SignedRefs, Error>
     where
         R: sigrefs::git::object::Reader + sigrefs::git::object::Writer,
         R: sigrefs::git::reference::Reader + sigrefs::git::reference::Writer,
@@ -112,7 +112,7 @@ impl Refs {
         repo: &R,
         signer: &S,
         force: bool,
-    ) -> Result<SignedRefsAt, Error>
+    ) -> Result<SignedRefs, Error>
     where
         R: sigrefs::git::object::Reader + sigrefs::git::object::Writer,
         R: sigrefs::git::reference::Reader + sigrefs::git::reference::Writer,
@@ -257,12 +257,6 @@ impl From<Refs> for BTreeMap<git::fmt::RefString, Oid> {
     }
 }
 
-impl From<SignedRefs> for Refs {
-    fn from(signed: SignedRefs) -> Self {
-        signed.refs
-    }
-}
-
 impl<I> From<I> for Refs
 where
     I: Iterator<Item = (git::fmt::RefString, Oid)>,
@@ -333,96 +327,10 @@ impl std::fmt::Display for FeatureLevel {
     }
 }
 
-/// Combination of [`Refs`] and a [`Signature`]. The signature is a cryptographic
-/// signature over the refs. This allows us to easily verify if a set of refs
-/// came from a particular key.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct SignedRefs {
-    /// The signed refs.
-    refs: Refs,
-    /// The signature of the signer over the refs.
-    #[serde(skip)]
-    signature: Signature,
-    /// This is the remote under which these refs exist, and the public key of the signer.
-    id: PublicKey,
-
-    #[serde(skip)]
-    level: FeatureLevel,
-
-    /// The [`Oid`] of the parent commit of the commit in which.
-    #[serde(skip)]
-    parent: Option<Oid>,
-}
-
-impl SignedRefs {
-    /// Returns the [`NodeId`] of the [`SignedRefs`].
-    pub fn id(&self) -> NodeId {
-        self.id
-    }
-
-    /// Returns the [`Refs`] of the [`SignedRefs`].
-    pub fn refs(&self) -> &Refs {
-        &self.refs
-    }
-
-    /// Returns the [`FeatureLevel`] computed for the signed references.
-    pub fn feature_level(&self) -> FeatureLevel {
-        self.level
-    }
-
-    /// The [`Oid`] of the parent commit, or [`None`] if these signed references
-    /// were found at a root commit.
-    pub fn parent(&self) -> Option<&Oid> {
-        self.parent.as_ref()
-    }
-
-    pub fn load<R>(remote: RemoteId, repo: &R) -> Result<Self, sigrefs::read::error::Read>
-    where
-        R: HasRepoId,
-        R: sigrefs::git::object::Reader + sigrefs::git::reference::Reader,
-    {
-        Self::load_internal(remote, repo, sigrefs::read::Tip::Reference(remote))
-    }
-
-    pub fn load_at<R>(
-        oid: Oid,
-        remote: RemoteId,
-        repo: &R,
-    ) -> Result<Self, sigrefs::read::error::Read>
-    where
-        R: HasRepoId,
-        R: sigrefs::git::object::Reader + sigrefs::git::reference::Reader,
-    {
-        Self::load_internal(remote, repo, sigrefs::read::Tip::Commit(oid))
-    }
-
-    fn load_internal<R>(
-        remote: RemoteId,
-        repo: &R,
-        tip: Tip,
-    ) -> Result<Self, sigrefs::read::error::Read>
-    where
-        R: HasRepoId,
-        R: sigrefs::git::object::Reader + sigrefs::git::reference::Reader,
-    {
-        let root = repo.rid();
-        let latest = sigrefs::SignedRefsReader::new(root, tip, repo, &remote).read()?;
-        Ok(latest.into_sigrefs_at(remote).sigrefs)
-    }
-}
-
-impl Deref for SignedRefs {
-    type Target = Refs;
-
-    fn deref(&self) -> &Self::Target {
-        &self.refs
-    }
-}
-
 /// The content-addressable information required to load a remote's
 /// `rad/sigrefs`.
 ///
-/// Use [`RefsAt::load`] to produce a [`SignedRefsAt`].
+/// Use [`RefsAt::load`] to produce [`SignedRefs`].
 ///
 /// `RefsAt` can also be used for communicating announcements of updates
 /// references to other nodes.
@@ -450,12 +358,12 @@ impl RefsAt {
         Ok(RefsAt { remote, at })
     }
 
-    pub fn load<R>(&self, repo: &R) -> Result<SignedRefsAt, sigrefs::read::error::Read>
+    pub fn load<R>(&self, repo: &R) -> Result<Option<SignedRefs>, sigrefs::read::error::Read>
     where
         R: HasRepoId,
         R: sigrefs::git::object::Reader + sigrefs::git::reference::Reader,
     {
-        SignedRefsAt::load_at(self.at, self.remote, repo)
+        SignedRefs::load_at(self.at, self.remote, repo)
     }
 
     pub fn path(&self) -> &git::fmt::Qualified<'_> {
@@ -471,13 +379,52 @@ impl std::fmt::Display for RefsAt {
 
 /// Verified [`SignedRefs`] that keeps track of their content address
 /// [`Oid`].
+///
+/// The signature is a cryptographic signature over the refs.
+/// This allows us to easily verify if a set of refs
+/// came from a particular key.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct SignedRefsAt {
-    pub sigrefs: SignedRefs,
+pub struct SignedRefs {
+    /// The signed refs.
+    refs: Refs,
+    /// The signature of the signer over the refs.
+    #[serde(skip)]
+    signature: Signature,
+    /// This is the remote under which these refs exist, and the public key of the signer.
+    id: PublicKey,
+
+    #[serde(skip)]
+    level: FeatureLevel,
+
+    /// The [`Oid`] of the parent commit of the commit in which.
+    #[serde(skip)]
+    parent: Option<Oid>,
+
     pub at: Oid,
 }
 
-impl SignedRefsAt {
+impl SignedRefs {
+    /// Returns the [`NodeId`] of the [`SignedRefs`].
+    pub fn id(&self) -> NodeId {
+        self.id
+    }
+
+    /// Returns the [`Refs`] of the [`SignedRefs`].
+    pub fn refs(&self) -> &Refs {
+        &self.refs
+    }
+
+    /// Returns the [`FeatureLevel`] computed for the signed references.
+    pub fn feature_level(&self) -> FeatureLevel {
+        self.level
+    }
+
+    /// The [`Oid`] of the parent commit, or [`None`] if these signed references
+    /// were found at a root commit.
+    pub fn parent(&self) -> Option<&Oid> {
+        self.parent.as_ref()
+    }
+
     /// Load the [`SignedRefs`] found under `remote`'s [`SIGREFS_BRANCH`].
     ///
     /// This will return `None` if the branch was not found, all other
@@ -485,42 +432,53 @@ impl SignedRefsAt {
     pub fn load<R>(remote: RemoteId, repo: &R) -> Result<Option<Self>, sigrefs::read::error::Read>
     where
         R: HasRepoId,
-        R: ReadRepository,
         R: sigrefs::git::object::Reader + sigrefs::git::reference::Reader,
     {
-        let at = match RefsAt::new(repo, remote) {
-            Ok(RefsAt { at, .. }) => at,
-            Err(sigrefs::read::error::Read::MissingSigrefs { .. }) => return Ok(None),
-            Err(e) => return Err(e),
-        };
-        Self::load_at(at, remote, repo).map(Some)
+        Self::load_internal(remote, repo, sigrefs::read::Tip::Reference(remote))
     }
 
     pub fn load_at<R>(
-        at: Oid,
+        oid: Oid,
         remote: RemoteId,
         repo: &R,
-    ) -> Result<Self, sigrefs::read::error::Read>
+    ) -> Result<Option<Self>, sigrefs::read::error::Read>
     where
         R: HasRepoId,
         R: sigrefs::git::object::Reader + sigrefs::git::reference::Reader,
     {
-        Ok(Self {
-            sigrefs: SignedRefs::load_at(at, remote, repo)?,
-            at,
-        })
+        Self::load_internal(remote, repo, sigrefs::read::Tip::Commit(oid))
+    }
+
+    fn load_internal<R>(
+        remote: RemoteId,
+        repo: &R,
+        tip: Tip,
+    ) -> Result<Option<Self>, sigrefs::read::error::Read>
+    where
+        R: HasRepoId,
+        R: sigrefs::git::object::Reader + sigrefs::git::reference::Reader,
+    {
+        let root = repo.rid();
+        match sigrefs::SignedRefsReader::new(root, tip, repo, &remote).read() {
+            Ok(latest) => Ok(Some(latest.into_sigrefs_at(remote))),
+            Err(sigrefs::read::error::Read::MissingSigrefs { namespace }) => {
+                debug_assert_eq!(namespace, remote);
+                Ok(None)
+            }
+            Err(err) => Err(err),
+        }
     }
 
     pub fn iter(&self) -> impl Iterator<Item = (&git::fmt::RefString, &Oid)> {
-        self.sigrefs.refs.iter()
+        self.refs.iter()
     }
 }
 
-impl Deref for SignedRefsAt {
-    type Target = SignedRefs;
+impl Deref for SignedRefs {
+    type Target = Refs;
 
     fn deref(&self) -> &Self::Target {
-        &self.sigrefs
+        &self.refs
     }
 }
 
@@ -678,7 +636,7 @@ mod tests {
 
         {
             // Sanity check: make sure the default branches don't already match between Alice and Bob.
-            let alice_paris_sigrefs = SignedRefsAt::load(*alice.public_key(), &paris)
+            let alice_paris_sigrefs = SignedRefs::load(*alice.public_key(), &paris)
                 .unwrap()
                 .unwrap();
             assert_ne!(

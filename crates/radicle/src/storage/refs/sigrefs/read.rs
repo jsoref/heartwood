@@ -19,8 +19,8 @@ use crate::git;
 use crate::identity::doc;
 use crate::storage::refs::sigrefs::git::{object, reference};
 use crate::storage::refs::{
-    FeatureLevel, Refs, SignedRefs, SignedRefsAt, IDENTITY_ROOT, REFS_BLOB_PATH,
-    SIGNATURE_BLOB_PATH, SIGREFS_BRANCH,
+    FeatureLevel, Refs, SignedRefs, IDENTITY_ROOT, REFS_BLOB_PATH, SIGNATURE_BLOB_PATH,
+    SIGREFS_BRANCH,
 };
 
 /// A `rad/sigrefs` that has passed the following verification checks:
@@ -50,15 +50,13 @@ impl VerifiedCommit {
         self.level
     }
 
-    pub(crate) fn into_sigrefs_at(self, id: PublicKey) -> SignedRefsAt {
-        SignedRefsAt {
-            sigrefs: SignedRefs {
-                refs: self.commit.refs,
-                signature: self.commit.signature,
-                id,
-                level: self.level,
-                parent: self.commit.parent,
-            },
+    pub(crate) fn into_sigrefs_at(self, id: PublicKey) -> SignedRefs {
+        SignedRefs {
+            refs: self.commit.refs,
+            signature: self.commit.signature,
+            id,
+            level: self.level,
+            parent: self.commit.parent,
             at: self.commit.oid,
         }
     }
