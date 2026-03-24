@@ -239,7 +239,7 @@ where
     fn sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
         &self,
         signer: &Device<G>,
-    ) -> Result<storage::refs::SignedRefs, RepositoryError> {
+    ) -> Result<storage::refs::SignedRefsAt, RepositoryError> {
         // Since this is a draft store, we do not actually want to sign the refs.
         // Instead, we just return the existing signed refs.
         let remote = self.repo.remote(signer.public_key())?;
@@ -250,7 +250,7 @@ where
     fn force_sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
         &self,
         signer: &Device<G>,
-    ) -> Result<storage::refs::SignedRefs, RepositoryError> {
+    ) -> Result<storage::refs::SignedRefsAt, RepositoryError> {
         self.sign_refs(signer)
     }
 }

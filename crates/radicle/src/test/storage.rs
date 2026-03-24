@@ -181,9 +181,7 @@ impl RemoteRepository for MockRepository {
     fn remote(&self, id: &RemoteId) -> Result<Remote, refs::Error> {
         self.remotes
             .get(id)
-            .map(|refs| Remote {
-                refs: refs.sigrefs.clone(),
-            })
+            .map(|refs| Remote { refs: refs.clone() })
             .ok_or(refs::Error::InvalidRef)
     }
 
@@ -191,14 +189,7 @@ impl RemoteRepository for MockRepository {
         Ok(self
             .remotes
             .iter()
-            .map(|(id, refs)| {
-                (
-                    *id,
-                    Remote {
-                        refs: refs.sigrefs.clone(),
-                    },
-                )
-            })
+            .map(|(id, refs)| (*id, Remote { refs: refs.clone() }))
             .collect())
     }
 
@@ -379,14 +370,14 @@ impl SignRepository for MockRepository {
     fn sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
         &self,
         _signer: &Device<G>,
-    ) -> Result<crate::storage::refs::SignedRefs, RepositoryError> {
+    ) -> Result<crate::storage::refs::SignedRefsAt, RepositoryError> {
         todo!()
     }
 
     fn force_sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
         &self,
         _signer: &Device<G>,
-    ) -> Result<crate::storage::refs::SignedRefs, RepositoryError> {
+    ) -> Result<crate::storage::refs::SignedRefsAt, RepositoryError> {
         todo!()
     }
 }

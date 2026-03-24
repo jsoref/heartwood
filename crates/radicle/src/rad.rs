@@ -15,7 +15,7 @@ use crate::identity::project::{Project, ProjectName};
 use crate::node::device::Device;
 use crate::storage::git::transport;
 use crate::storage::git::Repository;
-use crate::storage::refs::SignedRefs;
+use crate::storage::refs::SignedRefsAt;
 use crate::storage::RepositoryError;
 use crate::storage::{ReadRepository as _, RemoteId, SignRepository as _};
 use crate::storage::{WriteRepository, WriteStorage};
@@ -55,7 +55,7 @@ pub fn init<G, S>(
     visibility: Visibility,
     signer: &Device<G>,
     storage: S,
-) -> Result<(RepoId, identity::Doc, SignedRefs), InitError>
+) -> Result<(RepoId, identity::Doc, SignedRefsAt), InitError>
 where
     G: crypto::signature::Signer<crypto::Signature>,
     S: WriteStorage,
@@ -102,7 +102,7 @@ fn init_configure<G>(
     url: &git::Url,
     identity: git::Oid,
     signer: &Device<G>,
-) -> Result<SignedRefs, InitError>
+) -> Result<SignedRefsAt, InitError>
 where
     G: crypto::signature::Signer<crypto::Signature>,
 {

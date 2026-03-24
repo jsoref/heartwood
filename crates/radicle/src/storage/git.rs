@@ -18,7 +18,7 @@ use crate::identity::doc::DocError;
 use crate::identity::{CanonicalRefs, Doc, DocAt, RepoId};
 use crate::identity::{Identity, Project};
 use crate::node::device::Device;
-use crate::storage::refs::{FeatureLevel, Refs, SignedRefs, SignedRefsAt};
+use crate::storage::refs::{FeatureLevel, Refs, SignedRefsAt};
 use crate::storage::{refs, SignedRefsInfo};
 use crate::storage::{
     ReadRepository, ReadStorage, Remote, Remotes, RepositoryInfo, SetHead, SignRepository,
@@ -631,7 +631,12 @@ impl RemoteRepository for Repository {
     }
 
     fn remote(&self, remote: &RemoteId) -> Result<Remote, refs::Error> {
-        let refs = SignedRefs::load(*remote, self)?;
+        let refs = SignedRefsAt::load(*remote, self)?;
+        let refs = refs.ok_or_else(|| {
+            refs::Error::Read(refs::sigrefs::read::error::Read::MissingSigrefs {
+                namespace: *remote,
+            })
+        })?;
         Ok(Remote::new(refs))
     }
 
@@ -651,7 +656,7 @@ impl RemoteRepository for Repository {
 impl ValidateRepository for Repository {
     fn validate_remote(&self, remote: &Remote) -> Result<Validations, Error> {
         // Contains a copy of the signed refs of this remote.
-        let mut signed = BTreeMap::from((*remote.refs).clone());
+        let mut signed = BTreeMap::from((*remote.refs.sigrefs).clone());
         let mut failures = Validations::default();
         let mut has_sigrefs = false;
 
@@ -1002,14 +1007,14 @@ impl SignRepository for Repository {
     fn sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
         &self,
         signer: &Device<G>,
-    ) -> Result<SignedRefs, RepositoryError> {
+    ) -> Result<SignedRefsAt, RepositoryError> {
         self.sign_refs_with(signer, false)
     }
 
     fn force_sign_refs<G: crypto::signature::Signer<crypto::Signature>>(
         &self,
         signer: &Device<G>,
-    ) -> Result<SignedRefs, RepositoryError> {
+    ) -> Result<SignedRefsAt, RepositoryError> {
         self.sign_refs_with(signer, true)
     }
 }
@@ -1019,7 +1024,7 @@ impl Repository {
         &self,
         signer: &Device<G>,
         force: bool,
-    ) -> Result<SignedRefs, RepositoryError> {
+    ) -> Result<SignedRefsAt, RepositoryError> {
         let remote = signer.public_key();
         // Ensure the root reference is set, which is checked during sigref verification.
         if self
@@ -1038,7 +1043,7 @@ impl Repository {
             refs.save(*remote, committer, self, signer)?
         };
 
-        Ok(signed.sigrefs)
+        Ok(signed)
     }
 }
 
@@ -1224,6 +1229,6 @@ mod tests {
         unsigned.remove_sigrefs().unwrap();
 
         assert_eq!(remote.refs.refs(), signed.refs());
-        assert_eq!(*remote.refs, unsigned);
+        assert_eq!(*remote.refs.refs(), unsigned);
     }
 }

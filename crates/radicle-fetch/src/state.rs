@@ -799,7 +799,7 @@ where
     // with it.
     fn validate_remote(&self, remote: &Remote) -> Result<Validations, storage::Error> {
         // Contains a copy of the signed refs of this remote.
-        let mut signed = BTreeMap::from((*remote.refs).clone());
+        let mut signed = BTreeMap::from((*remote.refs.sigrefs).clone());
         let mut validations = Validations::default();
         let mut has_sigrefs = false;
 

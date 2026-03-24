@@ -471,7 +471,7 @@ impl std::fmt::Display for RefsAt {
 
 /// Verified [`SignedRefs`] that keeps track of their content address
 /// [`Oid`].
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct SignedRefsAt {
     pub sigrefs: SignedRefs,
     pub at: Oid,

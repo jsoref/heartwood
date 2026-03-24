@@ -23,7 +23,7 @@ pub mod error {
 
 pub(crate) fn validate(
     repo: &impl ValidateRepository,
-    SignedRefsAt { sigrefs, .. }: SignedRefsAt,
+    sigrefs: SignedRefsAt,
 ) -> Result<Option<Validations>, radicle::storage::Error> {
     let remote = radicle::storage::Remote::new(sigrefs);
     let validations = repo.validate_remote(&remote)?;
