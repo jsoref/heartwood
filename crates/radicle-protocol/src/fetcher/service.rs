@@ -165,11 +165,10 @@ mod tests {
     use radicle::storage::refs::RefsAt;
     use radicle::test::arbitrary;
     use std::num::NonZeroUsize;
-    use std::time::Duration;
 
     use super::*;
 
-    use crate::fetcher::MaxQueueSize;
+    use crate::fetcher::{FetchConfig, MaxQueueSize};
 
     #[test]
     fn test_fetch_coalescing_different_refs() {
@@ -181,7 +180,7 @@ mod tests {
         let repo = arbitrary::gen(1);
         let refs_specific: Vec<RefsAt> = arbitrary::vec(2);
         let refs_all = vec![];
-        let timeout = Duration::from_secs(30);
+        let config = FetchConfig::default();
 
         // fetch specific refs (Subscriber 1)
         let initiated1 = service.fetch(
@@ -189,7 +188,7 @@ mod tests {
                 from: node,
                 rid: repo,
                 refs: refs_specific.clone().into(),
-                timeout,
+                config,
             },
             Some(1),
         );
@@ -202,7 +201,7 @@ mod tests {
                 from: node,
                 rid: repo,
                 refs: refs_all.clone().into(),
-                timeout,
+                config,
             },
             Some(2),
         );

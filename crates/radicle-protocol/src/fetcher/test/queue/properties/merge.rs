@@ -8,7 +8,7 @@ use radicle_core::RepoId;
 
 use crate::fetcher::state::Enqueue;
 use crate::fetcher::test::queue::helpers::*;
-use crate::fetcher::RefsToFetch;
+use crate::fetcher::{FetchConfig, RefsToFetch};
 use crate::fetcher::{MaxQueueSize, Queue, QueuedFetch};
 
 #[quickcheck]
@@ -33,7 +33,7 @@ fn same_rid_merges_anywhere_in_queue(max_size: MaxQueueSize, merge_index: usize)
     let same_rid_item = QueuedFetch {
         rid: items[target_index].rid,
         refs: vec![arbitrary::gen(1)].into(),
-        timeout: Duration::from_secs(60),
+        config: FetchConfig::default(),
     };
 
     matches!(queue.enqueue(same_rid_item), Enqueue::Merged)
@@ -45,6 +45,7 @@ fn combines_refs(base_refs_count: u8, merge_refs_count: u8) -> bool {
     let merge_refs_count = (merge_refs_count as usize) % 5;
 
     let mut queue = create_queue(10);
+    let config = FetchConfig::default();
 
     let rid: RepoId = arbitrary::gen(1);
     let base_refs: Vec<RefsAt> = (0..base_refs_count).map(|_| arbitrary::gen(1)).collect();
@@ -53,13 +54,13 @@ fn combines_refs(base_refs_count: u8, merge_refs_count: u8) -> bool {
     let base_item = QueuedFetch {
         rid,
         refs: base_refs.clone().into(),
-        timeout: Duration::from_secs(30),
+        config: config.with_timeout(Duration::from_secs(30)),
     };
 
     let merge_item = QueuedFetch {
         rid,
         refs: merge_refs.clone().into(),
-        timeout: Duration::from_secs(30),
+        config: config.with_timeout(Duration::from_secs(30)),
     };
 
     let _ = queue.enqueue(base_item);
@@ -84,19 +85,20 @@ fn combines_refs(base_refs_count: u8, merge_refs_count: u8) -> bool {
 fn empty_refs_fetches_all() -> bool {
     let mut queue = create_queue(10);
     let rid: RepoId = arbitrary::gen(1);
+    let config = FetchConfig::default();
 
     // First enqueue with specific refs
     let item_with_refs = QueuedFetch {
         rid,
         refs: vec![arbitrary::gen(1), arbitrary::gen(1)].into(),
-        timeout: Duration::from_secs(30),
+        config,
     };
 
     // Second enqueue with empty refs (fetch everything)
     let item_empty_refs = QueuedFetch {
         rid,
         refs: RefsToFetch::All,
-        timeout: Duration::from_secs(30),
+        config,
     };
 
     let _ = queue.enqueue(item_with_refs);
@@ -110,20 +112,20 @@ fn empty_refs_fetches_all() -> bool {
 fn longer_timeout_preserved(short_secs: u16, long_secs: u16) -> bool {
     let short = Duration::from_secs(short_secs.min(long_secs) as u64);
     let long = Duration::from_secs(short_secs.max(long_secs) as u64);
-
+    let config = FetchConfig::default();
     let mut queue = create_queue(10);
     let rid: RepoId = arbitrary::gen(1);
 
     let item_short = QueuedFetch {
         rid,
         refs: RefsToFetch::All,
-        timeout: short,
+        config: config.with_timeout(short),
     };
 
     let item_long = QueuedFetch {
         rid,
         refs: RefsToFetch::All,
-        timeout: long,
+        config: config.with_timeout(long),
     };
 
     // Test both orderings
@@ -136,24 +138,25 @@ fn longer_timeout_preserved(short_secs: u16, long_secs: u16) -> bool {
     let _ = queue2.enqueue(item_short);
     let dequeued2 = queue2.dequeue().unwrap();
 
-    dequeued1.timeout == long && dequeued2.timeout == long
+    dequeued1.config.timeout() == long && dequeued2.config.timeout() == long
 }
 
 #[quickcheck]
 fn does_not_increase_queue_length() -> bool {
     let mut queue = create_queue(10);
     let rid: RepoId = arbitrary::gen(1);
+    let config = FetchConfig::default();
 
     let item1 = QueuedFetch {
         rid,
         refs: vec![arbitrary::gen(1)].into(),
-        timeout: Duration::from_secs(30),
+        config: config.with_timeout(Duration::from_secs(30)),
     };
 
     let item2 = QueuedFetch {
         rid,
         refs: vec![arbitrary::gen(1)].into(),
-        timeout: Duration::from_secs(60),
+        config: config.with_timeout(Duration::from_secs(60)),
     };
 
     let _ = queue.enqueue(item1);
@@ -184,23 +187,24 @@ fn succeed_when_at_capacity() -> bool {
     // When queue is at capacity, merging with existing item should still work
     let mut queue = create_queue(2);
     let rid: RepoId = arbitrary::gen(1);
+    let config = FetchConfig::default();
 
     let item1 = QueuedFetch {
         rid,
         refs: RefsToFetch::All,
-        timeout: Duration::from_secs(30),
+        config: config.with_timeout(Duration::from_secs(30)),
     };
 
     let item2 = QueuedFetch {
         rid: arbitrary::gen(1), // Different rid
         refs: RefsToFetch::All,
-        timeout: Duration::from_secs(30),
+        config: config.with_timeout(Duration::from_secs(30)),
     };
 
     let merge_item = QueuedFetch {
         rid, // Same as item1
         refs: vec![arbitrary::gen(1)].into(),
-        timeout: Duration::from_secs(60),
+        config: config.with_timeout(Duration::from_secs(60)),
     };
 
     let _ = queue.enqueue(item1);

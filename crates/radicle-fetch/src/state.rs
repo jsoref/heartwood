@@ -94,13 +94,13 @@ pub mod error {
 type IdentityTips = BTreeMap<PublicKey, Oid>;
 type SigrefTips = BTreeMap<PublicKey, Oid>;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct FetchLimit {
     pub special: u64,
     pub refs: u64,
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Config {
     pub limit: FetchLimit,
     pub level_min: FeatureLevel,

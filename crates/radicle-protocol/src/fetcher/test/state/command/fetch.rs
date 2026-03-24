@@ -5,8 +5,8 @@ use radicle_core::{NodeId, RepoId};
 
 use crate::fetcher::state::{command, event};
 use crate::fetcher::test::state::helpers;
-use crate::fetcher::RefsToFetch;
 use crate::fetcher::{ActiveFetch, FetcherState};
+use crate::fetcher::{FetchConfig, RefsToFetch};
 
 #[test]
 fn fetch_start_first_fetch_for_node() {
@@ -14,13 +14,13 @@ fn fetch_start_first_fetch_for_node() {
     let node_a: NodeId = arbitrary::gen(1);
     let repo_1: RepoId = arbitrary::gen(1);
     let refs_1 = helpers::gen_refs(2);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     let event = state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: refs_1.clone(),
-        timeout,
+        config,
     });
 
     assert_eq!(
@@ -29,7 +29,7 @@ fn fetch_start_first_fetch_for_node() {
             rid: repo_1,
             from: node_a,
             refs: refs_1.clone(),
-            timeout,
+            config,
         }
     );
     assert_eq!(
@@ -47,13 +47,13 @@ fn fetch_different_repo_same_node_within_capacity() {
     let node_a: NodeId = arbitrary::gen(1);
     let repo_1: RepoId = arbitrary::gen(1);
     let repo_2: RepoId = arbitrary::gen(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     let event1 = state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     assert!(matches!(event1, event::Fetch::Started { .. }));
 
@@ -61,7 +61,7 @@ fn fetch_different_repo_same_node_within_capacity() {
         from: node_a,
         rid: repo_2,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     assert!(matches!(event2, event::Fetch::Started { rid, .. } if rid == repo_2));
@@ -76,13 +76,13 @@ fn fetch_same_repo_different_nodes_queues_second() {
     let node_b: NodeId = arbitrary::gen(1);
     let repo_1: RepoId = arbitrary::gen(1);
     let refs_1 = helpers::gen_refs(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     let event1 = state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: refs_1.clone(),
-        timeout,
+        config,
     });
     assert!(matches!(event1, event::Fetch::Started { .. }));
 
@@ -91,7 +91,7 @@ fn fetch_same_repo_different_nodes_queues_second() {
         from: node_b,
         rid: repo_1,
         refs: refs_1.clone(),
-        timeout,
+        config,
     });
 
     assert!(
@@ -109,20 +109,20 @@ fn fetch_duplicate_returns_already_fetching() {
     let node_a: NodeId = arbitrary::gen(1);
     let repo_1: RepoId = arbitrary::gen(1);
     let refs_1 = helpers::gen_refs(2);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: refs_1.clone(),
-        timeout,
+        config,
     });
 
     let event = state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: refs_1.clone(),
-        timeout,
+        config,
     });
 
     assert_eq!(
@@ -141,20 +141,20 @@ fn fetch_same_repo_different_refs_enqueues() {
     let repo_1: RepoId = arbitrary::gen(1);
     let refs_1 = helpers::gen_refs(1);
     let refs_2 = helpers::gen_refs(2);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: refs_1.clone(),
-        timeout,
+        config,
     });
 
     let event = state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: refs_2.clone(),
-        timeout,
+        config,
     });
 
     assert_eq!(
@@ -172,20 +172,20 @@ fn fetch_at_capacity_enqueues() {
     let node_a: NodeId = arbitrary::gen(1);
     let repo_1: RepoId = arbitrary::gen(1);
     let repo_2: RepoId = arbitrary::gen(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     let event = state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     assert_eq!(
@@ -207,14 +207,14 @@ fn fetch_queue_rejected_capacity_reached() {
     let repo_2: RepoId = arbitrary::gen(1);
     let repo_3: RepoId = arbitrary::gen(1);
     let repo_4: RepoId = arbitrary::gen(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     // Fill concurrency
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     // Fill queue (capacity 2)
@@ -222,13 +222,13 @@ fn fetch_queue_rejected_capacity_reached() {
         from: node_a,
         rid: repo_2,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_3,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     // Exceed queue capacity
@@ -237,7 +237,7 @@ fn fetch_queue_rejected_capacity_reached() {
         from: node_a,
         rid: repo_4,
         refs: refs_4.clone(),
-        timeout,
+        config,
     });
 
     assert_eq!(
@@ -246,7 +246,7 @@ fn fetch_queue_rejected_capacity_reached() {
             rid: repo_4,
             from: node_a,
             refs: refs_4,
-            timeout,
+            config,
             capacity: 2,
         }
     );
@@ -260,20 +260,20 @@ fn fetch_queue_merges_already_queued() {
     let repo_2: RepoId = arbitrary::gen(1);
     let refs_2a = helpers::gen_refs(1);
     let refs_2b = helpers::gen_refs(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
         refs: refs_2a.clone(),
-        timeout,
+        config,
     });
 
     // Second fetch for same queued repo - should merge refs
@@ -281,7 +281,7 @@ fn fetch_queue_merges_already_queued() {
         from: node_a,
         rid: repo_2,
         refs: refs_2b.clone(),
-        timeout,
+        config,
     });
 
     // Returns Queued (merged)
@@ -319,13 +319,13 @@ fn fetch_queue_merge_empty_refs_fetches_all() {
     let repo_1: RepoId = arbitrary::gen(1);
     let repo_2: RepoId = arbitrary::gen(1);
     let refs_2 = helpers::gen_refs(2);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     // Queue with specific refs
@@ -333,7 +333,7 @@ fn fetch_queue_merge_empty_refs_fetches_all() {
         from: node_a,
         rid: repo_2,
         refs: refs_2.clone(),
-        timeout,
+        config,
     });
 
     // Queue again with empty refs (fetch everything)
@@ -341,7 +341,7 @@ fn fetch_queue_merge_empty_refs_fetches_all() {
         from: node_a,
         rid: repo_2,
         refs: RefsToFetch::All,
-        timeout,
+        config,
     });
 
     // Dequeue and verify refs became empty (fetch all)
@@ -362,12 +362,13 @@ fn fetch_queue_merge_takes_longer_timeout() {
     let repo_2: RepoId = arbitrary::gen(1);
     let short_timeout = Duration::from_secs(10);
     let long_timeout = Duration::from_secs(60);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout: short_timeout,
+        config: config.with_timeout(short_timeout),
     });
 
     // Queue with short timeout
@@ -375,7 +376,7 @@ fn fetch_queue_merge_takes_longer_timeout() {
         from: node_a,
         rid: repo_2,
         refs: helpers::gen_refs(1),
-        timeout: short_timeout,
+        config: config.with_timeout(short_timeout),
     });
 
     // Queue again with longer timeout
@@ -383,7 +384,7 @@ fn fetch_queue_merge_takes_longer_timeout() {
         from: node_a,
         rid: repo_2,
         refs: helpers::gen_refs(1),
-        timeout: long_timeout,
+        config: config.with_timeout(long_timeout),
     });
 
     state.fetched(command::Fetched {
@@ -392,7 +393,7 @@ fn fetch_queue_merge_takes_longer_timeout() {
     });
     // Dequeue and verify timeout is the longer one
     let queued = state.dequeue(&node_a).unwrap();
-    assert_eq!(queued.timeout, long_timeout);
+    assert_eq!(queued.config.timeout(), long_timeout);
 }
 
 #[test]
@@ -401,13 +402,13 @@ fn fetch_after_previous_completed() {
     let node_a: NodeId = arbitrary::gen(1);
     let repo_1: RepoId = arbitrary::gen(1);
     let refs_1 = helpers::gen_refs(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: refs_1.clone(),
-        timeout,
+        config,
     });
     state.fetched(command::Fetched {
         from: node_a,
@@ -418,7 +419,7 @@ fn fetch_after_previous_completed() {
         from: node_a,
         rid: repo_1,
         refs: refs_1.clone(),
-        timeout,
+        config,
     });
 
     assert!(matches!(event, event::Fetch::Started { .. }));

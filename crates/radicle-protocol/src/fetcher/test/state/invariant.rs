@@ -1,11 +1,9 @@
-use std::time::Duration;
-
 use radicle::test::arbitrary;
 use radicle_core::{NodeId, RepoId};
 
 use crate::fetcher::state::command;
 use crate::fetcher::test::state::helpers;
-use crate::fetcher::FetcherState;
+use crate::fetcher::{FetchConfig, FetcherState};
 
 #[test]
 fn queue_integrity_after_merge() {
@@ -15,20 +13,20 @@ fn queue_integrity_after_merge() {
     let repo_2: RepoId = arbitrary::gen(1);
     let refs_2a = helpers::gen_refs(1);
     let refs_2b = helpers::gen_refs(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
         refs: refs_2a.clone(),
-        timeout,
+        config,
     });
 
     // Second fetch for same repo - should merge
@@ -36,7 +34,7 @@ fn queue_integrity_after_merge() {
         from: node_a,
         rid: repo_2,
         refs: refs_2b.clone(),
-        timeout,
+        config,
     });
 
     // Queue should have exactly one repo_2 entry (merged)

@@ -6,7 +6,9 @@ pub mod service;
 pub use service::FetcherService;
 
 pub mod state;
-pub use state::{ActiveFetch, Config, FetcherState, MaxQueueSize, Queue, QueueIter, QueuedFetch};
+pub use state::{
+    ActiveFetch, Config, FetchConfig, FetcherState, MaxQueueSize, Queue, QueueIter, QueuedFetch,
+};
 
 #[cfg(test)]
 mod test;

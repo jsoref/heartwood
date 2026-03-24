@@ -10,6 +10,7 @@ pub mod event;
 
 pub use command::Command;
 pub use event::Event;
+use radicle::storage::refs::FeatureLevel;
 
 use std::collections::{BTreeMap, VecDeque};
 use std::num::NonZeroUsize;
@@ -18,11 +19,85 @@ use std::time;
 use radicle_core::{NodeId, RepoId};
 
 use crate::fetcher::RefsToFetch;
+use crate::service::FETCH_TIMEOUT;
 
 /// Default for the maximum items per fetch queue.
 pub const MAX_FETCH_QUEUE_SIZE: usize = 128;
 /// Default for maximum concurrency per node.
 pub const MAX_CONCURRENCY: NonZeroUsize = NonZeroUsize::MIN;
+
+/// Configuration options for tuning the fetch process.
+///
+/// Note that these are not used directly by [`FetcherState`], but are
+/// maintained within the state so that the options can be tracked across queued
+/// fetches.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct FetchConfig {
+    timeout: time::Duration,
+    protocol: radicle_fetch::Config,
+}
+
+impl FetchConfig {
+    /// Construct the default [`FetchConfig`].
+    pub fn new() -> Self {
+        Self {
+            timeout: FETCH_TIMEOUT,
+            protocol: radicle_fetch::Config::default(),
+        }
+    }
+
+    /// Set the [`FetchConfig::timeout`] to the given [`time::Duration`].
+    pub fn with_timeout(mut self, timeout: time::Duration) -> Self {
+        self.timeout = timeout;
+        self
+    }
+
+    /// Set the [`FetchConfig::fetch_config`] to the given [`radicle_fetch::Config`].
+    pub fn with_fetch_config(mut self, config: radicle_fetch::Config) -> Self {
+        self.protocol = config;
+        self
+    }
+
+    /// Set the minimum feature level, within the [`FetchConfig::fetch_config`],
+    /// to the given [`FeatureLevel`].
+    pub fn with_minimum_feature_level(mut self, feature_level: FeatureLevel) -> Self {
+        self.protocol.level_min = feature_level;
+        self
+    }
+
+    /// Return the timeout duration configured for this fetch.
+    pub fn timeout(&self) -> time::Duration {
+        self.timeout
+    }
+
+    /// Return the [`radicle_fetch::Config`] configured for this fetch.
+    pub fn fetch_config(&self) -> radicle_fetch::Config {
+        self.protocol
+    }
+
+    /// Merge another [`FetchConfig`] with the current one.
+    /// For each field, the following semantics occur:
+    /// - `timeout`: the maximum timeout is taken
+    /// - `protocol.limit.refs`: the maximum limit is taken
+    /// - `protocol.limit.special`: the maximum limit is taken
+    /// - `protocol.level_min`: the minimum level is taken
+    fn merge(&mut self, other: FetchConfig) {
+        self.timeout = self.timeout.max(other.timeout);
+        self.protocol.limit.refs = self.protocol.limit.refs.max(other.protocol.limit.refs);
+        self.protocol.limit.special = self
+            .protocol
+            .limit
+            .special
+            .max(other.protocol.limit.special);
+        self.protocol.level_min = self.protocol.level_min.min(other.protocol.level_min);
+    }
+}
+
+impl Default for FetchConfig {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 /// Logical state for Git fetches happening in the node.
 ///
@@ -98,19 +173,19 @@ impl FetcherState {
             from,
             rid,
             refs,
-            timeout,
+            config,
         }: command::Fetch,
     ) -> event::Fetch {
         if let Some(active) = self.active.get(&rid) {
             if active.refs == refs && active.from == from {
                 return event::Fetch::AlreadyFetching { rid, from };
             } else {
-                return self.enqueue(rid, from, refs, timeout);
+                return self.enqueue(rid, from, refs, config);
             }
         }
 
         if self.is_at_node_capacity(&from) {
-            self.enqueue(rid, from, refs, timeout)
+            self.enqueue(rid, from, refs, config)
         } else {
             self.active.insert(
                 rid,
@@ -123,7 +198,7 @@ impl FetcherState {
                 rid,
                 from,
                 refs,
-                timeout,
+                config,
             }
         }
     }
@@ -184,19 +259,19 @@ impl FetcherState {
         rid: RepoId,
         from: NodeId,
         refs: RefsToFetch,
-        timeout: time::Duration,
+        config: FetchConfig,
     ) -> event::Fetch {
         let queue = self
             .queues
             .entry(from)
             .or_insert(Queue::new(self.config.maximum_queue_size));
-        match queue.enqueue(QueuedFetch { rid, refs, timeout }) {
-            Enqueue::CapacityReached(QueuedFetch { rid, refs, timeout }) => {
+        match queue.enqueue(QueuedFetch { rid, refs, config }) {
+            Enqueue::CapacityReached(QueuedFetch { rid, refs, config }) => {
                 event::Fetch::QueueAtCapacity {
                     rid,
                     from,
                     refs,
-                    timeout,
+                    config,
                     capacity: queue.len(),
                 }
             }
@@ -296,8 +371,8 @@ pub struct QueuedFetch {
     pub rid: RepoId,
     /// The references that the fetch is being performed for.
     pub refs: RefsToFetch,
-    /// The timeout given for the fetch request.
-    pub timeout: time::Duration,
+    /// The configuration options to pass to the fetch process.
+    pub config: FetchConfig,
 }
 
 /// A queue for keeping track of fetches.
@@ -375,8 +450,7 @@ impl Queue {
     pub(super) fn enqueue(&mut self, fetch: QueuedFetch) -> Enqueue {
         if let Some(existing) = self.queue.iter_mut().find(|qf| qf.rid == fetch.rid) {
             existing.refs = existing.refs.clone().merge(fetch.refs);
-            // Take the longer timeout (more generous)
-            existing.timeout = existing.timeout.max(fetch.timeout);
+            existing.config.merge(fetch.config);
             return Enqueue::Merged;
         }
 

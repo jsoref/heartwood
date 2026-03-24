@@ -1,11 +1,9 @@
-use std::time::Duration;
-
 use radicle::test::arbitrary;
 use radicle_core::{NodeId, RepoId};
 
 use crate::fetcher::state::{command, event};
 use crate::fetcher::test::state::helpers;
-use crate::fetcher::FetcherState;
+use crate::fetcher::{FetchConfig, FetcherState};
 
 #[test]
 fn complete_single_ongoing() {
@@ -13,13 +11,13 @@ fn complete_single_ongoing() {
     let node_a: NodeId = arbitrary::gen(1);
     let repo_1: RepoId = arbitrary::gen(1);
     let refs_1 = helpers::gen_refs(2);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: refs_1.clone(),
-        timeout,
+        config,
     });
 
     let event = state.fetched(command::Fetched {
@@ -46,13 +44,13 @@ fn complete_then_dequeue_fifo() {
     let repo_2: RepoId = arbitrary::gen(1);
     let repo_3: RepoId = arbitrary::gen(1);
     let refs_2 = helpers::gen_refs(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     // Queue repo_2 first, then repo_3
@@ -60,13 +58,13 @@ fn complete_then_dequeue_fifo() {
         from: node_a,
         rid: repo_2,
         refs: refs_2.clone(),
-        timeout,
+        config,
     });
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_3,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     let event = state.fetched(command::Fetched {
@@ -91,25 +89,25 @@ fn complete_one_of_multiple() {
     let repo_1: RepoId = arbitrary::gen(1);
     let repo_2: RepoId = arbitrary::gen(1);
     let repo_3: RepoId = arbitrary::gen(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_3,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     let event = state.fetched(command::Fetched {

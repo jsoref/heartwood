@@ -864,7 +864,9 @@ where
                 }
             },
             Command::Fetch(rid, seed, timeout, resp) => {
-                self.fetch(rid, seed, vec![], timeout, Some(resp));
+                // TODO(finto): pass through feature-level
+                let config = self.fetch_config().with_timeout(timeout);
+                self.fetch(rid, seed, vec![], config, Some(resp));
             }
             Command::Seed(rid, scope, resp) => {
                 // Update our seeding policy.
@@ -971,14 +973,14 @@ where
         from: NodeId,
         refs: NonEmpty<RefsAt>,
         scope: Scope,
-        timeout: time::Duration,
+        config: fetcher::FetchConfig,
     ) -> bool {
         match self.refs_status_of(rid, refs, &scope) {
             Ok(status) => {
                 if status.want.is_empty() {
                     debug!(target: "service", "Skipping fetch for {rid}, all refs are already in storage");
                 } else {
-                    self.fetch(rid, from, status.want, timeout, None);
+                    self.fetch(rid, from, status.want, config, None);
                     return true;
                 }
             }
@@ -995,7 +997,7 @@ where
         rid: RepoId,
         from: NodeId,
         refs_at: Vec<RefsAt>,
-        timeout: time::Duration,
+        config: fetcher::FetchConfig,
         channel: Option<command::Responder<FetchResult>>,
     ) {
         let session = {
@@ -1019,7 +1021,7 @@ where
             from,
             rid,
             refs: refs_at.into(),
-            timeout,
+            config,
         };
         let fetcher::service::FetchInitiated { event, rejected } = self.fetcher.fetch(cmd, channel);
 
@@ -1035,15 +1037,15 @@ where
                 rid,
                 from,
                 refs: refs_at,
-                timeout,
+                config,
             } => {
                 debug!(target: "service", "Starting fetch for {rid} from {from}");
                 self.outbox.fetch(
                     session,
                     rid,
                     refs_at.into(),
-                    timeout,
                     self.config.limits.fetch_pack_receive,
+                    config,
                 );
             }
             fetcher::state::event::Fetch::Queued { rid, from } => {
@@ -1182,7 +1184,7 @@ where
             let Some(fetcher::QueuedFetch {
                 rid,
                 refs: refs_at,
-                timeout,
+                config,
             }) = self.fetcher.dequeue(&nid)
             else {
                 continue;
@@ -1203,12 +1205,12 @@ where
 
             match refs_at {
                 RefsToFetch::Refs(refs) => {
-                    self.fetch_refs_at(rid, nid, refs, scope, timeout);
+                    self.fetch_refs_at(rid, nid, refs, scope, config);
                 }
                 RefsToFetch::All => {
                     // Channel is `None` since they will already be
                     // registered with the fetcher service.
-                    self.fetch(rid, nid, vec![], timeout, None);
+                    self.fetch(rid, nid, vec![], config, None);
                 }
             }
         }
@@ -1592,7 +1594,7 @@ where
 
                 for rid in missing {
                     debug!(target: "service", "Missing seeded inventory {rid}; initiating fetch..");
-                    self.fetch(rid, *announcer, vec![], FETCH_TIMEOUT, None);
+                    self.fetch(rid, *announcer, vec![], self.fetch_config(), None);
                 }
                 return Ok(relay);
             }
@@ -1682,7 +1684,7 @@ where
                     return Ok(relay);
                 };
                 // Finally, start the fetch.
-                self.fetch_refs_at(message.rid, remote.id, refs, scope, FETCH_TIMEOUT);
+                self.fetch_refs_at(message.rid, remote.id, refs, scope, self.fetch_config());
 
                 return Ok(relay);
             }
@@ -2513,7 +2515,7 @@ where
                 Ok(seeds) => {
                     if let Some(connected) = NonEmpty::from_vec(seeds.connected().collect()) {
                         for seed in connected {
-                            self.fetch(rid, seed.nid, vec![], FETCH_TIMEOUT, None);
+                            self.fetch(rid, seed.nid, vec![], self.fetch_config(), None);
                         }
                     } else {
                         // TODO: We should make sure that this fetch is retried later, either
@@ -2660,6 +2662,11 @@ where
             AddressType::Onion => self.config.onion.is_some(),
             AddressType::Dns | AddressType::Ipv4 | AddressType::Ipv6 => true,
         }
+    }
+
+    fn fetch_config(&self) -> fetcher::FetchConfig {
+        fetcher::FetchConfig::default()
+            .with_minimum_feature_level(self.config.fetch.feature_level_min())
     }
 }
 

@@ -5,7 +5,7 @@ use radicle_core::{NodeId, RepoId};
 
 use crate::fetcher::state::command;
 use crate::fetcher::test::state::helpers;
-use crate::fetcher::FetcherState;
+use crate::fetcher::{FetchConfig, FetcherState};
 
 #[test]
 fn cannot_dequeue_while_node_at_capacity() {
@@ -20,14 +20,14 @@ fn cannot_dequeue_while_node_at_capacity() {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout: Duration::from_secs(10),
+        config: FetchConfig::default().with_timeout(Duration::from_secs(10)),
     });
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
         refs: refs_2.clone(),
-        timeout: timeout_2,
+        config: FetchConfig::default().with_timeout(timeout_2),
     });
 
     let result = state.dequeue(&node_a);
@@ -42,7 +42,7 @@ fn cannot_dequeue_while_node_at_capacity() {
     let queued = result.unwrap();
     assert_eq!(queued.rid, repo_2);
     assert_eq!(queued.refs, refs_2);
-    assert_eq!(queued.timeout, timeout_2);
+    assert_eq!(queued.config.timeout(), timeout_2);
 }
 
 #[test]
@@ -53,13 +53,13 @@ fn maintains_fifo_order() {
     let repo_2: RepoId = arbitrary::gen(1);
     let repo_3: RepoId = arbitrary::gen(1);
     let repo_4: RepoId = arbitrary::gen(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     // Queue in order: repo_2, repo_3, repo_4
@@ -67,19 +67,19 @@ fn maintains_fifo_order() {
         from: node_a,
         rid: repo_2,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_3,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_4,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     state.fetched(command::Fetched {

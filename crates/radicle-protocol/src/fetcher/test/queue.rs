@@ -7,10 +7,13 @@ use std::time::Duration;
 
 use qcheck::Arbitrary;
 
-use radicle::storage::refs::RefsAt;
+use radicle::storage::refs::{FeatureLevel, RefsAt};
 use radicle_core::RepoId;
 
-use crate::fetcher::state::{MaxQueueSize, QueuedFetch};
+use crate::fetcher::{
+    state::{MaxQueueSize, QueuedFetch},
+    FetchConfig,
+};
 
 impl Arbitrary for QueuedFetch {
     fn arbitrary(g: &mut qcheck::Gen) -> Self {
@@ -21,7 +24,9 @@ impl Arbitrary for QueuedFetch {
         QueuedFetch {
             rid: RepoId::arbitrary(g),
             refs: refs_at.into(),
-            timeout: Duration::from_secs(u64::arbitrary(g) % 3600),
+            config: FetchConfig::default()
+                .with_timeout(Duration::from_secs(u64::arbitrary(g) % 3600))
+                .with_minimum_feature_level(FeatureLevel::arbitrary(g)),
         }
     }
 }

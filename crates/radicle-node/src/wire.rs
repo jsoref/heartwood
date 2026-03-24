@@ -1010,9 +1010,9 @@ where
                 Io::Fetch {
                     rid,
                     remote,
-                    timeout,
                     reader_limit,
                     refs_at,
+                    config,
                 } => {
                     log::trace!(target: "wire", "Processing fetch for {rid} from {remote}..");
 
@@ -1026,8 +1026,9 @@ where
                         log::debug!(target: "wire", "Peer {remote} is not connected: dropping fetch");
                         continue;
                     };
-                    let (stream, channels) =
-                        streams.open(ChannelsConfig::new(timeout).with_reader_limit(reader_limit));
+                    let (stream, channels) = streams.open(
+                        ChannelsConfig::new(config.timeout()).with_reader_limit(reader_limit),
+                    );
 
                     log::debug!(target: "wire", "Opened new stream with id {stream} for {rid} and remote {remote}");
 
@@ -1037,6 +1038,7 @@ where
                             rid,
                             remote,
                             refs_at,
+                            config: config.fetch_config(),
                         },
                         stream,
                         channels,

@@ -1,11 +1,9 @@
-use std::time::Duration;
-
 use radicle::test::arbitrary;
 use radicle_core::{NodeId, RepoId};
 
 use crate::fetcher::state::{command, event};
 use crate::fetcher::test::state::helpers;
-use crate::fetcher::{ActiveFetch, FetcherState};
+use crate::fetcher::{ActiveFetch, FetchConfig, FetcherState};
 
 #[test]
 fn single_ongoing() {
@@ -13,13 +11,13 @@ fn single_ongoing() {
     let node_a: NodeId = arbitrary::gen(1);
     let repo_1: RepoId = arbitrary::gen(1);
     let refs_1 = helpers::gen_refs(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: refs_1.clone(),
-        timeout,
+        config,
     });
 
     let event = state.cancel(command::Cancel { from: node_a });
@@ -53,25 +51,25 @@ fn ongoing_and_queued() {
     let repo_1: RepoId = arbitrary::gen(1);
     let repo_2: RepoId = arbitrary::gen(1);
     let repo_3: RepoId = arbitrary::gen(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_3,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     let event = state.cancel(command::Cancel { from: node_a });
@@ -107,19 +105,19 @@ fn cancellation_is_isolated() {
     let node_b: NodeId = arbitrary::gen(1);
     let repo_1: RepoId = arbitrary::gen(1);
     let repo_2: RepoId = arbitrary::gen(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     state.fetch(command::Fetch {
         from: node_b,
         rid: repo_2,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     state.cancel(command::Cancel { from: node_a });

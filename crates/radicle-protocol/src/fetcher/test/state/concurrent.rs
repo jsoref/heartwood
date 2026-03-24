@@ -1,11 +1,9 @@
-use std::time::Duration;
-
 use radicle::test::arbitrary;
 use radicle_core::{NodeId, RepoId};
 
 use crate::fetcher::state::{command, event};
 use crate::fetcher::test::state::helpers;
-use crate::fetcher::FetcherState;
+use crate::fetcher::{FetchConfig, FetcherState};
 
 #[test]
 fn interleaved_operations() {
@@ -15,14 +13,14 @@ fn interleaved_operations() {
     let repo_1: RepoId = arbitrary::gen(1);
     let repo_2: RepoId = arbitrary::gen(1);
     let repo_3: RepoId = arbitrary::gen(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     // fetch(A, r1)
     let e1 = state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     assert!(matches!(e1, event::Fetch::Started { .. }));
 
@@ -31,7 +29,7 @@ fn interleaved_operations() {
         from: node_b,
         rid: repo_2,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     assert!(matches!(e2, event::Fetch::Started { .. }));
 
@@ -47,7 +45,7 @@ fn interleaved_operations() {
         from: node_a,
         rid: repo_3,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     assert!(matches!(e4, event::Fetch::Started { .. }));
 
@@ -70,19 +68,19 @@ fn fetched_then_cancel() {
     let node_a: NodeId = arbitrary::gen(1);
     let repo_1: RepoId = arbitrary::gen(1);
     let repo_2: RepoId = arbitrary::gen(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     // Complete repo_1

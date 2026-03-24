@@ -1,11 +1,9 @@
-use std::time::Duration;
-
 use radicle::test::arbitrary;
 use radicle_core::{NodeId, RepoId};
 
 use crate::fetcher::state::{command, event};
 use crate::fetcher::test::state::helpers;
-use crate::fetcher::FetcherState;
+use crate::fetcher::{FetchConfig, FetcherState};
 
 #[test]
 fn independent_queues() {
@@ -16,20 +14,20 @@ fn independent_queues() {
     let repo_b_active: RepoId = arbitrary::gen(2);
     let repo_a_queued: RepoId = arbitrary::gen(10);
     let repo_b_queued: RepoId = arbitrary::gen(20);
-    let timeout = Duration::from_secs(30);
+    let fetch_config = FetchConfig::default();
 
     // Fill capacity for both nodes
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_a_active,
         refs: helpers::gen_refs(1),
-        timeout,
+        config: fetch_config,
     });
     state.fetch(command::Fetch {
         from: node_b,
         rid: repo_b_active,
         refs: helpers::gen_refs(1),
-        timeout,
+        config: fetch_config,
     });
 
     // Queue for both
@@ -37,13 +35,13 @@ fn independent_queues() {
         from: node_a,
         rid: repo_a_queued,
         refs: helpers::gen_refs(1),
-        timeout,
+        config: fetch_config,
     });
     state.fetch(command::Fetch {
         from: node_b,
         rid: repo_b_queued,
         refs: helpers::gen_refs(1),
-        timeout,
+        config: fetch_config,
     });
 
     // Dequeue from A doesn't affect B
@@ -65,7 +63,7 @@ fn independent_queues() {
 #[test]
 fn high_count() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     for i in 0..100 {
         let node: NodeId = arbitrary::gen(i + 1);
@@ -74,7 +72,7 @@ fn high_count() {
             from: node,
             rid: repo,
             refs: helpers::gen_refs(1),
-            timeout,
+            config,
         });
         assert!(matches!(event, event::Fetch::Started { .. }));
     }

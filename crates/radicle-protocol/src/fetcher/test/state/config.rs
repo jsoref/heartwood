@@ -1,17 +1,15 @@
-use std::time::Duration;
-
 use radicle::test::arbitrary;
 use radicle_core::{NodeId, RepoId};
 
 use crate::fetcher::state::{command, event};
 use crate::fetcher::test::state::helpers;
-use crate::fetcher::FetcherState;
+use crate::fetcher::{FetchConfig, FetcherState};
 
 #[test]
 fn high_concurrency() {
     let mut state = FetcherState::new(helpers::config(100, 10));
     let node_a: NodeId = arbitrary::gen(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     for i in 0..100 {
         let repo: RepoId = arbitrary::gen(i + 1);
@@ -19,7 +17,7 @@ fn high_concurrency() {
             from: node_a,
             rid: repo,
             refs: helpers::gen_refs(1),
-            timeout,
+            config,
         });
         assert!(
             matches!(event, event::Fetch::Started { .. }),
@@ -45,20 +43,20 @@ fn min_queue_size() {
     let repo_1: RepoId = arbitrary::gen(1);
     let repo_2: RepoId = arbitrary::gen(1);
     let repo_3: RepoId = arbitrary::gen(1);
-    let timeout = Duration::from_secs(30);
+    let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
         from: node_a,
         rid: repo_1,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
 
     let event1 = state.fetch(command::Fetch {
         from: node_a,
         rid: repo_2,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     assert!(matches!(event1, event::Fetch::Queued { .. }));
 
@@ -66,7 +64,7 @@ fn min_queue_size() {
         from: node_a,
         rid: repo_3,
         refs: helpers::gen_refs(1),
-        timeout,
+        config,
     });
     assert!(matches!(event2, event::Fetch::QueueAtCapacity { .. }));
 }

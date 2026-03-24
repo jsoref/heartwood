@@ -8,11 +8,7 @@ use radicle::node::Event;
 use radicle::prelude::NodeId;
 use radicle::storage::refs::RefsAt;
 
-// use crate::runtime::{thread, Emitter, Handle};
-
 use radicle::node::events::Emitter;
-
-// pub use channels::{ChannelEvent, Channels, ChannelsConfig};
 
 /// Error returned by fetch.
 #[derive(thiserror::Error, Debug)]
@@ -82,6 +78,10 @@ pub enum FetchRequest {
         remote: NodeId,
         /// If this fetch is for a particular set of `rad/sigrefs`.
         refs_at: Option<Vec<RefsAt>>,
+        /// [`Config`] options when initiating the fetch protocol.
+        ///
+        /// [`Config`]: radicle_fetch::Config.
+        config: radicle_fetch::Config,
     },
     /// Server is responding to a fetch request by uploading the
     /// specified `refspecs` sent by the client.

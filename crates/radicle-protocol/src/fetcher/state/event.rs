@@ -1,11 +1,10 @@
 use std::collections::{BTreeMap, VecDeque};
-use std::time;
 
 use radicle_core::{NodeId, RepoId};
 
 use crate::fetcher::RefsToFetch;
 
-use super::{ActiveFetch, QueuedFetch};
+use super::{ActiveFetch, FetchConfig, QueuedFetch};
 
 /// Event returned from [`FetchState::handle`].
 ///
@@ -46,8 +45,8 @@ pub enum Fetch {
         from: NodeId,
         /// The references to be fetched.
         refs: RefsToFetch,
-        /// The timeout for the fetch process.
-        timeout: time::Duration,
+        /// The configuration options for the fetch process.
+        config: FetchConfig,
     },
     /// The repository is already being fetched from the given node.
     AlreadyFetching {
@@ -65,8 +64,8 @@ pub enum Fetch {
         from: NodeId,
         /// The references expected to be fetched.
         refs: RefsToFetch,
-        /// The timeout for the fetch process.
-        timeout: time::Duration,
+        /// The configuration options for the fetch process.
+        config: FetchConfig,
         /// The capacity of the queue.
         capacity: usize,
     },

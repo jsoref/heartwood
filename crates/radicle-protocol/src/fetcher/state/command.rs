@@ -1,8 +1,8 @@
-use std::time;
-
 use radicle_core::{NodeId, RepoId};
 
 use crate::fetcher::RefsToFetch;
+
+use super::FetchConfig;
 
 /// Commands for transitioning the [`FetcherState`].
 ///
@@ -33,12 +33,12 @@ impl From<Cancel> for Command {
 }
 
 impl Command {
-    pub fn fetch(from: NodeId, rid: RepoId, refs: RefsToFetch, timeout: time::Duration) -> Self {
+    pub fn fetch(from: NodeId, rid: RepoId, refs: RefsToFetch, config: FetchConfig) -> Self {
         Self::from(Fetch {
             from,
             rid,
             refs,
-            timeout,
+            config,
         })
     }
 
@@ -60,8 +60,8 @@ pub struct Fetch {
     pub rid: RepoId,
     /// The references to fetch.
     pub refs: RefsToFetch,
-    /// The timeout for the fetch process.
-    pub timeout: time::Duration,
+    /// The configuration options for the fetch process.
+    pub config: FetchConfig,
 }
 
 /// A fetch wants to be marked as completed.

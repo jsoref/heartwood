@@ -130,9 +130,10 @@ impl Worker {
                 rid,
                 remote,
                 refs_at,
+                config,
             } => {
                 log::debug!(target: "worker", "Worker processing outgoing fetch for {rid}");
-                let result = self.fetch(rid, remote, refs_at, channels, notifs);
+                let result = self.fetch(rid, remote, refs_at, config, channels, notifs);
                 FetchResult::Initiator { rid, result }
             }
             FetchRequest::Responder { remote, emitter } => {
@@ -238,11 +239,12 @@ impl Worker {
         rid: RepoId,
         remote: NodeId,
         refs_at: Option<Vec<RefsAt>>,
+        fetch_config: radicle_fetch::Config,
         channels: channels::ChannelsFlush,
         notifs: notifications::StoreWriter,
     ) -> Result<fetch::FetchResult, FetchError> {
         let FetchConfig {
-            config,
+            config: _,
             local,
             expiry,
         } = &self.fetch_config;
@@ -266,7 +268,7 @@ impl Worker {
             &self.storage,
             &mut cache,
             &mut self.db,
-            *config,
+            fetch_config,
             remote,
             refs_at,
         )?;
