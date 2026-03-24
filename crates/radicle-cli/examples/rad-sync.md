@@ -15,9 +15,9 @@ $ rad sync status --sort-by alias
 ╭───────────────────────────────────────────────────╮
 │ Node ID           Alias   ?   SigRefs   Timestamp │
 ├───────────────────────────────────────────────────┤
-│ (you)             alice   !   ac4a256   [..]      │
-│ z6Mkt67…v4N1tRk   bob     ✗   990bb99   [..]      │
-│ z6Mkux1…nVhib7Z   eve     ✗   990bb99   [..]      │
+│ (you)             alice   !   1d8285b   [..]      │
+│ z6Mkt67…v4N1tRk   bob     ✗   55be805   [..]      │
+│ z6Mkux1…nVhib7Z   eve     ✗   55be805   [..]      │
 ╰───────────────────────────────────────────────────╯
 ```
 
@@ -37,9 +37,9 @@ $ rad sync status --sort-by alias
 ╭───────────────────────────────────────────────────╮
 │ Node ID           Alias   ?   SigRefs   Timestamp │
 ├───────────────────────────────────────────────────┤
-│ (you)             alice   ✓   ac4a256   [..]      │
-│ z6Mkt67…v4N1tRk   bob     ✓   ac4a256   [..]      │
-│ z6Mkux1…nVhib7Z   eve     ✓   ac4a256   [..]      │
+│ (you)             alice   ✓   1d8285b   [..]      │
+│ z6Mkt67…v4N1tRk   bob     ✓   1d8285b   [..]      │
+│ z6Mkux1…nVhib7Z   eve     ✓   1d8285b   [..]      │
 ╰───────────────────────────────────────────────────╯
 ```
 

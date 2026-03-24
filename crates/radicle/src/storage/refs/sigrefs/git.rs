@@ -80,12 +80,18 @@ impl Committer {
         }
     }
 
+    /// Provide a stable [`Committer`] with the same `name`, `email`, and `time`
+    /// values.
+    ///
+    /// The [`Time`] value is constructed using the same seconds value used for
+    /// other tests. These values are set via the `RAD_LOCAL_TIME` environment
+    /// variable.
     #[cfg(any(test, feature = "test"))]
     pub fn stable(public_key: &PublicKey) -> Self {
         let author = Author {
             name: "radicle".to_string(),
             email: public_key.to_human(),
-            time: Time::new(0, 0),
+            time: Time::new(1671125284, 0),
         };
         Self::new(author)
     }
