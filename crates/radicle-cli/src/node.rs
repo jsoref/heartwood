@@ -4,7 +4,7 @@ use std::io::Write;
 
 use radicle::node::sync;
 use radicle::node::{Handle as _, NodeId};
-use radicle::storage::{ReadRepository, RepositoryError};
+use radicle::storage::{refs, ReadRepository, RepositoryError};
 use radicle::{Node, Profile};
 
 use crate::terminal as term;
@@ -21,6 +21,8 @@ pub struct SyncSettings {
     pub seeds: BTreeSet<NodeId>,
     /// How long to wait for syncing to complete.
     pub timeout: time::Duration,
+    /// The minimum feature level to accept when fetching signed references.
+    pub signed_references_minimum_feature_level: Option<refs::FeatureLevel>,
 }
 
 impl SyncSettings {
@@ -28,6 +30,13 @@ impl SyncSettings {
     #[must_use]
     pub fn timeout(mut self, timeout: time::Duration) -> Self {
         self.timeout = timeout;
+        self
+    }
+
+    /// Set minimum feature level for fetching signed references.
+    #[must_use]
+    pub fn minimum_feature_level(mut self, feature_level: Option<refs::FeatureLevel>) -> Self {
+        self.signed_references_minimum_feature_level = feature_level;
         self
     }
 
@@ -69,6 +78,7 @@ impl Default for SyncSettings {
             replicas: sync::ReplicationFactor::default(),
             seeds: BTreeSet::new(),
             timeout: DEFAULT_SYNC_TIMEOUT,
+            signed_references_minimum_feature_level: None,
         }
     }
 }

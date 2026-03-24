@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## New Features
 
+- Teach the `rad sync` and `rad clone` commands to accept the
+  `--signed-refs-feature-level` option. This option configures that fetch to use
+  the minimum feature level provided when fetching from other nodes. This
+  overrides the value of `node.fetch.signedReferences.featureLevel.minimum`, and
+  should only be used in scenarios where it is necessary to tolerate a lower
+  minimum feature level for a fetch to achieve backwards compatibility.
 - Fix the signed references reading process by correctly choosing the first,
   non-replayed commit. This only occurs if duplicate signatures are found and
   the process needs to find the first legitimate commit of the namespace.

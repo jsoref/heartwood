@@ -87,7 +87,9 @@ fn rad_clean() {
     bob.connect(&alice).converge([&alice]);
     eve.connect(&alice).converge([&alice]);
 
-    eve.handle.fetch(acme, alice.id, DEFAULT_TIMEOUT).unwrap();
+    eve.handle
+        .fetch(acme, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
 
     bob.fork(acme, bob.home.path()).unwrap();
     bob.announce(acme, 1, bob.home.path()).unwrap();

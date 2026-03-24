@@ -189,7 +189,10 @@ fn test_replication() {
     let seeds = alice.handle.seeds_for(acme, None).unwrap();
     assert!(seeds.is_connected(&bob.id));
 
-    let result = alice.handle.fetch(acme, bob.id, DEFAULT_TIMEOUT).unwrap();
+    let result = alice
+        .handle
+        .fetch(acme, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(result.is_success());
 
     let updated = match result {
@@ -266,7 +269,10 @@ fn test_replication_ref_in_sigrefs() {
     converge([&alice, &bob]);
 
     alice.handle.seed(acme, Scope::All).unwrap();
-    let result = alice.handle.fetch(acme, bob.id, DEFAULT_TIMEOUT).unwrap();
+    let result = alice
+        .handle
+        .fetch(acme, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
 
     assert_matches!(result, FetchResult::Success { .. });
 
@@ -325,7 +331,10 @@ fn test_replication_invalid() {
 
     alice.handle.follow(*carol.public_key(), None).unwrap();
     alice.handle.seed(acme, Scope::Followed).unwrap();
-    let result = alice.handle.fetch(acme, bob.id, DEFAULT_TIMEOUT).unwrap();
+    let result = alice
+        .handle
+        .fetch(acme, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
 
     // Fetch is successful despite not fetching Carol's refs, since she isn't a delegate.
     assert!(result.is_success());
@@ -355,7 +364,10 @@ fn test_migrated_clone() {
     let updated = bob.handle.seed(acme, Scope::All).unwrap();
     assert!(updated);
 
-    let result = bob.handle.fetch(acme, alice.id, DEFAULT_TIMEOUT).unwrap();
+    let result = bob
+        .handle
+        .fetch(acme, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(result.is_success());
 
     log::debug!(target: "test", "Fetch complete with {}", alice.id);
@@ -366,7 +378,10 @@ fn test_migrated_clone() {
         std::fs::remove_dir_all(path).unwrap();
     }
     assert!(!alice.storage.contains(&acme).unwrap());
-    let result = alice.handle.fetch(acme, bob.id, DEFAULT_TIMEOUT).unwrap();
+    let result = alice
+        .handle
+        .fetch(acme, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(result.is_success());
 
     let alice_repo = alice.storage.repository(acme).unwrap();
@@ -405,13 +420,19 @@ fn test_dont_fetch_owned_refs() {
 
     assert!(bob.handle.seed(acme, Scope::Followed).unwrap());
 
-    let result = bob.handle.fetch(acme, alice.id, DEFAULT_TIMEOUT).unwrap();
+    let result = bob
+        .handle
+        .fetch(acme, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(result.is_success());
 
     log::debug!(target: "test", "Fetch complete with {}", bob.id);
 
     alice.issue(acme, Title::new("Don't fetch self").unwrap(), "Use ^");
-    let result = alice.handle.fetch(acme, bob.id, DEFAULT_TIMEOUT).unwrap();
+    let result = alice
+        .handle
+        .fetch(acme, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(result.is_success())
 }
 
@@ -451,7 +472,10 @@ fn test_fetch_followed_remotes() {
         assert!(bob.handle.follow(*nid, None).unwrap());
     }
 
-    let result = bob.handle.fetch(acme, alice.id, DEFAULT_TIMEOUT).unwrap();
+    let result = bob
+        .handle
+        .fetch(acme, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(result.is_success());
 
     log::debug!(target: "test", "Fetch complete with {}", bob.id);
@@ -484,7 +508,10 @@ fn test_missing_remote() {
 
     assert!(bob.handle.seed(acme, Scope::Followed).unwrap());
     assert!(bob.handle.follow(*carol.public_key(), None).unwrap());
-    let result = bob.handle.fetch(acme, alice.id, DEFAULT_TIMEOUT).unwrap();
+    let result = bob
+        .handle
+        .fetch(acme, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(result.is_success());
     log::debug!(target: "test", "Fetch complete with {}", bob.id);
     rad::fork_remote(acme, &alice.id, &carol, &bob.storage).unwrap();
@@ -494,7 +521,10 @@ fn test_missing_remote() {
         Title::new("Missing Remote").unwrap(),
         "Fixing the missing remote issue",
     );
-    let result = bob.handle.fetch(acme, alice.id, DEFAULT_TIMEOUT).unwrap();
+    let result = bob
+        .handle
+        .fetch(acme, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(result.is_success());
     log::debug!(target: "test", "Fetch complete with {}", bob.id);
 }
@@ -514,7 +544,10 @@ fn test_fetch_preserve_owned_refs() {
     assert!(bob.handle.seed(acme, Scope::Followed).unwrap());
     assert!(bob.handle.follow(alice.id, None).unwrap());
 
-    let result = bob.handle.fetch(acme, alice.id, DEFAULT_TIMEOUT).unwrap();
+    let result = bob
+        .handle
+        .fetch(acme, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(result.is_success());
 
     log::debug!(target: "test", "Fetch complete with {}", bob.id);
@@ -529,7 +562,10 @@ fn test_fetch_preserve_owned_refs() {
         .unwrap();
 
     // Fetch shouldn't prune any of our own refs.
-    let result = alice.handle.fetch(acme, bob.id, DEFAULT_TIMEOUT).unwrap();
+    let result = alice
+        .handle
+        .fetch(acme, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     let (updated, _) = result.success().unwrap();
     assert_eq!(updated, vec![]);
 
@@ -562,7 +598,10 @@ fn test_clone() {
     let seeds = alice.handle.seeds_for(acme, None).unwrap();
     assert!(seeds.is_connected(&bob.id));
 
-    let result = alice.handle.fetch(acme, bob.id, DEFAULT_TIMEOUT).unwrap();
+    let result = alice
+        .handle
+        .fetch(acme, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(result.is_success());
 
     rad::fork(acme, &alice.signer, &alice.storage).unwrap();
@@ -616,11 +655,17 @@ fn test_fetch_up_to_date() {
     transport::local::register(alice.storage.clone());
 
     let _ = alice.handle.seed(acme, Scope::All).unwrap();
-    let result = alice.handle.fetch(acme, bob.id, DEFAULT_TIMEOUT).unwrap();
+    let result = alice
+        .handle
+        .fetch(acme, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(result.is_success());
 
     // Fetch again! This time, everything's up to date.
-    let result = alice.handle.fetch(acme, bob.id, DEFAULT_TIMEOUT).unwrap();
+    let result = alice
+        .handle
+        .fetch(acme, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert_matches!(
         result.success(),
         Some((updates, _fetched)) if updates.iter().all(|update| matches!(update, RefUpdate::Skipped { .. }))
@@ -643,14 +688,20 @@ fn test_fetch_unseeded() {
     transport::local::register(alice.storage.clone());
 
     let _ = alice.handle.seed(acme, Scope::All).unwrap();
-    let result = alice.handle.fetch(acme, bob.id, DEFAULT_TIMEOUT).unwrap();
+    let result = alice
+        .handle
+        .fetch(acme, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(result.is_success());
 
     // Bob stops seeding the repository
     assert!(bob.handle.unseed(acme).unwrap());
 
     // Alice attempts to fetch but is unauthorized
-    let result = alice.handle.fetch(acme, bob.id, DEFAULT_TIMEOUT).unwrap();
+    let result = alice
+        .handle
+        .fetch(acme, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert_matches!(result, FetchResult::Failed { .. });
 }
 
@@ -896,9 +947,14 @@ fn test_non_fastforward_sigrefs() {
     converge([&alice, &bob, &eve]);
 
     // Eve fetches the initial project from Bob.
-    eve.handle.fetch(rid, bob.id, DEFAULT_TIMEOUT).unwrap();
+    eve.handle
+        .fetch(rid, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     // Alice fetches it too.
-    let old_bob = alice.handle.fetch(rid, bob.id, DEFAULT_TIMEOUT).unwrap();
+    let old_bob = alice
+        .handle
+        .fetch(rid, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     let bob_sigrefs = bob
         .storage
         .repository(rid)
@@ -940,7 +996,10 @@ fn test_non_fastforward_sigrefs() {
         "Updated sigrefs are harshing my vibes",
     );
     // Alice fetches from Bob.
-    let new_bob = alice.handle.fetch(rid, bob.id, DEFAULT_TIMEOUT).unwrap();
+    let new_bob = alice
+        .handle
+        .fetch(rid, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     let bob_sigrefs = bob
         .storage
         .repository(rid)
@@ -972,7 +1031,7 @@ fn test_non_fastforward_sigrefs() {
     }
 
     assert_matches!(
-        alice.handle.fetch(rid, eve.id, DEFAULT_TIMEOUT).unwrap(),
+        alice.handle.fetch(rid, eve.id, DEFAULT_TIMEOUT, None).unwrap(),
         FetchResult::Success { updated, .. }
         if updated.iter().all(|u| u.is_skipped())
     );
@@ -999,11 +1058,15 @@ fn test_outdated_sigrefs() {
     eve.connect(&alice);
     converge([&alice, &bob, &eve]);
 
-    bob.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap();
+    bob.handle
+        .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(bob.storage.contains(&rid).unwrap());
     rad::fork(rid, &bob.signer, &bob.storage).unwrap();
 
-    eve.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap();
+    eve.handle
+        .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(eve.storage.contains(&rid).unwrap());
     rad::fork(rid, &eve.signer, &eve.storage).unwrap();
 
@@ -1011,13 +1074,18 @@ fn test_outdated_sigrefs() {
         .handle
         .follow(eve.id, Some(Alias::new("eve")))
         .unwrap();
-    alice.handle.fetch(rid, eve.id, DEFAULT_TIMEOUT).unwrap();
+    alice
+        .handle
+        .fetch(rid, eve.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     let repo = alice.storage.repository(rid).unwrap();
     assert!(repo.remote(&eve.id).is_ok());
 
     log::debug!(target: "test", "Bob fetches from Eve..");
     assert_matches!(
-        bob.handle.fetch(rid, eve.id, DEFAULT_TIMEOUT).unwrap(),
+        bob.handle
+            .fetch(rid, eve.id, DEFAULT_TIMEOUT, None)
+            .unwrap(),
         FetchResult::Success { .. }
     );
     let repo = bob.storage.repository(rid).unwrap();
@@ -1038,7 +1106,10 @@ fn test_outdated_sigrefs() {
     // Get the current state of eve's refs in alice's storage
     log::debug!(target: "test", "Alice fetches from Eve..");
     assert_matches!(
-        alice.handle.fetch(rid, eve.id, DEFAULT_TIMEOUT).unwrap(),
+        alice
+            .handle
+            .fetch(rid, eve.id, DEFAULT_TIMEOUT, None)
+            .unwrap(),
         FetchResult::Success { .. }
     );
     let repo = alice.storage.repository(rid).unwrap();
@@ -1059,7 +1130,10 @@ fn test_outdated_sigrefs() {
         .follow(bob.id, Some(Alias::new("bob")))
         .unwrap();
     assert_matches!(
-        alice.handle.fetch(rid, bob.id, DEFAULT_TIMEOUT).unwrap(),
+        alice
+            .handle
+            .fetch(rid, bob.id, DEFAULT_TIMEOUT, None)
+            .unwrap(),
         FetchResult::Success { .. }
     );
 
@@ -1093,11 +1167,15 @@ fn test_outdated_delegate_sigrefs() {
     eve.connect(&alice);
     converge([&alice, &bob, &eve]);
 
-    bob.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap();
+    bob.handle
+        .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(bob.storage.contains(&rid).unwrap());
     rad::fork(rid, &bob.signer, &bob.storage).unwrap();
 
-    eve.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap();
+    eve.handle
+        .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(eve.storage.contains(&rid).unwrap());
     rad::fork(rid, &eve.signer, &eve.storage).unwrap();
 
@@ -1105,13 +1183,18 @@ fn test_outdated_delegate_sigrefs() {
         .handle
         .follow(eve.id, Some(Alias::new("eve")))
         .unwrap();
-    alice.handle.fetch(rid, eve.id, DEFAULT_TIMEOUT).unwrap();
+    alice
+        .handle
+        .fetch(rid, eve.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     let repo = alice.storage.repository(rid).unwrap();
     assert!(repo.remote(&eve.id).is_ok());
 
     log::debug!(target: "test", "Bob fetches from Eve..");
     assert_matches!(
-        bob.handle.fetch(rid, eve.id, DEFAULT_TIMEOUT).unwrap(),
+        bob.handle
+            .fetch(rid, eve.id, DEFAULT_TIMEOUT, None)
+            .unwrap(),
         FetchResult::Success { .. }
     );
     let repo = bob.storage.repository(rid).unwrap();
@@ -1132,7 +1215,9 @@ fn test_outdated_delegate_sigrefs() {
     // Get the current state of eve's refs in alice's storage
     log::debug!(target: "test", "Alice fetches from Eve..");
     assert_matches!(
-        eve.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap(),
+        eve.handle
+            .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
+            .unwrap(),
         FetchResult::Success { .. }
     );
     let repo = eve.storage.repository(rid).unwrap();
@@ -1145,7 +1230,9 @@ fn test_outdated_delegate_sigrefs() {
 
     eve.handle.follow(bob.id, Some(Alias::new("bob"))).unwrap();
     assert_matches!(
-        eve.handle.fetch(rid, bob.id, DEFAULT_TIMEOUT).unwrap(),
+        eve.handle
+            .fetch(rid, bob.id, DEFAULT_TIMEOUT, None)
+            .unwrap(),
         FetchResult::Success { .. }
     );
 
@@ -1175,7 +1262,9 @@ fn missing_default_branch() {
     alice.connect(&bob);
     converge([&alice, &bob]);
 
-    bob.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap();
+    bob.handle
+        .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(bob.storage.contains(&rid).unwrap());
 
     // Fetching from still works despite not having
@@ -1185,7 +1274,10 @@ fn missing_default_branch() {
         Title::new("Hello, Acme").unwrap(),
         "Popping in to say hello",
     );
-    alice.handle.fetch(rid, bob.id, DEFAULT_TIMEOUT).unwrap();
+    alice
+        .handle
+        .fetch(rid, bob.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
 
     {
         let repo = bob.storage.repository(rid).unwrap();
@@ -1207,7 +1299,9 @@ fn missing_default_branch() {
 
     // Fetching from her will still succeed.
     assert_matches!(
-        bob.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap(),
+        bob.handle
+            .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
+            .unwrap(),
         FetchResult::Success { .. }
     );
     let repo = bob.storage.repository(rid).unwrap();
@@ -1240,7 +1334,9 @@ fn missing_delegate_default_branch() {
     converge([&seed]);
     bob.connect(&seed);
 
-    bob.handle.fetch(rid, seed.id, DEFAULT_TIMEOUT).unwrap();
+    bob.handle
+        .fetch(rid, seed.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     bob_events
         .wait(
             |e| {
@@ -1312,7 +1408,9 @@ fn missing_delegate_default_branch() {
     // a) Bob's default branch is still missing
     // b) Bob's issue is there
     assert_matches!(
-        seed.handle.fetch(rid, bob.id, DEFAULT_TIMEOUT).unwrap(),
+        seed.handle
+            .fetch(rid, bob.id, DEFAULT_TIMEOUT, None)
+            .unwrap(),
         FetchResult::Success { .. }
     );
     {
@@ -1323,7 +1421,10 @@ fn missing_delegate_default_branch() {
 
     // Do the same for Alice
     assert_matches!(
-        alice.handle.fetch(rid, seed.id, DEFAULT_TIMEOUT).unwrap(),
+        alice
+            .handle
+            .fetch(rid, seed.id, DEFAULT_TIMEOUT, None)
+            .unwrap(),
         FetchResult::Success { .. }
     );
     {
@@ -1334,7 +1435,9 @@ fn missing_delegate_default_branch() {
 
     // Check that Bob can still fetch from the seed
     assert_matches!(
-        bob.handle.fetch(rid, seed.id, DEFAULT_TIMEOUT).unwrap(),
+        bob.handle
+            .fetch(rid, seed.id, DEFAULT_TIMEOUT, None)
+            .unwrap(),
         FetchResult::Success { .. }
     );
 }
@@ -1360,11 +1463,15 @@ fn test_background_foreground_fetch() {
     alice.connect(&eve);
     converge([&alice, &bob, &eve]);
 
-    bob.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap();
+    bob.handle
+        .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(bob.storage.contains(&rid).unwrap());
     rad::fork(rid, &bob.signer, &bob.storage).unwrap();
 
-    eve.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap();
+    eve.handle
+        .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(eve.storage.contains(&rid).unwrap());
     rad::fork(rid, &eve.signer, &eve.storage).unwrap();
 
@@ -1373,7 +1480,10 @@ fn test_background_foreground_fetch() {
         .handle
         .follow(eve.id, Some(Alias::new("eve")))
         .unwrap();
-    alice.handle.fetch(rid, eve.id, DEFAULT_TIMEOUT).unwrap();
+    alice
+        .handle
+        .fetch(rid, eve.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     let repo = alice.storage.repository(rid).unwrap();
     assert!(repo.remote(&eve.id).is_ok());
     let repo = alice.storage.repository(rid).unwrap();
@@ -1414,7 +1524,10 @@ fn test_background_foreground_fetch() {
     // interfere
     log::debug!(target: "test", "Alice fetches from Eve..");
     assert_matches!(
-        alice.handle.fetch(rid, eve.id, DEFAULT_TIMEOUT).unwrap(),
+        alice
+            .handle
+            .fetch(rid, eve.id, DEFAULT_TIMEOUT, None)
+            .unwrap(),
         FetchResult::Success { .. }
     );
     let repo = alice.storage.repository(rid).unwrap();
@@ -1514,7 +1627,10 @@ fn test_channel_reader_limit() {
     let updated = bob.handle.seed(acme, Scope::All).unwrap();
     assert!(updated);
 
-    let result = bob.handle.fetch(acme, alice.id, DEFAULT_TIMEOUT).unwrap();
+    let result = bob
+        .handle
+        .fetch(acme, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(!result.is_success());
 
     let FetchResult::Failed { reason } = result else {
@@ -1548,7 +1664,10 @@ fn test_fetch_emits_canonical_ref_update() {
     bob.handle.seed(rid, Scope::All).unwrap();
     alice.connect(&bob);
 
-    let result = bob.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap();
+    let result = bob
+        .handle
+        .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(result.is_success());
 
     let default_branch: git::fmt::Qualified = {
@@ -1606,12 +1725,14 @@ fn test_non_fastforward_identity_doc() {
 
     // Bob and Eve have the same state for the repository
     bob.handle.seed(rid, Scope::Followed).unwrap();
-    bob.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap();
+    bob.handle
+        .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
 
     alice_laptop.handle.seed(rid, Scope::All).unwrap();
     alice_laptop
         .handle
-        .fetch(rid, alice.id, DEFAULT_TIMEOUT)
+        .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
         .unwrap();
     // Alice pushes new references to her laptop
     let issue = alice_laptop.issue(
@@ -1623,7 +1744,7 @@ fn test_non_fastforward_identity_doc() {
     // Eve will fetch these references since her scope is "all"
     eve.handle.seed(rid, Scope::All).unwrap();
     eve.handle
-        .fetch(rid, alice_laptop.id, DEFAULT_TIMEOUT)
+        .fetch(rid, alice_laptop.id, DEFAULT_TIMEOUT, None)
         .unwrap();
     assert!(has_issue(&eve, &issue));
 
@@ -1651,7 +1772,10 @@ fn test_non_fastforward_identity_doc() {
     //
     // Bob does not have the issue because Alice does not have the updates from
     // Alice's Laptop.
-    let result = bob.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap();
+    let result = bob
+        .handle
+        .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(matches!(result, FetchResult::Success { .. }));
     assert!(!has_issue(&bob, &issue));
     let repo = bob.storage.repository(rid).unwrap();
@@ -1662,7 +1786,9 @@ fn test_non_fastforward_identity_doc() {
     // Bob fetches from Eve, the identity document should remain the same, but
     // since Bob now knows that Alice's Laptop is a delegate, the issue should
     // be fetched.
-    bob.handle.fetch(rid, eve.id, DEFAULT_TIMEOUT).unwrap();
+    bob.handle
+        .fetch(rid, eve.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(matches!(result, FetchResult::Success { .. }));
     assert!(has_issue(&bob, &issue));
     let repo = bob.storage.repository(rid).unwrap();
@@ -1744,7 +1870,7 @@ fn test_block_prevents_fetch() {
 
     let result = alice
         .handle
-        .fetch(rid, bob.id, time::Duration::from_secs(5))
+        .fetch(rid, bob.id, time::Duration::from_secs(5), None)
         .unwrap();
 
     assert_matches!(result, FetchResult::Failed { .. });
@@ -1768,7 +1894,9 @@ fn fetch_does_not_contain_rad_sigrefs_parent() {
     alice.connect(&bob);
     converge([&alice, &bob]);
 
-    bob.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap();
+    bob.handle
+        .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     assert!(bob.storage.contains(&rid).unwrap());
     rad::fork(rid, &bob.signer, &bob.storage).unwrap();
 
@@ -1782,7 +1910,9 @@ fn fetch_does_not_contain_rad_sigrefs_parent() {
 
     log::debug!(target: "test", "Bob fetches from Alice..");
     assert_matches!(
-        bob.handle.fetch(rid, alice.id, DEFAULT_TIMEOUT).unwrap(),
+        bob.handle
+            .fetch(rid, alice.id, DEFAULT_TIMEOUT, None)
+            .unwrap(),
         FetchResult::Success { .. }
     );
     let repo = bob.storage.repository(rid).unwrap();

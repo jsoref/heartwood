@@ -8,6 +8,7 @@ use radicle::node::policy::Scope;
 use radicle::node::FetchResult;
 use radicle::node::Seeds;
 use radicle::node::{Address, Alias, Config, ConnectOptions};
+use radicle::storage::refs;
 use radicle::storage::refs::RefsAt;
 use radicle_core::{NodeId, RepoId};
 use thiserror::Error;
@@ -90,7 +91,13 @@ pub enum Command {
     /// sync status for given namespaces.
     Seeds(RepoId, HashSet<PublicKey>, Responder<Seeds>),
     /// Fetch the given repository from the network.
-    Fetch(RepoId, NodeId, time::Duration, Responder<FetchResult>),
+    Fetch(
+        RepoId,
+        NodeId,
+        time::Duration,
+        Option<refs::FeatureLevel>,
+        Responder<FetchResult>,
+    ),
     /// Seed the given repository.
     Seed(RepoId, Scope, Responder<bool>),
     /// Unseed the given repository.
@@ -150,9 +157,19 @@ impl Command {
         rid: RepoId,
         node_id: NodeId,
         duration: time::Duration,
+        signed_references_minimum_feature_level: Option<refs::FeatureLevel>,
     ) -> (Self, Receiver<Result<FetchResult>>) {
         let (responder, receiver) = Responder::oneshot();
-        (Self::Fetch(rid, node_id, duration, responder), receiver)
+        (
+            Self::Fetch(
+                rid,
+                node_id,
+                duration,
+                signed_references_minimum_feature_level,
+                responder,
+            ),
+            receiver,
+        )
     }
 
     pub fn seed(rid: RepoId, scope: Scope) -> (Self, Receiver<Result<bool>>) {
@@ -191,7 +208,10 @@ impl fmt::Debug for Command {
             Self::Config(_) => write!(f, "Config"),
             Self::ListenAddrs(_) => write!(f, "ListenAddrs"),
             Self::Seeds(id, _, _) => write!(f, "Seeds({id})"),
-            Self::Fetch(id, node, _, _) => write!(f, "Fetch({id}, {node})"),
+            Self::Fetch(id, node, _, feature_level, _) => match feature_level {
+                Some(feature_level) => write!(f, "Fetch({id}, {node} {feature_level})"),
+                None => write!(f, "Fetch({id}, {node})"),
+            },
             Self::Seed(id, scope, _) => write!(f, "Seed({id}, {scope})"),
             Self::Unseed(id, _) => write!(f, "Unseed({id})"),
             Self::Follow(id, _, _) => write!(f, "Follow({id})"),

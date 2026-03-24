@@ -324,7 +324,12 @@ pub fn fetch(
         }
         if let Some((nid, addr)) = fetcher.next_fetch() {
             spinner.emit_fetching(&nid, &addr, &progress);
-            let result = node.fetch(rid, nid, settings.timeout)?;
+            let result = node.fetch(
+                rid,
+                nid,
+                settings.timeout,
+                settings.signed_references_minimum_feature_level,
+            )?;
             match fetcher.fetch_complete(nid, result) {
                 std::ops::ControlFlow::Continue(update) => {
                     spinner.emit_progress(&update);

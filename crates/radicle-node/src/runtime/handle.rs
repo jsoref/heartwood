@@ -15,6 +15,7 @@ use radicle::node::events::{Event, Events};
 use radicle::node::policy;
 use radicle::node::{Config, NodeId};
 use radicle::node::{ConnectOptions, ConnectResult, Seeds};
+use radicle::storage::refs;
 use serde_json::json;
 use thiserror::Error;
 
@@ -229,9 +230,16 @@ impl radicle::node::Handle for Handle {
         id: RepoId,
         from: NodeId,
         timeout: time::Duration,
+        signed_references_minimum_feature_level: Option<refs::FeatureLevel>,
     ) -> Result<FetchResult, Error> {
         let (responder, receiver) = service::command::Responder::oneshot();
-        self.command(service::Command::Fetch(id, from, timeout, responder))?;
+        self.command(service::Command::Fetch(
+            id,
+            from,
+            timeout,
+            signed_references_minimum_feature_level,
+            responder,
+        ))?;
         Ok(receiver.recv()??)
     }
 

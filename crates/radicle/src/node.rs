@@ -43,7 +43,7 @@ use crate::crypto::PublicKey;
 use crate::git;
 use crate::identity::RepoId;
 use crate::profile;
-use crate::storage::refs::RefsAt;
+use crate::storage::refs::{FeatureLevel, RefsAt};
 use crate::storage::RefUpdate;
 
 pub use address::KnownAddress;
@@ -975,6 +975,7 @@ pub trait Handle: Clone + Sync + Send {
         id: RepoId,
         from: NodeId,
         timeout: time::Duration,
+        signed_references_minimum_feature_level: Option<FeatureLevel>,
     ) -> Result<FetchResult, Self::Error>;
     /// Start seeding the given repo. May update the scope. Does nothing if the
     /// repo is already seeded.
@@ -1244,6 +1245,7 @@ impl Handle for Node {
         rid: RepoId,
         from: NodeId,
         timeout: time::Duration,
+        signed_references_minimum_feature_level: Option<FeatureLevel>,
     ) -> Result<FetchResult, Error> {
         let result = self
             .call(
@@ -1251,6 +1253,7 @@ impl Handle for Node {
                     rid,
                     nid: from,
                     timeout,
+                    signed_references_minimum_feature_level,
                 },
                 DEFAULT_TIMEOUT.max(timeout),
             )?

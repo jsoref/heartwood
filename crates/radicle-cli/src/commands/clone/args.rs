@@ -2,12 +2,17 @@ use std::path::PathBuf;
 
 use clap::Parser;
 
-use crate::node::SyncSettings;
 use radicle::identity::doc::RepoId;
 use radicle::identity::IdError;
 use radicle::node::policy::Scope;
 use radicle::prelude::*;
+use radicle::storage::refs;
 
+use crate::common_args::{
+    SignedReferencesFeatureLevel, SignedReferencesFeatureLevelParser,
+    ABOUT_FETCH_SIGNED_REFERENCES_FEATURE_LEVEL_MINIMUM,
+};
+use crate::node::SyncSettings;
 use crate::terminal;
 
 const ABOUT: &str = "Clone a Radicle repository";
@@ -35,6 +40,13 @@ pub(super) struct SyncArgs {
     /// Valid arguments are for example "10s", "5min" or "2h 37min"
     #[arg(long, value_parser = humantime::parse_duration, default_value = "9s")]
     timeout: std::time::Duration,
+
+    #[arg(
+        long,
+        value_parser = SignedReferencesFeatureLevelParser,
+        help = ABOUT_FETCH_SIGNED_REFERENCES_FEATURE_LEVEL_MINIMUM
+    )]
+    signed_refs_feature_level: Option<SignedReferencesFeatureLevel>,
 }
 
 impl From<SyncArgs> for SyncSettings {
@@ -42,6 +54,9 @@ impl From<SyncArgs> for SyncSettings {
         SyncSettings {
             timeout: args.timeout,
             seeds: args.seeds.into_iter().collect(),
+            signed_references_minimum_feature_level: args
+                .signed_refs_feature_level
+                .map(refs::FeatureLevel::from),
             ..SyncSettings::default()
         }
     }

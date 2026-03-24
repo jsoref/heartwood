@@ -5,6 +5,7 @@ use std::io::LineWriter;
 use std::path::PathBuf;
 use std::{io, net, time};
 
+use radicle::storage::refs;
 #[cfg(unix)]
 use std::os::unix::net::{UnixListener, UnixStream};
 #[cfg(windows)]
@@ -112,8 +113,20 @@ where
                 CommandResult::ok().to_writer(writer).ok();
             }
         },
-        Command::Fetch { rid, nid, timeout } => {
-            fetch(rid, nid, timeout, writer, &mut handle)?;
+        Command::Fetch {
+            rid,
+            nid,
+            timeout,
+            signed_references_minimum_feature_level,
+        } => {
+            fetch(
+                rid,
+                nid,
+                timeout,
+                signed_references_minimum_feature_level,
+                writer,
+                &mut handle,
+            )?;
         }
         Command::Config => {
             let config = handle.config()?;
@@ -248,10 +261,11 @@ fn fetch<W: Write, H: Handle<Error = runtime::HandleError>>(
     id: RepoId,
     node: NodeId,
     timeout: time::Duration,
+    signed_references_minimum_feature_level: Option<refs::FeatureLevel>,
     mut writer: W,
     handle: &mut H,
 ) -> Result<(), CommandError> {
-    match handle.fetch(id, node, timeout) {
+    match handle.fetch(id, node, timeout, signed_references_minimum_feature_level) {
         Ok(result) => {
             json::to_writer(&mut writer, &result)?;
         }

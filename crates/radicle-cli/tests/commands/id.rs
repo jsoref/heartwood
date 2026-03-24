@@ -87,7 +87,9 @@ fn rad_id_threshold() {
     alice.connect(&seed).connect(&bob);
     bob.connect(&seed);
     alice.routes_to(&[(acme, seed.id)]);
-    seed.handle.fetch(acme, alice.id, DEFAULT_TIMEOUT).unwrap();
+    seed.handle
+        .fetch(acme, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
 
     formula(&environment.tempdir(), "examples/rad-id-threshold.md")
         .unwrap()
@@ -323,10 +325,12 @@ fn rad_id_collaboration() {
         .connect(&distrustful)
         .converge([&seed, &distrustful]);
 
-    seed.handle.fetch(acme, alice.id, DEFAULT_TIMEOUT).unwrap();
+    seed.handle
+        .fetch(acme, alice.id, DEFAULT_TIMEOUT, None)
+        .unwrap();
     distrustful
         .handle
-        .fetch(acme, alice.id, DEFAULT_TIMEOUT)
+        .fetch(acme, alice.id, DEFAULT_TIMEOUT, None)
         .unwrap();
 
     formula(&environment.tempdir(), "examples/rad-id-collaboration.md")

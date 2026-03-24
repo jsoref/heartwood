@@ -863,9 +863,13 @@ where
                     resp.err(e).ok();
                 }
             },
-            Command::Fetch(rid, seed, timeout, resp) => {
-                // TODO(finto): pass through feature-level
-                let config = self.fetch_config().with_timeout(timeout);
+            Command::Fetch(rid, seed, timeout, signed_references_minimum_feature_level, resp) => {
+                let feature_level = signed_references_minimum_feature_level
+                    .unwrap_or(self.config.fetch.feature_level_min());
+                let config = self
+                    .fetch_config()
+                    .with_timeout(timeout)
+                    .with_minimum_feature_level(feature_level);
                 self.fetch(rid, seed, vec![], config, Some(resp));
             }
             Command::Seed(rid, scope, resp) => {

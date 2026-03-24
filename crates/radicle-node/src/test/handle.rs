@@ -5,7 +5,7 @@ use std::time;
 
 use radicle::crypto::PublicKey;
 use radicle::git::Oid;
-use radicle::storage::refs::RefsAt;
+use radicle::storage::refs::{self, RefsAt};
 
 use crate::identity::RepoId;
 use crate::node::{Alias, Config, ConnectOptions, ConnectResult, Event, FetchResult, Seeds};
@@ -69,6 +69,7 @@ impl radicle::node::Handle for Handle {
         _id: RepoId,
         _from: NodeId,
         _timeout: time::Duration,
+        _signed_references_minimum_feature_level: Option<refs::FeatureLevel>,
     ) -> Result<FetchResult, Self::Error> {
         Ok(FetchResult::Success {
             updated: vec![],

@@ -15,6 +15,7 @@ use serde_json as json;
 
 use crate::crypto::PublicKey;
 use crate::identity::RepoId;
+use crate::storage::refs;
 
 use super::events::Event;
 use super::NodeId;
@@ -96,6 +97,7 @@ pub enum Command {
         rid: RepoId,
         nid: NodeId,
         timeout: time::Duration,
+        signed_references_minimum_feature_level: Option<refs::FeatureLevel>,
     },
 
     /// Seed the given repository.

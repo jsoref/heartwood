@@ -1496,15 +1496,15 @@ fn test_queued_fetch_max_capacity() {
     alice.connect_to(&bob);
 
     // Send the first fetch.
-    let (cmd, _recv1) = Command::fetch(rid1, bob.id, DEFAULT_TIMEOUT);
+    let (cmd, _recv1) = Command::fetch(rid1, bob.id, DEFAULT_TIMEOUT, None);
     alice.command(cmd);
 
     // Send the 2nd fetch that will be queued.
-    let (cmd, _recv2) = Command::fetch(rid2, bob.id, DEFAULT_TIMEOUT);
+    let (cmd, _recv2) = Command::fetch(rid2, bob.id, DEFAULT_TIMEOUT, None);
     alice.command(cmd);
 
     // Send the 3rd fetch that will be queued.
-    let (cmd, _recv3) = Command::fetch(rid3, bob.id, DEFAULT_TIMEOUT);
+    let (cmd, _recv3) = Command::fetch(rid3, bob.id, DEFAULT_TIMEOUT, None);
     alice.command(cmd);
 
     // The first fetch is initiated.
@@ -1618,15 +1618,15 @@ fn test_queued_fetch_from_command_same_rid() {
     alice.connect_to(&carol);
 
     // Send the first fetch.
-    let (cmd, _recv1) = Command::fetch(rid1, bob.id, DEFAULT_TIMEOUT);
+    let (cmd, _recv1) = Command::fetch(rid1, bob.id, DEFAULT_TIMEOUT, None);
     alice.command(cmd);
 
     // Send the 2nd fetch that will be queued.
-    let (cmd, _recv2) = Command::fetch(rid1, eve.id, DEFAULT_TIMEOUT);
+    let (cmd, _recv2) = Command::fetch(rid1, eve.id, DEFAULT_TIMEOUT, None);
     alice.command(cmd);
 
     // Send the 3rd fetch that will be queued.
-    let (cmd, _recv3) = Command::fetch(rid1, carol.id, DEFAULT_TIMEOUT);
+    let (cmd, _recv3) = Command::fetch(rid1, carol.id, DEFAULT_TIMEOUT, None);
     alice.command(cmd);
 
     // Peers Alice will fetch from.

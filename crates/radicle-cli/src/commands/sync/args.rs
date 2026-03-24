@@ -6,8 +6,13 @@ use clap::{Parser, Subcommand, ValueEnum};
 use radicle::{
     node::{sync, NodeId},
     prelude::RepoId,
+    storage::refs,
 };
 
+use crate::common_args::{
+    SignedReferencesFeatureLevel, SignedReferencesFeatureLevelParser,
+    ABOUT_FETCH_SIGNED_REFERENCES_FEATURE_LEVEL_MINIMUM,
+};
 use crate::node::SyncSettings;
 
 const ABOUT: &str = "Sync repositories to the network";
@@ -136,6 +141,14 @@ pub(super) struct SyncArgs {
     /// <RID> is ignored with `--inventory`
     #[arg(long, short)]
     inventory: bool,
+
+    #[arg(
+        long,
+        requires = "fetch",
+        value_parser = SignedReferencesFeatureLevelParser,
+        help = ABOUT_FETCH_SIGNED_REFERENCES_FEATURE_LEVEL_MINIMUM
+    )]
+    signed_refs_feature_level: Option<SignedReferencesFeatureLevel>,
 }
 
 impl SyncArgs {
@@ -220,9 +233,13 @@ impl From<SyncArgs> for SyncMode {
         } else {
             assert!(!args.inventory);
             let direction = args.direction();
+            let timeout = args.timeout();
+            let replicas = args.replication();
+            let feature_level = args.signed_refs_feature_level.map(refs::FeatureLevel::from);
             let mut settings = SyncSettings::default()
-                .timeout(args.timeout())
-                .replicas(args.replication());
+                .timeout(timeout)
+                .replicas(replicas)
+                .minimum_feature_level(feature_level);
             if !args.seeds.is_empty() {
                 settings.seeds = args.seeds.into_iter().collect();
             }

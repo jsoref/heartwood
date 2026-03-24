@@ -220,7 +220,7 @@ fn test_cob_deletion() {
 
     radicle::assert_matches!(
         bob.handle
-            .fetch(rid, alice.id, radicle::node::DEFAULT_TIMEOUT)
+            .fetch(rid, alice.id, radicle::node::DEFAULT_TIMEOUT, None)
             .unwrap(),
         radicle::node::FetchResult::Success { .. }
     );
