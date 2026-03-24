@@ -447,9 +447,8 @@ where
         let mut private = BTreeSet::new();
 
         for repo in self.storage.repositories()? {
+            let repo = self.upgrade_sigrefs(repo)?;
             let rid = repo.rid;
-
-            self.upgrade_sigrefs(&repo)?;
 
             // If we're not seeding this repo, just skip it.
             if !self.policies.is_seeding(&rid)? {
@@ -522,9 +521,9 @@ where
         Ok(())
     }
 
-    fn upgrade_sigrefs(&mut self, info: &RepositoryInfo) -> Result<(), Error> {
+    fn upgrade_sigrefs(&mut self, mut info: RepositoryInfo) -> Result<RepositoryInfo, Error> {
         if !matches!(info.refs, SignedRefsInfo::NeedsMigration) {
-            return Ok(());
+            return Ok(info);
         }
 
         let rid = info.rid;
@@ -536,8 +535,15 @@ where
 
         let repo = self.storage.repository_mut(rid)?;
         // NOTE: We assume to reach `FeatureLevel::LATEST` by signing refs.
-        repo.force_sign_refs(&self.signer)?;
-        Ok(())
+        let refs = repo.force_sign_refs(&self.signer)?;
+
+        let repo = self.storage.repository(rid)?;
+        let synced_at = SyncedAt::new(refs.at, &repo)?;
+
+        info.synced_at = Some(synced_at);
+        info.refs = SignedRefsInfo::Some(refs);
+
+        Ok(info)
     }
 }
 
