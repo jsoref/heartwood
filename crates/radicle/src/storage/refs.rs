@@ -330,7 +330,8 @@ impl std::fmt::Display for FeatureLevel {
 /// The content-addressable information required to load a remote's
 /// `rad/sigrefs`.
 ///
-/// Use [`RefsAt::load`] to produce [`SignedRefs`].
+/// Use [`RefsAt::remote`] and [`RefsAt::at`] with [`SignedRefs::load_at`] to
+/// attempt loading the expected signed references.
 ///
 /// `RefsAt` can also be used for communicating announcements of updates
 /// references to other nodes.
@@ -356,14 +357,6 @@ impl RefsAt {
             .map_err(sigrefs::read::error::Read::FindReference)?
             .ok_or_else(|| sigrefs::read::error::Read::MissingSigrefs { namespace: remote })?;
         Ok(RefsAt { remote, at })
-    }
-
-    pub fn load<R>(&self, repo: &R) -> Result<Option<SignedRefs>, sigrefs::read::error::Read>
-    where
-        R: HasRepoId,
-        R: sigrefs::git::object::Reader + sigrefs::git::reference::Reader,
-    {
-        SignedRefs::load_at(self.at, self.remote, repo)
     }
 
     pub fn path(&self) -> &git::fmt::Qualified<'_> {
