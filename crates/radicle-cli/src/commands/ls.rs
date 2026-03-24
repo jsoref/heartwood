@@ -2,7 +2,7 @@ mod args;
 
 pub use args::Args;
 
-use radicle::storage::{ReadStorage, RepositoryInfo};
+use radicle::storage::{ReadStorage, RepositoryInfo, SignedRefsInfo};
 
 use crate::terminal as term;
 
@@ -34,7 +34,7 @@ pub fn run(args: Args, ctx: impl term::Context) -> anyhow::Result<()> {
         if !doc.is_public() && args.public {
             continue;
         }
-        if refs.is_none() && !args.all && !args.seeded {
+        if matches!(refs, SignedRefsInfo::None) && !args.all && !args.seeded {
             continue;
         }
         let seeded = policy.is_seeding(&rid)?;

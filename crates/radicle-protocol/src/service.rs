@@ -38,7 +38,7 @@ use radicle::node::seed;
 use radicle::node::seed::Store as _;
 use radicle::node::{Penalty, Severity};
 use radicle::storage::refs::{FeatureLevel, SIGREFS_BRANCH};
-use radicle::storage::RepositoryError;
+use radicle::storage::{RepositoryError, RepositoryInfo, SignedRefsInfo};
 use radicle_fetch::policy::SeedingPolicy;
 
 use crate::fetcher;
@@ -522,33 +522,19 @@ where
         Ok(())
     }
 
-    fn upgrade_sigrefs(&mut self, info: &radicle::storage::RepositoryInfo) -> Result<(), Error> {
-        let Some(ref refs) = info.refs else {
-            // No refs, nothing to upgrade.
-            return Ok(());
-        };
-
-        if refs.feature_level() >= FeatureLevel::LATEST && refs.parent().is_some() {
-            // Refs are at target level or above, nothing to upgrade.
+    fn upgrade_sigrefs(&mut self, info: &RepositoryInfo) -> Result<(), Error> {
+        if !matches!(info.refs, SignedRefsInfo::NeedsMigration) {
             return Ok(());
         }
 
         let rid = info.rid;
 
-        if refs.parent().is_none() {
-            log::info!(
-                "Migrating `rad/sigrefs` of {rid} to force feature level {}, as the history currently contains only a root commit.",
-                FeatureLevel::LATEST
-            );
-        } else {
-            log::info!(
-                "Migrating `rad/sigrefs` of {rid} from level {} which is lower than target level {}.",
-                refs.feature_level(),
-                FeatureLevel::LATEST
-            );
-        }
+        log::info!(
+            "Migrating `rad/sigrefs` of {rid} to force feature level {}.",
+            FeatureLevel::LATEST
+        );
 
-        let repo = self.storage.repository_mut(info.rid)?;
+        let repo = self.storage.repository_mut(rid)?;
         // NOTE: We assume to reach `FeatureLevel::LATEST` by signing refs.
         repo.force_sign_refs(&self.signer)?;
         Ok(())

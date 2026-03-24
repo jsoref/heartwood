@@ -18,9 +18,8 @@ use crate::identity::doc::DocError;
 use crate::identity::{CanonicalRefs, Doc, DocAt, RepoId};
 use crate::identity::{Identity, Project};
 use crate::node::device::Device;
-use crate::node::SyncedAt;
-use crate::storage::refs;
 use crate::storage::refs::{FeatureLevel, Refs, SignedRefs, SignedRefsAt};
+use crate::storage::{refs, SignedRefsInfo};
 use crate::storage::{
     ReadRepository, ReadStorage, Remote, Remotes, RepositoryInfo, SetHead, SignRepository,
     WriteRepository, WriteStorage,
@@ -167,12 +166,13 @@ impl ReadStorage for Storage {
                 }
             };
             // Nb. This will be `None` if they were not found.
-            let refs = refs::SignedRefsAt::load(self.info.key, &repo)
+            let refs = SignedRefsInfo::new(refs::SignedRefsAt::load(self.info.key, &repo))
                 .map_err(|err| Error::Refs(refs::Error::Read(err)))?;
-            let synced_at = refs
-                .as_ref()
-                .map(|r| node::SyncedAt::new(r.at, &repo))
-                .transpose()?;
+
+            let synced_at = match &refs {
+                SignedRefsInfo::Some(refs) => Some(node::SyncedAt::new(refs.at, &repo)?),
+                _ => None,
+            };
 
             repos.push(RepositoryInfo {
                 rid,
@@ -258,12 +258,13 @@ impl Storage {
             let repo = self.repository(*rid)?;
             let (_, head) = repo.head()?;
 
-            let refs = refs::SignedRefsAt::load(self.info.key, &repo)
-                .map_err(|err| RepositoryError::from(refs::Error::Read(err)))?;
-            let synced_at = refs
-                .as_ref()
-                .map(|r| SyncedAt::new(r.at, &repo))
-                .transpose()?;
+            let refs = SignedRefsInfo::new(refs::SignedRefsAt::load(self.info.key, &repo))
+                .map_err(|err| Error::Refs(refs::Error::Read(err)))?;
+
+            let synced_at = match &refs {
+                SignedRefsInfo::Some(refs) => Some(node::SyncedAt::new(refs.at, &repo)?),
+                _ => None,
+            };
 
             Ok(RepositoryInfo {
                 rid: *rid,

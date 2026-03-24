@@ -26,10 +26,39 @@ use crate::identity::{Identity, RepoId};
 use crate::node::device::Device;
 use crate::node::SyncedAt;
 use crate::storage::git::NAMESPACES_GLOB;
-use crate::storage::refs::Refs;
+use crate::storage::refs::{FeatureLevel, Refs, SignedRefsAt};
 
 use self::refs::{RefsAt, SignedRefs};
 use crate::git::UserInfo;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SignedRefsInfo {
+    /// Repositories with this set to `None` are ones that are seeded but not forked.
+    None,
+    /// Local signed refs, if any.
+    Some(refs::SignedRefsAt),
+    NeedsMigration,
+}
+
+impl SignedRefsInfo {
+    pub(crate) fn new(
+        result: Result<Option<SignedRefsAt>, refs::sigrefs::read::error::Read>,
+    ) -> Result<Self, refs::sigrefs::read::error::Read> {
+        Ok(match result {
+            Ok(Some(refs))
+                if refs.feature_level() >= FeatureLevel::LATEST && refs.parent().is_some() =>
+            {
+                SignedRefsInfo::Some(refs)
+            }
+            Ok(Some(_)) => SignedRefsInfo::NeedsMigration,
+            Ok(None) => SignedRefsInfo::None,
+            Err(refs::sigrefs::read::error::Read::Downgrade { .. }) => {
+                SignedRefsInfo::NeedsMigration
+            }
+            Err(err) => return Err(err),
+        })
+    }
+}
 
 /// Basic repository information.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -40,9 +69,8 @@ pub struct RepositoryInfo {
     pub head: Oid,
     /// Identity document.
     pub doc: Doc,
-    /// Local signed refs, if any.
-    /// Repositories with this set to `None` are ones that are seeded but not forked.
-    pub refs: Option<refs::SignedRefsAt>,
+    /// Information about local signed references.
+    pub refs: SignedRefsInfo,
     /// Sync time of the repository.
     pub synced_at: Option<SyncedAt>,
 }
