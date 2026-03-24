@@ -21,6 +21,8 @@ pub struct Committer {
 }
 
 impl Committer {
+    const NAME: &str = "radicle";
+
     /// Construct a [`Committer`] using the timestamp found at
     /// [`GIT_COMMITTER_DATE`],
     ///
@@ -64,19 +66,11 @@ impl Committer {
                 }
             };
 
-            let time = Time::new(
-                timestamp
-                    .try_into()
-                    .expect("seconds since unix epoch must fit i64"),
-                0,
-            );
-            let author = Author {
-                name: "radicle".to_string(),
-                email: public_key.to_human(),
-                time,
-            };
+            let timestamp = timestamp
+                .try_into()
+                .expect("seconds since unix epoch must fit i64");
 
-            Self::new(author)
+            Self::from_key_and_time(public_key, timestamp)
         }
     }
 
@@ -88,12 +82,7 @@ impl Committer {
     /// variable.
     #[cfg(any(test, feature = "test"))]
     pub fn stable(public_key: &PublicKey) -> Self {
-        let author = Author {
-            name: "radicle".to_string(),
-            email: public_key.to_human(),
-            time: Time::new(1671125284, 0),
-        };
-        Self::new(author)
+        Self::from_key_and_time(public_key, 1671125284)
     }
 
     /// Construct a [`Committer`] with the provided [`Author`].
@@ -103,6 +92,14 @@ impl Committer {
 
     pub fn into_inner(self) -> Author {
         self.author
+    }
+
+    fn from_key_and_time(public_key: &PublicKey, timestamp: i64) -> Self {
+        Self::new(Author {
+            name: Self::NAME.to_string(),
+            email: public_key.to_human(),
+            time: Time::new(timestamp, 0),
+        })
     }
 }
 
