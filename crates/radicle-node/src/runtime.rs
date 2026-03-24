@@ -235,10 +235,6 @@ impl Runtime {
 
         let nid = *signer.public_key();
         let fetch = worker::FetchConfig {
-            config: radicle_fetch::Config {
-                limit: radicle_fetch::FetchLimit::default(),
-                level_min: config.fetch.feature_level_min(),
-            },
             local: nid,
             expiry: worker::garbage::Expiry::default(),
         };

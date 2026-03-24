@@ -59,8 +59,6 @@ pub struct TaskResult {
 
 #[derive(Debug, Clone)]
 pub struct FetchConfig {
-    /// Configuration passed to the fetch protocol.
-    pub config: radicle_fetch::Config,
     /// Public key of the local peer.
     pub local: crypto::PublicKey,
     /// Configuration for `git gc` garbage collection. Defaults to `1
@@ -243,11 +241,7 @@ impl Worker {
         channels: channels::ChannelsFlush,
         notifs: notifications::StoreWriter,
     ) -> Result<fetch::FetchResult, FetchError> {
-        let FetchConfig {
-            config: _,
-            local,
-            expiry,
-        } = &self.fetch_config;
+        let FetchConfig { local, expiry } = &self.fetch_config;
         // N.b. if the `rid` is blocked this will return an error, so
         // we won't continue with any further set up of the fetch.
         let allowed = radicle_fetch::Allowed::from_config(rid, &self.policies)?;
