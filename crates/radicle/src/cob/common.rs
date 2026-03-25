@@ -4,7 +4,7 @@ use std::ops::{Deref, Range};
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use base64::prelude::{Engine, BASE64_STANDARD};
+use base64::prelude::{BASE64_STANDARD, Engine};
 use localtime::LocalTime;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -454,11 +454,7 @@ pub enum Authorization {
 
 impl From<bool> for Authorization {
     fn from(value: bool) -> Self {
-        if value {
-            Self::Allow
-        } else {
-            Self::Deny
-        }
+        if value { Self::Allow } else { Self::Deny }
     }
 }
 

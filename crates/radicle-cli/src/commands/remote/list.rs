@@ -1,10 +1,10 @@
 use std::collections::HashSet;
 
+use radicle::Profile;
 use radicle::git::Url;
 use radicle::identity::{Did, RepoId};
 use radicle::node::{Alias, AliasStore as _, NodeId};
 use radicle::storage::ReadStorage as _;
-use radicle::Profile;
 use radicle_term::{Element, Table};
 
 use crate::git;

@@ -10,8 +10,8 @@ pub use crate::git;
 use crate::git::fmt;
 
 use crate::identity::doc::{Doc, DocAt, DocError, RawDoc, RepoId};
-use crate::node::device::Device;
 use crate::node::NodeId;
+use crate::node::device::Device;
 
 pub use crate::storage::*;
 

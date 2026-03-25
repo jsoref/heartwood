@@ -3,14 +3,14 @@ use std::time::Instant;
 
 use gix_protocol::Handshake;
 use radicle::crypto::PublicKey;
-use radicle::git::{fmt::Qualified, Oid};
+use radicle::git::{Oid, fmt::Qualified};
 use radicle::identity::{Did, Doc, DocError};
 
 use radicle::storage;
 use radicle::storage::git::Repository;
 use radicle::storage::refs::{FeatureLevel, RefsAt};
 use radicle::storage::{
-    git::Validation, Remote, RemoteId, RemoteRepository, Remotes, ValidateRepository, Validations,
+    Remote, RemoteId, RemoteRepository, Remotes, ValidateRepository, Validations, git::Validation,
 };
 
 use crate::git;
@@ -20,7 +20,7 @@ use crate::git::repository;
 use crate::sigrefs::SignedRefs;
 use crate::stage;
 use crate::stage::ProtocolStage;
-use crate::{refs, sigrefs, transport, Handle};
+use crate::{Handle, refs, sigrefs, transport};
 
 /// The data size limit, 5Mb, while fetching the special refs,
 /// i.e. `rad/id` and `rad/sigrefs`.
@@ -549,9 +549,13 @@ impl FetchState {
                         }) => {
                             let level_required = levels.max();
                             if level_reachable >= level_required {
-                                log::info!("Non-delegate {remote} has downgraded history, currently stuck at '{actual}', expects to be upgraded to '{level_required}' and will be upgraded to '{level_reachable}'.")
+                                log::info!(
+                                    "Non-delegate {remote} has downgraded history, currently stuck at '{actual}', expects to be upgraded to '{level_required}' and will be upgraded to '{level_reachable}'."
+                                )
                             } else {
-                                log::debug!("Non-delegate {remote} has downgraded history, currently stuck at '{actual}', expects to be upgraded to '{level_required}' but only level '{level_reachable}' was advertised.");
+                                log::debug!(
+                                    "Non-delegate {remote} has downgraded history, currently stuck at '{actual}', expects to be upgraded to '{level_required}' but only level '{level_reachable}' was advertised."
+                                );
                                 self.prune(&remote);
                                 continue;
                             }
@@ -601,9 +605,13 @@ impl FetchState {
                         }) => {
                             let level_required = levels.max();
                             if level_reachable >= level_required {
-                                log::info!("Delegate {remote} has downgraded history, currently stuck at '{actual}', expects to be upgraded to '{level_required}' and will be upgraded to '{level_reachable}'.")
+                                log::info!(
+                                    "Delegate {remote} has downgraded history, currently stuck at '{actual}', expects to be upgraded to '{level_required}' and will be upgraded to '{level_reachable}'."
+                                )
                             } else {
-                                log::info!("Delegate {remote} has downgraded history, currently stuck at '{actual}', expects to be upgraded to '{level_required}' but only level '{level_reachable}' was advertised.");
+                                log::info!(
+                                    "Delegate {remote} has downgraded history, currently stuck at '{actual}', expects to be upgraded to '{level_required}' but only level '{level_reachable}' was advertised."
+                                );
                                 self.prune(&remote);
                                 continue;
                             }
@@ -629,7 +637,10 @@ impl FetchState {
                     }
 
                     if level_reachable < FeatureLevel::LATEST {
-                        log::warn!("Delegate {remote} is on feature level '{level_reachable}' which is lower than '{}', they should consider upgrading Radicle.", FeatureLevel::LATEST)
+                        log::warn!(
+                            "Delegate {remote} is on feature level '{level_reachable}' which is lower than '{}', they should consider upgrading Radicle.",
+                            FeatureLevel::LATEST
+                        )
                     }
                 }
             }

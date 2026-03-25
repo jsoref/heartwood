@@ -1,8 +1,8 @@
 //! Implementation of the transport protocol.
 //!
 //! We use the Noise XK handshake pattern to establish an encrypted stream with a remote peer.
-use std::collections::hash_map::Entry;
 use std::collections::VecDeque;
+use std::collections::hash_map::Entry;
 use std::fmt::Debug;
 use std::sync::Arc;
 use std::time::Instant;
@@ -19,9 +19,9 @@ use radicle::node::device::Device;
 
 use radicle::collections::{RandomMap, RandomSet};
 use radicle::crypto;
-use radicle::node::config::AddressConfig;
 use radicle::node::Link;
 use radicle::node::NodeId;
+use radicle::node::config::AddressConfig;
 use radicle::storage::WriteStorage;
 use radicle_protocol::deserializer::Deserializer;
 pub use radicle_protocol::wire::frame;
@@ -34,9 +34,9 @@ use crate::reactor::{Listener, Transport};
 use crate::reactor::{NoiseSession, ProtocolArtifact, SessionEvent, Socks5Session};
 use crate::reactor::{Token, Tokens};
 use crate::service;
-use crate::service::io::Io;
 use crate::service::FETCH_TIMEOUT;
-use crate::service::{session, DisconnectReason, Metrics, Service};
+use crate::service::io::Io;
+use crate::service::{DisconnectReason, Metrics, Service, session};
 use crate::worker;
 use crate::worker::{ChannelEvent, ChannelsConfig};
 use crate::worker::{Task, TaskResult};
@@ -897,7 +897,10 @@ where
                         e.remove();
                     }
                     Peer::Connected { nid, .. } => {
-                        panic!("Wire::handover_transport: Unexpected handover of connected peer {nid} with token {}", token.0);
+                        panic!(
+                            "Wire::handover_transport: Unexpected handover of connected peer {nid} with token {}",
+                            token.0
+                        );
                     }
                 }
             }

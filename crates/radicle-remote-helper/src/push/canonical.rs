@@ -1,8 +1,8 @@
 use radicle::git;
 use radicle::git::canonical;
+use radicle::git::canonical::QuorumWithConvergence;
 use radicle::git::canonical::effects;
 use radicle::git::canonical::error::QuorumError;
-use radicle::git::canonical::QuorumWithConvergence;
 use radicle::prelude::Did;
 
 /// Validates a vote to update a canonical reference during push.

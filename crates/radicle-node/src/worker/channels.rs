@@ -3,8 +3,8 @@ use std::ops::Deref;
 use std::{fmt, io, time};
 
 use crossbeam_channel as chan;
-use radicle::node::config::FetchPackSizeLimit;
 use radicle::node::NodeId;
+use radicle::node::config::FetchPackSizeLimit;
 
 use crate::runtime::Handle;
 use crate::wire::StreamId;

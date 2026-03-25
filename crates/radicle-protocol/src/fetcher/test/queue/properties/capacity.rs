@@ -1,7 +1,7 @@
 use qcheck_macros::quickcheck;
 
 use crate::fetcher::test::queue::helpers::*;
-use crate::fetcher::{state::Enqueue, MaxQueueSize};
+use crate::fetcher::{MaxQueueSize, state::Enqueue};
 use crate::fetcher::{Queue, QueuedFetch};
 
 #[quickcheck]

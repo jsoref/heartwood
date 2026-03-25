@@ -1,8 +1,8 @@
 use crate::test;
 use crate::util::environment::Environment;
 use crate::util::formula::formula;
-use radicle::node::policy::Scope;
 use radicle::node::Handle as _;
+use radicle::node::policy::Scope;
 use radicle::prelude::RepoId;
 use radicle::test::fixtures;
 use std::str::FromStr;

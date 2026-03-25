@@ -8,7 +8,7 @@ use thiserror::Error;
 
 use crate::storage::refs::sigrefs::git::{object, reference};
 use crate::storage::refs::sigrefs::read::FeatureLevels;
-use crate::storage::refs::{canonical, FeatureLevel};
+use crate::storage::refs::{FeatureLevel, canonical};
 
 #[derive(Debug, Error)]
 #[non_exhaustive]
@@ -114,7 +114,9 @@ pub enum IdentityRoot {
 pub enum Verify {
     #[error("failed to verify signature over signed references")]
     Signature(crypto::signature::Error),
-    #[error("expected repository identity {expected}, but found {found} under commit '{identity_commit}' during verification of '{sigrefs_commit}")]
+    #[error(
+        "expected repository identity {expected}, but found {found} under commit '{identity_commit}' during verification of '{sigrefs_commit}"
+    )]
     MismatchedIdentity {
         identity_commit: Oid,
         sigrefs_commit: Oid,

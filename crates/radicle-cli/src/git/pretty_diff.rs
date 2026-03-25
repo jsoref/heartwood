@@ -7,8 +7,8 @@ use radicle_surf::diff;
 use radicle_surf::diff::{Added, Copied, Deleted, FileStats, Hunks, Modified, Moved};
 use radicle_surf::diff::{Diff, DiffContent, FileDiff, Hunk, Modification};
 use radicle_term as term;
-use term::cell::Cell;
 use term::VStack;
+use term::cell::Cell;
 
 use crate::git::unified_diff::FileHeader;
 use crate::terminal::highlight::{Highlighter, Theme};

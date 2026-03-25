@@ -2,7 +2,7 @@ use fmt::{Component, RefString};
 
 use radicle_git_ref_format::refname;
 
-use crate::{object, test::arbitrary::Invalid, ObjectId, TypeName};
+use crate::{ObjectId, TypeName, object, test::arbitrary::Invalid};
 
 #[cfg(feature = "git2")]
 mod git {
@@ -10,11 +10,11 @@ mod git {
 
     use crypto::test::signer::MockSigner;
     use crypto::{PublicKey, Signer};
-    use nonempty::{nonempty, NonEmpty};
+    use nonempty::{NonEmpty, nonempty};
     use qcheck::Arbitrary;
 
     use crate::{
-        create, get, list, update, Create, Entry, ObjectId, TypeName, Update, Updated, Version,
+        Create, Entry, ObjectId, TypeName, Update, Updated, Version, create, get, list, update,
     };
 
     use crate::test;

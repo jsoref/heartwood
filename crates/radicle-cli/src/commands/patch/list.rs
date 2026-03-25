@@ -7,9 +7,9 @@ use radicle::prelude::*;
 use radicle::profile::Profile;
 use radicle::storage::git::Repository;
 
+use term::Element as _;
 use term::format::Author;
 use term::table::{Table, TableOptions};
-use term::Element as _;
 
 use crate::terminal as term;
 use crate::terminal::patch as common;

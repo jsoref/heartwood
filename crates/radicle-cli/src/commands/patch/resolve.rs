@@ -1,9 +1,9 @@
 use anyhow::anyhow;
+use radicle::Profile;
 use radicle::cob::thread::CommentId;
 use radicle::patch::{self, PatchId};
-use radicle::patch::{cache::Patches as _, ReviewId};
+use radicle::patch::{ReviewId, cache::Patches as _};
 use radicle::storage::git::Repository;
-use radicle::Profile;
 
 use crate::terminal as term;
 

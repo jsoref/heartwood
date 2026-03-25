@@ -1,4 +1,4 @@
-use systemd_journal_logger::{connected_to_journal, JournalLog};
+use systemd_journal_logger::{JournalLog, connected_to_journal};
 
 /// If the current process is directly connected to the systemd journal,
 /// return a logger that will write to it.

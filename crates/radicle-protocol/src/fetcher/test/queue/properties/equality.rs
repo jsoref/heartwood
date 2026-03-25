@@ -14,9 +14,5 @@ fn symmetric(a: QueuedFetch, b: QueuedFetch) -> bool {
 
 #[quickcheck]
 fn transitive(a: QueuedFetch, b: QueuedFetch, c: QueuedFetch) -> bool {
-    if a == b && b == c {
-        a == c
-    } else {
-        true
-    }
+    if a == b && b == c { a == c } else { true }
 }

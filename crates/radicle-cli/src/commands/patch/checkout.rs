@@ -5,10 +5,10 @@ use radicle::cob::patch::RevisionId;
 use radicle::git::fmt::Qualified;
 use radicle::git::fmt::RefString;
 use radicle::git::raw::ErrorExt as _;
-use radicle::patch::cache::Patches as _;
 use radicle::patch::PatchId;
+use radicle::patch::cache::Patches as _;
 use radicle::storage::git::Repository;
-use radicle::{git, rad, Profile};
+use radicle::{Profile, git, rad};
 
 use crate::terminal as term;
 

@@ -3,11 +3,11 @@ use std::time::Duration;
 use radicle::test::arbitrary;
 use radicle_core::RepoId;
 
-use crate::fetcher::state::Enqueue;
-use crate::fetcher::test::queue::helpers::*;
 use crate::fetcher::FetchConfig;
 use crate::fetcher::QueuedFetch;
 use crate::fetcher::RefsToFetch;
+use crate::fetcher::state::Enqueue;
+use crate::fetcher::test::queue::helpers::*;
 
 #[test]
 fn zero_timeout_accepted() {

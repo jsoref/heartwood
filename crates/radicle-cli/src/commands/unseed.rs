@@ -1,6 +1,6 @@
 pub mod args;
 
-use radicle::{prelude::*, Node};
+use radicle::{Node, prelude::*};
 
 use crate::terminal as term;
 

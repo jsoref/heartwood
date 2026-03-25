@@ -13,15 +13,15 @@ use test_log::test;
 
 use radicle::cob;
 use radicle::identity::Visibility;
+use radicle::node::Link;
 use radicle::node::address::Store as _;
 use radicle::node::device::Device;
 use radicle::node::policy;
 use radicle::node::refs::Store as _;
 use radicle::node::routing::Store as _;
-use radicle::node::Link;
 use radicle::node::{ConnectOptions, DEFAULT_TIMEOUT};
-use radicle::storage::refs::RefsAt;
 use radicle::storage::RefUpdate;
+use radicle::storage::refs::RefsAt;
 use radicle::test::arbitrary::r#gen;
 use radicle::test::storage::MockRepository;
 use radicle_protocol::bounded::BoundedVec;
@@ -32,15 +32,15 @@ use crate::node;
 use crate::node::config::*;
 use crate::prelude::*;
 use crate::prelude::{LocalDuration, Timestamp};
+use crate::service::ServiceState as _;
 use crate::service::filter::Filter;
 use crate::service::io::Io;
 use crate::service::message::*;
-use crate::service::ServiceState as _;
 use crate::service::*;
-use crate::storage::git::transport::{local, remote};
-use crate::storage::git::Storage;
-use crate::storage::refs::SIGREFS_BRANCH;
 use crate::storage::ReadStorage;
+use crate::storage::git::Storage;
+use crate::storage::git::transport::{local, remote};
+use crate::storage::refs::SIGREFS_BRANCH;
 use crate::test::arbitrary;
 use crate::test::assert_matches;
 use crate::test::fixtures;
@@ -51,11 +51,11 @@ use crate::test::peer::Peer;
 use crate::test::simulator;
 use crate::test::simulator::{Peer as _, Simulation};
 
+use crate::LocalTime;
 use crate::test::storage::MockStorage;
 use crate::wire::Decode;
 use crate::wire::Encode;
 use crate::worker::fetch;
-use crate::LocalTime;
 use crate::{git, identity, rad, runtime, service, test};
 
 /// Default number of tests to run when testing things with high variance.
@@ -2040,13 +2040,14 @@ fn test_announcement_message_amplification() {
 
         // Make sure they have the routing table entry.
         for node in [&bob, &eve, &zod, &tom] {
-            assert!(node
-                .service
-                .database()
-                .routing()
-                .get(&rid)
-                .unwrap()
-                .contains(&alice.id));
+            assert!(
+                node.service
+                    .database()
+                    .routing()
+                    .get(&rid)
+                    .unwrap()
+                    .contains(&alice.id)
+            );
         }
 
         // Count how many copies of Alice's inventory message have been received by peers.

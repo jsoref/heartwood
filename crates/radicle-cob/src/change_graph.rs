@@ -7,8 +7,8 @@ use dag::Dag;
 use oid::Oid;
 
 use crate::{
-    change, object, object::collaboration::Evaluate, signatures::ExtendedSignature,
-    CollaborativeObject, Entry, EntryId, History, ObjectId, TypeName,
+    CollaborativeObject, Entry, EntryId, History, ObjectId, TypeName, change, object,
+    object::collaboration::Evaluate, signatures::ExtendedSignature,
 };
 
 #[derive(Debug, thiserror::Error)]

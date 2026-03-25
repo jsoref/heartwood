@@ -1,4 +1,4 @@
-use crate::{cell::Cell, Constraint, Element, Line, Paint, Size};
+use crate::{Constraint, Element, Line, Paint, Size, cell::Cell};
 
 /// Default text wrap width.
 pub const DEFAULT_WRAP: usize = 80;

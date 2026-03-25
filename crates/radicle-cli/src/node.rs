@@ -4,7 +4,7 @@ use std::io::Write;
 
 use radicle::node::sync;
 use radicle::node::{Handle as _, NodeId};
-use radicle::storage::{refs, ReadRepository, RepositoryError};
+use radicle::storage::{ReadRepository, RepositoryError, refs};
 use radicle::{Node, Profile};
 
 use crate::terminal as term;
@@ -136,7 +136,9 @@ pub fn announce<R: ReadRepository>(
     match announce_(repo, settings, reporting, node, profile) {
         Ok(result) => Ok(result),
         Err(e) if e.is_connection_err() => {
-            term::hint("Node is stopped. To announce changes to the network, start it with `rad node start`.");
+            term::hint(
+                "Node is stopped. To announce changes to the network, start it with `rad node start`.",
+            );
             Ok(None)
         }
         Err(e) => Err(e),

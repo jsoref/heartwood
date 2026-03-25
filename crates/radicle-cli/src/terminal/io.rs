@@ -1,12 +1,12 @@
 use anyhow::anyhow;
+use radicle::cob::Reaction;
 use radicle::cob::issue::Issue;
 use radicle::cob::thread::{Comment, CommentId};
-use radicle::cob::Reaction;
-use radicle::crypto::ssh::keystore::MemorySigner;
 use radicle::crypto::ssh::Keystore;
+use radicle::crypto::ssh::keystore::MemorySigner;
 use radicle::node::device::{BoxedDevice, Device};
-use radicle::profile::env::RAD_PASSPHRASE;
 use radicle::profile::Profile;
+use radicle::profile::env::RAD_PASSPHRASE;
 
 pub use radicle_term::io::*;
 pub use radicle_term::spinner;

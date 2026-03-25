@@ -13,10 +13,10 @@ use crate::identity::doc;
 use crate::identity::doc::{DocError, RepoId, Visibility};
 use crate::identity::project::{Project, ProjectName};
 use crate::node::device::Device;
-use crate::storage::git::transport;
-use crate::storage::git::Repository;
-use crate::storage::refs::SignedRefs;
 use crate::storage::RepositoryError;
+use crate::storage::git::Repository;
+use crate::storage::git::transport;
+use crate::storage::refs::SignedRefs;
 use crate::storage::{ReadRepository as _, RemoteId, SignRepository as _};
 use crate::storage::{WriteRepository, WriteStorage};
 use crate::{identity, storage};
@@ -230,7 +230,9 @@ where
 pub enum CheckoutError {
     #[error("failed to fetch to working copy: {0}")]
     FetchIo(#[source] std::io::Error),
-    #[error("internal fetch failed with exit status {status}, stderr and stdout follow:\n{stderr}\n{stdout}")]
+    #[error(
+        "internal fetch failed with exit status {status}, stderr and stdout follow:\n{stderr}\n{stdout}"
+    )]
     FetchGit {
         status: std::process::ExitStatus,
         stderr: String,
@@ -510,8 +512,8 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     use crate::identity::Did;
-    use crate::storage::git::transport;
     use crate::storage::git::Storage;
+    use crate::storage::git::transport;
     use crate::storage::{ReadStorage, RemoteRepository as _};
     use crate::test::fixtures;
     use git::fmt::{component, qualified};

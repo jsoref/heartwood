@@ -122,10 +122,10 @@ impl<A> Op<A> {
     pub fn manifest_of<S>(store: &S, id: &git::Oid) -> Result<Manifest, ManifestError>
     where
         S: cob::change::Storage<
-            ObjectId = git::Oid,
-            Parent = git::Oid,
-            Signatures = crypto::ssh::ExtendedSignature,
-        >,
+                ObjectId = git::Oid,
+                Parent = git::Oid,
+                Signatures = crypto::ssh::ExtendedSignature,
+            >,
     {
         store.manifest_of(id).map_err(|err| ManifestError {
             object: *id,
@@ -137,10 +137,10 @@ impl<A> Op<A> {
     pub fn load<S>(store: &S, id: git::Oid) -> Result<Self, LoadError>
     where
         S: cob::change::Storage<
-            ObjectId = git::Oid,
-            Parent = git::Oid,
-            Signatures = crypto::ssh::ExtendedSignature,
-        >,
+                ObjectId = git::Oid,
+                Parent = git::Oid,
+                Signatures = crypto::ssh::ExtendedSignature,
+            >,
         for<'de> A: serde::Deserialize<'de>,
     {
         let entry = store.load(id).map_err(|err| LoadError::Load {

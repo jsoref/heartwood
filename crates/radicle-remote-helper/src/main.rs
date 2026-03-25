@@ -34,8 +34,8 @@ use radicle::prelude::NodeId;
 use radicle::storage::git::transport::local::{Url, UrlError};
 use radicle::storage::{ReadRepository, WriteStorage};
 use radicle::version::Version;
+use radicle::{Profile, git, storage};
 use radicle::{cob, profile};
-use radicle::{git, storage, Profile};
 use radicle_cli::terminal as cli;
 
 use crate::protocol::{Command, Line, LineReader};

@@ -2,12 +2,12 @@ use radicle::patch::cache::Patches as _;
 use radicle::profile;
 use thiserror::Error;
 
+use radicle::Profile;
 use radicle::cob;
 use radicle::git;
 use radicle::prelude::NodeId;
-use radicle::storage::git::transport::local::Url;
 use radicle::storage::ReadRepository;
-use radicle::Profile;
+use radicle::storage::git::transport::local::Url;
 
 #[derive(Debug, Error)]
 pub(super) enum Error {

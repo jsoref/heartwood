@@ -5,12 +5,12 @@ use std::time::{Duration, Instant};
 
 use radicle_fetch::{ByteSlice as _, RemoteProgress};
 
+use radicle::Storage;
 use radicle::identity::RepoId;
 use radicle::node::events;
 use radicle::node::events::Emitter;
 use radicle::node::{Event, NodeId};
 use radicle::storage::git::paths;
-use radicle::Storage;
 
 use crate::runtime::thread;
 

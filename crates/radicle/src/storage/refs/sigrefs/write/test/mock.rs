@@ -4,16 +4,16 @@ use std::str::FromStr as _;
 
 use radicle_core::{NodeId, RepoId};
 use radicle_git_metadata::author::{Author, Time};
+use radicle_git_metadata::commit::CommitData;
 use radicle_git_metadata::commit::headers::Headers;
 use radicle_git_metadata::commit::trailers::OwnedTrailer;
-use radicle_git_metadata::commit::CommitData;
 use radicle_oid::Oid;
 
 use crate::git;
 use crate::identity::doc;
-use crate::storage::refs::sigrefs::git::{object, reference};
-use crate::storage::refs::{Refs, REFS_BLOB_PATH, SIGNATURE_BLOB_PATH, SIGREFS_BRANCH};
 use crate::storage::HasRepoId;
+use crate::storage::refs::sigrefs::git::{object, reference};
+use crate::storage::refs::{REFS_BLOB_PATH, Refs, SIGNATURE_BLOB_PATH, SIGREFS_BRANCH};
 
 const MOCKED_IDENTITY: u8 = 99u8;
 

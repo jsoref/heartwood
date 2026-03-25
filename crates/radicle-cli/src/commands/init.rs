@@ -10,7 +10,7 @@ use std::convert::TryFrom;
 use std::env;
 use std::str::FromStr;
 
-use anyhow::{anyhow, bail, Context as _};
+use anyhow::{Context as _, anyhow, bail};
 use serde_json as json;
 
 use radicle::crypto::ssh;
@@ -21,9 +21,9 @@ use radicle::git::raw::ErrorExt as _;
 use radicle::identity::project::ProjectName;
 use radicle::identity::{Doc, RepoId, Visibility};
 use radicle::node::events::UploadPack;
-use radicle::node::{Event, Handle, NodeId, DEFAULT_SUBSCRIBE_TIMEOUT};
+use radicle::node::{DEFAULT_SUBSCRIBE_TIMEOUT, Event, Handle, NodeId};
 use radicle::storage::ReadStorage as _;
-use radicle::{profile, Node};
+use radicle::{Node, profile};
 
 use crate::commands;
 use crate::git;
@@ -63,7 +63,9 @@ pub fn init(repo: git::Repository, args: Args, profile: &profile::Profile) -> an
     let default_branch = match find_default_branch(&repo) {
         Err(err @ DefaultBranchError::Head) => {
             term::error(err);
-            term::hint("try `git checkout <default branch>` or set `git config set --local init.defaultBranch <default branch>`");
+            term::hint(
+                "try `git checkout <default branch>` or set `git config set --local init.defaultBranch <default branch>`",
+            );
             anyhow::bail!("aborting `rad init`")
         }
         Err(err @ DefaultBranchError::NoHead) => {
@@ -209,7 +211,9 @@ pub fn init(repo: git::Repository, args: Args, profile: &profile::Profile) -> an
                 term::warning(format!(
                     "There was an error announcing your repository to the network: {e}"
                 ));
-                term::warning("Try again with `rad sync --announce`, or check your logs with `rad node logs`.");
+                term::warning(
+                    "Try again with `rad sync --announce`, or check your logs with `rad node logs`.",
+                );
                 term::blank();
             }
             term::info!("To push changes, run {}.", term::format::command(push_cmd));
@@ -445,7 +449,8 @@ pub fn announce(
                 term::blank();
                 term::info!(
                     "You are not connected to any peers. Your repository will be announced as soon as \
-                    your node establishes a connection with the network.");
+                    your node establishes a connection with the network."
+                );
                 term::info!("Check for peer connections with `rad node status`.");
                 term::blank();
             }

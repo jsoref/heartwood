@@ -3,13 +3,13 @@ use std::str::FromStr;
 
 use crate::crypto::PublicKey;
 use crate::git;
-use crate::identity::doc::Visibility;
 use crate::identity::RepoId;
-use crate::node::device::Device;
+use crate::identity::doc::Visibility;
 use crate::node::Alias;
+use crate::node::device::Device;
 use crate::rad;
-use crate::storage::git::transport;
 use crate::storage::git::Storage;
+use crate::storage::git::transport;
 use crate::storage::refs::SignedRefs;
 
 /// The birth of the radicle project, January 1st, 2018.

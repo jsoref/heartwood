@@ -4,14 +4,14 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Read, Seek, SeekFrom, Write};
 use std::{path::Path, process, thread, time};
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use localtime::LocalTime;
 
+use radicle::Node;
 use radicle::node;
 use radicle::node::{Address, ConnectResult, Handle as _, NodeId};
 use radicle::profile::env::RAD_PASSPHRASE;
-use radicle::Node;
-use radicle::{profile, Profile};
+use radicle::{Profile, profile};
 
 use crate::commands::node::logs::{LogRotatorFileSystem, Rotated};
 use crate::terminal as term;

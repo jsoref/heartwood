@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::num::NonZeroUsize;
 use std::path::Path;
 
-use crypto::{signature, PublicKey};
+use crypto::{PublicKey, signature};
 use nonempty::NonEmpty;
 use radicle_core::{NodeId, RepoId};
 use radicle_git_metadata::commit::CommitData;
@@ -19,8 +19,8 @@ use crate::git;
 use crate::identity::doc;
 use crate::storage::refs::sigrefs::git::{object, reference};
 use crate::storage::refs::{
-    FeatureLevel, Refs, SignedRefs, IDENTITY_ROOT, REFS_BLOB_PATH, SIGNATURE_BLOB_PATH,
-    SIGREFS_BRANCH,
+    FeatureLevel, IDENTITY_ROOT, REFS_BLOB_PATH, Refs, SIGNATURE_BLOB_PATH, SIGREFS_BRANCH,
+    SignedRefs,
 };
 
 /// A `rad/sigrefs` that has passed the following verification checks:
@@ -422,7 +422,7 @@ impl Commit {
                     sigrefs_commit: self.oid,
                     expected,
                     actual,
-                })
+                });
             }
         };
 

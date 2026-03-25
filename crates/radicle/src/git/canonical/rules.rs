@@ -22,10 +22,10 @@ use thiserror::Error;
 use crate::git;
 use crate::git::canonical;
 use crate::git::canonical::Canonical;
-use crate::git::fmt::refspec::QualifiedPattern;
 use crate::git::fmt::Qualified;
-use crate::git::fmt::{refname, RefString};
-use crate::identity::{doc, Did};
+use crate::git::fmt::refspec::QualifiedPattern;
+use crate::git::fmt::{RefString, refname};
+use crate::identity::{Did, doc};
 
 const ASTERISK: char = '*';
 
@@ -745,18 +745,18 @@ mod tests {
 
     use nonempty::nonempty;
 
-    use crate::crypto::{test::signer::MockSigner, Signer};
+    use crate::Storage;
+    use crate::crypto::{Signer, test::signer::MockSigner};
     use crate::git;
-    use crate::git::fmt::qualified_pattern;
     use crate::git::fmt::RefString;
-    use crate::identity::doc::Doc;
+    use crate::git::fmt::qualified_pattern;
     use crate::identity::Visibility;
+    use crate::identity::doc::Doc;
     use crate::node::device::Device;
     use crate::rad;
     use crate::storage::refs::{IDENTITY_BRANCH, IDENTITY_ROOT, SIGREFS_BRANCH, SIGREFS_PARENT};
-    use crate::storage::{git::transport, ReadStorage};
+    use crate::storage::{ReadStorage, git::transport};
     use crate::test::{arbitrary, fixtures};
-    use crate::Storage;
 
     use super::*;
 
@@ -994,7 +994,9 @@ mod tests {
 
         assert_eq!(
             patterns,
-            [pattern05, pattern06, pattern03, pattern02, pattern04, pattern01]
+            [
+                pattern05, pattern06, pattern03, pattern02, pattern04, pattern01
+            ]
         );
     }
 

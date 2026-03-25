@@ -6,7 +6,7 @@ use ec25519 as ed25519;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-pub use ed25519::{edwards25519, Error, KeyPair, Seed};
+pub use ed25519::{Error, KeyPair, Seed, edwards25519};
 
 pub extern crate signature;
 

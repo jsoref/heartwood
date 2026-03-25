@@ -8,8 +8,8 @@ use sqlite as sql;
 use thiserror::Error;
 
 use crate::node;
-use crate::node::address::{AddressType, KnownAddress, Node, Source};
 use crate::node::UserAgent;
+use crate::node::address::{AddressType, KnownAddress, Node, Source};
 use crate::node::{Address, Alias, AliasError, AliasStore, Database, NodeId, Penalty, Severity};
 use crate::prelude::Timestamp;
 use crate::sql::transaction;

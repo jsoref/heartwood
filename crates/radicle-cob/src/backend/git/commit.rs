@@ -6,9 +6,9 @@ use std::str::{self, FromStr};
 use git2::{ObjectType, Oid};
 
 use metadata::author::Author;
+use metadata::commit::CommitData;
 use metadata::commit::headers::Headers;
 use metadata::commit::trailers::OwnedTrailer;
-use metadata::commit::CommitData;
 
 use trailers::Trailers;
 

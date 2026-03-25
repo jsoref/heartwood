@@ -5,8 +5,8 @@ use nonempty::NonEmpty;
 use oid::Oid;
 
 use crate::{
-    change, change_graph::ChangeGraph, history::EntryId, CollaborativeObject, Embed, Evaluate,
-    ExtendedSignature, ObjectId, TypeName,
+    CollaborativeObject, Embed, Evaluate, ExtendedSignature, ObjectId, TypeName, change,
+    change_graph::ChangeGraph, history::EntryId,
 };
 
 use super::error;

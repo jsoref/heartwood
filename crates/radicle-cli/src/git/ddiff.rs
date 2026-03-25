@@ -305,7 +305,7 @@ impl unified_diff::Decode for DiffModification {
             (v1, v2) => {
                 return Err(unified_diff::Error::syntax(format!(
                     "indicator character expected, but got '{v1}{v2}'"
-                )))
+                )));
             }
         };
 

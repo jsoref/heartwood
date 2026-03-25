@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use radicle::cob::cache::COBS_DB_FILE;
-use radicle::crypto::ssh::{keystore::MemorySigner, Keystore};
+use radicle::crypto::ssh::{Keystore, keystore::MemorySigner};
 use radicle::crypto::{KeyPair, Seed};
 use radicle::git;
 use radicle::node::policy::store as policy;
@@ -47,10 +47,9 @@ pub(crate) mod config {
                 },
                 ..Limits::default()
             },
-            external_addresses: vec![node::Address::from_str(&format!(
-                "{alias}.radicle.example:8776"
-            ))
-            .unwrap()],
+            external_addresses: vec![
+                node::Address::from_str(&format!("{alias}.radicle.example:8776")).unwrap(),
+            ],
             ..node(alias)
         }
     }

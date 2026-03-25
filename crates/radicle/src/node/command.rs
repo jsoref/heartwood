@@ -17,8 +17,8 @@ use crate::crypto::PublicKey;
 use crate::identity::RepoId;
 use crate::storage::refs;
 
-use super::events::Event;
 use super::NodeId;
+use super::events::Event;
 
 /// Default timeout when waiting for the node to respond with data.
 pub const DEFAULT_TIMEOUT: time::Duration = time::Duration::from_secs(30);

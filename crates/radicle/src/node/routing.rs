@@ -320,11 +320,12 @@ mod test {
         let mut db = database(":memory:");
 
         for node in &nodes {
-            assert!(db
-                .add_inventory(&ids, *node, Timestamp::EPOCH)
-                .unwrap()
-                .iter()
-                .all(|(_, r)| *r == InsertResult::SeedAdded));
+            assert!(
+                db.add_inventory(&ids, *node, Timestamp::EPOCH)
+                    .unwrap()
+                    .iter()
+                    .all(|(_, r)| *r == InsertResult::SeedAdded)
+            );
         }
 
         let results = db.entries().unwrap().collect::<Vec<_>>();

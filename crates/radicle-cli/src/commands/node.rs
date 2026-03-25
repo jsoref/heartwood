@@ -7,11 +7,11 @@ pub mod routing;
 
 use std::{process, time};
 
+use radicle::node::Handle as _;
+use radicle::node::Node;
 use radicle::node::address::Store as AddressStore;
 use radicle::node::config::ConnectAddress;
 use radicle::node::routing::Store;
-use radicle::node::Handle as _;
-use radicle::node::Node;
 
 use crate::commands::node::args::Only;
 use crate::terminal as term;

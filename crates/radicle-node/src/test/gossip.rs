@@ -1,15 +1,15 @@
 use std::str::FromStr;
 
 use radicle::node;
-use radicle::node::device::Device;
 use radicle::node::UserAgent;
+use radicle::node::device::Device;
 use radicle::test::fixtures::r#gen;
 
 use crate::test::arbitrary;
 use crate::{
+    PROTOCOL_VERSION,
     prelude::{LocalDuration, LocalTime, Message},
     service::message::{InventoryAnnouncement, NodeAnnouncement},
-    PROTOCOL_VERSION,
 };
 
 pub fn messages(count: usize, now: LocalTime, delta: LocalDuration) -> Vec<Message> {
@@ -23,11 +23,7 @@ pub fn messages(count: usize, now: LocalTime, delta: LocalDuration) -> Vec<Messa
         } else {
             let delta = LocalDuration::from_secs(rng.u64(0..delta.as_secs()));
 
-            if rng.bool() {
-                now + delta
-            } else {
-                now - delta
-            }
+            if rng.bool() { now + delta } else { now - delta }
         };
 
         msgs.push(Message::node(

@@ -1,9 +1,9 @@
 use crate::test;
 use crate::util::environment::Environment;
 use crate::util::formula::formula;
-use radicle::node::policy::Scope;
-use radicle::node::Event;
 use radicle::node::DEFAULT_TIMEOUT;
+use radicle::node::Event;
+use radicle::node::policy::Scope;
 use radicle::node::{Alias, Handle as _};
 use radicle::prelude::RepoId;
 use radicle::storage::ReadStorage as _;

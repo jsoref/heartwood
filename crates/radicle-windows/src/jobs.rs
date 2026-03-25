@@ -2,11 +2,11 @@ use std::io;
 use std::os::windows::io::AsRawHandle as _;
 
 use windows::{
-    core::PCWSTR,
     Win32::{
         Foundation::{CloseHandle, HANDLE},
         System::JobObjects::{AssignProcessToJobObject, CreateJobObjectW, TerminateJobObject},
     },
+    core::PCWSTR,
 };
 
 use thiserror::Error;

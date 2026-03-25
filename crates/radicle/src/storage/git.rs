@@ -19,21 +19,21 @@ use crate::identity::{CanonicalRefs, Doc, DocAt, RepoId};
 use crate::identity::{Identity, Project};
 use crate::node::device::Device;
 use crate::storage::refs::{FeatureLevel, Refs, SignedRefs};
-use crate::storage::{refs, SignedRefsInfo};
 use crate::storage::{
     ReadRepository, ReadStorage, Remote, Remotes, RepositoryInfo, SetHead, SignRepository,
     WriteRepository, WriteStorage,
 };
+use crate::storage::{SignedRefsInfo, refs};
 use crate::{git, git::Oid, node};
 
-use crate::git::fmt::{
-    refname, refspec, refspec::PatternStr, refspec::PatternString, Qualified, RefString,
-};
 use crate::git::RefError;
 use crate::git::UserInfo;
+use crate::git::fmt::{
+    Qualified, RefString, refname, refspec, refspec::PatternStr, refspec::PatternString,
+};
 pub use crate::storage::{Error, RepositoryError};
 
-use super::refs::{sigrefs, RefsAt};
+use super::refs::{RefsAt, sigrefs};
 use super::{RemoteId, RemoteRepository, ValidateRepository};
 
 pub static NAMESPACES_GLOB: LazyLock<PatternString> =

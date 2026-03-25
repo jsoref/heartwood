@@ -4,7 +4,7 @@ use std::ops::Deref;
 use std::{io, vec};
 
 use crate::cell::Cell;
-use crate::{viewport, Color, Filled, Label, Style};
+use crate::{Color, Filled, Label, Style, viewport};
 
 /// Rendering constraint.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]

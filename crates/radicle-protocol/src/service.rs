@@ -42,14 +42,14 @@ use radicle::storage::{RepositoryError, RepositoryInfo, SignedRefsInfo};
 use radicle_fetch::policy::SeedingPolicy;
 
 use crate::fetcher;
-use crate::fetcher::service::FetcherService;
 use crate::fetcher::FetcherState;
 use crate::fetcher::RefsToFetch;
+use crate::fetcher::service::FetcherService;
 use crate::service::gossip::Store as _;
 use crate::service::message::{
     Announcement, AnnouncementMessage, Info, NodeAnnouncement, Ping, RefsAnnouncement, RefsStatus,
 };
-use crate::service::policy::{store::Write, Scope};
+use crate::service::policy::{Scope, store::Write};
 use radicle::identity::RepoId;
 use radicle::node::events::Emitter;
 use radicle::node::routing;
@@ -57,7 +57,7 @@ use radicle::node::routing::InsertResult;
 use radicle::node::{Address, Features, FetchResult, HostName, Seed, Seeds, SyncStatus, SyncedAt};
 use radicle::prelude::*;
 use radicle::storage;
-use radicle::storage::{refs::RefsAt, Namespaces, ReadStorage};
+use radicle::storage::{Namespaces, ReadStorage, refs::RefsAt};
 // use radicle::worker::fetch;
 // use crate::worker::FetchError;
 use radicle::crypto;

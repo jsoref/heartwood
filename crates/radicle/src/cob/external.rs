@@ -87,7 +87,7 @@ use std::process::{Command, Stdio};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use serde_json::{from_slice, to_writer, Error as JsonError, Map, Value};
+use serde_json::{Error as JsonError, Map, Value, from_slice, to_writer};
 
 use crate::cob::object::collaboration::Evaluate;
 use crate::cob::op::{Op as CobOp, OpEncodingError};

@@ -1,7 +1,7 @@
 pub mod git;
 pub mod refs;
 
-use std::collections::{hash_map, HashSet};
+use std::collections::{HashSet, hash_map};
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::{fmt, io};
@@ -16,15 +16,15 @@ pub use git::{Validation, Validations};
 
 use crate::cob;
 use crate::collections::RandomMap;
-use crate::git::canonical;
-use crate::git::fmt::{refspec::PatternString, refspec::Refspec, Qualified, RefStr, RefString};
-use crate::git::raw::ErrorExt as _;
 use crate::git::RefError;
-use crate::identity::{doc, Did, PayloadError};
+use crate::git::canonical;
+use crate::git::fmt::{Qualified, RefStr, RefString, refspec::PatternString, refspec::Refspec};
+use crate::git::raw::ErrorExt as _;
+use crate::identity::{Did, PayloadError, doc};
 use crate::identity::{Doc, DocAt, DocError};
 use crate::identity::{Identity, RepoId};
-use crate::node::device::Device;
 use crate::node::SyncedAt;
+use crate::node::device::Device;
 use crate::storage::git::NAMESPACES_GLOB;
 use crate::storage::refs::{FeatureLevel, Refs, SignedRefs};
 

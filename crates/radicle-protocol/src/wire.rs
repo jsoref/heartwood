@@ -85,7 +85,9 @@ pub enum Error {
     #[error(transparent)]
     Invalid(#[from] Invalid),
 
-    #[error("unexpected end of buffer, requested {requested} more bytes but only {available} are available")]
+    #[error(
+        "unexpected end of buffer, requested {requested} more bytes but only {available} are available"
+    )]
     UnexpectedEnd { available: usize, requested: usize },
 }
 

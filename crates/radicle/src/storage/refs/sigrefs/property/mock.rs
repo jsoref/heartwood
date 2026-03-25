@@ -6,7 +6,7 @@ use tempfile::TempDir;
 
 use crate::identity::doc;
 use crate::storage::refs::sigrefs::git::Committer;
-use crate::storage::refs::{Refs, IDENTITY_ROOT};
+use crate::storage::refs::{IDENTITY_ROOT, Refs};
 
 /// A `Vec<T>` whose [`Arbitrary`] instance caps the length at
 /// [`Self::MAX_LEN`], preventing the property runner from generating inputs

@@ -4,14 +4,14 @@ use std::time;
 use clap::{Parser, Subcommand, ValueEnum};
 
 use radicle::{
-    node::{sync, NodeId},
+    node::{NodeId, sync},
     prelude::RepoId,
     storage::refs,
 };
 
 use crate::common_args::{
-    SignedReferencesFeatureLevel, SignedReferencesFeatureLevelParser,
-    ABOUT_FETCH_SIGNED_REFERENCES_FEATURE_LEVEL_MINIMUM,
+    ABOUT_FETCH_SIGNED_REFERENCES_FEATURE_LEVEL_MINIMUM, SignedReferencesFeatureLevel,
+    SignedReferencesFeatureLevelParser,
 };
 use crate::node::SyncSettings;
 

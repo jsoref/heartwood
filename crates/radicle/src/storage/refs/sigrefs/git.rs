@@ -41,8 +41,8 @@ impl Committer {
         #[cfg(not(any(test, feature = "test")))]
         {
             use crate::profile::env::GIT_COMMITTER_DATE;
-            use std::env::var;
             use std::env::VarError;
+            use std::env::var;
 
             let timestamp = match var(GIT_COMMITTER_DATE) {
                 Ok(s) => match s.trim().parse::<u64>() {
@@ -147,7 +147,7 @@ mod git2_impls {
             let commit = match self.find_commit(git2::Oid::from(*oid)) {
                 Ok(c) => c,
                 Err(e) if e.code() == git2::ErrorCode::NotFound => {
-                    return Err(ReadBlob::commit_not_found_error(*oid))
+                    return Err(ReadBlob::commit_not_found_error(*oid));
                 }
                 Err(e) => return Err(ReadBlob::other(e)),
             };

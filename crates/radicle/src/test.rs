@@ -71,14 +71,14 @@ pub fn fetch<W: WriteRepository>(
 pub mod setup {
     use std::path::{Path, PathBuf};
 
-    use tempfile::{tempdir, TempDir};
+    use tempfile::{TempDir, tempdir};
 
     use super::storage::{Namespaces, RefUpdate};
     use crate::crypto::test::signer::MockSigner;
     use crate::node::device::Device;
-    use crate::storage::git::transport::remote;
     use crate::storage::git::Repository;
-    use crate::{git, profile::Home, rad::REMOTE_NAME, test::fixtures, Storage};
+    use crate::storage::git::transport::remote;
+    use crate::{Storage, git, profile::Home, rad::REMOTE_NAME, test::fixtures};
     use crate::{prelude::*, rad};
 
     /// A node.

@@ -1,4 +1,4 @@
-use crate::{ssh::ExtendedSignature, KeyPair, PublicKey, SecretKey, Seed, Signature};
+use crate::{KeyPair, PublicKey, SecretKey, Seed, Signature, ssh::ExtendedSignature};
 
 #[derive(Debug, Clone)]
 pub struct MockSigner {

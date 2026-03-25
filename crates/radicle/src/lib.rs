@@ -44,7 +44,7 @@ pub mod prelude {
 
     pub use crypto::PublicKey;
     pub use git::BranchName;
-    pub use identity::{project::Project, Did, Doc, RawDoc, RepoId};
+    pub use identity::{Did, Doc, RawDoc, RepoId, project::Project};
     pub use node::{Alias, NodeId, Timestamp};
     pub use profile::Profile;
     pub use storage::{ReadRepository, ReadStorage, SignRepository, WriteRepository, WriteStorage};

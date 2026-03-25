@@ -16,18 +16,18 @@ use crate::git::fmt::*;
 use crate::git::*;
 use crate::identity;
 use crate::identity::doc::DocError;
-use crate::node::device::Device;
 use crate::node::NodeId;
+use crate::node::device::Device;
 use crate::storage;
 use crate::storage::Error;
 use crate::storage::{
-    git::{Remote, Remotes, Validations},
     ReadRepository,
+    git::{Remote, Remotes, Validations},
 };
 
 use super::{RemoteId, Repository};
 
-pub use crate::cob::{store, ObjectId, Store};
+pub use crate::cob::{ObjectId, Store, store};
 
 #[derive(Error, Debug)]
 pub enum ObjectsError {

@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::git::canonical::{
-    rules::{self, RawRules, Rules, ValidationError},
     ValidRule,
+    rules::{self, RawRules, Rules, ValidationError},
 };
 
 use super::doc::{Delegates, Payload};

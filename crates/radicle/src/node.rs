@@ -43,11 +43,11 @@ use crate::crypto::PublicKey;
 use crate::git;
 use crate::identity::RepoId;
 use crate::profile;
-use crate::storage::refs::{FeatureLevel, RefsAt};
 use crate::storage::RefUpdate;
+use crate::storage::refs::{FeatureLevel, RefsAt};
 
 pub use address::KnownAddress;
-pub use command::{Command, CommandResult, ConnectOptions, Success, DEFAULT_TIMEOUT};
+pub use command::{Command, CommandResult, ConnectOptions, DEFAULT_TIMEOUT, Success};
 pub use config::Config;
 pub use cyphernet::addr::{HostName, PeerAddr, PeerAddrParseError};
 pub use db::Database;
@@ -1049,7 +1049,7 @@ impl<T: DeserializeOwned> Iterator for LineIter<T> {
                         return Some(Err(Error::InvalidJson {
                             response: l.clone(),
                             error: e,
-                        }))
+                        }));
                     }
                     Ok(result) => result,
                 };

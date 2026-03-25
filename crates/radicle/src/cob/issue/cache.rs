@@ -9,8 +9,8 @@ use crate::cob::cache;
 use crate::cob::cache::{Remove, StoreReader, StoreWriter, Update};
 use crate::cob::store;
 use crate::cob::{Embed, Label, ObjectId, TypeName, Uri};
-use crate::node::device::Device;
 use crate::node::NodeId;
+use crate::node::device::Device;
 use crate::prelude::{Did, RepoId};
 use crate::storage::{HasRepoId, ReadRepository, RepositoryError, SignRepository, WriteRepository};
 

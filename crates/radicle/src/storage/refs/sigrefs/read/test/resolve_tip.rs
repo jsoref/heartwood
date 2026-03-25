@@ -1,9 +1,9 @@
 use super::mock;
 use super::mock::{AlwaysVerify, MockRepository};
-use crate::storage::refs::sigrefs::read::error;
-use crate::storage::refs::sigrefs::read::Tip;
-use crate::storage::refs::sigrefs::SignedRefsReader;
 use crate::storage::refs::IDENTITY_ROOT;
+use crate::storage::refs::sigrefs::SignedRefsReader;
+use crate::storage::refs::sigrefs::read::Tip;
+use crate::storage::refs::sigrefs::read::error;
 
 #[test]
 fn missing_sigrefs() {

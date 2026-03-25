@@ -1,8 +1,8 @@
 use radicle_oid::Oid;
 
-use crate::storage::refs::sigrefs::read::error::{Read, Verify};
-use crate::storage::refs::sigrefs::read::{error, FeatureLevels, SignedRefsReader, Tip};
 use crate::storage::refs::sigrefs::VerifiedCommit;
+use crate::storage::refs::sigrefs::read::error::{Read, Verify};
+use crate::storage::refs::sigrefs::read::{FeatureLevels, SignedRefsReader, Tip, error};
 use crate::storage::refs::{FeatureLevel, IDENTITY_ROOT, SIGREFS_PARENT};
 use crate::{assert_matches, git};
 

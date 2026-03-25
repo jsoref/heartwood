@@ -286,8 +286,8 @@ impl<S: Session + Source> EventHandler for Transport<S> {
     type Reaction = SessionEvent<S>;
 
     fn interests(&self) -> Option<Interest> {
-        use mio::Interest;
         use TransportState::*;
+        use mio::Interest;
 
         match self.state {
             Init => Some(Interest::WRITABLE),

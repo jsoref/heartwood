@@ -6,7 +6,7 @@ use std::path::Path;
 use std::process::Command;
 use std::str::FromStr;
 
-pub use radicle_oid::{str::ParseOidError, Oid};
+pub use radicle_oid::{Oid, str::ParseOidError};
 
 pub extern crate radicle_git_ref_format as fmt;
 
@@ -705,20 +705,12 @@ pub fn set_upstream(
     let branch_remote = format!("branch.{branch}.remote");
     let branch_merge = format!("branch.{branch}.merge");
 
-    config.remove_multivar(&branch_remote, ".*").or_else(|e| {
-        if e.is_not_found() {
-            Ok(())
-        } else {
-            Err(e)
-        }
-    })?;
-    config.remove_multivar(&branch_merge, ".*").or_else(|e| {
-        if e.is_not_found() {
-            Ok(())
-        } else {
-            Err(e)
-        }
-    })?;
+    config
+        .remove_multivar(&branch_remote, ".*")
+        .or_else(|e| if e.is_not_found() { Ok(()) } else { Err(e) })?;
+    config
+        .remove_multivar(&branch_merge, ".*")
+        .or_else(|e| if e.is_not_found() { Ok(()) } else { Err(e) })?;
     config.set_multivar(&branch_remote, ".*", remote)?;
     config.set_multivar(&branch_merge, ".*", merge)?;
 
@@ -768,7 +760,7 @@ pub mod process {
 
     use crate::storage::ReadRepository;
 
-    use super::{run, Oid, Verbosity};
+    use super::{Oid, Verbosity, run};
 
     /// Perform a local fetch, from storage using `git fetch-pack`.
     ///

@@ -2,21 +2,21 @@ mod args;
 
 use std::collections::BTreeSet;
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 
-use radicle::cob::identity::{self, IdentityMut, Revision, RevisionId};
 use radicle::cob::Title;
+use radicle::cob::identity::{self, IdentityMut, Revision, RevisionId};
 use radicle::identity::doc::update;
-use radicle::identity::{doc, Doc, Identity, RawDoc};
-use radicle::node::device::Device;
+use radicle::identity::{Doc, Identity, RawDoc, doc};
 use radicle::node::NodeId;
+use radicle::node::device::Device;
 use radicle::storage::{ReadStorage as _, WriteRepository};
-use radicle::{cob, crypto, Profile};
+use radicle::{Profile, cob, crypto};
 use radicle_surf::diff::Diff;
 use radicle_term::Element;
 
-use crate::git::unified_diff::Encode as _;
 use crate::git::Rev;
+use crate::git::unified_diff::Encode as _;
 use crate::terminal as term;
 use crate::terminal::args::Error;
 use crate::terminal::format::Author;

@@ -1,6 +1,6 @@
 use std::io::IsTerminal as _;
-use std::sync::atomic::{AtomicBool, AtomicI32};
 use std::sync::LazyLock;
+use std::sync::atomic::{AtomicBool, AtomicI32};
 use std::{fmt, sync};
 
 use super::color::Color;

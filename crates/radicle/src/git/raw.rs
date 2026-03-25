@@ -6,7 +6,7 @@
 
 // Re-exports that are only used within this crate.
 pub(crate) use git2::{
-    message_trailers_strs, AutotagOption, Blob, FetchOptions, FetchPrune, Object, Revwalk, Sort,
+    AutotagOption, Blob, FetchOptions, FetchPrune, Object, Revwalk, Sort, message_trailers_strs,
 };
 
 #[cfg(unix)]
@@ -35,7 +35,7 @@ pub mod build {
 
 pub(crate) mod transport {
     pub use git2::transport::{
-        register, Service, SmartSubtransport, SmartSubtransportStream, Transport,
+        Service, SmartSubtransport, SmartSubtransportStream, Transport, register,
     };
 }
 

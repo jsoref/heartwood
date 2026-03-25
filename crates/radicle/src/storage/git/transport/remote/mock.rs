@@ -9,8 +9,8 @@ use std::{process, thread};
 
 use super::Url;
 use crate::git;
-use crate::storage::git::transport::ChildStream;
 use crate::storage::RemoteId;
+use crate::storage::git::transport::ChildStream;
 
 /// Nodes registered with the mock transport.
 static NODES: LazyLock<Mutex<HashMap<(ThreadId, RemoteId), PathBuf>>> =

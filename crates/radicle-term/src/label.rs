@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::{cell::Cell, Color, Constraint, Element, Filled, Line, Paint, Size, Style};
+use crate::{Color, Constraint, Element, Filled, Line, Paint, Size, Style, cell::Cell};
 
 /// A styled string that does not contain any `'\n'` and implements [`Element`] and [`Cell`].
 #[derive(Clone, Default, Debug)]

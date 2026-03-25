@@ -533,7 +533,7 @@ impl Decode for Modification {
             Some(c) => {
                 return Err(Error::syntax(format!(
                     "indicator character expected, but got '{c}'",
-                )))
+                )));
             }
             None => return Err(Error::UnexpectedEof),
         };

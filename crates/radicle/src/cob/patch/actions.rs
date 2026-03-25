@@ -5,9 +5,9 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::cob::{thread::Edit, ActorId, Embed, Label, Timestamp, Uri};
+use crate::cob::{ActorId, Embed, Label, Timestamp, Uri, thread::Edit};
 
-use super::{lookup, Error, Patch, ReviewId, Verdict};
+use super::{Error, Patch, ReviewId, Verdict, lookup};
 
 /// A review edit that keeps track of the different versions of actions.
 ///

@@ -11,7 +11,7 @@ use std::sync::LazyLock;
 use crate::git::Oid;
 use nonempty::NonEmpty;
 use radicle_cob::type_name::{TypeName, TypeNameParse};
-use serde::{de, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de};
 use thiserror::Error;
 
 use crate::canonical::formatter::CanonicalFormatter;
@@ -21,7 +21,7 @@ use crate::crypto::Signature;
 use crate::git;
 use crate::git::canonical::rules;
 use crate::git::raw::ErrorExt as _;
-use crate::identity::{project::Project, Did};
+use crate::identity::{Did, project::Project};
 use crate::node::device::Device;
 use crate::storage;
 use crate::storage::{ReadRepository, RepositoryError};
@@ -29,8 +29,8 @@ use crate::storage::{ReadRepository, RepositoryError};
 pub use crypto::PublicKey;
 pub use radicle_core::repo::*;
 
-use super::crefs::{self, RawCanonicalRefs};
 use super::CanonicalRefs;
+use super::crefs::{self, RawCanonicalRefs};
 
 /// Path to the identity document in the identity branch.
 pub static PATH: LazyLock<&Path> = LazyLock::new(|| Path::new("radicle.json"));
@@ -974,8 +974,8 @@ mod test {
 
     use crate::assert_matches;
     use crate::rad;
-    use crate::storage::git::transport;
     use crate::storage::git::Storage;
+    use crate::storage::git::transport;
     use crate::storage::{ReadStorage as _, RemoteId, WriteStorage as _};
     use crate::test::arbitrary;
     use crate::test::arbitrary::r#gen;

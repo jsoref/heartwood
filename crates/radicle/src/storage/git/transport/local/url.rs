@@ -123,16 +123,22 @@ mod test {
         assert_eq!(url.repo, repo);
         assert_eq!(url.namespace, Some(namespace));
 
-        assert!(format!("heartwood://{}", repo.canonical())
-            .parse::<Url>()
-            .is_err());
-        assert!(format!("git://{}", repo.canonical())
-            .parse::<Url>()
-            .is_err());
+        assert!(
+            format!("heartwood://{}", repo.canonical())
+                .parse::<Url>()
+                .is_err()
+        );
+        assert!(
+            format!("git://{}", repo.canonical())
+                .parse::<Url>()
+                .is_err()
+        );
         assert!(format!("rad://{namespace}").parse::<Url>().is_err());
-        assert!(format!("rad://{}/{namespace}/fnord", repo.canonical())
-            .parse::<Url>()
-            .is_err());
+        assert!(
+            format!("rad://{}/{namespace}/fnord", repo.canonical())
+                .parse::<Url>()
+                .is_err()
+        );
     }
 
     #[test]

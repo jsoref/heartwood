@@ -219,7 +219,7 @@ mod radicle_git_ref_format_impls {
 mod serde_impls {
     use alloc::string::String;
 
-    use serde::{de, Deserialize, Deserializer, Serialize};
+    use serde::{Deserialize, Deserializer, Serialize, de};
 
     use super::RepoId;
 
@@ -347,48 +347,72 @@ mod test {
     fn invalid() {
         assert!("".parse::<RepoId>().is_err());
         assert!("not-a-valid-rid".parse::<RepoId>().is_err());
-        assert!("xyz:z3gqcJUoA1n9HaHKufZs5FCSGazv5"
-            .parse::<RepoId>()
-            .is_err());
-        assert!("RAD:z3gqcJUoA1n9HaHKufZs5FCSGazv5"
-            .parse::<RepoId>()
-            .is_err());
+        assert!(
+            "xyz:z3gqcJUoA1n9HaHKufZs5FCSGazv5"
+                .parse::<RepoId>()
+                .is_err()
+        );
+        assert!(
+            "RAD:z3gqcJUoA1n9HaHKufZs5FCSGazv5"
+                .parse::<RepoId>()
+                .is_err()
+        );
         assert!("rad:".parse::<RepoId>().is_err());
-        assert!("rad:z3gqcJUoA1n9HaHKufZs5FCSG0zv5"
-            .parse::<RepoId>()
-            .is_err());
-        assert!("rad:z3gqcJUoA1n9HaHKufZs5FCSGOzv5"
-            .parse::<RepoId>()
-            .is_err());
-        assert!("rad:z3gqcJUoA1n9HaHKufZs5FCSGIzv5"
-            .parse::<RepoId>()
-            .is_err());
-        assert!("rad:z3gqcJUoA1n9HaHKufZs5FCSGlzv5"
-            .parse::<RepoId>()
-            .is_err());
-        assert!("rad:z3gqcJUoA1n9HaHKufZs5FCSGázv5"
-            .parse::<RepoId>()
-            .is_err());
-        assert!("rad:z3gqcJUoA1n9HaHKufZs5FCSG@zv5"
-            .parse::<RepoId>()
-            .is_err());
-        assert!("rad:Z3gqcJUoA1n9HaHKufZs5FCSGazv5"
-            .parse::<RepoId>()
-            .is_err());
+        assert!(
+            "rad:z3gqcJUoA1n9HaHKufZs5FCSG0zv5"
+                .parse::<RepoId>()
+                .is_err()
+        );
+        assert!(
+            "rad:z3gqcJUoA1n9HaHKufZs5FCSGOzv5"
+                .parse::<RepoId>()
+                .is_err()
+        );
+        assert!(
+            "rad:z3gqcJUoA1n9HaHKufZs5FCSGIzv5"
+                .parse::<RepoId>()
+                .is_err()
+        );
+        assert!(
+            "rad:z3gqcJUoA1n9HaHKufZs5FCSGlzv5"
+                .parse::<RepoId>()
+                .is_err()
+        );
+        assert!(
+            "rad:z3gqcJUoA1n9HaHKufZs5FCSGázv5"
+                .parse::<RepoId>()
+                .is_err()
+        );
+        assert!(
+            "rad:z3gqcJUoA1n9HaHKufZs5FCSG@zv5"
+                .parse::<RepoId>()
+                .is_err()
+        );
+        assert!(
+            "rad:Z3gqcJUoA1n9HaHKufZs5FCSGazv5"
+                .parse::<RepoId>()
+                .is_err()
+        );
         assert!("rad:z3gqcJUoA1n9HaHKuf".parse::<RepoId>().is_err());
-        assert!("rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5abcdef"
-            .parse::<RepoId>()
-            .is_err());
-        assert!("rad: z3gqcJUoA1n9HaHKufZs5FCSGazv5"
-            .parse::<RepoId>()
-            .is_err());
+        assert!(
+            "rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5abcdef"
+                .parse::<RepoId>()
+                .is_err()
+        );
+        assert!(
+            "rad: z3gqcJUoA1n9HaHKufZs5FCSGazv5"
+                .parse::<RepoId>()
+                .is_err()
+        );
     }
 
     #[test]
     fn valid() {
-        assert!("rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5"
-            .parse::<RepoId>()
-            .is_ok());
+        assert!(
+            "rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5"
+                .parse::<RepoId>()
+                .is_ok()
+        );
         assert!("z3gqcJUoA1n9HaHKufZs5FCSGazv5".parse::<RepoId>().is_ok());
         assert!("z3XncAdkZjeK9mQS5Sdc4qhw98BUX".parse::<RepoId>().is_ok());
     }

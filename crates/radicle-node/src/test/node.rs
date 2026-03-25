@@ -11,33 +11,33 @@ use std::{
 
 use crossbeam_channel as chan;
 
+use radicle::Storage;
 use radicle::cob;
 use radicle::cob::issue;
+use radicle::crypto::Signature;
 use radicle::crypto::signature::Signer;
 use radicle::crypto::ssh::keystore::MemorySigner;
 use radicle::crypto::test::signer::MockSigner;
-use radicle::crypto::Signature;
 use radicle::git;
 use radicle::git::fmt::refname;
 use radicle::identity::{RepoId, Visibility};
+use radicle::node::Config;
+use radicle::node::Event;
 use radicle::node::config::ConnectAddress;
 use radicle::node::policy::store as policy;
 use radicle::node::seed::Store as _;
-use radicle::node::Config;
-use radicle::node::Event;
 use radicle::node::{self, Alias};
 use radicle::node::{ConnectOptions, Handle as _};
 use radicle::node::{Database, POLICIES_DB_FILE};
-use radicle::profile::{env, Home, Profile};
+use radicle::profile::{Home, Profile, env};
 use radicle::rad;
 use radicle::storage::{ReadStorage as _, RemoteRepository as _, SignRepository as _};
 use radicle::test::fixtures;
-use radicle::Storage;
 
-use crate::node::device::Device;
 use crate::node::NodeId;
+use crate::node::device::Device;
 use crate::storage::git::transport;
-use crate::{runtime, runtime::Handle, service, Runtime};
+use crate::{Runtime, runtime, runtime::Handle, service};
 
 /// A node that can be run.
 pub struct Node<G> {

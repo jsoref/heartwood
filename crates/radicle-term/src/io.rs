@@ -4,15 +4,15 @@ use std::process::Stdio;
 use std::sync::LazyLock;
 use std::{env, fmt, io, process};
 
+use inquire::InquireError;
 use inquire::ui::{ErrorMessageRenderConfig, StyleSheet, Styled};
 use inquire::validator;
-use inquire::InquireError;
-use inquire::{ui::Color, ui::RenderConfig, Confirm, CustomType, Password};
+use inquire::{Confirm, CustomType, Password, ui::Color, ui::RenderConfig};
 use thiserror::Error;
 use zeroize::Zeroizing;
 
 use crate::format;
-use crate::{style, Paint, Size};
+use crate::{Paint, Size, style};
 
 pub use inquire;
 pub use inquire::Select;

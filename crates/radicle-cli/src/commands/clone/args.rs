@@ -2,15 +2,15 @@ use std::path::PathBuf;
 
 use clap::Parser;
 
-use radicle::identity::doc::RepoId;
 use radicle::identity::IdError;
+use radicle::identity::doc::RepoId;
 use radicle::node::policy::Scope;
 use radicle::prelude::*;
 use radicle::storage::refs;
 
 use crate::common_args::{
-    SignedReferencesFeatureLevel, SignedReferencesFeatureLevelParser,
-    ABOUT_FETCH_SIGNED_REFERENCES_FEATURE_LEVEL_MINIMUM,
+    ABOUT_FETCH_SIGNED_REFERENCES_FEATURE_LEVEL_MINIMUM, SignedReferencesFeatureLevel,
+    SignedReferencesFeatureLevelParser,
 };
 use crate::node::SyncSettings;
 use crate::terminal;

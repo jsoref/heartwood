@@ -1,9 +1,9 @@
 mod args;
 
+use radicle::node::Handle;
 use radicle::node::policy;
 use radicle::node::policy::{Policy, Scope};
-use radicle::node::Handle;
-use radicle::{prelude::*, Node};
+use radicle::{Node, prelude::*};
 use radicle_term::Element as _;
 
 use crate::commands::sync;

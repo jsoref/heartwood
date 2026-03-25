@@ -1,8 +1,8 @@
 use radicle_oid::Oid;
 
 use crate::storage::refs::sigrefs::git::Committer;
-use crate::storage::refs::sigrefs::write::{error, SignedRefsWriter, Update};
-use crate::storage::refs::{FeatureLevel, Refs, IDENTITY_ROOT, SIGREFS_BRANCH};
+use crate::storage::refs::sigrefs::write::{SignedRefsWriter, Update, error};
+use crate::storage::refs::{FeatureLevel, IDENTITY_ROOT, Refs, SIGREFS_BRANCH};
 
 use super::mock;
 use super::mock::MockRepository;

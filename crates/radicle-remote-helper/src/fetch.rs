@@ -5,8 +5,8 @@ use thiserror::Error;
 
 use radicle::git;
 
-use crate::service::GitService;
 use crate::Verbosity;
+use crate::service::GitService;
 
 #[derive(Debug, Error)]
 pub(super) enum Error {
@@ -24,7 +24,9 @@ pub(super) enum Error {
     InvalidOid(#[from] radicle::git::ParseOidError),
 
     /// Error fetching pack from storage to working copy.
-    #[error("`git fetch-pack` failed with exit status {status}, stderr and stdout follow:\n{stderr}\n{stdout}")]
+    #[error(
+        "`git fetch-pack` failed with exit status {status}, stderr and stdout follow:\n{stderr}\n{stdout}"
+    )]
     FetchPackFailed {
         status: ExitStatus,
         stderr: String,

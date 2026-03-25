@@ -1,5 +1,5 @@
-use radicle::identity::doc::CanonicalRefsError;
 use radicle::identity::CanonicalRefs;
+use radicle::identity::doc::CanonicalRefsError;
 use radicle::storage::git::TempRepository;
 pub(crate) use radicle_protocol::worker::fetch::error;
 
@@ -19,7 +19,7 @@ use radicle::storage::{
     ReadRepository, ReadStorage as _, RefUpdate, RemoteRepository, RepositoryError,
     WriteRepository as _,
 };
-use radicle::{cob, git, node, Storage};
+use radicle::{Storage, cob, git, node};
 use radicle_fetch::git::refs::Applied;
 use radicle_fetch::{Allowed, BlockList};
 pub use radicle_protocol::worker::fetch::{FetchResult, UpdatedCanonicalRefs};

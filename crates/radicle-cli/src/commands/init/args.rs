@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use radicle::{
-    identity::{project::ProjectName, Visibility},
+    identity::{Visibility, project::ProjectName},
     node::policy::Scope,
     prelude::RepoId,
 };
@@ -115,8 +115,8 @@ impl clap::builder::TypedValueParser for ScopeParser {
 #[cfg(test)]
 mod test {
     use super::Args;
-    use clap::error::ErrorKind;
     use clap::Parser;
+    use clap::error::ErrorKind;
 
     #[test]
     fn should_parse_rid_non_urn() {

@@ -13,8 +13,8 @@ use crate::cob::{Create, Embed, EntryId, ObjectId, TypeName, Update, Updated, Ur
 use crate::git;
 use crate::node::device::Device;
 use crate::prelude::*;
-use crate::storage::git as storage;
 use crate::storage::SignRepository;
+use crate::storage::git as storage;
 use crate::{cob, identity};
 
 pub trait CobAction {
@@ -129,7 +129,9 @@ pub enum Error {
         #[source]
         err: git::raw::Error,
     },
-    #[error("transaction already contains action {0} which produces an identifier, denying to add action {1} which also produces an identifier")]
+    #[error(
+        "transaction already contains action {0} which produces an identifier, denying to add action {1} which also produces an identifier"
+    )]
     ClashingIdentifiers(String, String),
 }
 
@@ -344,7 +346,8 @@ where
     /// Return all objects.
     pub fn all(
         &self,
-    ) -> Result<impl ExactSizeIterator<Item = Result<(ObjectId, T), Error>> + use<'a, T, R>, Error> {
+    ) -> Result<impl ExactSizeIterator<Item = Result<(ObjectId, T), Error>> + use<'a, T, R>, Error>
+    {
         let raw = cob::list::<T, _>(self.repo, self.type_name)?;
 
         Ok(raw.into_iter().map(|o| Ok((*o.id(), o.object))))

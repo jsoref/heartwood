@@ -3,11 +3,11 @@ use std::io::IsTerminal;
 use std::path::Path;
 use std::process;
 
+use radicle::Profile;
 use radicle::explorer::ExplorerResource;
 use radicle::git;
 use radicle::node::Handle;
 use radicle::storage;
-use radicle::Profile;
 use radicle_cli::node::{SyncError, SyncReporting, SyncSettings};
 use radicle_cli::terminal as term;
 

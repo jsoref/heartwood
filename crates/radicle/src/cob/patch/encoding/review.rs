@@ -127,7 +127,7 @@ mod test {
     use serde_json::json;
 
     use crate::{
-        cob::{thread::Edit, Timestamp},
+        cob::{Timestamp, thread::Edit},
         patch,
     };
 

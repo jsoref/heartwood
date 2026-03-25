@@ -3,13 +3,13 @@ mod args;
 
 use std::str::FromStr;
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 
 use radicle::crypto::ssh;
 use radicle::crypto::ssh::Passphrase;
 use radicle::node::Alias;
 use radicle::profile::env;
-use radicle::{profile, Profile};
+use radicle::{Profile, profile};
 
 use crate::terminal as term;
 

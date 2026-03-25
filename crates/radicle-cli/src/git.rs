@@ -14,21 +14,21 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
 
-use anyhow::anyhow;
 use anyhow::Context as _;
+use anyhow::anyhow;
 use thiserror::Error;
 
 use radicle::crypto::ssh;
 use radicle::git;
-use radicle::git::{Version, VERSION_REQUIRED};
+use radicle::git::{VERSION_REQUIRED, Version};
 use radicle::prelude::{NodeId, RepoId};
 use radicle::storage::git::transport;
 
 pub use radicle::git::Oid;
 
 pub use radicle::git::raw::{
-    build::CheckoutBuilder, AnnotatedCommit, Commit, Direction, ErrorCode, ErrorExt as _,
-    MergeAnalysis, MergeOptions, Reference, Repository, Signature,
+    AnnotatedCommit, Commit, Direction, ErrorCode, ErrorExt as _, MergeAnalysis, MergeOptions,
+    Reference, Repository, Signature, build::CheckoutBuilder,
 };
 
 pub const CONFIG_COMMIT_GPG_SIGN: &str = "commit.gpgsign";

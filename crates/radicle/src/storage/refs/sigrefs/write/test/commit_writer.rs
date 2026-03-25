@@ -1,7 +1,7 @@
 use super::mock;
 use super::mock::MockRepository;
-use crate::storage::refs::sigrefs::write::{error, CommitWriter};
-use crate::storage::refs::{Refs, IDENTITY_ROOT};
+use crate::storage::refs::sigrefs::write::{CommitWriter, error};
+use crate::storage::refs::{IDENTITY_ROOT, Refs};
 
 fn mock_refs() -> Refs {
     Refs::from(

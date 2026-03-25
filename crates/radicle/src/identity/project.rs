@@ -1,8 +1,8 @@
 use std::{fmt, str::FromStr};
 
 use serde::{
-    de::{self, MapAccess, Visitor},
     Deserialize, Serialize,
+    de::{self, MapAccess, Visitor},
 };
 use thiserror::Error;
 

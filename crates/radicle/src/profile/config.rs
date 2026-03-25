@@ -7,9 +7,9 @@ use serde_json as json;
 use thiserror::Error;
 
 use crate::explorer::Explorer;
+use crate::node::Alias;
 use crate::node::config::DefaultSeedingPolicy;
 use crate::node::policy::{Policy, Scope};
-use crate::node::Alias;
 use crate::{cli, node, web};
 
 #[derive(Debug, Error)]
@@ -112,7 +112,9 @@ pub enum InitError {
 
 #[derive(Debug, Error)]
 pub enum LoadError {
-    #[error("failed to open configuration file {path:?}: {err}, perhaps you need to initialise one `rad config init --alias <alias>`")]
+    #[error(
+        "failed to open configuration file {path:?}: {err}, perhaps you need to initialise one `rad config init --alias <alias>`"
+    )]
     File {
         path: PathBuf,
         #[source]
@@ -380,13 +382,11 @@ impl RawConfig {
         let mut current = &mut self.0;
         for key in config_path.iter() {
             current = match current {
-                json::Value::Object(map) => {
-                    map.entry(key).or_insert_with(|| json::json!({}))
-                }
+                json::Value::Object(map) => map.entry(key).or_insert_with(|| json::json!({})),
                 _ => {
                     return Err(ModifyError::Upsert {
                         key: key.to_owned(),
-                    })
+                    });
                 }
             }
         }

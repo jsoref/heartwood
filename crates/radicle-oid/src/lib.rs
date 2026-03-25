@@ -509,7 +509,10 @@ mod serde {
 
                     fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
                         use crate::str::SHA1_DIGEST_STR_LEN;
-                        write!(f, "a Git object identifier (SHA-1 digest in hexadecimal notation; {SHA1_DIGEST_STR_LEN} characters; {SHA1_DIGEST_LEN} bytes)")
+                        write!(
+                            f,
+                            "a Git object identifier (SHA-1 digest in hexadecimal notation; {SHA1_DIGEST_STR_LEN} characters; {SHA1_DIGEST_LEN} bytes)"
+                        )
                     }
 
                     fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
@@ -551,7 +554,7 @@ mod radicle_git_ref_format {
 mod schemars {
     use alloc::{borrow::Cow, format};
 
-    use ::schemars::{json_schema, JsonSchema, Schema, SchemaGenerator};
+    use ::schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 
     use super::Oid;
 
@@ -565,7 +568,7 @@ mod schemars {
         }
 
         fn json_schema(_: &mut SchemaGenerator) -> Schema {
-            use crate::{str::SHA1_DIGEST_STR_LEN, SHA1_DIGEST_LEN};
+            use crate::{SHA1_DIGEST_LEN, str::SHA1_DIGEST_STR_LEN};
             json_schema!({
                 "description": format!("A Git object identifier (SHA-1 digest in hexadecimal notation; {SHA1_DIGEST_STR_LEN} characters; {SHA1_DIGEST_LEN} bytes)"),
                 "type": "string",

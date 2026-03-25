@@ -1,4 +1,5 @@
 use radicle::{
+    Profile,
     cob::{
         self,
         cache::{MigrateCallback, MigrateProgress},
@@ -6,7 +7,6 @@ use radicle::{
     prelude::NodeId,
     profile,
     storage::ReadRepository,
-    Profile,
 };
 use radicle_term as term;
 

@@ -2,7 +2,7 @@ use thiserror::Error;
 
 use crate::git;
 use crate::git::fmt::RefString;
-use crate::identity::{doc::PayloadId, Did, DocError};
+use crate::identity::{Did, DocError, doc::PayloadId};
 
 #[derive(Debug, Error)]
 #[error("'{0}' is not a valid visibility type")]
@@ -28,7 +28,9 @@ pub enum DocVerification {
     PayloadError { id: PayloadId, err: String },
     #[error(transparent)]
     Doc(#[from] DocError),
-    #[error("incompatible payloads: The rule(s) xyz.radicle.crefs.rules.{matches:?} matches the value of xyz.radicle.project.defaultBranch ('{default}'). Possible resolutions: Change the name of the default branch or remove the rule(s).")]
+    #[error(
+        "incompatible payloads: The rule(s) xyz.radicle.crefs.rules.{matches:?} matches the value of xyz.radicle.project.defaultBranch ('{default}'). Possible resolutions: Change the name of the default branch or remove the rule(s)."
+    )]
     DisallowDefault {
         matches: Vec<String>,
         default: git::fmt::Qualified<'static>,

@@ -1,6 +1,6 @@
 mod builder;
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 
 use radicle::cob::patch::{PatchId, RevisionId, Verdict};
 use radicle::git;

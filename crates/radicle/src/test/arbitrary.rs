@@ -5,16 +5,16 @@ use std::str::FromStr;
 use std::{iter, net};
 
 use crypto::PublicKey;
-use cyphernet::addr::tor::OnionAddrV3;
 use cyphernet::EcPk;
+use cyphernet::addr::tor::OnionAddrV3;
 use qcheck::Arbitrary;
 
 use crate::identity::doc::Visibility;
 use crate::identity::project::ProjectName;
 use crate::identity::{
+    Did,
     doc::{Doc, DocAt, RawDoc, RepoId},
     project::Project,
-    Did,
 };
 use crate::node::address::{AddressType, Source};
 use crate::node::{Address, Alias, KnownAddress, Timestamp, UserAgent};

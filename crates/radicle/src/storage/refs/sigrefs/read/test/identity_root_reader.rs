@@ -2,11 +2,11 @@ use radicle_core::RepoId;
 use radicle_oid::Oid;
 
 use crate::git;
-use crate::storage::refs::sigrefs::read::{
-    error, IdentityRoot, IdentityRootReader, SignedRefsReader, Tip,
-};
 use crate::storage::refs::sigrefs::VerifiedCommit;
-use crate::storage::refs::{Refs, IDENTITY_ROOT};
+use crate::storage::refs::sigrefs::read::{
+    IdentityRoot, IdentityRootReader, SignedRefsReader, Tip, error,
+};
+use crate::storage::refs::{IDENTITY_ROOT, Refs};
 
 use super::mock;
 use super::mock::{AlwaysVerify, MockRepository};

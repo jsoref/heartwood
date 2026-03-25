@@ -3,14 +3,14 @@
 mod mock;
 use mock::*;
 
-use crypto::test::signer::MockSigner;
 use crypto::Signer as _;
+use crypto::test::signer::MockSigner;
 use qcheck::TestResult;
 use qcheck_macros::quickcheck;
 
+use crate::storage::refs::Refs;
 use crate::storage::refs::sigrefs::read::{SignedRefsReader, Tip};
 use crate::storage::refs::sigrefs::write::{SignedRefsWriter, Update};
-use crate::storage::refs::Refs;
 
 #[quickcheck]
 fn roundtrip(BoundedVec(all_refs): BoundedVec<Refs>) -> TestResult {

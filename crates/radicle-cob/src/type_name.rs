@@ -116,15 +116,19 @@ mod test {
         assert!(TypeName::from_str("abc..ghi").is_err());
         assert!(TypeName::from_str("abc.-123.ghi").is_err());
         assert!(TypeName::from_str("abc.123-.ghi").is_err());
-        assert!(TypeName::from_str(&format!(
-            "a.very.long.name.that.exceeds.the.two-hundred-and-fifty-five.length.limit.{}",
-            "a".repeat(255)
-        ))
-        .is_err());
-        assert!(TypeName::from_str(&format!(
-            "component.exceeds.sixty-three.limit.{}",
-            "a".repeat(64)
-        ))
-        .is_err());
+        assert!(
+            TypeName::from_str(&format!(
+                "a.very.long.name.that.exceeds.the.two-hundred-and-fifty-five.length.limit.{}",
+                "a".repeat(255)
+            ))
+            .is_err()
+        );
+        assert!(
+            TypeName::from_str(&format!(
+                "component.exceeds.sixty-three.limit.{}",
+                "a".repeat(64)
+            ))
+            .is_err()
+        );
     }
 }

@@ -141,7 +141,9 @@ fn parse_options() -> Result<Options, lexopt::Error> {
             }
             Long("log") | Long("log-level") => {
                 if matches!(arg, Long("log")) {
-                    eprintln!("Warning: The option `--log` is deprecated and will be removed. Please use `--log-level` instead.");
+                    eprintln!(
+                        "Warning: The option `--log` is deprecated and will be removed. Please use `--log-level` instead."
+                    );
                 }
                 log_level = Some(parser.value()?.parse_with(log::Level::from_str)?);
             }
@@ -202,7 +204,9 @@ enum ExecutionError {
         path: PathBuf,
         source: radicle::crypto::ssh::keystore::Error,
     },
-    #[error("failed to load secret key '{secret}': fingerprint of corresponding public key is different from '{fingerprint}'")]
+    #[error(
+        "failed to load secret key '{secret}': fingerprint of corresponding public key is different from '{fingerprint}'"
+    )]
     FingerprintMismatch {
         secret: PathBuf,
         fingerprint: Fingerprint,
@@ -341,7 +345,7 @@ fn initialize_logging(options: &LogOptions) -> Result<(), Box<dyn std::error::Er
         match options.logger {
             #[cfg(feature = "structured-logger")]
             Logger::Structured => {
-                use structured_logger::{json, Builder};
+                use structured_logger::{Builder, json};
 
                 let writer = match options.format.unwrap_or(LogFormat::Json) {
                     LogFormat::Json => json::new_writer(io::stdout()),

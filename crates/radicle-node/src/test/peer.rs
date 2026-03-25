@@ -7,19 +7,19 @@ use std::str::FromStr;
 
 use log::*;
 
+use radicle::Storage;
 use radicle::crypto;
 use radicle::git::Oid;
 use radicle::identity::Visibility;
-use radicle::node::address::Store as _;
-use radicle::node::device::Device;
 use radicle::node::Database;
 use radicle::node::UserAgent;
-use radicle::node::{address, Alias, ConnectOptions};
+use radicle::node::address::Store as _;
+use radicle::node::device::Device;
+use radicle::node::{Alias, ConnectOptions, address};
 use radicle::rad;
 use radicle::storage::refs;
 use radicle::storage::refs::{RefsAt, SignedRefs};
 use radicle::storage::{ReadRepository, RemoteRepository};
-use radicle::Storage;
 
 use crate::crypto::test::signer::MockSigner;
 use crate::identity::RepoId;

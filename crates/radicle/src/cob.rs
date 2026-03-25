@@ -16,13 +16,13 @@ pub mod test;
 #[cfg(test)]
 pub use radicle_cob::stable;
 
-pub use cache::{migrate, MigrateCallback};
+pub use cache::{MigrateCallback, migrate};
 pub use common::*;
 pub use op::{ActorId, Op};
 pub use radicle_cob::{
-    change, history::EntryId, object, object::collaboration::error, type_name::TypeNameParse,
     CollaborativeObject, Contents, Create, Embed, Entry, Evaluate, History, Manifest, ObjectId,
-    Store, TypeName, Update, Updated, Version,
+    Store, TypeName, Update, Updated, Version, change, history::EntryId, object,
+    object::collaboration::error, type_name::TypeNameParse,
 };
 pub use radicle_cob::{create, get, list, remove, update};
 

@@ -3,13 +3,13 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 use std::sync::LazyLock;
 
-use serde::{ser::SerializeStruct, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, ser::SerializeStruct};
 use thiserror::Error;
 
 use crate::cob;
 use crate::cob::common::{Reaction, Timestamp, Uri};
 use crate::cob::store::Cob;
-use crate::cob::{op, ActorId, Embed, EntryId, Op};
+use crate::cob::{ActorId, Embed, EntryId, Op, op};
 use crate::git;
 use crate::prelude::ReadRepository;
 
@@ -633,8 +633,8 @@ mod tests {
     use crate as radicle;
     use crate::cob::store::Cob;
     use crate::cob::test;
-    use crate::crypto::test::signer::MockSigner;
     use crate::crypto::Signer;
+    use crate::crypto::test::signer::MockSigner;
     use crate::node::device::Device;
     use crate::profile::env;
     use crate::test::arbitrary;

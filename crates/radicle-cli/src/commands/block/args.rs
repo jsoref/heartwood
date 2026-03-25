@@ -16,8 +16,8 @@ pub struct Args {
 
 #[cfg(test)]
 mod test {
-    use clap::error::ErrorKind;
     use clap::Parser;
+    use clap::error::ErrorKind;
 
     use super::Args;
 

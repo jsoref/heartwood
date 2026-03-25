@@ -1,8 +1,8 @@
 use radicle_oid::Oid;
 
-use crate::storage::refs::sigrefs::read::{error, SignedRefsReader, Tip};
-use crate::storage::refs::sigrefs::VerifiedCommit;
 use crate::storage::refs::IDENTITY_ROOT;
+use crate::storage::refs::sigrefs::VerifiedCommit;
+use crate::storage::refs::sigrefs::read::{SignedRefsReader, Tip, error};
 
 use super::mock;
 use super::mock::{AlwaysVerify, MockRepository};

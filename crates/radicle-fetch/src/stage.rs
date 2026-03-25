@@ -37,10 +37,10 @@ use either::Either;
 use gix_protocol::handshake::Ref;
 use nonempty::NonEmpty;
 use radicle::crypto::PublicKey;
-use radicle::git::fmt::{refname, Component, Namespaced, Qualified};
+use radicle::git::fmt::{Component, Namespaced, Qualified, refname};
+use radicle::storage::ReadRepository;
 use radicle::storage::git::Repository;
 use radicle::storage::refs::{RefsAt, Special};
-use radicle::storage::ReadRepository;
 
 use crate::git::refs::{Policy, Update, Updates};
 use crate::policy::BlockList;

@@ -116,13 +116,17 @@ mod test {
     fn test_operations() {
         assert_eq!(Features::NONE.with(Features::SEED), Features::SEED);
 
-        assert!(!Features::from(u64::MAX)
-            .without(Features::SEED)
-            .has(Features::SEED));
+        assert!(
+            !Features::from(u64::MAX)
+                .without(Features::SEED)
+                .has(Features::SEED)
+        );
 
-        assert!(Features::from(u64::MIN)
-            .with(Features::SEED)
-            .has(Features::SEED));
+        assert!(
+            Features::from(u64::MIN)
+                .with(Features::SEED)
+                .has(Features::SEED)
+        );
 
         assert_eq!(
             Features::NONE.with(Features::SEED).without(Features::SEED),

@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use localtime::LocalTime;
-use radicle::node::{address, config, HostName, NodeId};
+use radicle::node::{HostName, NodeId, address, config};
 
 /// Peer rate limiter.
 ///

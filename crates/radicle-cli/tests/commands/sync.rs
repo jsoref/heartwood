@@ -1,8 +1,8 @@
 use std::str::FromStr as _;
 
+use radicle::node::Handle as _;
 use radicle::node::config::DefaultSeedingPolicy;
 use radicle::node::policy::Scope;
-use radicle::node::Handle as _;
 use radicle::prelude::RepoId;
 use radicle::storage::{ReadStorage as _, RemoteRepository as _};
 

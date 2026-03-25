@@ -1,4 +1,4 @@
-use crate::commit::parse::{parse, ParseError};
+use crate::commit::parse::{ParseError, parse};
 
 /// Helper type whose FromStr always fails.
 ///

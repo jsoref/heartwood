@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::net;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::{fmt, io, time};
 
 #[cfg(unix)]

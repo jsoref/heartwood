@@ -9,8 +9,8 @@ use serde::{Deserialize, Serialize};
 use crate::cob::op::Op;
 use crate::cob::patch::Patch;
 use crate::cob::store::encoding;
-use crate::cob::{patch, Title};
 use crate::cob::{Entry, History, Manifest, Timestamp, Version};
+use crate::cob::{Title, patch};
 use crate::crypto::Signer;
 use crate::git::Oid;
 use crate::node::device::Device;
@@ -257,7 +257,7 @@ fn encoded<T: Cob, G: Signer>(
 ) -> (Vec<u8>, crate::git::Oid) {
     use radicle_git_metadata::{
         author::{Author, Time},
-        commit::{headers::Headers, trailers::OwnedTrailer, CommitData},
+        commit::{CommitData, headers::Headers, trailers::OwnedTrailer},
     };
 
     let data = encoding::encode(action).unwrap();

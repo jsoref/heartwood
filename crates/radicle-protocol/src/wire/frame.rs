@@ -6,7 +6,7 @@ use bytes::{Buf, BufMut};
 use radicle::node::Link;
 
 use crate::service::Message;
-use crate::{wire, wire::varint, wire::varint::VarInt, PROTOCOL_VERSION};
+use crate::{PROTOCOL_VERSION, wire, wire::varint, wire::varint::VarInt};
 
 /// Protocol version strings all start with the magic sequence `rad`, followed
 /// by a version number.

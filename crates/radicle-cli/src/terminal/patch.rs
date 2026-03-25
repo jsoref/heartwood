@@ -9,13 +9,13 @@ use std::io::IsTerminal as _;
 use thiserror::Error;
 
 use radicle::cob;
-use radicle::cob::patch;
 use radicle::cob::Title;
+use radicle::cob::patch;
 use radicle::git;
 use radicle::patch::{Patch, PatchId};
 use radicle::prelude::Profile;
-use radicle::storage::git::Repository;
 use radicle::storage::WriteRepository as _;
+use radicle::storage::git::Repository;
 
 use crate::terminal as term;
 use crate::terminal::Element;

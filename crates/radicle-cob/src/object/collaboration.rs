@@ -6,12 +6,12 @@ use nonempty::NonEmpty;
 use oid::Oid;
 
 use crate::change::store::{Manifest, Version};
-use crate::{change, Entry, History, ObjectId, TypeName};
+use crate::{Entry, History, ObjectId, TypeName, change};
 
 pub mod error;
 
 mod create;
-pub use create::{create, Create};
+pub use create::{Create, create};
 
 mod get;
 pub use get::get;
@@ -25,7 +25,7 @@ mod remove;
 pub use remove::remove;
 
 mod update;
-pub use update::{update, Update, Updated};
+pub use update::{Update, Updated, update};
 
 /// A collaborative object
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -12,9 +12,9 @@ mod state;
 use std::io;
 use std::time::Instant;
 
-use gix_protocol::{handshake, Handshake};
+use gix_protocol::{Handshake, handshake};
 
-pub use gix_protocol::{transport::bstr::ByteSlice, RemoteProgress};
+pub use gix_protocol::{RemoteProgress, transport::bstr::ByteSlice};
 pub use handle::Handle;
 pub use policy::{Allowed, BlockList, Scope};
 use radicle::storage::git::Repository;
@@ -22,8 +22,8 @@ pub use state::{Config, FetchLimit, FetchResult};
 pub use transport::Transport;
 
 use radicle::crypto::PublicKey;
-use radicle::storage::refs::RefsAt;
 use radicle::storage::ReadRepository as _;
+use radicle::storage::refs::RefsAt;
 use state::FetchState;
 use thiserror::Error;
 

@@ -1,12 +1,12 @@
+use radicle::Profile;
 use radicle::cob::thread;
 use radicle::storage::WriteRepository;
-use radicle::Profile;
 use radicle::{cob, git, issue, storage};
 
 use crate::git::Rev;
 use crate::terminal as term;
-use crate::terminal::patch::Message;
 use crate::terminal::Element as _;
+use crate::terminal::patch::Message;
 
 pub(super) fn comment(
     profile: &Profile,

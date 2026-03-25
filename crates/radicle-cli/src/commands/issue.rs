@@ -6,18 +6,18 @@ use anyhow::Context as _;
 
 use radicle::cob::common::Label;
 use radicle::cob::issue::{CloseReason, State};
-use radicle::cob::{issue, Title};
+use radicle::cob::{Title, issue};
 
+use radicle::Profile;
 use radicle::crypto;
 use radicle::issue::cache::Issues as _;
-use radicle::node::device::Device;
 use radicle::node::NodeId;
+use radicle::node::device::Device;
 use radicle::prelude::Did;
 use radicle::profile;
 use radicle::storage;
 use radicle::storage::{WriteRepository, WriteStorage};
-use radicle::Profile;
-use radicle::{cob, Node};
+use radicle::{Node, cob};
 
 pub use args::Args;
 use args::{Assigned, Command, CommentAction, StateArg};
@@ -25,10 +25,10 @@ use args::{Assigned, Command, CommentAction, StateArg};
 use crate::git::Rev;
 use crate::node;
 use crate::terminal as term;
+use crate::terminal::Element;
 use crate::terminal::args::Error;
 use crate::terminal::format::Author;
 use crate::terminal::issue::Format;
-use crate::terminal::Element;
 
 const ABOUT: &str = "Manage issues";
 

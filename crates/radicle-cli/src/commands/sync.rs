@@ -5,13 +5,13 @@ use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::time;
 
-use anyhow::{anyhow, Context as _};
+use anyhow::{Context as _, anyhow};
 
 use radicle::node;
+use radicle::node::SyncedAt;
 use radicle::node::address::Store;
 use radicle::node::sync;
 use radicle::node::sync::fetch::SuccessfulOutcome;
-use radicle::node::SyncedAt;
 use radicle::node::{AliasStore, Handle as _, Node, Seed, SyncStatus};
 use radicle::prelude::{NodeId, Profile, RepoId};
 use radicle::storage::ReadRepository;

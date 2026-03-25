@@ -339,8 +339,8 @@ impl std::str::FromStr for FilteredTypeName {
 #[cfg(test)]
 mod test {
     use super::Args;
-    use clap::error::ErrorKind;
     use clap::Parser;
+    use clap::error::ErrorKind;
 
     const ARGS: &[&str] = &[
         "--repo",

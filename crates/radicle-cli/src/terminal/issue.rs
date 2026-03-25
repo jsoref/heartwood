@@ -3,14 +3,14 @@ use std::io;
 use radicle_term::table::TableOptions;
 use radicle_term::{Table, VStack};
 
+use radicle::Profile;
 use radicle::cob;
 use radicle::cob::issue;
 use radicle::cob::issue::CloseReason;
-use radicle::Profile;
 
 use crate::terminal as term;
-use crate::terminal::format::Author;
 use crate::terminal::Element;
+use crate::terminal::format::Author;
 
 pub const OPEN_MSG: &str = r#"
 <!--

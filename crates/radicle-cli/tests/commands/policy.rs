@@ -1,8 +1,8 @@
 use crate::test;
 use crate::util::environment::Environment;
 use radicle::node;
-use radicle::node::config::DefaultSeedingPolicy;
 use radicle::node::Alias;
+use radicle::node::config::DefaultSeedingPolicy;
 
 #[test]
 fn rad_seed_and_follow() {

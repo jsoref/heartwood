@@ -10,9 +10,9 @@ use sqlite as sql;
 use thiserror::Error;
 
 use crate::git;
-use crate::git::fmt::RefString;
 use crate::git::Oid;
 use crate::git::RefError;
+use crate::git::fmt::RefString;
 use crate::prelude::RepoId;
 use crate::sql::transaction;
 use crate::storage::RefUpdate;
@@ -578,9 +578,10 @@ mod test {
         assert!(db.insert(&repo, &update1, time).unwrap());
         assert!(db.insert(&repo, &update2, time).unwrap());
         assert!(db.insert(&repo, &update3, time).unwrap());
-        assert!(db
-            .set_status(NotificationStatus::ReadAt(time), &[1, 2, 3])
-            .unwrap());
+        assert!(
+            db.set_status(NotificationStatus::ReadAt(time), &[1, 2, 3])
+                .unwrap()
+        );
 
         let mut notifs = db.by_repo(&repo, "timestamp").unwrap();
 
@@ -619,9 +620,10 @@ mod test {
             new: master2,
         };
         assert!(db.insert(&repo, &update1, time1).unwrap());
-        assert!(db
-            .set_status(NotificationStatus::ReadAt(time1), &[1])
-            .unwrap());
+        assert!(
+            db.set_status(NotificationStatus::ReadAt(time1), &[1])
+                .unwrap()
+        );
         assert!(db.insert(&repo, &update2, time2).unwrap());
 
         let mut notifs = db.by_repo(&repo, "timestamp").unwrap();

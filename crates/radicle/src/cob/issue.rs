@@ -13,11 +13,11 @@ use crate::cob::common::{Author, Authorization, Label, Reaction, Timestamp, Uri}
 use crate::cob::store::Transaction;
 use crate::cob::store::{Cob, CobAction};
 use crate::cob::thread::{Comment, CommentId, Thread};
-use crate::cob::{op, store, ActorId, Embed, EntryId, ObjectId, TypeName};
-use crate::cob::{thread, TitleError};
+use crate::cob::{ActorId, Embed, EntryId, ObjectId, TypeName, op, store};
+use crate::cob::{TitleError, thread};
 use crate::identity::doc::DocError;
-use crate::node::device::Device;
 use crate::node::NodeId;
+use crate::node::device::Device;
 use crate::prelude::{Did, Doc, ReadRepository, RepoId};
 use crate::storage;
 use crate::storage::{HasRepoId, RepositoryError, WriteRepository};
@@ -981,7 +981,7 @@ mod test {
     use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::cob::{store::CobWithType, ActorId, Reaction};
+    use crate::cob::{ActorId, Reaction, store::CobWithType};
     use crate::git::Oid;
     use crate::issue::cache::Issues as _;
     use crate::test::arbitrary;

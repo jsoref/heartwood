@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
-use radicle::node::config::ConnectAddress;
 use radicle::node::Address;
+use radicle::node::config::ConnectAddress;
 use radicle::profile::Config;
 
 static NODES_RENAMED: LazyLock<HashMap<Address, Address>> = LazyLock::new(|| {

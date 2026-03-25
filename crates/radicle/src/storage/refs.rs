@@ -17,11 +17,11 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::git;
-use crate::git::raw::ErrorExt as _;
 use crate::git::Oid;
+use crate::git::raw::ErrorExt as _;
 use crate::storage;
-use crate::storage::refs::sigrefs::read::Tip;
 use crate::storage::RemoteId;
+use crate::storage::refs::sigrefs::read::Tip;
 
 pub use crate::git::refs::storage::*;
 
@@ -495,13 +495,13 @@ pub mod canonical {
 #[allow(clippy::unwrap_used)]
 mod tests {
     use qcheck_macros::quickcheck;
-    use storage::{git::transport, RemoteRepository, SignRepository, WriteStorage};
+    use storage::{RemoteRepository, SignRepository, WriteStorage, git::transport};
 
     use super::*;
     use crate::assert_matches;
     use crate::node::device::Device;
     use crate::storage::WriteRepository as _;
-    use crate::{cob::identity::Identity, cob::Title, rad, test::fixtures, Storage};
+    use crate::{Storage, cob::Title, cob::identity::Identity, rad, test::fixtures};
 
     #[quickcheck]
     fn prop_canonical_roundtrip(refs: Refs) {

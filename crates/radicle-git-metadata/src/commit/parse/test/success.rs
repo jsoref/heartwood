@@ -142,9 +142,11 @@ This line is not a valid trailer."#;
 
     assert_eq!(commit.trailers().count(), 0);
     assert!(commit.message().contains("Signed-off-by"));
-    assert!(commit
-        .message()
-        .contains("This line is not a valid trailer."));
+    assert!(
+        commit
+            .message()
+            .contains("This line is not a valid trailer.")
+    );
 }
 
 #[test]

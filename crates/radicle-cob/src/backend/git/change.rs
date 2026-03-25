@@ -15,10 +15,10 @@ use crate::change::store::Version;
 use crate::signatures;
 use crate::trailers::CommitTrailer;
 use crate::{
-    change,
-    change::{store, Contents, Entry, Timestamp},
+    Embed, change,
+    change::{Contents, Entry, Timestamp, store},
     signatures::{ExtendedSignature, Signatures},
-    trailers, Embed,
+    trailers,
 };
 
 use super::commit::Commit;

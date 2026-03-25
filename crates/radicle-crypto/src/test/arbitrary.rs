@@ -1,6 +1,6 @@
 use qcheck::Arbitrary;
 
-use crate::{test::signer::MockSigner, KeyPair, PublicKey, SecretKey, Seed};
+use crate::{KeyPair, PublicKey, SecretKey, Seed, test::signer::MockSigner};
 
 impl Arbitrary for MockSigner {
     fn arbitrary(g: &mut qcheck::Gen) -> Self {

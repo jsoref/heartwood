@@ -1,12 +1,12 @@
-use std::sync::atomic::{self, AtomicBool};
 use std::sync::Arc;
+use std::sync::atomic::{self, AtomicBool};
 
 use bstr::BString;
 use radicle::crypto::PublicKey;
 use radicle::git::Oid;
 use radicle::identity::{Doc, DocError};
-use radicle::storage::git::Repository;
 use radicle::storage::ReadRepository;
+use radicle::storage::git::Repository;
 
 use crate::policy::{Allowed, BlockList};
 use crate::transport::{ConnectionStream, Transport};

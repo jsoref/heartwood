@@ -5,8 +5,8 @@ use std::sync::LazyLock;
 
 use super::*;
 use crate::bounded::BoundedVec;
-use radicle::node::UserAgent;
 use radicle::node::PROTOCOL_VERSION;
+use radicle::node::UserAgent;
 
 pub use store::{AnnouncementId, Error, RelayStatus, Store};
 

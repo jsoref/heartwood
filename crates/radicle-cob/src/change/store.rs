@@ -7,7 +7,7 @@ use oid::Oid;
 use serde::{Deserialize, Serialize};
 
 use crate::object::collaboration::error::{Create, Update};
-use crate::{signatures, TypeName};
+use crate::{TypeName, signatures};
 
 /// Change entry storage.
 pub trait Storage {

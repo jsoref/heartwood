@@ -7,10 +7,10 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crypto::{ssh, PublicKey};
+use crypto::{PublicKey, ssh};
 use metadata::commit::{
-    headers::Signature::{Pgp, Ssh},
     CommitData,
+    headers::Signature::{Pgp, Ssh},
 };
 
 pub use ssh::ExtendedSignature;

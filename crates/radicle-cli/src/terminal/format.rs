@@ -3,14 +3,14 @@ use std::fmt;
 use localtime::LocalTime;
 
 pub use radicle_term::format::*;
-pub use radicle_term::{style, Paint};
+pub use radicle_term::{Paint, style};
 
 use radicle::cob::ObjectId;
 use radicle::identity::Visibility;
 use radicle::node::policy::Policy;
 use radicle::node::{Alias, AliasStore, NodeId};
 use radicle::prelude::Did;
-use radicle::profile::{env, Profile};
+use radicle::profile::{Profile, env};
 use radicle::storage::RefUpdate;
 use radicle_term::element::Line;
 

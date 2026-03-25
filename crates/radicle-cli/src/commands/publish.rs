@@ -1,6 +1,6 @@
 mod args;
 
-use anyhow::{anyhow, Context as _};
+use anyhow::{Context as _, anyhow};
 
 use radicle::cob;
 use radicle::identity::{Identity, Visibility};

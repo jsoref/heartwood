@@ -11,8 +11,8 @@ use radicle::storage::refs::{FeatureLevel, RefsAt};
 use radicle_core::RepoId;
 
 use crate::fetcher::{
-    state::{MaxQueueSize, QueuedFetch},
     FetchConfig,
+    state::{MaxQueueSize, QueuedFetch},
 };
 
 impl Arbitrary for QueuedFetch {

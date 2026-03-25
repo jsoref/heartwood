@@ -13,10 +13,11 @@ use std::{fmt, io, net};
 
 use localtime::{LocalDuration, LocalTime};
 use log::*;
-use radicle::node::events::Event;
 use radicle::node::NodeId;
+use radicle::node::events::Event;
 use radicle_protocol::worker::FetchError;
 
+use crate::Link;
 use crate::crypto;
 use crate::prelude::{Address, RepoId};
 use crate::service::io::Io;
@@ -26,7 +27,6 @@ use crate::storage::{ReadRepository, WriteStorage};
 use crate::test::arbitrary;
 use crate::test::peer::Service;
 use crate::worker::fetch;
-use crate::Link;
 
 /// Minimum latency between peers.
 pub const MIN_LATENCY: LocalDuration = LocalDuration::from_millis(1);

@@ -2,7 +2,7 @@ mod args;
 
 use std::{thread, time};
 
-use anyhow::{anyhow, Context as _};
+use anyhow::{Context as _, anyhow};
 
 use radicle::git;
 use radicle::git::raw::ErrorExt as _;

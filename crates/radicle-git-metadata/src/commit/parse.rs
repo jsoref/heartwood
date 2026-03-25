@@ -6,9 +6,9 @@ use std::borrow::Cow;
 use crate::author::Author;
 
 use super::{
+    CommitData,
     headers::Headers,
     trailers::{OwnedTrailer, Token, Trailer},
-    CommitData,
 };
 
 #[derive(Debug, thiserror::Error)]

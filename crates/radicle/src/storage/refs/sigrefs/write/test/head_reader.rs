@@ -2,8 +2,8 @@ use radicle_git_ref_format::Component;
 
 use super::mock::{self, MockRepository};
 use crate::storage::refs::sigrefs::read;
-use crate::storage::refs::sigrefs::write::{error, Head, HeadReader};
-use crate::storage::refs::{Refs, IDENTITY_ROOT, SIGREFS_BRANCH};
+use crate::storage::refs::sigrefs::write::{Head, HeadReader, error};
+use crate::storage::refs::{IDENTITY_ROOT, Refs, SIGREFS_BRANCH};
 
 /// Drive `HeadReader` directly via the sigrefs reference for `mock::node_id()`.
 fn read(repo: &MockRepository) -> Result<Option<Head>, error::Head> {

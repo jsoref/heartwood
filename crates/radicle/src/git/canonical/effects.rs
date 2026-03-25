@@ -1,9 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::git;
+use crate::git::Oid;
 use crate::git::fmt::Qualified;
 use crate::git::raw::ErrorExt as _;
-use crate::git::Oid;
 use crate::prelude::Did;
 
 use super::{FoundObjects, GraphAheadBehind, MergeBase, Object};

@@ -16,7 +16,7 @@ use sqlite as sql;
 use thiserror::Error;
 
 use crate::node::{
-    address, Address, Alias, Features, KnownAddress, NodeId, Timestamp, UserAgent, PROTOCOL_VERSION,
+    Address, Alias, Features, KnownAddress, NodeId, PROTOCOL_VERSION, Timestamp, UserAgent, address,
 };
 use crate::sql::transaction;
 

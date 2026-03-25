@@ -10,8 +10,8 @@ use radicle::storage::refs::{self, RefsAt};
 use crate::identity::RepoId;
 use crate::node::{Alias, Config, ConnectOptions, ConnectResult, Event, FetchResult, Seeds};
 use crate::runtime::HandleError;
-use radicle::node::policy;
 use radicle::node::NodeId;
+use radicle::node::policy;
 
 #[derive(Default, Clone)]
 pub struct Handle {

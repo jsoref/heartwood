@@ -6,10 +6,10 @@ use radicle_crypto::test::signer::MockSigner;
 use test_log::test;
 
 use radicle::git::raw::ErrorExt as _;
+use radicle::node::Event;
 use radicle::node::device::Device;
 use radicle::node::policy::Scope;
-use radicle::node::Event;
-use radicle::node::{Alias, ConnectResult, FetchResult, Handle as _, DEFAULT_TIMEOUT};
+use radicle::node::{Alias, ConnectResult, DEFAULT_TIMEOUT, FetchResult, Handle as _};
 use radicle::storage::{
     ReadRepository, ReadStorage, RefUpdate, RemoteRepository, SignRepository, ValidateRepository,
     WriteRepository, WriteStorage,
@@ -22,7 +22,7 @@ use crate::node::config::Limits;
 use crate::node::{Config, ConnectOptions};
 use crate::service;
 use crate::storage::git::transport;
-use crate::test::node::{converge, Node, NodeHandle};
+use crate::test::node::{Node, NodeHandle, converge};
 
 mod config {
     use super::*;
@@ -631,12 +631,13 @@ fn test_clone() {
     assert_eq!(canonical, oid);
 
     // Make sure that bob has refs/rad/id set
-    assert!(bob
-        .storage
-        .repository(acme)
-        .unwrap()
-        .identity_head()
-        .is_ok());
+    assert!(
+        bob.storage
+            .repository(acme)
+            .unwrap()
+            .identity_head()
+            .is_ok()
+    );
 }
 
 #[test]

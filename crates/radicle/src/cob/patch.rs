@@ -25,11 +25,11 @@ use crate::cob::store::{Cob, CobAction};
 use crate::cob::thread;
 use crate::cob::thread::Thread;
 use crate::cob::thread::{Comment, CommentId, Edit, Reactions};
-use crate::cob::{op, store, ActorId, Embed, EntryId, ObjectId, TypeName, Uri};
+use crate::cob::{ActorId, Embed, EntryId, ObjectId, TypeName, Uri, op, store};
 use crate::crypto::PublicKey;
 use crate::git;
-use crate::identity::doc::{DocAt, DocError};
 use crate::identity::PayloadError;
+use crate::identity::doc::{DocAt, DocError};
 use crate::node::device::Device;
 use crate::prelude::*;
 use crate::storage;
@@ -2868,7 +2868,7 @@ mod ser {
 
     use serde::ser::SerializeSeq;
 
-    use crate::cob::{thread::Reactions, ActorId, CodeLocation};
+    use crate::cob::{ActorId, CodeLocation, thread::Reactions};
 
     /// Serialize a `Revision`'s reaction as an object containing the
     /// `location`, `emoji`, and all `authors` that have performed the

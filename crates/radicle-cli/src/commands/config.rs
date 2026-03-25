@@ -5,7 +5,7 @@ use args::Command;
 
 use std::path::Path;
 
-use radicle::profile::{config, Config, ConfigPath, RawConfig};
+use radicle::profile::{Config, ConfigPath, RawConfig, config};
 
 use crate::terminal as term;
 use crate::terminal::Element as _;

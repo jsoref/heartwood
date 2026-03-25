@@ -3,9 +3,8 @@ pub mod error;
 use either::Either;
 use radicle::git::raw::ErrorExt as _;
 use radicle::git::{
-    self,
+    self, Oid,
     fmt::{Namespaced, Qualified},
-    Oid,
 };
 use radicle::storage::git::Repository;
 

@@ -3,11 +3,12 @@ use std::collections::HashMap;
 use radicle_core::{NodeId, RepoId};
 
 use crate::fetcher::{
-    state::{
-        command::{self},
-        event, Config, FetcherState, QueuedFetch,
-    },
     RefsToFetch,
+    state::{
+        Config, FetcherState, QueuedFetch,
+        command::{self},
+        event,
+    },
 };
 
 /// Service layer that wraps [`FetcherState`] and manages subscriber coalescing.

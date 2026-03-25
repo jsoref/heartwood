@@ -16,13 +16,13 @@ use radicle::node::policy::config::SeedingPolicy;
 use radicle::prelude::NodeId;
 use radicle::storage::refs::RefsAt;
 use radicle::storage::{ReadRepository, ReadStorage};
-use radicle::{cob, crypto, Storage};
+use radicle::{Storage, cob, crypto};
 
 pub use radicle_protocol::worker::{
     AuthorizationError, FetchError, FetchRequest, FetchResult, UploadError,
 };
 
-use crate::runtime::{thread, Handle};
+use crate::runtime::{Handle, thread};
 use crate::wire::StreamId;
 
 pub use channels::{ChannelEvent, Channels, ChannelsConfig};
@@ -154,13 +154,13 @@ impl Worker {
                                 std::io::ErrorKind::UnexpectedEof,
                                 "unexpected end of stream while reading upload-pack header",
                             ))),
-                        }
+                        };
                     }
                     Some(Err(e)) => {
                         return FetchResult::Responder {
                             rid: None,
                             result: Err(UploadError::PacketLine(e)),
-                        }
+                        };
                     }
                     Some(Ok(Err(e))) => {
                         return FetchResult::Responder {
@@ -169,7 +169,7 @@ impl Worker {
                                 std::io::ErrorKind::InvalidData,
                                 format!("invalid upload-pack header: {e}"),
                             ))),
-                        }
+                        };
                     }
                     Some(Ok(Ok(header))) => header,
                 };

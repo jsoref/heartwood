@@ -1,7 +1,7 @@
 //! Client control socket implementation.
-use std::io::prelude::*;
 use std::io::BufReader;
 use std::io::LineWriter;
+use std::io::prelude::*;
 use std::path::PathBuf;
 use std::{io, net, time};
 
@@ -283,8 +283,8 @@ mod tests {
 
     use super::*;
     use crate::identity::RepoId;
-    use crate::node::policy::Scope;
     use crate::node::Handle;
+    use crate::node::policy::Scope;
     use crate::node::{Alias, Node, NodeId};
     use crate::test;
 

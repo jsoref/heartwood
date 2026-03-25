@@ -3,13 +3,13 @@ use std::sync::OnceLock;
 
 use crossbeam_channel as chan;
 
-use ::windows::core::BOOL;
 use ::windows::Win32::System::Console::{
-    SetConsoleCtrlHandler, CTRL_BREAK_EVENT, CTRL_CLOSE_EVENT, CTRL_C_EVENT, CTRL_LOGOFF_EVENT,
-    CTRL_SHUTDOWN_EVENT,
+    CTRL_BREAK_EVENT, CTRL_C_EVENT, CTRL_CLOSE_EVENT, CTRL_LOGOFF_EVENT, CTRL_SHUTDOWN_EVENT,
+    SetConsoleCtrlHandler,
 };
+use ::windows::core::BOOL;
 
-use crate::{already_installed, Signal};
+use crate::{Signal, already_installed};
 
 static NOTIFY: OnceLock<chan::Sender<Signal>> = OnceLock::new();
 

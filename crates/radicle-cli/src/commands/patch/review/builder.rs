@@ -26,7 +26,7 @@ use radicle::git;
 use radicle::git::Oid;
 use radicle::node::device::Device;
 use radicle::prelude::*;
-use radicle::storage::git::{cob::DraftStore, Repository};
+use radicle::storage::git::{Repository, cob::DraftStore};
 use radicle_surf::diff::*;
 use radicle_term::{Element, VStack};
 

@@ -1,7 +1,7 @@
 use std::io;
 
 #[cfg(unix)]
-use libc::{getrlimit, rlim_t, rlimit, setrlimit, RLIMIT_NOFILE};
+use libc::{RLIMIT_NOFILE, getrlimit, rlim_t, rlimit, setrlimit};
 
 #[cfg(unix)]
 type Int = rlim_t;

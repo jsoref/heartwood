@@ -6,10 +6,10 @@ use sqlite as sql;
 use thiserror::Error;
 
 use crate::git::Oid;
+use crate::node::NodeId;
 use crate::node::address;
 use crate::node::address::Store as _;
-use crate::node::NodeId;
-use crate::node::{seed::SyncedSeed, Database, SyncedAt};
+use crate::node::{Database, SyncedAt, seed::SyncedSeed};
 use crate::prelude::{RepoId, Timestamp};
 
 #[derive(Error, Debug)]

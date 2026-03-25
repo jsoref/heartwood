@@ -3,8 +3,8 @@ mod args;
 
 use std::path::PathBuf;
 
-use anyhow::anyhow;
 use anyhow::Context as _;
+use anyhow::anyhow;
 
 use radicle::git;
 use radicle::node::AliasStore;

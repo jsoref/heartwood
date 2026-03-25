@@ -8,9 +8,9 @@ use serde_json as json;
 use thiserror::Error;
 
 use radicle::cob::{Title, TypeNameParse};
+use radicle::identity::doc::PayloadId;
 use radicle::identity::doc::update::EditVisibility;
 use radicle::identity::doc::update::PayloadUpsert;
-use radicle::identity::doc::PayloadId;
 use radicle::prelude::{Did, RepoId};
 
 use crate::git::Rev;
@@ -240,9 +240,9 @@ pub(super) enum Command {
 
 #[cfg(test)]
 mod test {
-    use super::{parse_many_upserts, Args};
-    use clap::error::ErrorKind;
+    use super::{Args, parse_many_upserts};
     use clap::Parser;
+    use clap::error::ErrorKind;
 
     #[test]
     fn should_parse_single_payload() {

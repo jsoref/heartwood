@@ -1,7 +1,7 @@
 use super::mock;
 use super::mock::MockRepository;
-use crate::storage::refs::sigrefs::write::{error, Tree, TreeWriter};
 use crate::storage::refs::Refs;
+use crate::storage::refs::sigrefs::write::{Tree, TreeWriter, error};
 
 fn mock_refs() -> Refs {
     Refs::from([(mock::refs_heads_main(), mock::oid(10))].into_iter())

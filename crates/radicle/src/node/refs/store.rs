@@ -6,8 +6,8 @@ use localtime::LocalTime;
 use sqlite as sql;
 use thiserror::Error;
 
-use crate::git::fmt::Qualified;
 use crate::git::Oid;
+use crate::git::fmt::Qualified;
 use crate::node::Database;
 use crate::node::NodeId;
 use crate::prelude::RepoId;
@@ -195,15 +195,17 @@ mod test {
         assert!(db.is_empty().unwrap());
         assert_eq!(db.count().unwrap(), 0);
 
-        assert!(db
-            .set(&repo, &namespace, &refname1, oid, timestamp)
-            .unwrap());
+        assert!(
+            db.set(&repo, &namespace, &refname1, oid, timestamp)
+                .unwrap()
+        );
         assert!(!db.is_empty().unwrap());
         assert_eq!(db.count().unwrap(), 1);
 
-        assert!(db
-            .set(&repo, &namespace, &refname2, oid, timestamp)
-            .unwrap());
+        assert!(
+            db.set(&repo, &namespace, &refname2, oid, timestamp)
+                .unwrap()
+        );
         assert_eq!(db.count().unwrap(), 2);
     }
 
@@ -238,21 +240,24 @@ mod test {
         let mut timestamp = LocalTime::now();
 
         assert_eq!(db.get(&repo, &namespace, &refname).unwrap(), None);
-        assert!(db
-            .set(&repo, &namespace, &refname, oid1, timestamp)
-            .unwrap());
+        assert!(
+            db.set(&repo, &namespace, &refname, oid1, timestamp)
+                .unwrap()
+        );
         assert_eq!(
             db.get(&repo, &namespace, &refname).unwrap(),
             Some((oid1, timestamp))
         );
-        assert!(!db
-            .set(&repo, &namespace, &refname, oid1, timestamp)
-            .unwrap());
+        assert!(
+            !db.set(&repo, &namespace, &refname, oid1, timestamp)
+                .unwrap()
+        );
         timestamp.elapse(LocalDuration::from_millis(1));
 
-        assert!(db
-            .set(&repo, &namespace, &refname, oid2, timestamp)
-            .unwrap());
+        assert!(
+            db.set(&repo, &namespace, &refname, oid2, timestamp)
+                .unwrap()
+        );
         assert_eq!(
             db.get(&repo, &namespace, &refname).unwrap(),
             Some((oid2, timestamp))

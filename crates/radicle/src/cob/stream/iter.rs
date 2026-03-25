@@ -4,11 +4,11 @@ use serde::Deserialize;
 
 use crate::cob::{Op, TypeName};
 use crate::git;
-use crate::git::fmt::refspec::PatternString;
 use crate::git::Oid;
+use crate::git::fmt::refspec::PatternString;
 
-use super::error;
 use super::CobRange;
+use super::error;
 
 /// A `Walk` specifies a range to construct a [`WalkIter`].
 #[derive(Clone, Debug)]

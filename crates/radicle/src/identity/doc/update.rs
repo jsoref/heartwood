@@ -8,7 +8,7 @@ use crate::{
     git,
     identity::crefs::GetCanonicalRefs as _,
     prelude::Did,
-    storage::{self, refs, ReadRepository, RepositoryError},
+    storage::{self, ReadRepository, RepositoryError, refs},
 };
 
 use super::{Doc, PayloadError, PayloadId, RawDoc, Visibility};
@@ -206,7 +206,7 @@ pub fn verify(raw: RawDoc) -> Result<Doc, error::DocVerification> {
             return Err(error::DocVerification::PayloadError {
                 id: PayloadId::project(),
                 err: e.to_string(),
-            })
+            });
         }
     };
     // Ensure that if we have canonical reference rules and a project, that no
@@ -279,7 +279,7 @@ mod test {
         git,
         identity::{
             crefs::GetCanonicalRefs,
-            doc::{update::error, PayloadId},
+            doc::{PayloadId, update::error},
         },
         prelude::RawDoc,
         test::arbitrary,

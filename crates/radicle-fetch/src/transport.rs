@@ -4,18 +4,18 @@ pub(crate) mod ls_refs;
 use std::collections::BTreeSet;
 use std::io;
 use std::path::PathBuf;
-use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 
 use bstr::BString;
 use gix_features::progress::prodash::progress;
-use gix_protocol::handshake;
 use gix_protocol::Handshake;
-use gix_transport::client;
+use gix_protocol::handshake;
 use gix_transport::Protocol;
 use gix_transport::Service;
-use radicle::git::fmt::Qualified;
+use gix_transport::client;
 use radicle::git::Oid;
+use radicle::git::fmt::Qualified;
 use radicle::storage::git::Repository;
 use thiserror::Error;
 

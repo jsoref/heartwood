@@ -2,7 +2,7 @@ use radicle_oid::Oid;
 
 use crate::storage::refs::sigrefs::git::object;
 
-use super::{error, Commit, CommitReader};
+use super::{Commit, CommitReader, error};
 
 pub(super) struct Walk<'a, R> {
     repository: &'a R,

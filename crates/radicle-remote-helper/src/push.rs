@@ -13,6 +13,7 @@ use radicle::identity::doc::CanonicalRefsError;
 use radicle::node::device::Device;
 use thiserror::Error;
 
+use radicle::Profile;
 use radicle::cob;
 use radicle::cob::object::ParseObjectId;
 use radicle::cob::patch;
@@ -25,13 +26,12 @@ use radicle::node::NodeId;
 use radicle::storage;
 use radicle::storage::git::transport::local::Url;
 use radicle::storage::{ReadRepository, SignRepository as _, WriteRepository};
-use radicle::Profile;
 use radicle::{git, rad};
 use radicle_cli::terminal as term;
 
 use crate::service::GitService;
 use crate::service::NodeSession;
-use crate::{hint, warn, Options, Verbosity};
+use crate::{Options, Verbosity, hint, warn};
 
 #[derive(Debug, Error)]
 pub(super) enum Error {
@@ -39,7 +39,9 @@ pub(super) enum Error {
     #[error("cannot push to remote namespace owned by {0}")]
     KeyMismatch(Did),
     /// No public key is given
-    #[error("no public key given as a remote namespace, perhaps you are attempting to push to restricted refs")]
+    #[error(
+        "no public key given as a remote namespace, perhaps you are attempting to push to restricted refs"
+    )]
     NoKey,
     /// User tried to delete the canonical branch.
     #[error("refusing to delete default branch ref '{0}'")]
@@ -116,7 +118,9 @@ pub(super) enum Error {
     FindObjects(#[from] git::canonical::error::FindObjectsError),
 
     /// Error sending pack from the working copy to storage.
-    #[error("`git send-pack` failed with exit status {status}, stderr and stdout follow:\n{stderr}\n{stdout}")]
+    #[error(
+        "`git send-pack` failed with exit status {status}, stderr and stdout follow:\n{stderr}\n{stdout}"
+    )]
     SendPackFailed {
         status: ExitStatus,
         stderr: String,

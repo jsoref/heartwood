@@ -10,19 +10,18 @@ use thiserror::Error;
 use crate::git;
 use crate::git::Oid;
 use crate::identity::doc::Doc;
-use crate::node::device::Device;
 use crate::node::NodeId;
+use crate::node::device::Device;
 use crate::storage;
 use crate::{
     cob,
     cob::{
-        op, store,
+        ActorId, Timestamp, Uri, op, store,
         store::{Cob, CobAction, Transaction},
-        ActorId, Timestamp, Uri,
     },
     identity::{
-        doc::{DocError, RepoId},
         Did,
+        doc::{DocError, RepoId},
     },
     storage::{ReadRepository, RepositoryError, WriteRepository},
 };
@@ -1074,12 +1073,12 @@ mod test {
 
     use crate::cob::{self, Title};
     use crate::crypto::PublicKey;
+    use crate::identity::Visibility;
     use crate::identity::did::Did;
     use crate::identity::doc::PayloadId;
-    use crate::identity::Visibility;
     use crate::rad;
-    use crate::storage::git::Storage;
     use crate::storage::ReadStorage;
+    use crate::storage::git::Storage;
     use crate::test::fixtures;
     use crate::test::setup::{Network, NodeWithRepo};
 

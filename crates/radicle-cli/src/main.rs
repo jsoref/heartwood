@@ -5,8 +5,8 @@ use std::io::Write;
 use std::{io::ErrorKind, process};
 
 use anyhow::anyhow;
-use clap::builder::styling::AnsiColor;
 use clap::builder::Styles;
+use clap::builder::styling::AnsiColor;
 use clap::{CommandFactory as _, Parser, Subcommand};
 
 use radicle::version::Version;

@@ -2,7 +2,7 @@ use std::{mem, net};
 
 use bytes::Buf;
 use bytes::BufMut;
-use cypheraddr::{tor, HostName, NetAddr};
+use cypheraddr::{HostName, NetAddr, tor};
 use radicle::crypto::Signature;
 use radicle::git::Oid;
 use radicle::identity::RepoId;
@@ -426,14 +426,14 @@ impl wire::Decode for ZeroBytes {
 #[cfg(test)]
 mod tests {
     use qcheck_macros::quickcheck;
-    use radicle::node::device::Device;
     use radicle::node::UserAgent;
+    use radicle::node::device::Device;
     use radicle::storage::refs::RefsAt;
     use radicle::test::arbitrary;
 
     use crate::deserializer::Deserializer;
     use crate::prop_roundtrip;
-    use crate::wire::{roundtrip, Encode as _};
+    use crate::wire::{Encode as _, roundtrip};
 
     use super::*;
 

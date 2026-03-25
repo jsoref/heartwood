@@ -9,11 +9,11 @@ use std::time;
 
 use crossbeam_channel as chan;
 
-use crate::git::fmt::Qualified;
 use crate::git::Oid;
+use crate::git::fmt::Qualified;
 use crate::node;
 use crate::prelude::*;
-use crate::storage::{refs, RefUpdate};
+use crate::storage::{RefUpdate, refs};
 
 /// Maximum unconsumed events allowed per subscription.
 pub const MAX_PENDING_EVENTS: usize = 8192;

@@ -13,7 +13,7 @@ use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 use std::{io, thread};
 
-use crossbeam_channel::{unbounded, Receiver, TryRecvError};
+use crossbeam_channel::{Receiver, TryRecvError, unbounded};
 use mio::event::{Event, Source};
 use mio::{Events, Interest, Poll, Waker};
 use thiserror::Error;

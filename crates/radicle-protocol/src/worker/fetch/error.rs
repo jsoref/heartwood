@@ -19,7 +19,9 @@ pub enum Fetch {
     Repository(#[from] radicle::storage::RepositoryError),
     #[error(transparent)]
     RefsDb(Box<radicle::node::refs::Error>),
-    #[error("validation of the storage repository failed: the delegates {delegates:?} failed to validate to meet a threshold of {threshold}")]
+    #[error(
+        "validation of the storage repository failed: the delegates {delegates:?} failed to validate to meet a threshold of {threshold}"
+    )]
     Validation {
         threshold: usize,
         delegates: Vec<String>,

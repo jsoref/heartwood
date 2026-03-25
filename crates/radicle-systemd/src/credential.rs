@@ -1,7 +1,7 @@
-use std::env::{var, VarError::*};
+use std::env::{VarError::*, var};
 use std::ffi::OsString;
 use std::fmt;
-use std::path::{is_separator, PathBuf};
+use std::path::{PathBuf, is_separator};
 
 const CREDENTIALS_DIRECTORY: &str = "CREDENTIALS_DIRECTORY";
 
@@ -39,8 +39,12 @@ impl fmt::Display for PathError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use PathError::*;
         match self {
-		InvalidCredentialId { id } => write!(f, "The systemd credential ID '{id}' is invalid."),
-		EnvVarNotUnicode { os } => write!(f, "The value of environment variable '{CREDENTIALS_DIRECTORY}' is not valid Unicode (it lossily translates to '{}').", os.to_string_lossy()),
-	}
+            InvalidCredentialId { id } => write!(f, "The systemd credential ID '{id}' is invalid."),
+            EnvVarNotUnicode { os } => write!(
+                f,
+                "The value of environment variable '{CREDENTIALS_DIRECTORY}' is not valid Unicode (it lossily translates to '{}').",
+                os.to_string_lossy()
+            ),
+        }
     }
 }

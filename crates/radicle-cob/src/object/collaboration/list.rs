@@ -1,6 +1,6 @@
 // Copyright © 2022 The Radicle Link Contributors
 
-use crate::{change_graph::ChangeGraph, CollaborativeObject, Evaluate, TypeName};
+use crate::{CollaborativeObject, Evaluate, TypeName, change_graph::ChangeGraph};
 
 use super::error;
 
@@ -19,10 +19,10 @@ where
     T: Evaluate<S>,
     S: crate::object::Storage,
     S: crate::change::Storage<
-        ObjectId = crate::object::Oid,
-        Parent = crate::object::Oid,
-        Signatures = crate::ExtendedSignature,
-    >,
+            ObjectId = crate::object::Oid,
+            Parent = crate::object::Oid,
+            Signatures = crate::ExtendedSignature,
+        >,
 {
     let references = storage
         .types(typename)

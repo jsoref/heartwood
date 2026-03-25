@@ -2,9 +2,8 @@ use bstr::{BString, ByteSlice};
 use either::Either;
 use radicle::crypto::PublicKey;
 use radicle::git::{
-    self,
+    self, Oid,
     fmt::{Component, Namespaced, Qualified},
-    Oid,
 };
 use thiserror::Error;
 

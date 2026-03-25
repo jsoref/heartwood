@@ -5,12 +5,12 @@ use std::io;
 use gix_features::progress::Progress;
 use gix_protocol::handshake::Ref;
 use gix_protocol::transport::Protocol;
-use gix_protocol::{ls_refs, Handshake};
+use gix_protocol::{Handshake, ls_refs};
 use gix_transport::bstr::BString;
 
 use crate::stage::RefPrefix;
 
-use super::{agent_name, Connection};
+use super::{Connection, agent_name};
 
 /// Configuration for running an ls-refs process.
 ///

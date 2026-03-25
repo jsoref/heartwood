@@ -1,16 +1,16 @@
 use std::io;
 use std::path::PathBuf;
-use std::sync::{atomic::AtomicBool, Arc};
+use std::sync::{Arc, atomic::AtomicBool};
 
 use gix_features::progress::{DynNestedProgress, NestedProgress};
 use gix_pack as pack;
 use gix_protocol::fetch::negotiate::one_round::State;
 use gix_protocol::handshake::Ref;
-use gix_protocol::{fetch, Handshake};
+use gix_protocol::{Handshake, fetch};
 
 use crate::git::packfile;
 
-use super::{agent_name, Connection, WantsHaves};
+use super::{Connection, WantsHaves, agent_name};
 
 pub type Error = fetch::Error;
 

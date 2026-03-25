@@ -7,7 +7,7 @@ use thiserror::Error;
 
 use crate::cob;
 use crate::cob::TypedId;
-use crate::git::{fmt::Qualified, BranchName};
+use crate::git::{BranchName, fmt::Qualified};
 use crate::prelude::RepoId;
 use crate::storage::{RefUpdate, RemoteId};
 

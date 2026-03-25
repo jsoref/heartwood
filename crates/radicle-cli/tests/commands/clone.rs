@@ -1,10 +1,10 @@
 use crate::test;
 use crate::util::environment::Environment;
 use radicle::node;
+use radicle::node::UserAgent;
 use radicle::node::address::Store as _;
 use radicle::node::policy::Scope;
 use radicle::node::routing::Store as _;
-use radicle::node::UserAgent;
 use radicle::node::{Alias, Handle as _};
 use radicle::prelude::{NodeId, RepoId};
 use radicle::storage::ReadStorage as _;

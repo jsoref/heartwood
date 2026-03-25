@@ -125,7 +125,7 @@ macro_rules! _assert_matches_cfg {
 
 #[cfg(test)]
 mod test {
-    use std::panic::{catch_unwind, UnwindSafe};
+    use std::panic::{UnwindSafe, catch_unwind};
 
     #[derive(Debug)]
     enum Foo {

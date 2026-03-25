@@ -482,26 +482,35 @@ impl Message {
         };
         let msg = match self {
             Self::Announcement(Announcement { node, message, .. }) => match message {
-                AnnouncementMessage::Node(NodeAnnouncement { addresses, timestamp, .. }) => format!(
+                AnnouncementMessage::Node(NodeAnnouncement {
+                    addresses,
+                    timestamp,
+                    ..
+                }) => format!(
                     "{verb} node announcement of {node} with {} address(es) {prep} {remote} (t={timestamp})",
                     addresses.len()
                 ),
-                AnnouncementMessage::Refs(RefsAnnouncement { rid, refs, timestamp }) => format!(
+                AnnouncementMessage::Refs(RefsAnnouncement {
+                    rid,
+                    refs,
+                    timestamp,
+                }) => format!(
                     "{verb} refs announcement of {node} for {rid} with {} remote(s) {prep} {remote} (t={timestamp})",
                     refs.len()
                 ),
-                AnnouncementMessage::Inventory(InventoryAnnouncement { inventory, timestamp }) => {
+                AnnouncementMessage::Inventory(InventoryAnnouncement {
+                    inventory,
+                    timestamp,
+                }) => {
                     format!(
                         "{verb} inventory announcement of {node} with {} item(s) {prep} {remote} (t={timestamp})",
                         inventory.len()
                     )
                 }
             },
-            Self::Info(Info::RefsAlreadySynced { rid,  .. }) => {
-                format!(
-                    "{verb} `refs-already-synced` info {prep} {remote} for {rid}"
-                )
-            },
+            Self::Info(Info::RefsAlreadySynced { rid, .. }) => {
+                format!("{verb} `refs-already-synced` info {prep} {remote} for {rid}")
+            }
             Self::Ping { .. } => format!("{verb} ping {prep} {remote}"),
             Self::Pong { .. } => format!("{verb} pong {prep} {remote}"),
             Self::Subscribe(Subscribe { .. }) => {
@@ -530,7 +539,7 @@ impl Ping {
     /// Maximum number of zero bytes in a pong message.
     pub const MAX_PONG_ZEROES: wire::Size =
         Message::MAX_SIZE - mem::size_of::<wire::Size>() as wire::Size; // Account for zeroes length
-                                                                        // prefix.
+    // prefix.
 
     pub fn new(rng: &mut fastrand::Rng) -> Self {
         let ponglen = rng.u16(0..Self::MAX_PONG_ZEROES);

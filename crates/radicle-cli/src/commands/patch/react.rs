@@ -1,11 +1,11 @@
 use anyhow::anyhow;
 
-use radicle::cob;
-use radicle::cob::{patch, Reaction};
-use radicle::patch::cache::Patches as _;
-use radicle::patch::ByRevision;
-use radicle::storage::git::Repository;
 use radicle::Profile;
+use radicle::cob;
+use radicle::cob::{Reaction, patch};
+use radicle::patch::ByRevision;
+use radicle::patch::cache::Patches as _;
+use radicle::storage::git::Repository;
 
 use crate::git;
 use crate::terminal as term;

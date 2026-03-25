@@ -4,7 +4,7 @@ use clap::{Parser, Subcommand};
 
 use radicle::{
     cob::{Label, Reaction, Title},
-    identity::{did::DidError, Did, RepoId},
+    identity::{Did, RepoId, did::DidError},
     issue::{CloseReason, State},
 };
 

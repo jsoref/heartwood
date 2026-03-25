@@ -22,10 +22,10 @@ use std::collections::BTreeSet;
 use anyhow::anyhow;
 
 use radicle::cob::patch::PatchId;
-use radicle::cob::{patch, Label};
+use radicle::cob::{Label, patch};
 use radicle::patch::cache::Patches as _;
 use radicle::storage::git::transport;
-use radicle::{prelude::*, Node};
+use radicle::{Node, prelude::*};
 
 use crate::git::Rev;
 use crate::node;

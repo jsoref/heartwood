@@ -22,18 +22,18 @@ use localtime::LocalTime;
 use thiserror::Error;
 
 use crate::cob::migrate;
-use crate::crypto::ssh::agent::Agent;
-use crate::crypto::ssh::{keystore, Keystore, Passphrase};
 use crate::crypto::PublicKey;
+use crate::crypto::ssh::agent::Agent;
+use crate::crypto::ssh::{Keystore, Passphrase, keystore};
 use crate::node::device::{BoxedDevice, Device};
 use crate::node::policy::config::store::Read;
 use crate::node::{
-    notifications, policy, policy::Scope, Alias, AliasStore, Handle as _, Node, UserAgent,
+    Alias, AliasStore, Handle as _, Node, UserAgent, notifications, policy, policy::Scope,
 };
 use crate::prelude::{Did, NodeId, RepoId};
-use crate::storage::git::transport;
-use crate::storage::git::Storage;
 use crate::storage::ReadRepository;
+use crate::storage::git::Storage;
+use crate::storage::git::transport;
 use crate::{cob, git, node, storage};
 
 /// Environment variables used by radicle.
@@ -496,8 +496,7 @@ pub fn home() -> Result<Home, io::Error> {
         "Environment variables `RAD_HOME` and `HOME` are both unset or not valid Unicode.";
 
     #[cfg(windows)]
-    const ERROR_MESSAGE_UNSET: &str =
-        "Environment variables `RAD_HOME`, `HOME`, and `USERPROFILE` are all unset or not valid Unicode.";
+    const ERROR_MESSAGE_UNSET: &str = "Environment variables `RAD_HOME`, `HOME`, and `USERPROFILE` are all unset or not valid Unicode.";
 
     struct DetectedHome {
         path: String,

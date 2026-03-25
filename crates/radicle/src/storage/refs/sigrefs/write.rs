@@ -5,20 +5,20 @@ mod test;
 
 use std::path::Path;
 
-use crypto::signature::{self, Signer};
 use crypto::PublicKey;
+use crypto::signature::{self, Signer};
 use radicle_core::{NodeId, RepoId};
 use radicle_git_metadata::author::Author;
-use radicle_git_metadata::commit::{headers::Headers, trailers::OwnedTrailer, CommitData};
+use radicle_git_metadata::commit::{CommitData, headers::Headers, trailers::OwnedTrailer};
 use radicle_oid::Oid;
 
 use crate::git;
-use crate::storage::refs::sigrefs::git::{object, reference, Committer};
-use crate::storage::refs::sigrefs::read::CommitReader;
-use crate::storage::refs::sigrefs::{read, VerifiedCommit};
 use crate::storage::refs::SignedRefs;
+use crate::storage::refs::sigrefs::git::{Committer, object, reference};
+use crate::storage::refs::sigrefs::read::CommitReader;
+use crate::storage::refs::sigrefs::{VerifiedCommit, read};
 use crate::storage::refs::{
-    FeatureLevel, Refs, IDENTITY_ROOT, REFS_BLOB_PATH, SIGNATURE_BLOB_PATH, SIGREFS_BRANCH,
+    FeatureLevel, IDENTITY_ROOT, REFS_BLOB_PATH, Refs, SIGNATURE_BLOB_PATH, SIGREFS_BRANCH,
     SIGREFS_PARENT,
 };
 
@@ -161,7 +161,7 @@ where
 
         let commit_writer = match head {
             Ok(Some(head)) if !force && head.is_unchanged(&refs) => {
-                return Ok(Update::unchanged(head.verified))
+                return Ok(Update::unchanged(head.verified));
             }
             Ok(Some(head)) => CommitWriter::with_parent(
                 refs,

@@ -3,16 +3,16 @@ use std::collections::VecDeque;
 use localtime::LocalDuration;
 use log::*;
 use radicle::identity::RepoId;
-use radicle::node::config::FetchPackSizeLimit;
 use radicle::node::Address;
 use radicle::node::NodeId;
+use radicle::node::config::FetchPackSizeLimit;
 use radicle::storage::refs::RefsAt;
 
 use crate::fetcher;
-use crate::service::message::Message;
-use crate::service::session::Session;
 use crate::service::DisconnectReason;
 use crate::service::Link;
+use crate::service::message::Message;
+use crate::service::session::Session;
 
 use super::gossip;
 use super::message::{Announcement, AnnouncementMessage};

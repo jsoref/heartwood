@@ -26,7 +26,9 @@ pub(crate) struct GraphDescendant {
 
 #[derive(Debug, Error)]
 /// Head being pushed diverges from canonical head.
-#[error("refusing to update canonical reference to commit that is not a descendant of current canonical head")]
+#[error(
+    "refusing to update canonical reference to commit that is not a descendant of current canonical head"
+)]
 pub(crate) struct HeadsDiverge {
     head: git::Oid,
     canonical: git::Oid,

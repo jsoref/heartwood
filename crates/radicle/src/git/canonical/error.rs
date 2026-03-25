@@ -2,20 +2,26 @@ use thiserror::Error;
 
 use crate::git::Oid;
 
-use super::{effects, ObjectType};
+use super::{ObjectType, effects};
 pub use effects::{FindObjectsError, MergeBaseError};
 
 #[derive(Debug, Error)]
 pub enum QuorumError {
-    #[error("could not determine target for canonical reference '{refname}', found objects of different types")]
+    #[error(
+        "could not determine target for canonical reference '{refname}', found objects of different types"
+    )]
     DifferentTypes { refname: String },
     #[error(transparent)]
     Convergence(#[from] ConvergesError),
     #[error(transparent)]
     MergeBase(#[from] MergeBaseError),
-    #[error("could not determine target for canonical reference '{refname}', no object with at least {threshold} vote(s) found (threshold not met)")]
+    #[error(
+        "could not determine target for canonical reference '{refname}', no object with at least {threshold} vote(s) found (threshold not met)"
+    )]
     NoCandidates { refname: String, threshold: usize },
-    #[error("could not determine target commit for canonical reference '{refname}', found diverging commits {longest} and {head}, with base commit {base} and threshold {threshold}")]
+    #[error(
+        "could not determine target commit for canonical reference '{refname}', found diverging commits {longest} and {head}, with base commit {base} and threshold {threshold}"
+    )]
     DivergingCommits {
         refname: String,
         threshold: usize,
@@ -23,7 +29,9 @@ pub enum QuorumError {
         longest: Oid,
         head: Oid,
     },
-    #[error("could not determine target tag for canonical reference '{refname}', found multiple candidates with threshold {threshold}")]
+    #[error(
+        "could not determine target tag for canonical reference '{refname}', found multiple candidates with threshold {threshold}"
+    )]
     DivergingTags {
         refname: String,
         threshold: usize,

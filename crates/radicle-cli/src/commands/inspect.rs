@@ -11,15 +11,15 @@ use chrono::prelude::*;
 
 use radicle::identity::RepoId;
 use radicle::identity::{DocAt, Identity};
-use radicle::node::policy::SeedingPolicy;
 use radicle::node::AliasStore as _;
+use radicle::node::policy::SeedingPolicy;
 use radicle::storage::git::{Repository, Storage};
 use radicle::storage::refs::{FeatureLevel, RefsAt, SignedRefs};
 use radicle::storage::{ReadRepository, ReadStorage};
 
 use crate::terminal as term;
-use crate::terminal::json;
 use crate::terminal::Element;
+use crate::terminal::json;
 
 pub use args::Args;
 use args::Target;

@@ -1,9 +1,9 @@
 use std::ops::ControlFlow;
 
-use radicle::issue::IssueId;
-use radicle::storage::git::Repository;
-use radicle::storage::ReadStorage as _;
 use radicle::Profile;
+use radicle::issue::IssueId;
+use radicle::storage::ReadStorage as _;
+use radicle::storage::git::Repository;
 
 use crate::terminal as term;
 

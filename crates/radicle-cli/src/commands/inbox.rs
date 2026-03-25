@@ -9,8 +9,8 @@ use anyhow::anyhow;
 
 use localtime::LocalTime;
 use radicle::cob::TypedId;
-use radicle::git::fmt::Qualified;
 use radicle::git::BranchName;
+use radicle::git::fmt::Qualified;
 use radicle::identity::Identity;
 use radicle::issue::cache::Issues as _;
 use radicle::node::notifications;
@@ -18,7 +18,7 @@ use radicle::node::notifications::*;
 use radicle::patch::cache::Patches as _;
 use radicle::prelude::{NodeId, Profile, RepoId};
 use radicle::storage::{ReadRepository, ReadStorage};
-use radicle::{cob, git, Storage};
+use radicle::{Storage, cob, git};
 
 use term::Element as _;
 

@@ -3,7 +3,7 @@ use std::{fmt, ops::ControlFlow};
 use crate::git::Oid;
 use crate::prelude::Did;
 
-use super::{effects, error, Object};
+use super::{Object, effects, error};
 
 /// Checks for convergence and ensures that compared objects are of the same
 /// type, i.e. commit or tag, to the [`Candidate`].

@@ -21,7 +21,7 @@ use crate::terminal as term;
 
 pub use args::Args;
 
-use args::{parse_many_embeds, FilteredTypeName, Format};
+use args::{FilteredTypeName, Format, parse_many_embeds};
 
 fn embeds(
     repo: &storage::git::Repository,

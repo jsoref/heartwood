@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::ops::Not as _;
 
 pub use radicle::storage::refs::SignedRefs;
-pub use radicle::storage::{git::Validation, Validations};
+pub use radicle::storage::{Validations, git::Validation};
 use radicle::{crypto::PublicKey, storage::ValidateRepository};
 
 pub mod error {

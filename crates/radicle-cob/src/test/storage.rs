@@ -6,9 +6,9 @@ use fmt::Component;
 use tempfile::TempDir;
 
 use crate::{
-    change,
+    ObjectId, Store, change,
     object::{self, Reference},
-    signatures, ObjectId, Store,
+    signatures,
 };
 
 pub mod error {

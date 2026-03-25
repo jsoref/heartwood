@@ -1,4 +1,4 @@
-use std::env::{remove_var, var, VarError};
+use std::env::{VarError, remove_var, var};
 use std::os::fd::RawFd;
 use std::process::id;
 

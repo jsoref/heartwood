@@ -26,8 +26,8 @@ use radicle::version::Version;
 
 pub use localtime::{LocalDuration, LocalTime};
 pub use radicle::node::Link;
-pub use radicle::node::UserAgent;
 pub use radicle::node::PROTOCOL_VERSION;
+pub use radicle::node::UserAgent;
 pub use radicle::prelude::Timestamp;
 pub use radicle::{collections, crypto, git, identity, node, profile, rad, storage};
 pub use runtime::Runtime;
@@ -49,10 +49,10 @@ pub static USER_AGENT: LazyLock<UserAgent> = LazyLock::new(|| {
 pub mod prelude {
     pub use crate::crypto::{PublicKey, Signature};
     pub use crate::identity::{Did, RepoId};
-    pub use crate::node::{config::Network, Address, Event, NodeId};
+    pub use crate::node::{Address, Event, NodeId, config::Network};
     pub use crate::service::filter::Filter;
     pub use crate::service::{DisconnectReason, Message};
-    pub use crate::storage::refs::Refs;
     pub use crate::storage::WriteStorage;
+    pub use crate::storage::refs::Refs;
     pub use crate::{LocalDuration, LocalTime, Timestamp};
 }

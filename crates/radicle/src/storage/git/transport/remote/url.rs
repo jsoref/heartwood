@@ -130,9 +130,11 @@ mod test {
 
         assert!(format!("heartwood://{node}").parse::<Url>().is_err());
         assert!(format!("rad://{node}").parse::<Url>().is_err());
-        assert!(format!("heartwood://{node}/{namespace}")
-            .parse::<Url>()
-            .is_err());
+        assert!(
+            format!("heartwood://{node}/{namespace}")
+                .parse::<Url>()
+                .is_err()
+        );
         assert!(
             format!("heartwood://{node}/{}/{namespace}/fnord", repo.canonical())
                 .parse::<Url>()

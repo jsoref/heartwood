@@ -11,8 +11,8 @@ pub use winpipe::WinStream as Stream;
 use thiserror::Error;
 use zeroize::Zeroize as _;
 
-use crate::agent::msg;
 use crate::agent::Constraint;
+use crate::agent::msg;
 use crate::encoding::{self, Encodable};
 use crate::encoding::{Buffer, Encoding, Reader};
 
@@ -97,13 +97,13 @@ impl AgentClient<Stream> {
                 return Err(Error::BadAuthSock {
                     path: path.display().to_string(),
                     source: err,
-                })
+                });
             }
             Err(err) => {
                 return Err(Error::Connect {
                     path: path.display().to_string(),
                     source: err,
-                })
+                });
             }
             Ok(stream) => stream,
         };

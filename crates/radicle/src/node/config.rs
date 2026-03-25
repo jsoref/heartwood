@@ -22,7 +22,7 @@ pub type ProtocolVersion = u8;
 pub mod seeds {
     use std::{str::FromStr, sync::LazyLock};
 
-    use cyphernet::addr::{tor::OnionAddrV3, HostName, NetAddr};
+    use cyphernet::addr::{HostName, NetAddr, tor::OnionAddrV3};
 
     use super::{ConnectAddress, NodeId, PeerAddr};
 
@@ -767,7 +767,7 @@ wrapper!(
 #[allow(clippy::unwrap_used)]
 mod test {
     use super::{DefaultSeedingPolicy, Scope};
-    use crate::node::{policy, Alias};
+    use crate::node::{Alias, policy};
     use serde_json::json;
 
     #[test]

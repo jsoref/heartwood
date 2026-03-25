@@ -32,7 +32,9 @@ pub(crate) enum BlockTarget {
 }
 
 #[derive(Debug, Error)]
-#[error("invalid repository or node specified (RID parsing failed with: '{repo}', NID parsing failed with: '{node}'))")]
+#[error(
+    "invalid repository or node specified (RID parsing failed with: '{repo}', NID parsing failed with: '{node}'))"
+)]
 pub(crate) struct BlockTargetParseError {
     repo: radicle::identity::IdError,
     node: radicle::crypto::PublicKeyError,
@@ -62,7 +64,9 @@ impl std::fmt::Display for BlockTarget {
 }
 
 #[derive(Debug, thiserror::Error)]
-#[error("invalid Node ID specified (Node ID parsing failed with: '{nid}', DID parsing failed with: '{did}'))")]
+#[error(
+    "invalid Node ID specified (Node ID parsing failed with: '{nid}', DID parsing failed with: '{did}'))"
+)]
 pub(crate) struct NodeIdParseError {
     did: radicle::identity::did::DidError,
     nid: radicle::crypto::PublicKeyError,

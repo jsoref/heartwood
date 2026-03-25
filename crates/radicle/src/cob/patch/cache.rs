@@ -712,7 +712,7 @@ mod tests {
 
     use crate::cob::cache::{Store, Update, Write};
     use crate::cob::thread::{Comment, Thread};
-    use crate::cob::{migrate, Author, Title};
+    use crate::cob::{Author, Title, migrate};
     use crate::patch::{
         ByRevision, MergeTarget, Patch, PatchCounts, PatchId, Revision, RevisionId, State, Status,
     };

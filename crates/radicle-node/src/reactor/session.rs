@@ -256,7 +256,7 @@ impl Session for TcpStream {
 }
 
 mod impl_noise {
-    use cyphernet::encrypt::noise::{error::NoiseError as Error, NoiseState as Noise};
+    use cyphernet::encrypt::noise::{NoiseState as Noise, error::NoiseError as Error};
     use cyphernet::{Digest, Ecdh};
 
     use super::*;

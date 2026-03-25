@@ -19,23 +19,23 @@ use radicle_signals::Signal;
 use thiserror::Error;
 
 use radicle::node;
+use radicle::node::Event;
+use radicle::node::UserAgent;
 use radicle::node::address;
 use radicle::node::address::Store as _;
 use radicle::node::notifications;
 use radicle::node::policy::config as policy;
-use radicle::node::Event;
-use radicle::node::UserAgent;
 use radicle::profile::Home;
-use radicle::{cob, git, storage, Storage};
+use radicle::{Storage, cob, git, storage};
 
 use crate::control;
-use crate::node::{routing, NodeId};
+use crate::node::{NodeId, routing};
 use crate::reactor;
 use crate::reactor::Reactor;
 use crate::service::gossip;
 use crate::wire::Wire;
 use crate::worker;
-use crate::{service, LocalTime};
+use crate::{LocalTime, service};
 
 pub use handle::Error as HandleError;
 pub use handle::Handle;
@@ -282,22 +282,24 @@ impl Runtime {
             || control::listen(listener, handle)
         });
 
-        let _signals = thread::spawn(&self.id, "signals", move || loop {
-            use radicle::node::Handle as _;
+        let _signals = thread::spawn(&self.id, "signals", move || {
+            loop {
+                use radicle::node::Handle as _;
 
-            match self.signals.recv() {
-                Ok(Signal::Terminate | Signal::Interrupt) => {
-                    log::info!(target: "node", "Termination signal received; shutting down..");
-                    self.handle.shutdown().ok();
-                    break;
-                }
-                Ok(Signal::Hangup) => {
-                    log::debug!(target: "node", "Hangup signal (SIGHUP) received; ignoring..");
-                }
-                Ok(Signal::WindowChanged) => {}
-                Err(e) => {
-                    log::warn!(target: "node", "Signal notifications channel error: {e}");
-                    break;
+                match self.signals.recv() {
+                    Ok(Signal::Terminate | Signal::Interrupt) => {
+                        log::info!(target: "node", "Termination signal received; shutting down..");
+                        self.handle.shutdown().ok();
+                        break;
+                    }
+                    Ok(Signal::Hangup) => {
+                        log::debug!(target: "node", "Hangup signal (SIGHUP) received; ignoring..");
+                    }
+                    Ok(Signal::WindowChanged) => {}
+                    Err(e) => {
+                        log::warn!(target: "node", "Signal notifications channel error: {e}");
+                        break;
+                    }
                 }
             }
         });

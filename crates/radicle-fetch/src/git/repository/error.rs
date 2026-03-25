@@ -1,7 +1,6 @@
 use radicle::git::{
-    self,
+    self, Oid,
     fmt::{Namespaced, Qualified},
-    Oid,
 };
 use thiserror::Error;
 

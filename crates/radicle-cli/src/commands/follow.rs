@@ -1,7 +1,7 @@
 mod args;
 
-use radicle::node::{policy, Alias, AliasStore, Handle, NodeId};
-use radicle::{prelude::*, Node};
+use radicle::node::{Alias, AliasStore, Handle, NodeId, policy};
+use radicle::{Node, prelude::*};
 use radicle_term::{Element as _, Paint, Table};
 
 use crate::terminal as term;

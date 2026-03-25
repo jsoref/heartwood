@@ -1,8 +1,8 @@
 use qcheck_macros::quickcheck;
 
+use crate::fetcher::QueuedFetch;
 use crate::fetcher::state::Enqueue;
 use crate::fetcher::test::queue::helpers::*;
-use crate::fetcher::QueuedFetch;
 
 #[quickcheck]
 fn ordering(count: u8) -> bool {

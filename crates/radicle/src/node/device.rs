@@ -2,9 +2,9 @@ use std::fmt;
 use std::ops::Deref;
 
 use crypto::{
+    Signature,
     signature::{Keypair, KeypairRef, Signer, Verifier},
     ssh::ExtendedSignature,
-    Signature,
 };
 
 use crate::crypto;
