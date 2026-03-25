@@ -434,7 +434,7 @@ where
     }
 
     /// Drain outgoing messages sent from this peer to the remote peer.
-    pub fn messages(&mut self, remote: NodeId) -> impl Iterator<Item = Message> {
+    pub fn messages(&mut self, remote: NodeId) -> impl Iterator<Item = Message> + use<S, G> {
         let mut msgs = Vec::new();
 
         Service::outbox(&mut self.service)

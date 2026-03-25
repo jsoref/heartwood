@@ -10,9 +10,9 @@ use crate::fetcher::{FetchConfig, FetcherState};
 #[test]
 fn cannot_dequeue_while_node_at_capacity() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
     let refs_2 = helpers::gen_refs(3);
     let timeout_2 = Duration::from_secs(42);
 
@@ -48,11 +48,11 @@ fn cannot_dequeue_while_node_at_capacity() {
 #[test]
 fn maintains_fifo_order() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
-    let repo_3: RepoId = arbitrary::gen(1);
-    let repo_4: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
+    let repo_3: RepoId = arbitrary::r#gen(1);
+    let repo_4: RepoId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
@@ -105,7 +105,7 @@ fn maintains_fifo_order() {
 #[test]
 fn empty_queue_returns_none() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
 
     assert!(state.dequeue(&node_a).is_none());
 }

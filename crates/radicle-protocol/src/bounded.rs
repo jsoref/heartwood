@@ -268,8 +268,10 @@ unsafe impl<const N: usize> bytes::BufMut for BoundedVec<u8, N> {
 
         debug_assert!(len <= N);
 
-        // Addition will not overflow since the sum is at most the capacity.
-        self.v.set_len(len);
+        // SAFETY: See bounds check above.
+        unsafe {
+            self.v.set_len(len);
+        }
     }
 
     fn chunk_mut(&mut self) -> &mut bytes::buf::UninitSlice {

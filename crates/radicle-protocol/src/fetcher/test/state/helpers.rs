@@ -13,6 +13,6 @@ pub fn config(max_concurrency: usize, max_queue_size: usize) -> Config {
 }
 
 pub fn gen_refs(count: usize) -> RefsToFetch {
-    let refs: Vec<_> = (0..count).map(|_| arbitrary::gen(1)).collect();
+    let refs: Vec<_> = (0..count).map(|_| arbitrary::r#gen(1)).collect();
     refs.into()
 }

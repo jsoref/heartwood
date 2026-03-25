@@ -638,7 +638,7 @@ mod tests {
     use crate::node::device::Device;
     use crate::profile::env;
     use crate::test::arbitrary;
-    use crate::test::arbitrary::gen;
+    use crate::test::arbitrary::r#gen;
     use crate::test::storage::MockRepository;
 
     /// An object that can be used to create and sign changes.
@@ -700,7 +700,7 @@ mod tests {
     #[test]
     fn test_redact_comment() {
         let radicle::test::setup::Node { signer, .. } = radicle::test::setup::Node::default();
-        let repo = gen::<MockRepository>(1);
+        let repo = r#gen::<MockRepository>(1);
         let mut alice = Actor::new(signer);
 
         let a0 = alice.comment("First comment", None);
@@ -725,7 +725,7 @@ mod tests {
     #[test]
     fn test_edit_comment() {
         let mut alice = Actor::<MockSigner>::default();
-        let repo = gen::<MockRepository>(1);
+        let repo = r#gen::<MockRepository>(1);
 
         let c0 = alice.comment("Hello world!", None);
         let c1 = alice.edit(c0.id(), "Goodbye world.");
@@ -747,7 +747,7 @@ mod tests {
         let alice = MockSigner::default();
         let bob = MockSigner::default();
         let eve = MockSigner::default();
-        let repo = gen::<MockRepository>(1);
+        let repo = r#gen::<MockRepository>(1);
         let time = env::local_time();
 
         let mut a = test::history::<Thread, _>(
@@ -812,7 +812,7 @@ mod tests {
 
     #[test]
     fn test_duplicate_comments() {
-        let repo = gen::<MockRepository>(1);
+        let repo = r#gen::<MockRepository>(1);
         let alice = MockSigner::default();
         let bob = MockSigner::default();
         let time = env::local_time();
@@ -856,7 +856,7 @@ mod tests {
 
     #[quickcheck]
     fn prop_ordering(timestamp: u64) {
-        let repo = gen::<MockRepository>(1);
+        let repo = r#gen::<MockRepository>(1);
         let alice = MockSigner::default();
         let bob = MockSigner::default();
         let timestamp = Timestamp::from_secs(timestamp);
@@ -915,7 +915,7 @@ mod tests {
 
     #[test]
     fn test_comment_redact_missing() {
-        let repo = gen::<MockRepository>(1);
+        let repo = r#gen::<MockRepository>(1);
         let mut alice = Actor::<MockSigner>::default();
         let mut t = Thread::default();
         let id = arbitrary::entry_id();
@@ -925,7 +925,7 @@ mod tests {
 
     #[test]
     fn test_comment_edit_missing() {
-        let repo = gen::<MockRepository>(1);
+        let repo = r#gen::<MockRepository>(1);
         let mut alice = Actor::<MockSigner>::default();
         let mut t = Thread::default();
         let id = arbitrary::entry_id();
@@ -935,7 +935,7 @@ mod tests {
 
     #[test]
     fn test_comment_edit_redacted() {
-        let repo = gen::<MockRepository>(1);
+        let repo = r#gen::<MockRepository>(1);
         let mut alice = Actor::<MockSigner>::default();
 
         let a1 = alice.comment("Hi", None);

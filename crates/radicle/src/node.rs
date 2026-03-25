@@ -488,7 +488,7 @@ impl Address {
         self.0.port
     }
 
-    pub fn display_compact(&self) -> impl Display {
+    pub fn display_compact(&self) -> impl Display + use<> {
         let host = match self.host() {
             HostName::Ip(IpAddr::V4(ip)) => ip.to_string(),
             HostName::Ip(IpAddr::V6(ip)) => format!("[{ip}]"),
@@ -1420,11 +1420,11 @@ pub(crate) mod properties {
 
     impl AliasInput {
         pub fn new() -> Self {
-            let short = arbitrary::gen::<Alias>(0);
+            let short = arbitrary::r#gen::<Alias>(0);
             let long = {
                 // Ensure we have a second, unique alias
                 let mut a = short.to_string();
-                a.push_str(arbitrary::gen::<Alias>(1).as_str());
+                a.push_str(arbitrary::r#gen::<Alias>(1).as_str());
                 Alias::new(a)
             };
             Self {

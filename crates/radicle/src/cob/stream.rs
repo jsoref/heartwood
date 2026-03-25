@@ -177,7 +177,7 @@ mod tests {
     use crate::cob::change::Storage as _;
     use crate::crypto::test::signer::MockSigner;
     use crate::test::arbitrary;
-    use crate::test::arbitrary::gen;
+    use crate::test::arbitrary::r#gen;
     use crate::{cob, test};
 
     use super::*;
@@ -188,13 +188,13 @@ mod tests {
 
     fn gen_ops(repo: &git::raw::Repository, signer: &MockSigner) -> Vec<cob::Entry> {
         // Number of ops
-        let n = gen::<u8>(1).clamp(1, 10);
+        let n = r#gen::<u8>(1).clamp(1, 10);
         let mut entries = Vec::with_capacity(n.into());
 
         let mut parent = None;
         for _ in 0..n {
             // Number of actions in this op
-            let m = gen::<u8>(1).clamp(1, 3);
+            let m = r#gen::<u8>(1).clamp(1, 3);
             let contents = create_contents((0..m).map(|_| arbitrary::alphanumeric(1)));
             let entry = create_entry(repo, signer, contents, parent);
             parent = Some(entry.id);
@@ -383,7 +383,7 @@ mod tests {
             until: ops.last().unwrap().id.into(),
         };
         let n = ops.len() - 1;
-        let (x, y) = gen::<(usize, usize)>(1);
+        let (x, y) = r#gen::<(usize, usize)>(1);
         let x = x.clamp(0, n);
         let y = y.clamp(0, n);
         let (from, until) = if x <= y {

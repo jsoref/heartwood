@@ -304,7 +304,7 @@ impl<'a, 'b> QuorumFinder<'a, 'b> {
         }
     }
 
-    fn find_merge_bases(&mut self) -> ControlFlow<(), impl Iterator<Item = (Oid, Oid)>> {
+    fn find_merge_bases(&mut self) -> ControlFlow<(), impl Iterator<Item = (Oid, Oid)> + use<>> {
         match self.commit_quorum.next_candidate() {
             Some(candidate) => ControlFlow::Continue(candidate),
             None => ControlFlow::Break(()),

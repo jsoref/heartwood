@@ -978,7 +978,7 @@ mod test {
     use crate::storage::git::Storage;
     use crate::storage::{ReadStorage as _, RemoteId, WriteStorage as _};
     use crate::test::arbitrary;
-    use crate::test::arbitrary::gen;
+    use crate::test::arbitrary::r#gen;
     use crate::test::fixtures;
 
     use super::*;
@@ -988,7 +988,7 @@ mod test {
     fn test_duplicate_dids() {
         let delegate = Device::mock_from_seed([0xff; 32]);
         let did = Did::from(delegate.public_key());
-        let mut doc = RawDoc::new(gen::<Project>(1), vec![did], 1, Visibility::Public);
+        let mut doc = RawDoc::new(r#gen::<Project>(1), vec![did], 1, Visibility::Public);
         doc.delegate(did);
         let doc = doc.verified().unwrap();
         assert!(doc.delegates().len() == 1, "Duplicate DID was not removed");
@@ -998,11 +998,11 @@ mod test {
     #[test]
     fn test_max_delegates() {
         // Generate more than the max delegates
-        let delegates = (0..MAX_DELEGATES + 1).map(gen).collect::<Vec<Did>>();
+        let delegates = (0..MAX_DELEGATES + 1).map(r#gen).collect::<Vec<Did>>();
 
         // A document with max delegates will be fine
         let doc = RawDoc::new(
-            gen::<Project>(1),
+            r#gen::<Project>(1),
             delegates[0..MAX_DELEGATES].into(),
             1,
             Visibility::Public,
@@ -1010,7 +1010,7 @@ mod test {
         assert_matches!(doc.verified(), Ok(_));
 
         // A document that exceeds max delegates should fail
-        let doc = RawDoc::new(gen::<Project>(1), delegates, 1, Visibility::Public);
+        let doc = RawDoc::new(r#gen::<Project>(1), delegates, 1, Visibility::Public);
         assert_matches!(doc.verified(), Err(DocError::Delegates(DelegatesError(_))));
     }
 
@@ -1149,8 +1149,8 @@ mod test {
     fn test_not_found() {
         let tempdir = tempfile::tempdir().unwrap();
         let storage = Storage::open(tempdir.path().join("storage"), fixtures::user()).unwrap();
-        let remote = arbitrary::gen::<RemoteId>(1);
-        let proj = arbitrary::gen::<RepoId>(1);
+        let remote = arbitrary::r#gen::<RemoteId>(1);
+        let proj = arbitrary::r#gen::<RepoId>(1);
         let repo = storage.create(proj).unwrap();
         let oid = git::raw::Oid::from_str("2d52a53ce5e4f141148a5f770cfd3ead2d6a45b8").unwrap();
 

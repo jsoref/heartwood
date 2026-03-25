@@ -186,8 +186,8 @@ mod test {
         let mut db = Database::memory().unwrap();
         let oid = arbitrary::oid();
 
-        let repo = arbitrary::gen::<RepoId>(1);
-        let namespace = arbitrary::gen::<NodeId>(1);
+        let repo = arbitrary::r#gen::<RepoId>(1);
+        let namespace = arbitrary::r#gen::<NodeId>(1);
         let refname1 = qualified!("refs/heads/master");
         let refname2 = qualified!("refs/heads/main");
         let timestamp = LocalTime::now();
@@ -212,8 +212,8 @@ mod test {
         let mut db = Database::memory().unwrap();
         let oid = arbitrary::oid();
 
-        let repo = arbitrary::gen::<RepoId>(1);
-        let namespace = arbitrary::gen::<NodeId>(1);
+        let repo = arbitrary::r#gen::<RepoId>(1);
+        let namespace = arbitrary::r#gen::<NodeId>(1);
         let refname = qualified!("refs/heads/master");
         let timestamp = LocalTime::now();
 
@@ -232,8 +232,8 @@ mod test {
 
         assert_ne!(oid1, oid2);
 
-        let repo = arbitrary::gen::<RepoId>(1);
-        let namespace = arbitrary::gen::<NodeId>(1);
+        let repo = arbitrary::r#gen::<RepoId>(1);
+        let namespace = arbitrary::r#gen::<NodeId>(1);
         let refname = qualified!("refs/heads/master");
         let mut timestamp = LocalTime::now();
 

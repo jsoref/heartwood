@@ -1026,7 +1026,7 @@ mod tests {
 
     #[test]
     fn test_rule_validate_success() {
-        let doc = arbitrary::gen::<Doc>(1);
+        let doc = arbitrary::r#gen::<Doc>(1);
         let delegates = Allowed::Set(doc.delegates().as_ref().clone());
         let threshold = doc.majority();
 
@@ -1041,7 +1041,7 @@ mod tests {
 
     #[test]
     fn test_rule_validate_failures() {
-        let doc = arbitrary::gen::<Doc>(1);
+        let doc = arbitrary::r#gen::<Doc>(1);
         let pattern = pattern(qualified_pattern!("refs/heads/main"));
 
         assert!(matches!(

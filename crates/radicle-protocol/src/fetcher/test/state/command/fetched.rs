@@ -8,8 +8,8 @@ use crate::fetcher::{FetchConfig, FetcherState};
 #[test]
 fn complete_single_ongoing() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
     let refs_1 = helpers::gen_refs(2);
     let config = FetchConfig::default();
 
@@ -39,10 +39,10 @@ fn complete_single_ongoing() {
 #[test]
 fn complete_then_dequeue_fifo() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
-    let repo_3: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
+    let repo_3: RepoId = arbitrary::r#gen(1);
     let refs_2 = helpers::gen_refs(1);
     let config = FetchConfig::default();
 
@@ -85,10 +85,10 @@ fn complete_then_dequeue_fifo() {
 #[test]
 fn complete_one_of_multiple() {
     let mut state = FetcherState::new(helpers::config(3, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
-    let repo_3: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
+    let repo_3: RepoId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
@@ -124,8 +124,8 @@ fn complete_one_of_multiple() {
 #[test]
 fn non_existent_returns_not_found() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
 
     let event = state.fetched(command::Fetched {
         from: node_a,

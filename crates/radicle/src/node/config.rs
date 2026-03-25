@@ -718,7 +718,7 @@ impl From<LimitGossipMaxAge> for LocalDuration {
 ///   - `Deserialize`
 ///   - `From<$name> for $type`, i.e. can convert back into the original type
 macro_rules! wrapper {
-    ($name:ident, $type:ty, $default:expr $(, $derive:ty)*) => {
+    ($name:ident, $type:ty, $default:expr_2021 $(, $derive:ty)*) => {
         #[derive(Clone, Debug, Deserialize, Display, Serialize, From $(, $derive)*)]
         #[display("{0}")]
         #[serde(transparent)]

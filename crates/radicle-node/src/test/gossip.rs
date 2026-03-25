@@ -3,7 +3,7 @@ use std::str::FromStr;
 use radicle::node;
 use radicle::node::device::Device;
 use radicle::node::UserAgent;
-use radicle::test::fixtures::gen;
+use radicle::test::fixtures::r#gen;
 
 use crate::test::arbitrary;
 use crate::{
@@ -35,7 +35,7 @@ pub fn messages(count: usize, now: LocalTime, delta: LocalDuration) -> Vec<Messa
                 version: PROTOCOL_VERSION,
                 features: node::Features::SEED,
                 timestamp: time.into(),
-                alias: node::Alias::new(gen::string(5)),
+                alias: node::Alias::new(r#gen::string(5)),
                 addresses: None.into(),
                 nonce: 0,
                 agent: UserAgent::from_str("/radicle:test/").unwrap(),

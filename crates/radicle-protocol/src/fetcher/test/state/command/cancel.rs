@@ -8,8 +8,8 @@ use crate::fetcher::{ActiveFetch, FetchConfig, FetcherState};
 #[test]
 fn single_ongoing() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
     let refs_1 = helpers::gen_refs(1);
     let config = FetchConfig::default();
 
@@ -47,10 +47,10 @@ fn single_ongoing() {
 #[test]
 fn ongoing_and_queued() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
-    let repo_3: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
+    let repo_3: RepoId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
@@ -91,7 +91,7 @@ fn ongoing_and_queued() {
 #[test]
 fn non_existent_returns_unexpected() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_unknown: NodeId = arbitrary::gen(1);
+    let node_unknown: NodeId = arbitrary::r#gen(1);
 
     let event = state.cancel(command::Cancel { from: node_unknown });
 
@@ -101,10 +101,10 @@ fn non_existent_returns_unexpected() {
 #[test]
 fn cancellation_is_isolated() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let node_b: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let node_b: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     state.fetch(command::Fetch {

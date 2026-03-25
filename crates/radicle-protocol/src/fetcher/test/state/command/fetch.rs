@@ -11,8 +11,8 @@ use crate::fetcher::{FetchConfig, RefsToFetch};
 #[test]
 fn fetch_start_first_fetch_for_node() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
     let refs_1 = helpers::gen_refs(2);
     let config = FetchConfig::default();
 
@@ -44,9 +44,9 @@ fn fetch_start_first_fetch_for_node() {
 #[test]
 fn fetch_different_repo_same_node_within_capacity() {
     let mut state = FetcherState::new(helpers::config(2, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     let event1 = state.fetch(command::Fetch {
@@ -72,9 +72,9 @@ fn fetch_different_repo_same_node_within_capacity() {
 #[test]
 fn fetch_same_repo_different_nodes_queues_second() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let node_b: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let node_b: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
     let refs_1 = helpers::gen_refs(1);
     let config = FetchConfig::default();
 
@@ -106,8 +106,8 @@ fn fetch_same_repo_different_nodes_queues_second() {
 #[test]
 fn fetch_duplicate_returns_already_fetching() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
     let refs_1 = helpers::gen_refs(2);
     let config = FetchConfig::default();
 
@@ -137,8 +137,8 @@ fn fetch_duplicate_returns_already_fetching() {
 #[test]
 fn fetch_same_repo_different_refs_enqueues() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
     let refs_1 = helpers::gen_refs(1);
     let refs_2 = helpers::gen_refs(2);
     let config = FetchConfig::default();
@@ -169,9 +169,9 @@ fn fetch_same_repo_different_refs_enqueues() {
 #[test]
 fn fetch_at_capacity_enqueues() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     state.fetch(command::Fetch {
@@ -202,11 +202,11 @@ fn fetch_at_capacity_enqueues() {
 #[test]
 fn fetch_queue_rejected_capacity_reached() {
     let mut state = FetcherState::new(helpers::config(1, 2));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
-    let repo_3: RepoId = arbitrary::gen(1);
-    let repo_4: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
+    let repo_3: RepoId = arbitrary::r#gen(1);
+    let repo_4: RepoId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     // Fill concurrency
@@ -255,9 +255,9 @@ fn fetch_queue_rejected_capacity_reached() {
 #[test]
 fn fetch_queue_merges_already_queued() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
     let refs_2a = helpers::gen_refs(1);
     let refs_2b = helpers::gen_refs(1);
     let config = FetchConfig::default();
@@ -315,9 +315,9 @@ fn fetch_queue_merges_already_queued() {
 #[test]
 fn fetch_queue_merge_empty_refs_fetches_all() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
     let refs_2 = helpers::gen_refs(2);
     let config = FetchConfig::default();
 
@@ -357,9 +357,9 @@ fn fetch_queue_merge_empty_refs_fetches_all() {
 #[test]
 fn fetch_queue_merge_takes_longer_timeout() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
     let short_timeout = Duration::from_secs(10);
     let long_timeout = Duration::from_secs(60);
     let config = FetchConfig::default();
@@ -399,8 +399,8 @@ fn fetch_queue_merge_takes_longer_timeout() {
 #[test]
 fn fetch_after_previous_completed() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
     let refs_1 = helpers::gen_refs(1);
     let config = FetchConfig::default();
 

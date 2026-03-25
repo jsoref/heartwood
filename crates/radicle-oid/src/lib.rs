@@ -108,7 +108,7 @@ impl Oid {
     /// See also [`::git2::Oid::is_zero`].
     pub fn is_zero(&self) -> bool {
         match self {
-            Oid::Sha1(ref array) => array.iter().all(|b| *b == 0),
+            Oid::Sha1(array) => array.iter().all(|b| *b == 0),
         }
     }
 }
@@ -116,7 +116,7 @@ impl Oid {
 impl AsRef<[u8]> for Oid {
     fn as_ref(&self) -> &[u8] {
         match self {
-            Oid::Sha1(ref array) => array,
+            Oid::Sha1(array) => array,
         }
     }
 }

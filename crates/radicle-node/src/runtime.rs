@@ -318,7 +318,8 @@ impl Runtime {
 
     #[cfg(all(feature = "systemd", target_os = "linux"))]
     fn receive_listener() -> Option<UnixListener> {
-        let fd = match radicle_systemd::listen::fd("control") {
+        // SAFETY: When `fd` is called, no other threads are spawned (yet).
+        let fd = match unsafe { radicle_systemd::listen::fd("control") } {
             Ok(Some(fd)) => fd,
             Ok(None) => return None,
             Err(err) => {

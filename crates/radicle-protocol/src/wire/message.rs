@@ -443,11 +443,11 @@ mod tests {
     #[test]
     fn test_refs_ann_max_size() {
         let signer = Device::mock();
-        let refs: [RefsAt; REF_REMOTE_LIMIT] = arbitrary::gen(1);
+        let refs: [RefsAt; REF_REMOTE_LIMIT] = arbitrary::r#gen(1);
         let ann = AnnouncementMessage::Refs(RefsAnnouncement {
-            rid: arbitrary::gen(1),
+            rid: arbitrary::r#gen(1),
             refs: BoundedVec::collect_from(&mut refs.into_iter()),
-            timestamp: arbitrary::gen(1),
+            timestamp: arbitrary::r#gen(1),
         });
         let ann = ann.signed(&signer);
         let msg = Message::Announcement(ann);
@@ -459,10 +459,10 @@ mod tests {
     #[test]
     fn test_inv_ann_max_size() {
         let signer = Device::mock();
-        let inv: [RepoId; INVENTORY_LIMIT] = arbitrary::gen(1);
+        let inv: [RepoId; INVENTORY_LIMIT] = arbitrary::r#gen(1);
         let ann = AnnouncementMessage::Inventory(InventoryAnnouncement {
             inventory: BoundedVec::collect_from(&mut inv.into_iter()),
-            timestamp: arbitrary::gen(1),
+            timestamp: arbitrary::r#gen(1),
         });
         let ann = ann.signed(&signer);
         let msg = Message::Announcement(ann);
@@ -474,14 +474,14 @@ mod tests {
     #[test]
     fn test_node_ann_max_size() {
         let signer = Device::mock();
-        let addrs: [Address; ADDRESS_LIMIT] = arbitrary::gen(1);
+        let addrs: [Address; ADDRESS_LIMIT] = arbitrary::r#gen(1);
         let alias = ['@'; radicle::node::MAX_ALIAS_LENGTH];
         let ann = AnnouncementMessage::Node(NodeAnnouncement {
             version: 1,
             features: Default::default(),
             alias: radicle::node::Alias::new(String::from_iter(alias)),
             addresses: BoundedVec::collect_from(&mut addrs.into_iter()),
-            timestamp: arbitrary::gen(1),
+            timestamp: arbitrary::r#gen(1),
             nonce: u64::MAX,
             agent: UserAgent::default(),
         });
@@ -539,7 +539,7 @@ mod tests {
         }
 
         qcheck::QuickCheck::new()
-            .gen(qcheck::Gen::new(16))
+            .r#gen(qcheck::Gen::new(16))
             .quickcheck(property as fn(items: Vec<Message>));
     }
 

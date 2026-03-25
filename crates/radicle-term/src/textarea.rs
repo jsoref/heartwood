@@ -30,7 +30,7 @@ impl TextArea {
     }
 
     /// Get the lines of text in this text area.
-    pub fn lines(&self) -> impl Iterator<Item = String> {
+    pub fn lines(&self) -> impl Iterator<Item = String> + use<> {
         let mut lines: Vec<String> = Vec::new();
         let mut fenced = false;
 

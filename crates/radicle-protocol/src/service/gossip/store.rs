@@ -389,8 +389,8 @@ mod test {
     #[test]
     fn test_announced() {
         let mut db = Database::memory().unwrap();
-        let nid = arbitrary::gen::<NodeId>(1);
-        let rid = arbitrary::gen::<RepoId>(1);
+        let nid = arbitrary::r#gen::<NodeId>(1);
+        let rid = arbitrary::r#gen::<RepoId>(1);
         let timestamp = LocalTime::now().into();
         let signer = Device::mock();
         let refs = AnnouncementMessage::Refs(RefsAnnouncement {

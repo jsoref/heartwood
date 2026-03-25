@@ -1080,8 +1080,8 @@ mod test {
         let test::setup::NodeWithRepo { node, repo, .. } = test::setup::NodeWithRepo::default();
         let mut issues = Cache::no_cache(&*repo).unwrap();
 
-        let assignee = Did::from(arbitrary::gen::<ActorId>(1));
-        let assignee_two = Did::from(arbitrary::gen::<ActorId>(1));
+        let assignee = Did::from(arbitrary::r#gen::<ActorId>(1));
+        let assignee_two = Did::from(arbitrary::r#gen::<ActorId>(1));
         let issue = issues
             .create(
                 cob::Title::new("My first issue").unwrap(),
@@ -1119,8 +1119,8 @@ mod test {
         let test::setup::NodeWithRepo { node, repo, .. } = test::setup::NodeWithRepo::default();
         let mut issues = Cache::no_cache(&*repo).unwrap();
 
-        let assignee = Did::from(arbitrary::gen::<ActorId>(1));
-        let assignee_two = Did::from(arbitrary::gen::<ActorId>(1));
+        let assignee = Did::from(arbitrary::r#gen::<ActorId>(1));
+        let assignee_two = Did::from(arbitrary::r#gen::<ActorId>(1));
         let mut issue = issues
             .create(
                 cob::Title::new("My first issue").unwrap(),
@@ -1218,8 +1218,8 @@ mod test {
         let test::setup::NodeWithRepo { node, repo, .. } = test::setup::NodeWithRepo::default();
         let mut issues = Cache::no_cache(&*repo).unwrap();
 
-        let assignee = Did::from(arbitrary::gen::<ActorId>(1));
-        let assignee_two = Did::from(arbitrary::gen::<ActorId>(1));
+        let assignee = Did::from(arbitrary::r#gen::<ActorId>(1));
+        let assignee_two = Did::from(arbitrary::r#gen::<ActorId>(1));
         let mut issue = issues
             .create(
                 cob::Title::new("My first issue").unwrap(),

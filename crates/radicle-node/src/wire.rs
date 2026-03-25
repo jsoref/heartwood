@@ -1297,9 +1297,9 @@ mod test {
             }
         }
 
-        let rid = radicle::test::arbitrary::gen(1);
-        let pk = radicle::test::arbitrary::gen(1);
-        let sig: [u8; 64] = radicle::test::arbitrary::gen(1);
+        let rid = radicle::test::arbitrary::r#gen(1);
+        let pk = radicle::test::arbitrary::r#gen(1);
+        let sig: [u8; 64] = radicle::test::arbitrary::r#gen(1);
 
         // Message with extension.
         let mut stream = Vec::new();

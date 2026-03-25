@@ -289,7 +289,7 @@ mod test {
 
     #[test]
     fn test_can_update_crefs() {
-        let raw = arbitrary::gen::<RawDoc>(1);
+        let raw = arbitrary::r#gen::<RawDoc>(1);
         let raw = super::payload(
             raw,
             [PayloadUpsert {
@@ -310,7 +310,7 @@ mod test {
 
     #[test]
     fn test_cannot_include_default_branch_rule() {
-        let raw = arbitrary::gen::<RawDoc>(1);
+        let raw = arbitrary::r#gen::<RawDoc>(1);
         let branch = git::fmt::Qualified::from(git::fmt::lit::refs_heads(
             raw.project().unwrap().default_branch(),
         ));
@@ -343,7 +343,7 @@ mod test {
 
     #[test]
     fn test_default_branch_rule_exists_after_verification() {
-        let raw = arbitrary::gen::<RawDoc>(1);
+        let raw = arbitrary::r#gen::<RawDoc>(1);
         let branch = git::fmt::Qualified::from(git::fmt::lit::refs_heads(
             raw.project().unwrap().default_branch(),
         ));

@@ -431,7 +431,7 @@ impl Profile {
 
     /// Returns the routing store, with SQLite
     /// configuration from [`Self::config`] applied.
-    pub fn routing(&self) -> Result<impl node::routing::Store, node::db::Error> {
+    pub fn routing(&self) -> Result<impl node::routing::Store + use<>, node::db::Error> {
         self.home.routing(self.config.node.database)
     }
 }
@@ -721,7 +721,7 @@ impl Home {
     pub fn addresses(
         &self,
         config: node::db::config::Config,
-    ) -> Result<impl node::address::Store, node::db::Error> {
+    ) -> Result<impl node::address::Store + use<>, node::db::Error> {
         self.database_mut(config)
     }
 
@@ -729,7 +729,7 @@ impl Home {
     pub fn routing(
         &self,
         config: node::db::config::Config,
-    ) -> Result<impl node::routing::Store, node::db::Error> {
+    ) -> Result<impl node::routing::Store + use<>, node::db::Error> {
         self.database(config)
     }
 
@@ -737,7 +737,7 @@ impl Home {
     pub fn routing_mut(
         &self,
         config: node::db::config::Config,
-    ) -> Result<impl node::routing::Store, node::db::Error> {
+    ) -> Result<impl node::routing::Store + use<>, node::db::Error> {
         self.database_mut(config)
     }
 

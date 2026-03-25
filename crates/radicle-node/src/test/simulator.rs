@@ -666,7 +666,7 @@ where
                                     canonical: fetch::UpdatedCanonicalRefs::default(),
                                     namespaces: HashSet::new(),
                                     clone: true,
-                                    doc: arbitrary::gen(1),
+                                    doc: arbitrary::r#gen(1),
                                 })),
                             ),
                         },

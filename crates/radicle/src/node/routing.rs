@@ -357,8 +357,8 @@ mod test {
 
     #[test]
     fn test_insert_duplicate() {
-        let id = arbitrary::gen::<RepoId>(1);
-        let node = arbitrary::gen::<NodeId>(1);
+        let id = arbitrary::r#gen::<RepoId>(1);
+        let node = arbitrary::r#gen::<NodeId>(1);
         let mut db = database(":memory:");
 
         assert_eq!(
@@ -377,8 +377,8 @@ mod test {
 
     #[test]
     fn test_insert_existing_updated_time() {
-        let id = arbitrary::gen::<RepoId>(1);
-        let node = arbitrary::gen::<NodeId>(1);
+        let id = arbitrary::r#gen::<RepoId>(1);
+        let node = arbitrary::r#gen::<NodeId>(1);
         let mut db = database(":memory:");
 
         assert_eq!(
@@ -398,9 +398,9 @@ mod test {
 
     #[test]
     fn test_update_existing_multi() {
-        let id1 = arbitrary::gen::<RepoId>(1);
-        let id2 = arbitrary::gen::<RepoId>(1);
-        let node = arbitrary::gen::<NodeId>(1);
+        let id1 = arbitrary::r#gen::<RepoId>(1);
+        let id2 = arbitrary::r#gen::<RepoId>(1);
+        let node = arbitrary::r#gen::<NodeId>(1);
         let mut db = database(":memory:");
 
         assert_eq!(
@@ -427,8 +427,8 @@ mod test {
 
     #[test]
     fn test_remove_redundant() {
-        let id = arbitrary::gen::<RepoId>(1);
-        let node = arbitrary::gen::<NodeId>(1);
+        let id = arbitrary::r#gen::<RepoId>(1);
+        let node = arbitrary::r#gen::<NodeId>(1);
         let mut db = database(":memory:");
 
         assert_eq!(
@@ -441,10 +441,10 @@ mod test {
 
     #[test]
     fn test_remove_many() {
-        let id1 = arbitrary::gen::<RepoId>(1);
-        let id2 = arbitrary::gen::<RepoId>(1);
-        let id3 = arbitrary::gen::<RepoId>(1);
-        let node = arbitrary::gen::<NodeId>(1);
+        let id1 = arbitrary::r#gen::<RepoId>(1);
+        let id2 = arbitrary::r#gen::<RepoId>(1);
+        let id3 = arbitrary::r#gen::<RepoId>(1);
+        let node = arbitrary::r#gen::<NodeId>(1);
         let mut db = database(":memory:");
 
         db.add_inventory([&id1, &id2, &id3], node, Timestamp::EPOCH)
@@ -459,7 +459,7 @@ mod test {
     fn test_len() {
         let mut db = database(":memory:");
         let ids = arbitrary::vec::<RepoId>(10);
-        let node = arbitrary::gen(1);
+        let node = arbitrary::r#gen(1);
 
         db.add_inventory(&ids, node, LocalTime::now().into())
             .unwrap();
@@ -490,7 +490,7 @@ mod test {
                 .unwrap();
         }
 
-        let pruned = db.prune(now.into(), None, &arbitrary::gen(1)).unwrap();
+        let pruned = db.prune(now.into(), None, &arbitrary::r#gen(1)).unwrap();
         assert_eq!(pruned, ids.len() * nodes.len());
 
         for id in &ids {
@@ -503,7 +503,7 @@ mod test {
 
     #[test]
     fn test_count() {
-        let id = arbitrary::gen::<RepoId>(1);
+        let id = arbitrary::r#gen::<RepoId>(1);
         let nodes = arbitrary::set::<NodeId>(5..10);
         let mut db = database(":memory:");
 

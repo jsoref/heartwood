@@ -8,11 +8,11 @@ use crate::fetcher::{FetchConfig, FetcherState};
 #[test]
 fn interleaved_operations() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let node_b: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
-    let repo_3: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let node_b: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
+    let repo_3: RepoId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     // fetch(A, r1)
@@ -65,9 +65,9 @@ fn interleaved_operations() {
 #[test]
 fn fetched_then_cancel() {
     let mut state = FetcherState::new(helpers::config(2, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     state.fetch(command::Fetch {

@@ -8,9 +8,9 @@ use crate::fetcher::{FetchConfig, FetcherState};
 #[test]
 fn queue_integrity_after_merge() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
     let refs_2a = helpers::gen_refs(1);
     let refs_2b = helpers::gen_refs(1);
     let config = FetchConfig::default();

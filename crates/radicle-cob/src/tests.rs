@@ -22,7 +22,7 @@ mod git {
     #[test]
     fn roundtrip() {
         let storage = test::Storage::new();
-        let signer = gen::<MockSigner>(1);
+        let signer = r#gen::<MockSigner>(1);
         let terry = test::Person::new(&storage, "terry", *signer.public_key()).unwrap();
         let proj = test::Project::new(&storage, "discworld", *signer.public_key()).unwrap();
         let proj = test::RemoteProject {
@@ -56,7 +56,7 @@ mod git {
     #[test]
     fn list_cobs() {
         let storage = test::Storage::new();
-        let signer = gen::<MockSigner>(1);
+        let signer = r#gen::<MockSigner>(1);
         let terry = test::Person::new(&storage, "terry", *signer.public_key()).unwrap();
         let proj = test::Project::new(&storage, "discworld", *signer.public_key()).unwrap();
         let proj = test::RemoteProject {
@@ -108,7 +108,7 @@ mod git {
     #[test]
     fn update_cob() {
         let storage = test::Storage::new();
-        let signer = gen::<MockSigner>(1);
+        let signer = r#gen::<MockSigner>(1);
         let terry = test::Person::new(&storage, "terry", *signer.public_key()).unwrap();
         let proj = test::Project::new(&storage, "discworld", *signer.public_key()).unwrap();
         let proj = test::RemoteProject {
@@ -163,9 +163,9 @@ mod git {
     #[test]
     fn traverse_cobs() {
         let storage = test::Storage::new();
-        let neil_signer = gen::<MockSigner>(2);
+        let neil_signer = r#gen::<MockSigner>(2);
         let neil = test::Person::new(&storage, "gaiman", *neil_signer.public_key()).unwrap();
-        let terry_signer = gen::<MockSigner>(1);
+        let terry_signer = r#gen::<MockSigner>(1);
         let terry = test::Person::new(&storage, "pratchett", *terry_signer.public_key()).unwrap();
         let proj = test::Project::new(&storage, "discworld", *terry_signer.public_key()).unwrap();
         let terry_proj = test::RemoteProject {
@@ -264,10 +264,10 @@ mod git {
         Ok(())
     }
 
-    fn gen<T: Arbitrary>(size: usize) -> T {
-        let mut gen = qcheck::Gen::new(size);
+    fn r#gen<T: Arbitrary>(size: usize) -> T {
+        let mut r#gen = qcheck::Gen::new(size);
 
-        T::arbitrary(&mut gen)
+        T::arbitrary(&mut r#gen)
     }
 }
 

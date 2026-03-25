@@ -92,7 +92,7 @@ impl NodeAnnouncement {
         .expect("proof-of-work output vector is a valid length");
 
         // Calculate the number of leading zero bits in the output vector.
-        if let Some((zero_bytes, non_zero)) = output.iter().enumerate().find(|(_, &x)| x != 0) {
+        if let Some((zero_bytes, non_zero)) = output.iter().enumerate().find(|&(_, &x)| x != 0) {
             zero_bytes as u32 * 8 + non_zero.leading_zeros()
         } else {
             output.len() as u32 * 8
@@ -703,7 +703,7 @@ mod tests {
         }
 
         let msg: Message = AnnouncementMessage::from(RefsAnnouncement {
-            rid: arbitrary::gen(1),
+            rid: arbitrary::r#gen(1),
             refs,
             timestamp: LocalTime::now().into(),
         })

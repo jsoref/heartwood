@@ -22,7 +22,7 @@ use radicle::node::Link;
 use radicle::node::{ConnectOptions, DEFAULT_TIMEOUT};
 use radicle::storage::refs::RefsAt;
 use radicle::storage::RefUpdate;
-use radicle::test::arbitrary::gen;
+use radicle::test::arbitrary::r#gen;
 use radicle::test::storage::MockRepository;
 use radicle_protocol::bounded::BoundedVec;
 
@@ -78,7 +78,7 @@ pub static TEST_CASES: LazyLock<usize> = LazyLock::new(|| {
 
 #[test]
 fn test_inventory_decode() {
-    let inventory: Vec<RepoId> = arbitrary::gen(300);
+    let inventory: Vec<RepoId> = arbitrary::r#gen(300);
     let timestamp: Timestamp = LocalTime::now().into();
 
     let mut buf = Vec::new();
@@ -414,7 +414,7 @@ fn test_inventory_pruning() {
 #[test]
 fn test_seeding() {
     let mut alice = Peer::new("alice", [7, 7, 7, 7]);
-    let proj_id: identity::RepoId = test::arbitrary::gen(1);
+    let proj_id: identity::RepoId = test::arbitrary::r#gen(1);
 
     let (cmd, receiver) = Command::seed(proj_id, policy::Scope::default());
     alice.command(cmd);
@@ -722,7 +722,7 @@ fn test_refs_announcement_relay_public() {
         .elapse(service::GOSSIP_INTERVAL);
 
     // Pretend Alice cloned Bob's repos.
-    let repos = gen::<[MockRepository; 3]>(1);
+    let repos = r#gen::<[MockRepository; 3]>(1);
     for (i, mut repo) in repos.into_iter().enumerate() {
         repo.doc.doc = repo
             .doc
@@ -803,7 +803,7 @@ fn test_refs_announcement_relay_private() {
 
     // The first repo is not visible to Eve.
     let repo1 = {
-        let mut repo = gen::<MockRepository>(1);
+        let mut repo = r#gen::<MockRepository>(1);
         repo.doc.doc = repo
             .doc
             .doc
@@ -817,7 +817,7 @@ fn test_refs_announcement_relay_private() {
 
     // The second repo is visible to Eve.
     let repo2 = {
-        let mut repo = gen::<MockRepository>(1);
+        let mut repo = r#gen::<MockRepository>(1);
         repo.doc.doc = repo
             .doc
             .doc
@@ -960,7 +960,7 @@ fn test_refs_announcement_no_subscribe() {
     let mut alice = Peer::with_storage("alice", [7, 7, 7, 7], storage);
     let bob = Peer::new("bob", [8, 8, 8, 8]);
     let eve = Peer::new("eve", [9, 9, 9, 9]);
-    let id = arbitrary::gen(1);
+    let id = arbitrary::r#gen(1);
 
     alice.seed(&id, policy::Scope::All).unwrap();
     alice.connect_to(&bob);
@@ -1406,7 +1406,7 @@ fn test_maintain_connections_failed_attempt() {
 fn test_seed_repo_subscribe() {
     let mut alice = Peer::new("alice", [7, 7, 7, 7]);
     let bob = Peer::new("bob", [8, 8, 8, 8]);
-    let rid = arbitrary::gen::<RepoId>(1);
+    let rid = arbitrary::r#gen::<RepoId>(1);
 
     alice.connect_to(&bob);
     let (cmd, recv) = Command::seed(rid, policy::Scope::default());
@@ -1425,7 +1425,7 @@ fn test_seed_repo_subscribe() {
 
 #[test]
 fn test_fetch_missing_inventory_on_gossip() {
-    let rid = arbitrary::gen::<RepoId>(1);
+    let rid = arbitrary::r#gen::<RepoId>(1);
     let mut alice = Peer::new("alice", [7, 7, 7, 7]);
     let bob = Peer::new("bob", [8, 8, 8, 8]);
     let now = LocalTime::now();
@@ -1450,7 +1450,7 @@ fn test_fetch_missing_inventory_on_gossip() {
 
 #[test]
 fn test_fetch_missing_inventory_on_schedule() {
-    let rid = arbitrary::gen::<RepoId>(1);
+    let rid = arbitrary::r#gen::<RepoId>(1);
     let mut alice = Peer::new("alice", [7, 7, 7, 7]);
     let bob = Peer::new("bob", [8, 8, 8, 8]);
     let now = LocalTime::now();
@@ -1596,7 +1596,7 @@ fn test_queued_fetch_from_ann_same_rid() {
             canonical: fetch::UpdatedCanonicalRefs::default(),
             namespaces: [carol.id()].into_iter().collect(),
             clone: false,
-            doc: arbitrary::gen(1),
+            doc: arbitrary::r#gen(1),
         }),
     );
     // Now the 1st fetch is done, but the 2nd and 3rd fetches are redundant.
@@ -1646,7 +1646,7 @@ fn test_queued_fetch_from_command_same_rid() {
     alice.elapse(KEEP_ALIVE_DELTA);
 
     // Finish the 1st fetch.
-    alice.fetched(rid1, nid, Ok(arbitrary::gen::<fetch::FetchResult>(1)));
+    alice.fetched(rid1, nid, Ok(arbitrary::r#gen::<fetch::FetchResult>(1)));
     // Now the 1st fetch is done, the 2nd fetch is dequeued.
     let (rid, nid) = alice.fetches().next().unwrap();
     assert_eq!(rid, rid1);
@@ -1656,7 +1656,7 @@ fn test_queued_fetch_from_command_same_rid() {
     assert_matches!(alice.fetches().next(), None);
 
     // Finish the 2nd fetch.
-    alice.fetched(rid1, nid, Ok(arbitrary::gen::<fetch::FetchResult>(1)));
+    alice.fetched(rid1, nid, Ok(arbitrary::r#gen::<fetch::FetchResult>(1)));
     // Now the 2nd fetch is done, the 3rd fetch is dequeued.
     assert_matches!(alice.fetches().next(), Some((rid, nid)) if rid == rid1 && peers.remove(&nid));
     // All fetches were initiated.
@@ -1909,7 +1909,7 @@ fn prop_inventory_exchange_dense() {
         }
     }
     qcheck::QuickCheck::new()
-        .gen(qcheck::Gen::new(5))
+        .r#gen(qcheck::Gen::new(5))
         .tests(20)
         .quickcheck(property as fn(MockStorage, MockStorage, MockStorage));
 }
@@ -1933,7 +1933,7 @@ fn test_announcement_message_amplification() {
                 failure_rate: 0.,
             },
         );
-        let rid = gen::<RepoId>(1);
+        let rid = r#gen::<RepoId>(1);
 
         // Make sure the node gossip intervals are not accidentally synchronized.
         alice.elapse(LocalDuration::from_millis(
@@ -2030,7 +2030,7 @@ fn test_announcement_message_amplification() {
         alice
             .storage_mut()
             .repos
-            .insert(rid, gen::<MockRepository>(1));
+            .insert(rid, r#gen::<MockRepository>(1));
         let (cmd, _) = Command::add_inventory(rid);
         alice.command(cmd);
 

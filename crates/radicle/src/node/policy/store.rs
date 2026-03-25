@@ -467,7 +467,7 @@ mod test {
 
     #[test]
     fn test_follow_and_unfollow_node() {
-        let id = arbitrary::gen::<NodeId>(1);
+        let id = arbitrary::r#gen::<NodeId>(1);
         let mut db = Store::open(":memory:").unwrap();
         let eve = Alias::new("eve");
 
@@ -480,7 +480,7 @@ mod test {
 
     #[test]
     fn test_seed_and_unseed_repo() {
-        let id = arbitrary::gen::<RepoId>(1);
+        let id = arbitrary::r#gen::<RepoId>(1);
         let mut db = Store::open(":memory:").unwrap();
 
         assert!(db.seed(&id, Scope::All).unwrap());
@@ -520,7 +520,7 @@ mod test {
 
     #[test]
     fn test_update_alias() {
-        let id = arbitrary::gen::<NodeId>(1);
+        let id = arbitrary::r#gen::<NodeId>(1);
         let mut db = Store::open(":memory:").unwrap();
 
         assert!(db.follow(&id, Some(&Alias::new("eve"))).unwrap());
@@ -540,7 +540,7 @@ mod test {
 
     #[test]
     fn test_update_scope() {
-        let id = arbitrary::gen::<RepoId>(1);
+        let id = arbitrary::r#gen::<RepoId>(1);
         let mut db = Store::open(":memory:").unwrap();
 
         assert!(db.seed(&id, Scope::All).unwrap());
@@ -557,7 +557,7 @@ mod test {
 
     #[test]
     fn test_repo_policy() {
-        let id = arbitrary::gen::<RepoId>(1);
+        let id = arbitrary::r#gen::<RepoId>(1);
         let mut db = Store::open(":memory:").unwrap();
 
         assert!(db.seed(&id, Scope::All).unwrap());
@@ -569,7 +569,7 @@ mod test {
 
     #[test]
     fn test_node_policy() {
-        let id = arbitrary::gen::<NodeId>(1);
+        let id = arbitrary::r#gen::<NodeId>(1);
         let mut db = Store::open(":memory:").unwrap();
 
         assert!(db.follow(&id, None).unwrap());

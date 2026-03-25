@@ -156,7 +156,7 @@ impl CommitQuorum {
     ///
     /// A [`MergeBase`] should be calculated for each, and these should be
     /// recorded using [`CommitQuorum::found_merge_bases`].
-    pub fn next_candidate(&mut self) -> Option<impl Iterator<Item = (Oid, Oid)>> {
+    pub fn next_candidate(&mut self) -> Option<impl Iterator<Item = (Oid, Oid)> + use<>> {
         self.voting.next_candidate()
     }
 

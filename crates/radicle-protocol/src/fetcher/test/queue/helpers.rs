@@ -12,7 +12,7 @@ pub fn create_queue(capacity: usize) -> Queue {
 
 pub fn create_fetch() -> QueuedFetch {
     QueuedFetch {
-        rid: arbitrary::gen(1),
+        rid: arbitrary::r#gen(1),
         refs: RefsToFetch::All,
         config: FetchConfig::default(),
     }

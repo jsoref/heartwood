@@ -70,7 +70,7 @@ impl PaintTarget {
 
 #[macro_export]
 macro_rules! info {
-    ($writer:expr; $($arg:tt)*) => ({
+    ($writer:expr_2021; $($arg:tt)*) => ({
         writeln!($writer, $($arg)*).ok();
     });
     ($($arg:tt)*) => ({
@@ -81,7 +81,7 @@ macro_rules! info {
 #[macro_export]
 macro_rules! success {
     // Pattern when a writer is provided.
-    ($writer:expr; $($arg:tt)*) => ({
+    ($writer:expr_2021; $($arg:tt)*) => ({
         $crate::io::success_args($writer, format_args!($($arg)*));
     });
     // Pattern without writer.
@@ -100,7 +100,7 @@ macro_rules! tip {
 #[macro_export]
 macro_rules! notice {
     // Pattern when a writer is provided.
-    ($writer:expr; $($arg:tt)*) => ({
+    ($writer:expr_2021; $($arg:tt)*) => ({
         $crate::io::notice_args($writer, format_args!($($arg)*));
     });
     ($($arg:tt)*) => ({

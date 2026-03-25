@@ -342,8 +342,8 @@ mod tests {
     fn test_seed_unseed() {
         let tmp = tempfile::tempdir().unwrap();
         let socket = tmp.path().join("node.sock");
-        let proj = test::arbitrary::gen::<RepoId>(1);
-        let peer = test::arbitrary::gen::<NodeId>(1);
+        let proj = test::arbitrary::r#gen::<RepoId>(1);
+        let peer = test::arbitrary::r#gen::<NodeId>(1);
         let listener = UnixListener::bind(&socket).unwrap();
         let mut handle = Node::new(&socket);
 

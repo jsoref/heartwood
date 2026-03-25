@@ -14,7 +14,7 @@ fn zero_timeout_accepted() {
     let mut queue = create_queue(10);
     let config = FetchConfig::default().with_timeout(Duration::ZERO);
     let item = QueuedFetch {
-        rid: arbitrary::gen(1),
+        rid: arbitrary::r#gen(1),
         refs: RefsToFetch::All,
         config,
     };
@@ -26,7 +26,7 @@ fn max_timeout_accepted() {
     let mut queue = create_queue(10);
     let config = FetchConfig::default().with_timeout(Duration::MAX);
     let item = QueuedFetch {
-        rid: arbitrary::gen(1),
+        rid: arbitrary::r#gen(1),
         refs: RefsToFetch::All,
         config,
     };
@@ -35,7 +35,7 @@ fn max_timeout_accepted() {
 
 #[test]
 fn empty_refs_items_can_be_equal() {
-    let rid: RepoId = arbitrary::gen(1);
+    let rid: RepoId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     let item1 = QueuedFetch {
@@ -56,9 +56,9 @@ fn empty_refs_items_can_be_equal() {
 fn merge_preserves_position_in_queue() {
     let mut queue = create_queue(10);
 
-    let rid_first: RepoId = arbitrary::gen(1);
-    let rid_second: RepoId = arbitrary::gen(2);
-    let rid_third: RepoId = arbitrary::gen(3);
+    let rid_first: RepoId = arbitrary::r#gen(1);
+    let rid_second: RepoId = arbitrary::r#gen(2);
+    let rid_third: RepoId = arbitrary::r#gen(3);
     let config = FetchConfig::default();
 
     // Enqueue three items
@@ -81,7 +81,7 @@ fn merge_preserves_position_in_queue() {
     // Merge into the second item
     let result = queue.enqueue(QueuedFetch {
         rid: rid_second,
-        refs: vec![arbitrary::gen(1)].into(),
+        refs: vec![arbitrary::r#gen(1)].into(),
         config: config.with_timeout(Duration::from_secs(60)),
     });
     assert_eq!(result, Enqueue::Merged);

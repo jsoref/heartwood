@@ -223,7 +223,7 @@ impl ExternalCommand {
         exe
     }
 
-    fn display_exe(&self) -> impl Display {
+    fn display_exe(&self) -> impl Display + use<> {
         match self.exe().into_string() {
             Ok(exe) => exe,
             Err(exe) => format!("{exe:?}"),

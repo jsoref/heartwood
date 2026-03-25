@@ -244,7 +244,7 @@ pub fn populate(repo: &git::raw::Repository, scale: usize) -> Vec<git::fmt::Qual
 }
 
 /// Generate random fixtures.
-pub mod gen {
+pub mod r#gen {
     use super::*;
 
     /// Generate a random string of the given length.

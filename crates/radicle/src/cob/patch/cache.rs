@@ -732,8 +732,8 @@ mod tests {
     }
 
     fn revision() -> (RevisionId, Revision) {
-        let author = arbitrary::gen::<Did>(1);
-        let description = arbitrary::gen::<String>(1);
+        let author = arbitrary::r#gen::<Did>(1);
+        let description = arbitrary::r#gen::<String>(1);
         let base = arbitrary::oid();
         let oid = arbitrary::oid();
         let timestamp = env::local_time();
@@ -763,7 +763,7 @@ mod tests {
 
     #[test]
     fn test_is_empty() {
-        let repo = arbitrary::gen::<MockRepository>(1);
+        let repo = arbitrary::r#gen::<MockRepository>(1);
         let mut cache = memory(repo);
         assert!(cache.is_empty().unwrap());
 
@@ -791,12 +791,12 @@ mod tests {
 
     #[test]
     fn test_counts() {
-        let repo = arbitrary::gen::<MockRepository>(1);
+        let repo = arbitrary::r#gen::<MockRepository>(1);
         let mut cache = memory(repo);
-        let n_open = arbitrary::gen::<u8>(0);
-        let n_draft = arbitrary::gen::<u8>(1);
-        let n_archived = arbitrary::gen::<u8>(1);
-        let n_merged = arbitrary::gen::<u8>(1);
+        let n_open = arbitrary::r#gen::<u8>(0);
+        let n_draft = arbitrary::r#gen::<u8>(1);
+        let n_archived = arbitrary::r#gen::<u8>(1);
+        let n_merged = arbitrary::r#gen::<u8>(1);
         let open_ids = (0..n_open)
             .map(|_| PatchId::from(arbitrary::oid()))
             .collect::<BTreeSet<PatchId>>();
@@ -879,12 +879,12 @@ mod tests {
 
     #[test]
     fn test_get() {
-        let repo = arbitrary::gen::<MockRepository>(1);
+        let repo = arbitrary::r#gen::<MockRepository>(1);
         let mut cache = memory(repo);
-        let ids = (0..arbitrary::gen::<u8>(1))
+        let ids = (0..arbitrary::r#gen::<u8>(1))
             .map(|_| PatchId::from(arbitrary::oid()))
             .collect::<BTreeSet<PatchId>>();
-        let missing = (0..arbitrary::gen::<u8>(2))
+        let missing = (0..arbitrary::r#gen::<u8>(2))
             .filter_map(|_| {
                 let id = PatchId::from(arbitrary::oid());
                 (!ids.contains(&id)).then_some(id)
@@ -915,10 +915,10 @@ mod tests {
 
     #[test]
     fn test_find_by_revision() {
-        let repo = arbitrary::gen::<MockRepository>(1);
+        let repo = arbitrary::r#gen::<MockRepository>(1);
         let mut cache = memory(repo);
         let patch_id = PatchId::from(arbitrary::oid());
-        let revisions = (0..arbitrary::gen::<NonZeroU8>(1).into())
+        let revisions = (0..arbitrary::r#gen::<NonZeroU8>(1).into())
             .map(|_| revision())
             .collect::<BTreeMap<RevisionId, Revision>>();
         let (rev_id, rev) = revisions
@@ -957,9 +957,9 @@ mod tests {
 
     #[test]
     fn test_list() {
-        let repo = arbitrary::gen::<MockRepository>(1);
+        let repo = arbitrary::r#gen::<MockRepository>(1);
         let mut cache = memory(repo);
-        let ids = (0..arbitrary::gen::<u8>(1))
+        let ids = (0..arbitrary::r#gen::<u8>(1))
             .map(|_| PatchId::from(arbitrary::oid()))
             .collect::<BTreeSet<PatchId>>();
         let mut patches = Vec::with_capacity(ids.len());
@@ -988,9 +988,9 @@ mod tests {
 
     #[test]
     fn test_list_by_status() {
-        let repo = arbitrary::gen::<MockRepository>(1);
+        let repo = arbitrary::r#gen::<MockRepository>(1);
         let mut cache = memory(repo);
-        let ids = (0..arbitrary::gen::<u8>(1))
+        let ids = (0..arbitrary::r#gen::<u8>(1))
             .map(|_| PatchId::from(arbitrary::oid()))
             .collect::<BTreeSet<PatchId>>();
         let mut patches = Vec::with_capacity(ids.len());
@@ -1019,9 +1019,9 @@ mod tests {
 
     #[test]
     fn test_remove() {
-        let repo = arbitrary::gen::<MockRepository>(1);
+        let repo = arbitrary::r#gen::<MockRepository>(1);
         let mut cache = memory(repo);
-        let ids = (0..arbitrary::gen::<u8>(1))
+        let ids = (0..arbitrary::r#gen::<u8>(1))
             .map(|_| PatchId::from(arbitrary::oid()))
             .collect::<BTreeSet<PatchId>>();
 

@@ -545,7 +545,7 @@ mod test {
 
     #[test]
     fn all_nodes_are_candidates() {
-        let local = arbitrary::gen::<NodeId>(0);
+        let local = arbitrary::r#gen::<NodeId>(0);
         let replicas = ReplicationFactor::default();
         let seeds = arbitrary::set::<NodeId>(3..=6)
             .into_iter()
@@ -574,10 +574,10 @@ mod test {
 
     #[test]
     fn ignores_duplicates_and_local_node() {
-        let local = arbitrary::gen::<NodeId>(0);
+        let local = arbitrary::r#gen::<NodeId>(0);
         let replicas = ReplicationFactor::default();
-        let bob = arbitrary::gen::<NodeId>(1);
-        let eve = arbitrary::gen::<NodeId>(2);
+        let bob = arbitrary::r#gen::<NodeId>(1);
+        let eve = arbitrary::r#gen::<NodeId>(2);
         let seeds = [bob].into_iter().collect::<BTreeSet<_>>();
         let extra_candidates = vec![bob, local, eve];
         let config = FetcherConfig::public(seeds.clone(), replicas, local)
@@ -597,7 +597,7 @@ mod test {
 
     #[test]
     fn all_nodes_are_fetchable() {
-        let local = arbitrary::gen::<NodeId>(0);
+        let local = arbitrary::r#gen::<NodeId>(0);
         let replicas = ReplicationFactor::default();
         let seeds = arbitrary::set::<NodeId>(3..=6)
             .into_iter()
@@ -614,7 +614,7 @@ mod test {
             .collect::<Vec<_>>();
 
         while let Some(node) = fetcher.next_node() {
-            fetcher.ready_to_fetch(node, arbitrary::gen::<Address>(0));
+            fetcher.ready_to_fetch(node, arbitrary::r#gen::<Address>(0));
         }
 
         while let Some((node, _)) = fetcher.next_fetch() {
@@ -626,7 +626,7 @@ mod test {
 
     #[test]
     fn reaches_target_of_preferred_seeds() {
-        let local = arbitrary::gen::<NodeId>(0);
+        let local = arbitrary::r#gen::<NodeId>(0);
         let replicas = ReplicationFactor::default();
         let seeds = arbitrary::set::<NodeId>(3..=3)
             .into_iter()
@@ -640,7 +640,7 @@ mod test {
         let expected = seeds.into_iter().collect::<Vec<_>>();
 
         while let Some(node) = fetcher.next_node() {
-            fetcher.ready_to_fetch(node, arbitrary::gen::<Address>(0));
+            fetcher.ready_to_fetch(node, arbitrary::r#gen::<Address>(0));
 
             if let Some((node, _)) = fetcher.next_fetch() {
                 match fetcher.fetch_complete(
@@ -668,7 +668,7 @@ mod test {
 
     #[test]
     fn reaches_target_of_replicas() {
-        let local = arbitrary::gen::<NodeId>(0);
+        let local = arbitrary::r#gen::<NodeId>(0);
         let replicas = ReplicationFactor::must_reach(3);
         let seeds = arbitrary::set::<NodeId>(3..=3)
             .into_iter()
@@ -686,7 +686,7 @@ mod test {
             .collect::<Vec<_>>();
 
         while let Some(node) = fetcher.next_node() {
-            fetcher.ready_to_fetch(node, arbitrary::gen::<Address>(0));
+            fetcher.ready_to_fetch(node, arbitrary::r#gen::<Address>(0));
 
             if let Some((node, _)) = fetcher.next_fetch() {
                 if seeds.contains(&node) {
@@ -718,7 +718,7 @@ mod test {
 
     #[test]
     fn reaches_target_of_max_replicas() {
-        let local = arbitrary::gen::<NodeId>(0);
+        let local = arbitrary::r#gen::<NodeId>(0);
         let replicas = ReplicationFactor::range(1, 3);
         let candidates = arbitrary::set::<NodeId>(3..=3);
         let seeds = candidates.iter().take(3).copied().collect::<BTreeSet<_>>();
@@ -735,7 +735,7 @@ mod test {
             .collect::<Vec<_>>();
 
         while let Some(node) = fetcher.next_node() {
-            fetcher.ready_to_fetch(node, arbitrary::gen::<Address>(0));
+            fetcher.ready_to_fetch(node, arbitrary::r#gen::<Address>(0));
 
             if let Some((node, _)) = fetcher.next_fetch() {
                 if seeds.contains(&node) {
@@ -777,7 +777,7 @@ mod test {
 
     #[test]
     fn preferred_seeds_target_returned_over_replicas() {
-        let local = arbitrary::gen::<NodeId>(0);
+        let local = arbitrary::r#gen::<NodeId>(0);
         let replicas = ReplicationFactor::range(1, 3);
         let candidates = arbitrary::set::<NodeId>(3..=3);
         let seeds = candidates.into_iter().collect::<BTreeSet<_>>();
@@ -787,7 +787,7 @@ mod test {
         let mut result = Vec::with_capacity(seeds.len());
 
         while let Some(node) = fetcher.next_node() {
-            fetcher.ready_to_fetch(node, arbitrary::gen::<Address>(0));
+            fetcher.ready_to_fetch(node, arbitrary::r#gen::<Address>(0));
 
             if let Some((node, _)) = fetcher.next_fetch() {
                 match fetcher.fetch_complete(
@@ -815,7 +815,7 @@ mod test {
 
     #[test]
     fn could_not_reach_target() {
-        let local = arbitrary::gen::<NodeId>(0);
+        let local = arbitrary::r#gen::<NodeId>(0);
         let replicas = ReplicationFactor::must_reach(4);
         let candidates = arbitrary::set::<NodeId>(3..=3);
         let seeds = candidates.into_iter().collect::<BTreeSet<_>>();
@@ -824,7 +824,7 @@ mod test {
         let mut fetcher = Fetcher::new(config).expect("fetcher should be constructed correctly");
 
         while let Some(node) = fetcher.next_node() {
-            fetcher.ready_to_fetch(node, arbitrary::gen::<Address>(0));
+            fetcher.ready_to_fetch(node, arbitrary::r#gen::<Address>(0));
 
             if let Some((node, _)) = fetcher.next_fetch() {
                 fetcher.fetch_failed(node, "could not connect");

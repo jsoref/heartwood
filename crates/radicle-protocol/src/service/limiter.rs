@@ -159,7 +159,7 @@ mod test {
         let mut r = RateLimiter::default();
         let t = (3, 0.2); // Three tokens burst. One token every 5 seconds.
         let a = HostName::Dns(String::from("seed.radicle.example.com"));
-        let n = arbitrary::gen::<NodeId>(1);
+        let n = arbitrary::r#gen::<NodeId>(1);
         let n = Some(&n);
 
         assert_eq!(r.limit(a.clone(), n, &t, LocalTime::from_secs(0)), false); // Burst capacity
@@ -189,7 +189,7 @@ mod test {
     #[rustfmt::skip]
     fn test_limiter_multi() {
         let t = (1, 1.0); // One token per second. One token burst.
-        let n = arbitrary::gen::<NodeId>(1);
+        let n = arbitrary::r#gen::<NodeId>(1);
         let n = Some(&n);
         let mut r = RateLimiter::default();
         let addr1 = HostName::Dns(String::from("seed.radicle.example.com"));
@@ -210,7 +210,7 @@ mod test {
     fn test_limiter_different_rates() {
         let t1 = (1, 1.0); // One token per second. One token burst.
         let t2 = (2, 2.0); // Two tokens per second. Two token burst.
-        let n = arbitrary::gen::<NodeId>(1);
+        let n = arbitrary::r#gen::<NodeId>(1);
         let n = Some(&n);
         let mut r = RateLimiter::default();
         let addr1 = HostName::Dns(String::from("seed.radicle.example.com"));

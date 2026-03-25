@@ -39,7 +39,7 @@ where
         .extra
         .iter()
         .find_map(|kv| match kv {
-            (ref k, Some(v)) if k == "version" => {
+            (k, Some(v)) if k == "version" => {
                 let version = match v.as_str() {
                     "2" => 2,
                     "1" => 1,

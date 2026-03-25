@@ -20,20 +20,28 @@ const SD_LISTEN_FDS_START: RawFd = 3;
 ///  - <https://github.com/systemd/systemd/blob/v254/src/libsystemd/sd-daemon/sd-daemon.c>
 ///  - <https://0pointer.de/blog/projects/socket-activation.html>
 ///  - <https://0pointer.de/blog/projects/socket-activation2.html>
-pub fn fd(name: &str) -> Result<Option<RawFd>, VarError> {
-    let fd = match var(LISTEN_PID) {
+///
+/// # Safety
+///
+/// This function calls [`remove_var`] to remove the environment variables
+/// it interpreted in case it returns `Ok(Some(_))`. In this case, this
+/// function inherits the unsafe behavior of [`remove_var`].
+pub unsafe fn fd(name: &str) -> Result<Option<RawFd>, VarError> {
+    match var(LISTEN_PID) {
         Err(VarError::NotPresent) => Ok(None),
         Err(err) => Err(err),
         Ok(pid) if pid != id().to_string() => Ok(None),
         _ if var(LISTEN_FDS)? != "1" || var(LISTEN_FDNAMES).ok() != Some(name.to_string()) => {
             Ok(None)
         }
-        _ => Ok(Some(SD_LISTEN_FDS_START)),
-    };
+        _ => {
+            unsafe {
+                remove_var(LISTEN_PID);
+                remove_var(LISTEN_FDS);
+                remove_var(LISTEN_FDNAMES);
+            }
 
-    remove_var(LISTEN_PID);
-    remove_var(LISTEN_FDS);
-    remove_var(LISTEN_FDNAMES);
-
-    fd
+            Ok(Some(SD_LISTEN_FDS_START))
+        }
+    }
 }

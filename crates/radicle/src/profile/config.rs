@@ -380,7 +380,7 @@ impl RawConfig {
         let mut current = &mut self.0;
         for key in config_path.iter() {
             current = match current {
-                json::Value::Object(ref mut map) => {
+                json::Value::Object(map) => {
                     map.entry(key).or_insert_with(|| json::json!({}))
                 }
                 _ => {

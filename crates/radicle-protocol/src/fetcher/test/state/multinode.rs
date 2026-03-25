@@ -8,12 +8,12 @@ use crate::fetcher::{FetchConfig, FetcherState};
 #[test]
 fn independent_queues() {
     let mut state = FetcherState::new(helpers::config(1, 10));
-    let node_a: NodeId = arbitrary::gen(1);
-    let node_b: NodeId = arbitrary::gen(1);
-    let repo_a_active: RepoId = arbitrary::gen(1);
-    let repo_b_active: RepoId = arbitrary::gen(2);
-    let repo_a_queued: RepoId = arbitrary::gen(10);
-    let repo_b_queued: RepoId = arbitrary::gen(20);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let node_b: NodeId = arbitrary::r#gen(1);
+    let repo_a_active: RepoId = arbitrary::r#gen(1);
+    let repo_b_active: RepoId = arbitrary::r#gen(2);
+    let repo_a_queued: RepoId = arbitrary::r#gen(10);
+    let repo_b_queued: RepoId = arbitrary::r#gen(20);
     let fetch_config = FetchConfig::default();
 
     // Fill capacity for both nodes
@@ -66,8 +66,8 @@ fn high_count() {
     let config = FetchConfig::default();
 
     for i in 0..100 {
-        let node: NodeId = arbitrary::gen(i + 1);
-        let repo: RepoId = arbitrary::gen(i + 1);
+        let node: NodeId = arbitrary::r#gen(i + 1);
+        let repo: RepoId = arbitrary::r#gen(i + 1);
         let event = state.fetch(command::Fetch {
             from: node,
             rid: repo,

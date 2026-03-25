@@ -2999,7 +2999,7 @@ mod test {
     use crate::profile::env;
     use crate::test;
     use crate::test::arbitrary;
-    use crate::test::arbitrary::gen;
+    use crate::test::arbitrary::r#gen;
     use crate::test::storage::MockRepository;
 
     use cob::migrate;
@@ -3251,9 +3251,9 @@ mod test {
         let base = git::Oid::from_str("cb18e95ada2bb38aadd8e6cef0963ce37a87add3").unwrap();
         let oid = git::Oid::from_str("518d5069f94c03427f694bb494ac1cd7d1339380").unwrap();
         let mut alice = Actor::<MockSigner>::default();
-        let rid = gen::<RepoId>(1);
+        let rid = r#gen::<RepoId>(1);
         let doc = RawDoc::new(
-            gen::<Project>(1),
+            r#gen::<Project>(1),
             vec![alice.did()],
             1,
             identity::Visibility::Public,
@@ -3308,7 +3308,7 @@ mod test {
     fn test_revision_edit_redact() {
         let base = arbitrary::oid();
         let oid = arbitrary::oid();
-        let repo = gen::<MockRepository>(1);
+        let repo = r#gen::<MockRepository>(1);
         let time = env::local_time();
         let alice = MockSigner::default();
         let bob = MockSigner::default();
@@ -3370,7 +3370,7 @@ mod test {
         let base = git::Oid::from_str("cb18e95ada2bb38aadd8e6cef0963ce37a87add3").unwrap();
         let oid = git::Oid::from_str("518d5069f94c03427f694bb494ac1cd7d1339380").unwrap();
         let mut alice = Actor::<MockSigner>::default();
-        let repo = gen::<MockRepository>(1);
+        let repo = r#gen::<MockRepository>(1);
         let reaction = Reaction::new('👍').expect("failed to create a reaction");
 
         let a1 = alice.op::<Patch>([

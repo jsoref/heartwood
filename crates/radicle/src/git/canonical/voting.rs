@@ -66,7 +66,7 @@ impl CommitVoting {
     /// compared to the other commit to see what their common merge base is. The
     /// merge base is then recorded using [`MergeBase`] and is recorded using
     /// [`CommitVoting::found_merge_base`].
-    pub fn next_candidate(&mut self) -> Option<impl Iterator<Item = (Oid, Oid)>> {
+    pub fn next_candidate(&mut self) -> Option<impl Iterator<Item = (Oid, Oid)> + use<>> {
         self.candidates
             .pop()
             .map(|(oid, others)| others.into_iter().map(move |other| (oid, other)))

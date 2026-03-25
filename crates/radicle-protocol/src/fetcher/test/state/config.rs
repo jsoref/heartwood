@@ -8,11 +8,11 @@ use crate::fetcher::{FetchConfig, FetcherState};
 #[test]
 fn high_concurrency() {
     let mut state = FetcherState::new(helpers::config(100, 10));
-    let node_a: NodeId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     for i in 0..100 {
-        let repo: RepoId = arbitrary::gen(i + 1);
+        let repo: RepoId = arbitrary::r#gen(i + 1);
         let event = state.fetch(command::Fetch {
             from: node_a,
             rid: repo,
@@ -39,10 +39,10 @@ fn high_concurrency() {
 #[test]
 fn min_queue_size() {
     let mut state = FetcherState::new(helpers::config(1, 1));
-    let node_a: NodeId = arbitrary::gen(1);
-    let repo_1: RepoId = arbitrary::gen(1);
-    let repo_2: RepoId = arbitrary::gen(1);
-    let repo_3: RepoId = arbitrary::gen(1);
+    let node_a: NodeId = arbitrary::r#gen(1);
+    let repo_1: RepoId = arbitrary::r#gen(1);
+    let repo_2: RepoId = arbitrary::r#gen(1);
+    let repo_3: RepoId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     state.fetch(command::Fetch {

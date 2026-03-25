@@ -575,7 +575,7 @@ mod test {
 
     #[test]
     fn test_get_none() {
-        let alice = arbitrary::gen::<NodeId>(1);
+        let alice = arbitrary::r#gen::<NodeId>(1);
         let cache = Database::memory().unwrap();
         let result = cache.get(&alice).unwrap();
 
@@ -584,7 +584,7 @@ mod test {
 
     #[test]
     fn test_remove_nothing() {
-        let alice = arbitrary::gen::<NodeId>(1);
+        let alice = arbitrary::r#gen::<NodeId>(1);
         let mut cache = Database::memory().unwrap();
         let removed = cache.remove(&alice).unwrap();
 
@@ -593,7 +593,7 @@ mod test {
 
     #[test]
     fn test_alias() {
-        let alice = arbitrary::gen::<NodeId>(1);
+        let alice = arbitrary::r#gen::<NodeId>(1);
         let mut cache = Database::memory().unwrap();
         let features = node::Features::SEED;
         let timestamp = Timestamp::from(LocalTime::now());
@@ -632,7 +632,7 @@ mod test {
 
     #[test]
     fn test_insert_and_get() {
-        let alice = arbitrary::gen::<NodeId>(1);
+        let alice = arbitrary::r#gen::<NodeId>(1);
         let mut cache = Database::memory().unwrap();
         let version = 2;
         let features = node::Features::SEED;
@@ -672,7 +672,7 @@ mod test {
 
     #[test]
     fn test_insert_duplicate() {
-        let alice = arbitrary::gen::<NodeId>(1);
+        let alice = arbitrary::r#gen::<NodeId>(1);
         let mut cache = Database::memory().unwrap();
         let features = node::Features::SEED;
         let timestamp = LocalTime::now().into();
@@ -701,7 +701,7 @@ mod test {
 
     #[test]
     fn test_insert_and_update() {
-        let alice = arbitrary::gen::<NodeId>(1);
+        let alice = arbitrary::r#gen::<NodeId>(1);
         let mut cache = Database::memory().unwrap();
         let timestamp = LocalTime::now().into();
         let features = node::Features::SEED;
@@ -776,8 +776,8 @@ mod test {
 
     #[test]
     fn test_insert_and_remove() {
-        let alice = arbitrary::gen::<NodeId>(1);
-        let bob = arbitrary::gen::<NodeId>(1);
+        let alice = arbitrary::r#gen::<NodeId>(1);
+        let bob = arbitrary::r#gen::<NodeId>(1);
         let mut cache = Database::memory().unwrap();
         let timestamp = LocalTime::now().into();
         let ua = UserAgent::default();
@@ -868,8 +868,8 @@ mod test {
 
     #[test]
     fn test_disconnected() {
-        let alice = arbitrary::gen::<NodeId>(1);
-        let addr = arbitrary::gen::<Address>(1);
+        let alice = arbitrary::r#gen::<NodeId>(1);
+        let addr = arbitrary::r#gen::<Address>(1);
         let mut cache = Database::memory().unwrap();
         let features = node::Features::SEED;
         let timestamp = Timestamp::from(LocalTime::now());
@@ -909,16 +909,16 @@ mod test {
 
     #[test]
     fn test_disconnected_ban() {
-        let alice = arbitrary::gen::<NodeId>(1);
+        let alice = arbitrary::r#gen::<NodeId>(1);
         let ua = UserAgent::default();
         let ip1: net::Ipv4Addr = [8, 8, 8, 8].into();
         let ip2: net::Ipv4Addr = [9, 9, 9, 9].into();
-        let ka1 = arbitrary::gen::<KnownAddress>(1);
+        let ka1 = arbitrary::r#gen::<KnownAddress>(1);
         let ka1 = KnownAddress {
             addr: Address::from(NetAddr::new(ip1.into(), 8776)),
             ..ka1
         };
-        let ka2 = arbitrary::gen::<KnownAddress>(1);
+        let ka2 = arbitrary::r#gen::<KnownAddress>(1);
         let ka2 = KnownAddress {
             addr: Address::from(NetAddr::new(ip2.into(), 8776)),
             ..ka2
@@ -980,7 +980,7 @@ mod test {
         let features = node::Features::SEED;
         let agent = UserAgent::default();
         let timestamp = Timestamp::from(LocalTime::now());
-        let ka = arbitrary::gen::<KnownAddress>(1);
+        let ka = arbitrary::r#gen::<KnownAddress>(1);
 
         for id in short_ids {
             db.insert(id, 1, features, short, 16, &agent, timestamp, [ka.clone()])

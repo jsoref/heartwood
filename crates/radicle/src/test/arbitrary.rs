@@ -23,7 +23,7 @@ use crate::test::storage::{MockRepository, MockStorage};
 use crate::{cob, git};
 
 pub fn oid() -> storage::Oid {
-    let oid_bytes: [u8; 20] = gen(1);
+    let oid_bytes: [u8; 20] = r#gen(1);
     storage::Oid::from_sha1(oid_bytes)
 }
 
@@ -65,9 +65,9 @@ pub fn vec<T: Eq + Arbitrary>(size: usize) -> Vec<T> {
 }
 
 pub fn nonempty_storage(size: usize) -> MockStorage {
-    let mut storage = gen::<MockStorage>(size);
+    let mut storage = r#gen::<MockStorage>(size);
     for _ in 0..size {
-        let doc = gen::<DocAt>(1);
+        let doc = r#gen::<DocAt>(1);
         let id = RepoId::from(doc.blob);
         storage.repos.insert(
             id,
@@ -86,32 +86,32 @@ pub fn nonempty_storage(size: usize) -> MockStorage {
 pub fn alphanumeric(size: usize) -> String {
     let mut s = String::with_capacity(size);
     for _ in 0..size {
-        let choice = gen::<u8>(size).clamp(0, 3);
+        let choice = r#gen::<u8>(size).clamp(0, 3);
         let c = match choice {
             // Generate A-Z
-            0 => gen::<u8>(size).clamp(0x41, 0x5A),
+            0 => r#gen::<u8>(size).clamp(0x41, 0x5A),
             // Generate a-z
-            1 => gen::<u8>(size).clamp(0x61, 0x7A),
+            1 => r#gen::<u8>(size).clamp(0x61, 0x7A),
             // Generate 0-9
-            _ => gen::<u8>(size).clamp(0x30, 0x39),
+            _ => r#gen::<u8>(size).clamp(0x30, 0x39),
         };
         s.push(char::from(c));
     }
     s
 }
 
-pub fn gen<T: Arbitrary>(size: usize) -> T {
-    let mut gen = qcheck::Gen::new(size);
+pub fn r#gen<T: Arbitrary>(size: usize) -> T {
+    let mut r#gen = qcheck::Gen::new(size);
 
-    T::arbitrary(&mut gen)
+    T::arbitrary(&mut r#gen)
 }
 
 pub fn with_gen<T, F>(size: usize, f: F) -> T
 where
     F: FnOnce(&mut qcheck::Gen) -> T,
 {
-    let mut gen = qcheck::Gen::new(size);
-    f(&mut gen)
+    let mut r#gen = qcheck::Gen::new(size);
+    f(&mut r#gen)
 }
 
 impl Arbitrary for Did {

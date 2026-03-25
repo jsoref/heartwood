@@ -294,7 +294,7 @@ impl<T> Store<T> {
         &self,
         repo: &RepoId,
         order_by: &str,
-    ) -> Result<impl Iterator<Item = Result<Notification, Error>> + '_, Error> {
+    ) -> Result<impl Iterator<Item = Result<Notification, Error>> + '_ + use<'_, T>, Error> {
         let mut stmt = self.db.prepare(format!(
             "SELECT rowid, repo, ref, old, new, status, timestamp
              FROM `repository-notifications`
@@ -424,7 +424,7 @@ mod test {
     #[test]
     fn test_clear() {
         let mut db = Store::open(":memory:").unwrap();
-        let repo = arbitrary::gen::<RepoId>(1);
+        let repo = arbitrary::r#gen::<RepoId>(1);
         let old = arbitrary::oid();
         let time = LocalTime::from_millis(32188142);
         let master = arbitrary::oid();
@@ -447,8 +447,8 @@ mod test {
     #[test]
     fn test_counts_by_repo() {
         let mut db = Store::open(":memory:").unwrap();
-        let repo1 = arbitrary::gen::<RepoId>(1);
-        let repo2 = arbitrary::gen::<RepoId>(1);
+        let repo1 = arbitrary::r#gen::<RepoId>(1);
+        let repo2 = arbitrary::r#gen::<RepoId>(1);
         let oid = arbitrary::oid();
         let time = LocalTime::from_millis(32188142);
 
@@ -480,7 +480,7 @@ mod test {
 
     #[test]
     fn test_branch_notifications() {
-        let repo = arbitrary::gen::<RepoId>(1);
+        let repo = arbitrary::r#gen::<RepoId>(1);
         let old = arbitrary::oid();
         let master = arbitrary::oid();
         let other = arbitrary::oid();
@@ -558,7 +558,7 @@ mod test {
 
     #[test]
     fn test_notification_status() {
-        let repo = arbitrary::gen::<RepoId>(1);
+        let repo = arbitrary::r#gen::<RepoId>(1);
         let oid = arbitrary::oid();
         let time = LocalTime::from_millis(32188142);
         let mut db = Store::open(":memory:").unwrap();
@@ -600,7 +600,7 @@ mod test {
 
     #[test]
     fn test_duplicate_notifications() {
-        let repo = arbitrary::gen::<RepoId>(1);
+        let repo = arbitrary::r#gen::<RepoId>(1);
         let old = arbitrary::oid();
         let master1 = arbitrary::oid();
         let master2 = arbitrary::oid();
@@ -647,7 +647,7 @@ mod test {
 
     #[test]
     fn test_cob_notifications() {
-        let repo = arbitrary::gen::<RepoId>(1);
+        let repo = arbitrary::r#gen::<RepoId>(1);
         let old = arbitrary::oid();
         let new = arbitrary::oid();
         let timestamp = LocalTime::from_millis(32189874);

@@ -176,8 +176,8 @@ mod tests {
             .with_max_concurrency(NonZeroUsize::new(1).unwrap())
             .with_max_capacity(MaxQueueSize::new(NonZeroUsize::new(10).unwrap()));
         let mut service = FetcherService::<usize>::new(config);
-        let node = arbitrary::gen(1);
-        let repo = arbitrary::gen(1);
+        let node = arbitrary::r#gen(1);
+        let repo = arbitrary::r#gen(1);
         let refs_specific: Vec<RefsAt> = arbitrary::vec(2);
         let refs_all = vec![];
         let config = FetchConfig::default();

@@ -85,7 +85,9 @@ unsafe impl<const B: usize, D: wire::Decode> bytes::BufMut for Deserializer<B, D
     }
 
     unsafe fn advance_mut(&mut self, cnt: usize) {
-        self.unparsed.advance_mut(cnt);
+        unsafe {
+            self.unparsed.advance_mut(cnt);
+        }
     }
 
     fn chunk_mut(&mut self) -> &mut bytes::buf::UninitSlice {

@@ -284,7 +284,7 @@ impl EcSk for MemorySigner {
     where
         Self: Sized,
     {
-        let ms = Self::gen();
+        let ms = Self::r#gen();
         let pk = ms.public;
 
         (ms, pk)
@@ -356,7 +356,7 @@ impl MemorySigner {
     }
 
     /// Generate a new memory signer.
-    pub fn gen() -> Self {
+    pub fn r#gen() -> Self {
         let keypair = KeyPair::generate();
         let sk = keypair.sk;
 

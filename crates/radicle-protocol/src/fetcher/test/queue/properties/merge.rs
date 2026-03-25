@@ -32,7 +32,7 @@ fn same_rid_merges_anywhere_in_queue(max_size: MaxQueueSize, merge_index: usize)
     let target_index = merge_index % items.len();
     let same_rid_item = QueuedFetch {
         rid: items[target_index].rid,
-        refs: vec![arbitrary::gen(1)].into(),
+        refs: vec![arbitrary::r#gen(1)].into(),
         config: FetchConfig::default(),
     };
 
@@ -47,9 +47,9 @@ fn combines_refs(base_refs_count: u8, merge_refs_count: u8) -> bool {
     let mut queue = create_queue(10);
     let config = FetchConfig::default();
 
-    let rid: RepoId = arbitrary::gen(1);
-    let base_refs: Vec<RefsAt> = (0..base_refs_count).map(|_| arbitrary::gen(1)).collect();
-    let merge_refs: Vec<RefsAt> = (0..merge_refs_count).map(|_| arbitrary::gen(1)).collect();
+    let rid: RepoId = arbitrary::r#gen(1);
+    let base_refs: Vec<RefsAt> = (0..base_refs_count).map(|_| arbitrary::r#gen(1)).collect();
+    let merge_refs: Vec<RefsAt> = (0..merge_refs_count).map(|_| arbitrary::r#gen(1)).collect();
 
     let base_item = QueuedFetch {
         rid,
@@ -84,13 +84,13 @@ fn combines_refs(base_refs_count: u8, merge_refs_count: u8) -> bool {
 #[quickcheck]
 fn empty_refs_fetches_all() -> bool {
     let mut queue = create_queue(10);
-    let rid: RepoId = arbitrary::gen(1);
+    let rid: RepoId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     // First enqueue with specific refs
     let item_with_refs = QueuedFetch {
         rid,
-        refs: vec![arbitrary::gen(1), arbitrary::gen(1)].into(),
+        refs: vec![arbitrary::r#gen(1), arbitrary::r#gen(1)].into(),
         config,
     };
 
@@ -114,7 +114,7 @@ fn longer_timeout_preserved(short_secs: u16, long_secs: u16) -> bool {
     let long = Duration::from_secs(short_secs.max(long_secs) as u64);
     let config = FetchConfig::default();
     let mut queue = create_queue(10);
-    let rid: RepoId = arbitrary::gen(1);
+    let rid: RepoId = arbitrary::r#gen(1);
 
     let item_short = QueuedFetch {
         rid,
@@ -144,18 +144,18 @@ fn longer_timeout_preserved(short_secs: u16, long_secs: u16) -> bool {
 #[quickcheck]
 fn does_not_increase_queue_length() -> bool {
     let mut queue = create_queue(10);
-    let rid: RepoId = arbitrary::gen(1);
+    let rid: RepoId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     let item1 = QueuedFetch {
         rid,
-        refs: vec![arbitrary::gen(1)].into(),
+        refs: vec![arbitrary::r#gen(1)].into(),
         config: config.with_timeout(Duration::from_secs(30)),
     };
 
     let item2 = QueuedFetch {
         rid,
-        refs: vec![arbitrary::gen(1)].into(),
+        refs: vec![arbitrary::r#gen(1)].into(),
         config: config.with_timeout(Duration::from_secs(60)),
     };
 
@@ -175,7 +175,7 @@ fn different_rid_accepted(base_item: QueuedFetch) -> bool {
 
     // Item with different rid should be queued (not merged)
     let different_rid = QueuedFetch {
-        rid: arbitrary::gen(1),
+        rid: arbitrary::r#gen(1),
         ..base_item
     };
 
@@ -186,7 +186,7 @@ fn different_rid_accepted(base_item: QueuedFetch) -> bool {
 fn succeed_when_at_capacity() -> bool {
     // When queue is at capacity, merging with existing item should still work
     let mut queue = create_queue(2);
-    let rid: RepoId = arbitrary::gen(1);
+    let rid: RepoId = arbitrary::r#gen(1);
     let config = FetchConfig::default();
 
     let item1 = QueuedFetch {
@@ -196,14 +196,14 @@ fn succeed_when_at_capacity() -> bool {
     };
 
     let item2 = QueuedFetch {
-        rid: arbitrary::gen(1), // Different rid
+        rid: arbitrary::r#gen(1), // Different rid
         refs: RefsToFetch::All,
         config: config.with_timeout(Duration::from_secs(30)),
     };
 
     let merge_item = QueuedFetch {
         rid, // Same as item1
-        refs: vec![arbitrary::gen(1)].into(),
+        refs: vec![arbitrary::r#gen(1)].into(),
         config: config.with_timeout(Duration::from_secs(60)),
     };
 

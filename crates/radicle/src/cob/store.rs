@@ -344,7 +344,7 @@ where
     /// Return all objects.
     pub fn all(
         &self,
-    ) -> Result<impl ExactSizeIterator<Item = Result<(ObjectId, T), Error>> + 'a, Error> {
+    ) -> Result<impl ExactSizeIterator<Item = Result<(ObjectId, T), Error>> + use<'a, T, R>, Error> {
         let raw = cob::list::<T, _>(self.repo, self.type_name)?;
 
         Ok(raw.into_iter().map(|o| Ok((*o.id(), o.object))))
