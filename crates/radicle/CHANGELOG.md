@@ -15,6 +15,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## 0.23.0
+
+### Added
+
+- `radicle::node::config::Config` has a new required `fetch` field. Existing
+  struct literals must be updated to include this field.
+- `radicle::node::command::Command::Fetch` variant has a new
+  `signed_references_minimum_feature_level` field.
+- `radicle::storage::refs::sigrefs::write::Update::Changed` variant has a new
+  `level` field.
+- `radicle::storage::refs::sigrefs::write::Update::Unchanged` variant has a new
+  `verified` field.
+- `radicle::storage::git::Validation` has a new `InsufficientFeatureLevel`
+  variant.
+- `radicle::storage::SignRepository` trait has a new required method
+  `force_sign_refs`.
+
+### Changed
+
+- `radicle::storage::refs::sigrefs::write::SignedRefsWriter::new` now takes 5
+  parameters instead of 4.
+- `radicle::node::Handle::fetch` now takes 5 parameters instead of 4.
+
+### Removed
+
+- `radicle::storage::refs::sigrefs::write::Update::Unchanged` fields `commit`,
+  `refs`, and `signature` were removed.
+- `radicle::storage::refs::sigrefs::read::error::Verify::MissingIdentity`
+  variant was removed.
+- `radicle::storage::refs::sigrefs::write::error::Head` variants `Blob`, `Refs`,
+  `Signature`, and `MissingPath` were removed.
+- `radicle::storage::refs::sigrefs::git::committer` function was removed.
+- `radicle::storage::refs::sigrefs::git::Committer::from_env_or_else` and
+  `Committer::from_env` methods were removed.
+- `radicle::storage::refs::sigrefs::read::VerifiedCommit` methods `id`,
+  `signature`, `into_refs`, and `parent` were removed.
+- `radicle::storage::refs::RefsAt::load` method was removed.
+- `radicle::storage::refs::sigrefs::write::SignedRefsWriter::write` method was
+  removed.
+- `radicle::storage::refs::sigrefs::read::error::MissingIdentity` struct was
+  removed.
+- `radicle::storage::refs::SignedRefsAt` struct was removed.
+
+### Security
+
+- Loading `radicle::storage::refs::SignedRefs` from a repository protects
+  against replay attacks, graft attacks, and downgrade attacks.
+
 ## 0.22.0
 
 ### Added
