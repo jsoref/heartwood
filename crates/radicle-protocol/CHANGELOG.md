@@ -15,7 +15,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-## [Unreleased]
+## 0.7.0
+
+### Added
+
+- `radicle_protocol::fetcher::state::QueuedFetch` has a new required `config`
+  field. Existing struct literals must be updated to include this field.
+- `radicle_protocol::fetcher::state::command::Fetch` has a new required `config`
+  field. Existing struct literals must be updated to include this field.
+- `radicle_protocol::service::io::Io::Fetch` variant has a new `config` field.
+- `radicle_protocol::fetcher::state::event::Fetch::Started` variant has a new
+  `config` field.
+- `radicle_protocol::fetcher::state::event::Fetch::QueueAtCapacity` variant has
+  a new `config` field.
+- `radicle_protocol::worker::FetchRequest::Initiator` variant has a new `config`
+  field.
+- `radicle_protocol::service::command::Command::Fetch` tuple variant has a new
+  field at position 4.
+
+### Changed
+
+- `radicle_protocol::service::command::Command::fetch` now takes 4 parameters
+  instead of 3.
+
+### Removed
+
+- `radicle_protocol::fetcher::state::QueuedFetch` field `timeout` was removed.
+- `radicle_protocol::fetcher::state::command::Fetch` field `timeout` was
+  removed.
+- `radicle_protocol::fetcher::state::event::Fetch::Started` field `timeout` was
+  removed.
+- `radicle_protocol::fetcher::state::event::Fetch::QueueAtCapacity` field
+  `timeout` was removed.
+- `radicle_protocol::service::io::Io::Fetch` field `timeout` was removed.
+
+## 0.6.0
 
 ### Changed
 
