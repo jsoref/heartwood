@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## 0.20.0
+
+### Added
+
+- `radicle_cli::node::SyncSettings` has a new required
+  `signed_references_minimum_feature_level` field. Existing struct literals must
+  be updated to include this field.
+
 ## 0.19.0
 
 ### Removed
