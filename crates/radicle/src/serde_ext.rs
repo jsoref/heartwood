@@ -47,6 +47,7 @@ where
 }
 
 /// Deserialize a value, but if it is `null`, return the default value.
+#[cfg(feature = "tor")]
 pub(crate) fn null_to_default<'de, D, T>(deserializer: D) -> Result<T, D::Error>
 where
     T: serde::Deserialize<'de> + Default,

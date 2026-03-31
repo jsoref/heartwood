@@ -208,7 +208,12 @@ impl Arbitrary for MockRepository {
 
 impl Arbitrary for AddressType {
     fn arbitrary(g: &mut qcheck::Gen) -> Self {
-        let t = *g.choose(&[1, 2, 3, 4]).unwrap() as u8;
+        #[cfg(not(feature = "tor"))]
+        let types = [1, 2, 3];
+        #[cfg(feature = "tor")]
+        let types = [1, 2, 3, 4];
+
+        let t = *g.choose(&types).unwrap() as u8;
 
         AddressType::try_from(t).unwrap()
     }
