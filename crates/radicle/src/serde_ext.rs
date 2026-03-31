@@ -45,3 +45,13 @@ where
     let v: serde_json::Value = serde::Deserialize::deserialize(deserializer)?;
     Ok(T::deserialize(v).unwrap_or_default())
 }
+
+/// Deserialize a value, but if it is `null`, return the default value.
+pub(crate) fn null_to_default<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+where
+    T: serde::Deserialize<'de> + Default,
+    D: serde::Deserializer<'de>,
+{
+    use serde::Deserialize as _;
+    Ok(Option::deserialize(deserializer)?.unwrap_or_default())
+}
