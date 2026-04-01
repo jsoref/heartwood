@@ -28,9 +28,7 @@ use crate::crypto::ssh::agent::Agent;
 use crate::crypto::ssh::{Keystore, Passphrase, keystore};
 use crate::node::device::{BoxedDevice, Device};
 use crate::node::policy::config::store::Read;
-use crate::node::{
-    Alias, AliasStore, Handle as _, Node, UserAgent, notifications, policy, policy::Scope,
-};
+use crate::node::{Alias, AliasStore, Handle as _, Node, notifications, policy, policy::Scope};
 use crate::prelude::{Did, NodeId, RepoId};
 use crate::storage::ReadRepository;
 use crate::storage::git::Storage;
@@ -257,7 +255,7 @@ impl Profile {
             &public_key,
             config.node.features(),
             &config.node.alias,
-            &UserAgent::default(),
+            &config.node.user_agent(),
             LocalTime::now().into(),
             config.node.external_addresses.iter(),
         )?;

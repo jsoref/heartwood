@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   using `--verbose`, and the full OID when using `--verbose`.
   These ranges make using `git range-diff` a lot easier, since you can copy
   the range from each revision you want to compare.
+- Nodes will now advertise the version of Radicle they are running in the node
+  announcement as part of the "user agent", which is shared among the network.
+  For example, the value that will be shared by Radicle 1.9.0 will be
+  `/radicle:1.9.0/`. This value is also customizable by node operators via the
+  configuration value `node.userAgent`. Refer to `rad config schema` for more
+  information on the possible values. Operators that choose to set a custom
+  value are asked to keep the substring `/radicle:{YOUR_VERSION}/` which allows
+  for better telemetry regarding version distribution on the network.
+  To opt-out of sending any meaningful user agent, set `node.userAgent = null`.
 
 ## 1.8.0
 
