@@ -561,7 +561,7 @@ where
 #[macro_export]
 macro_rules! prop_roundtrip {
     ($t:ty, $name:tt) => {
-        paste::paste! {
+        pastey::paste! {
             #[quickcheck]
             fn [< prop_roundtrip_ $name:lower >](v: $t) {
                 $crate::wire::roundtrip(v);
@@ -569,7 +569,7 @@ macro_rules! prop_roundtrip {
         }
     };
     ($t:ty) => {
-        paste::paste! {
+        pastey::paste! {
             prop_roundtrip!($t, [< $t >]);
         }
     };
