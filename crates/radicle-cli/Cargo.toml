@@ -14,7 +14,7 @@ name = "rad"
 path = "src/main.rs"
 
 [features]
-default = ["i2p", "tor"]
+default = ["backtrace", "i2p","tor"]
 i2p = ["radicle/i2p"]
 tor = ["radicle/tor"]
 
@@ -57,6 +57,7 @@ tree-sitter-toml-ng = "0.6.0"
 tree-sitter-typescript = "0.23.2"
 
 [target.'cfg(unix)'.dependencies]
+backtrace = { workspace = true, optional = true }
 shlex = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
