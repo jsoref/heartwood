@@ -83,7 +83,7 @@ zeroize = "1.5.7"
 # `radicle-surf` → `radicle-git-ext` → `git-ref-format` → `git-ref-format-core`
 # Also note that `radicle-surf → git2` so try to also sync with `git2`.
 git-ref-format-core = { version = "0.6.0", default-features = false }
-radicle-surf = "0.27.0"
+radicle-surf = "0.27.1"
 
 [workspace.lints]
 clippy.type_complexity = "allow"

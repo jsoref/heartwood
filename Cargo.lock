@@ -3342,9 +3342,9 @@ checksum = "fb935931bdd2a2966f3b584f3031d9d54ec0713ddbc563a0193d54e62a88ec73"
 
 [[package]]
 name = "radicle-surf"
-version = "0.27.0"
+version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2c6a29eac2e55a6d0632c8faeb3cbe91afb1e07be60d157a27fdadb8cc4c508"
+checksum = "a2dfaa46d3e05ca10fc5841bb9cfac9fe6d3685cf2a02b16972f4cafbb888bd1"
 dependencies = [
  "anyhow",
  "base64 0.21.7",
@@ -4274,9 +4274,9 @@ dependencies = [
 
 [[package]]
 name = "tar"
-version = "0.4.44"
+version = "0.4.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d863878d212c87a19c1a610eb53bb01fe12951c0501cf5a0d65f724914a667a"
+checksum = "22692a6476a21fa75fdfc11d452fda482af402c008cdbaf3476414e122040973"
 dependencies = [
  "filetime",
  "libc",
