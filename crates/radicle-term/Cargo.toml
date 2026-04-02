@@ -16,7 +16,7 @@ default = ["git2"]
 anstyle-query = "1.0.0"
 crossterm = "0.29.0"
 indicatif = { version = "0.18.0" }
-inquire = { version = "0.7.4", default-features = false, features = [
+inquire = { version = "0.9.4", default-features = false, features = [
     "crossterm",
     "editor",
 ] }
