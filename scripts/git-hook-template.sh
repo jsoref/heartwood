@@ -28,7 +28,7 @@ if [ ${#CHANGED_FILES[@]} -gt 0 ]; then
     # Read from /dev/tty because stdin is not attached to the terminal in Git hooks.
     exec < /dev/tty
 
-    read -r -p "Do you want to continue executing the ${HOOK_NAME} hooks? [y/N] " response
+    read -r -p "⚠️ Do you want to continue executing the '${HOOK_NAME}' hook? [y/N] " response
     case "$response" in
         [yY][eE][sS]|[yY])
             echo "Continuing with '${HOOK_NAME}' hook..."
@@ -42,14 +42,12 @@ fi
 
 # Execute the appropriate just recipe based on the hook name
 if [ "$HOOK_NAME" = "pre-commit" ]; then
-    echo "Running pre-commit checks..."
     just pre-commit
 elif [ "$HOOK_NAME" = "pre-push" ]; then
-    echo "Running pre-push checks..."
     just pre-push
 elif [ "$HOOK_NAME" = "post-checkout" ]; then
     just post-checkout
 else
-    echo "Unknown hook: $HOOK_NAME"
+    echo "⚠️ Unknown hook: $HOOK_NAME"
     exit 1
 fi
