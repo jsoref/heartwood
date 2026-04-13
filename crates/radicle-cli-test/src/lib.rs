@@ -199,13 +199,11 @@ impl TestFormula {
             for (package, binary) in binaries {
                 log::debug!(target: "test", "Building binaries for package `{package}`..");
 
-                let cargo_manifest_dir = cargo_manifest_dir();
-
                 let results = escargot::CargoBuild::new()
                     .package(package)
                     .bin(binary)
-                    .manifest_path(cargo_manifest_dir.clone().join("Cargo.toml"))
-                    .target_dir(cargo_manifest_dir.join(CARGO_TARGET_DIR_DIRNAME))
+                    .manifest_path(cargo_manifest_dir().join("Cargo.toml"))
+                    .target_dir(cargo_target_dir())
                     .exec()
                     .unwrap();
 
@@ -531,6 +529,12 @@ fn cargo_manifest_dir() -> PathBuf {
     env::var("CARGO_MANIFEST_DIR").map(PathBuf::from).unwrap()
 }
 
+fn cargo_target_dir() -> PathBuf {
+    env::var("CARGO_TARGET_DIR")
+        .map(PathBuf::from)
+        .unwrap_or(cargo_manifest_dir().join(CARGO_TARGET_DIR_DIRNAME))
+}
+
 /// Get the list of binary paths to use as `$PATH` for the tests,
 /// starting with the current working directory.
 fn bins(cwd: PathBuf) -> Vec<PathBuf> {
@@ -540,11 +544,7 @@ fn bins(cwd: PathBuf) -> Vec<PathBuf> {
     // this makes it more convenient to execute scripts during testing.
     bins.push(cwd);
 
-    bins.push(
-        cargo_manifest_dir()
-            .join(CARGO_TARGET_DIR_DIRNAME)
-            .join(CARGO_PROFILE),
-    );
+    bins.push(cargo_target_dir().join(CARGO_PROFILE));
 
     // Add the "real" `$PATH`.
     if let Ok(path) = env::var("PATH") {
