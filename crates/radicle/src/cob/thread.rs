@@ -714,7 +714,7 @@ mod tests {
         let a3 = alice.redact(a1.id());
         thread.op(a3, [], &repo).unwrap();
 
-        let (_, comment0) = thread.comments().nth(0).unwrap();
+        let (_, comment0) = thread.comments().next().unwrap();
         let (_, comment1) = thread.comments().nth(1).unwrap();
 
         assert_eq!(thread.comments().count(), 2);

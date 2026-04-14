@@ -3386,7 +3386,7 @@ mod test {
         let review = revision.review_by(alice.signer.public_key()).unwrap();
         assert_eq!(review.verdict(), Some(Verdict::Reject));
         assert_eq!(review.comments().count(), 2);
-        assert_eq!(review.comments().nth(0).unwrap().1.body(), "First comment!");
+        assert_eq!(review.comments().next().unwrap().1.body(), "First comment!");
         assert_eq!(
             review.comments().nth(1).unwrap().1.body(),
             "Second comment!"
@@ -3517,7 +3517,7 @@ mod test {
         assert_eq!(patch.revisions.len(), 2);
         assert_eq!(patch.revisions().count(), 2);
         assert_eq!(
-            patch.revisions().nth(0).unwrap().1.description(),
+            patch.revisions().next().unwrap().1.description(),
             "Blah blah blah."
         );
         assert_eq!(

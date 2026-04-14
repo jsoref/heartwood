@@ -1290,7 +1290,7 @@ mod test {
 
         let id = issue.id;
         let mut issue = issues.get_mut(&id).unwrap();
-        let (_, reply1) = &issue.replies_to(&root).nth(0).unwrap();
+        let (_, reply1) = &issue.replies_to(&root).next().unwrap();
         let (_, reply2) = &issue.replies_to(&root).nth(1).unwrap();
 
         assert_eq!(reply1.body(), "Hi hi hi.");
@@ -1303,8 +1303,8 @@ mod test {
 
         let issue = issues.get(&id).unwrap().unwrap();
 
-        assert_eq!(issue.replies_to(&c1).nth(0).unwrap().1.body(), "Re: Hi.");
-        assert_eq!(issue.replies_to(&c2).nth(0).unwrap().1.body(), "Re: Ha.");
+        assert_eq!(issue.replies_to(&c1).next().unwrap().1.body(), "Re: Hi.");
+        assert_eq!(issue.replies_to(&c2).next().unwrap().1.body(), "Re: Ha.");
         assert_eq!(
             issue.replies_to(&c2).nth(1).unwrap().1.body(),
             "Re: Ha. Ha."
@@ -1370,7 +1370,7 @@ mod test {
 
         let id = issue.id;
         let issue = issues.get(&id).unwrap().unwrap();
-        let (_, c0) = &issue.comments().nth(0).unwrap();
+        let (_, c0) = &issue.comments().next().unwrap();
         let (_, c1) = &issue.comments().nth(1).unwrap();
         let (_, c2) = &issue.comments().nth(2).unwrap();
 

@@ -1,5 +1,4 @@
 #![allow(clippy::too_many_arguments)]
-#![allow(clippy::iter_nth_zero)]
 #![warn(clippy::unwrap_used)]
 
 pub extern crate radicle_crypto as crypto;
