@@ -39,10 +39,8 @@ pub fn run(
                 continue;
             }
         };
-        if !authors.is_empty() {
-            if !authors.contains(patch.author().id()) {
-                continue;
-            }
+        if !authors.is_empty() && !authors.contains(patch.author().id()) {
+            continue;
         }
         all.push((id, patch));
     }

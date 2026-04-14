@@ -1,5 +1,4 @@
 #![allow(clippy::or_fun_call)]
-#![allow(clippy::collapsible_else_if)]
 
 mod args;
 

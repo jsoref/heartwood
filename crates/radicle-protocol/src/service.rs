@@ -1,6 +1,4 @@
 #![allow(clippy::too_many_arguments)]
-#![allow(clippy::collapsible_match)]
-#![allow(clippy::collapsible_if)]
 #![warn(clippy::unwrap_used)]
 pub mod command;
 pub use command::{Command, QueryState};

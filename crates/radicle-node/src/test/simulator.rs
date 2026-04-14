@@ -1,5 +1,4 @@
 //! A simple P2P network simulator. Acts as the _reactor_, but without doing any I/O.
-#![allow(clippy::collapsible_if)]
 #![allow(dead_code)]
 
 use std::cell::RefCell;
@@ -387,10 +386,8 @@ where
                         let conn = (node, id);
 
                         let attempted = link.is_outbound() && self.attempts.remove(&conn);
-                        if attempted || link.is_inbound() {
-                            if self.connections.insert(conn) {
-                                p.connected(id, addr, link);
-                            }
+                        if (attempted || link.is_inbound()) && self.connections.insert(conn) {
+                            p.connected(id, addr, link);
                         }
                     }
                     Input::Disconnected(id, reason) => {

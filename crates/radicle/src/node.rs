@@ -1,4 +1,3 @@
-#![allow(clippy::collapsible_if)]
 mod features;
 
 pub mod address;

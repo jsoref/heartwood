@@ -1,4 +1,3 @@
-#![allow(clippy::collapsible_else_if)]
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
