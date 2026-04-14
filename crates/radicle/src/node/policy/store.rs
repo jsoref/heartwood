@@ -1,4 +1,3 @@
-#![allow(clippy::type_complexity)]
 use std::collections::{BTreeMap, BTreeSet};
 use std::marker::PhantomData;
 use std::path::Path;

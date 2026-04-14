@@ -1,4 +1,3 @@
-#![allow(clippy::type_complexity)]
 use std::str::FromStr;
 
 use localtime::LocalTime;
@@ -35,6 +34,7 @@ pub trait Store: address::Store {
         timestamp: Timestamp,
     ) -> Result<bool, Error>;
     /// Get the repos seeded by the given node.
+    #[allow(clippy::type_complexity)]
     fn seeded_by(
         &self,
         nid: &NodeId,

@@ -1,4 +1,3 @@
-#![allow(clippy::type_complexity)]
 use std::marker::PhantomData;
 use std::num::TryFromIntError;
 use std::path::Path;

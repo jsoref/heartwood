@@ -198,6 +198,7 @@ impl ReviewItem {
         self.hunk().and_then(|h| HunkHeader::try_from(h).ok())
     }
 
+    #[allow(clippy::type_complexity)]
     fn paths(&self) -> (Option<(&Path, Oid)>, Option<(&Path, Oid)>) {
         match self {
             Self::FileAdded { path, new, .. } => (None, Some((path, Oid::from(*new.oid)))),

@@ -1,6 +1,5 @@
 //! Generic COB storage.
 #![allow(clippy::large_enum_variant)]
-#![allow(clippy::type_complexity)]
 use std::fmt::Debug;
 use std::marker::PhantomData;
 

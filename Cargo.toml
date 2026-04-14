@@ -89,7 +89,6 @@ fallible_impl_from = "deny"
 fn_params_excessive_bools = "deny"
 indexing_slicing = "deny"
 must_use_candidate = "deny"
-type_complexity = "allow"
 unneeded_field_pattern = "deny"
 wildcard_enum_match_arm = "deny"
 

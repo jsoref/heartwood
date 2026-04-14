@@ -1,4 +1,3 @@
-#![allow(clippy::type_complexity)]
 #![allow(clippy::collapsible_if)]
 mod features;
 

@@ -1,4 +1,3 @@
-#![allow(clippy::type_complexity)]
 use std::num::TryFromIntError;
 use std::str::FromStr;
 
