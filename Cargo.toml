@@ -85,7 +85,6 @@ git-ref-format-core = { version = "0.6.0", default-features = false }
 radicle-surf = "0.27.1"
 
 [workspace.lints.clippy]
-enum_variant_names = "allow"
 fallible_impl_from = "deny"
 fn_params_excessive_bools = "deny"
 indexing_slicing = "deny"

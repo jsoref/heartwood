@@ -139,6 +139,7 @@ impl FromStr for ReviewAction {
 /// A single review item. Can be a hunk or eg. a file move.
 /// Files are usually split into multiple review items.
 #[derive(Debug)]
+#[allow(clippy::enum_variant_names)]
 pub enum ReviewItem {
     FileAdded {
         path: PathBuf,
