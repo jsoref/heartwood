@@ -1,4 +1,3 @@
-#![allow(clippy::identity_op)]
 use std::ops::{Deref, DerefMut};
 
 pub use bloomy::BloomFilter;
@@ -7,13 +6,13 @@ use radicle::identity::RepoId;
 
 /// Size in bytes of *large* bloom filter.
 /// It can store about 13'675 items with a false positive rate of 1%.
-pub const FILTER_SIZE_L: usize = 16 * 1024;
+pub const FILTER_SIZE_L: usize = 1024 * 16;
 /// Size in bytes of *medium* bloom filter.
 /// It can store about 3'419 items with a false positive rate of 1%.
-pub const FILTER_SIZE_M: usize = 4 * 1024;
+pub const FILTER_SIZE_M: usize = 1024 * 4;
 /// Size in bytes of *small* bloom filter.
 /// It can store about 855 items with a false positive rate of 1%.
-pub const FILTER_SIZE_S: usize = 1 * 1024;
+pub const FILTER_SIZE_S: usize = 1024;
 
 /// Valid filter sizes.
 pub const FILTER_SIZES: [usize; 3] = [FILTER_SIZE_S, FILTER_SIZE_M, FILTER_SIZE_L];
