@@ -1,6 +1,6 @@
 // Copyright © 2021 The Radicle Link Contributors
 
-#![warn(clippy::unwrap_used)]
+#![deny(clippy::unwrap_used)]
 //! # Collaborative Objects
 //!
 //! Collaborative objects are graphs of CRDTs.

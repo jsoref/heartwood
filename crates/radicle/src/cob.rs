@@ -1,4 +1,4 @@
-#![warn(clippy::unwrap_used)]
+#![deny(clippy::unwrap_used)]
 pub mod cache;
 pub mod common;
 pub mod external;

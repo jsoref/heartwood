@@ -1,4 +1,4 @@
-#![warn(clippy::unwrap_used)]
+#![deny(clippy::unwrap_used)]
 pub mod crefs;
 pub mod did;
 pub mod doc;

@@ -1,5 +1,5 @@
 #![allow(clippy::too_many_arguments)]
-#![warn(clippy::unwrap_used)]
+#![deny(clippy::unwrap_used)]
 pub mod command;
 pub use command::{Command, QueryState};
 
