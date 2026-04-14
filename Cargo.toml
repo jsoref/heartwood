@@ -84,15 +84,15 @@ zeroize = "1.5.7"
 git-ref-format-core = { version = "0.6.0", default-features = false }
 radicle-surf = "0.27.1"
 
-[workspace.lints]
-clippy.type_complexity = "allow"
-clippy.enum_variant_names = "allow"
-clippy.indexing_slicing = "deny"
-clippy.fallible_impl_from = "deny"
-clippy.wildcard_enum_match_arm = "deny"
-clippy.unneeded_field_pattern = "deny"
-clippy.fn_params_excessive_bools = "deny"
-clippy.must_use_candidate = "deny"
+[workspace.lints.clippy]
+enum_variant_names = "allow"
+fallible_impl_from = "deny"
+fn_params_excessive_bools = "deny"
+indexing_slicing = "deny"
+must_use_candidate = "deny"
+type_complexity = "allow"
+unneeded_field_pattern = "deny"
+wildcard_enum_match_arm = "deny"
 
 [profile.container]
 inherits = "release"
