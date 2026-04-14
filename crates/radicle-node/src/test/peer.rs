@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::collections::HashSet;
 use std::iter;
 use std::net;

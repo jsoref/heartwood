@@ -1,5 +1,4 @@
 //! A simple P2P network simulator. Acts as the _reactor_, but without doing any I/O.
-#![allow(dead_code)]
 
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashSet, VecDeque};
