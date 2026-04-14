@@ -10,7 +10,9 @@ edition.workspace = true
 rust-version.workspace = true
 
 [features]
+bstr = ["radicle-git-ref-format/bstr"]
 default = []
+gix = ["radicle-oid/gix"]
 test = ["tempfile", "qcheck", "radicle-crypto/test", "radicle-cob/test"]
 logger = ["colored", "chrono"]
 qcheck = [
@@ -40,7 +42,6 @@ fastrand = { workspace = true, features = ["std"] }
 git2 = { workspace = true, features = ["vendored-libgit2"] }
 indexmap = { version = "2", features = ["serde"] }
 log = { workspace = true, features = ["std"] }
-multibase = { workspace = true }
 nonempty = { workspace = true, features = ["serialize"] }
 qcheck = { workspace = true, optional = true }
 radicle-cob = { workspace = true, features = ["git2"] }

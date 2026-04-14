@@ -2994,7 +2994,6 @@ dependencies = [
  "jsonschema",
  "libc",
  "log",
- "multibase",
  "nonempty",
  "pretty_assertions",
  "qcheck",
@@ -3037,7 +3036,6 @@ dependencies = [
  "radicle-cli-test",
  "radicle-cob",
  "radicle-crypto",
- "radicle-git-ref-format",
  "radicle-localtime",
  "radicle-node",
  "radicle-surf",
@@ -3064,7 +3062,6 @@ dependencies = [
  "tree-sitter-toml-ng",
  "tree-sitter-typescript",
  "winsplit",
- "zeroize",
 ]
 
 [[package]]
@@ -3170,8 +3167,6 @@ dependencies = [
  "log",
  "nonempty",
  "radicle",
- "radicle-git-ref-format",
- "radicle-oid",
  "thiserror 2.0.18",
 ]
 
@@ -3217,10 +3212,7 @@ name = "radicle-node"
 version = "0.19.0"
 dependencies = [
  "backtrace",
- "bloomy",
  "bytes",
- "chrono",
- "colored",
  "crossbeam-channel",
  "cyphernet",
  "fastrand",
@@ -3228,7 +3220,6 @@ dependencies = [
  "lexopt",
  "log",
  "mio",
- "nonempty",
  "qcheck",
  "qcheck-macros",
  "radicle",
@@ -3239,12 +3230,10 @@ dependencies = [
  "radicle-signals",
  "radicle-systemd",
  "radicle-windows",
- "scrypt",
  "serde",
  "serde_json",
  "snapbox",
  "socket2",
- "sqlite",
  "structured-logger",
  "tempfile",
  "test-log",
@@ -3286,7 +3275,6 @@ dependencies = [
  "radicle-localtime",
  "scrypt",
  "serde",
- "serde_json",
  "sqlite",
  "thiserror 2.0.18",
 ]
@@ -3299,7 +3287,6 @@ dependencies = [
  "log",
  "radicle",
  "radicle-cli",
- "radicle-crypto",
  "thiserror 2.0.18",
 ]
 
