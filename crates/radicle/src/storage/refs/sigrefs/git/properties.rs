@@ -1,5 +1,3 @@
-#![allow(clippy::unwrap_used)]
-
 use crypto::{signature, test::signer::MockSigner, PublicKey, Signer as _};
 use qcheck::TestResult;
 use qcheck_macros::quickcheck;

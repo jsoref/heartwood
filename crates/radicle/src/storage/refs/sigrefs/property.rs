@@ -1,5 +1,3 @@
-#![allow(clippy::unwrap_used)]
-
 mod mock;
 use mock::*;
 

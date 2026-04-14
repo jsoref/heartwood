@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used)]
 use std::marker::PhantomData;
 use std::ops::Deref;
 

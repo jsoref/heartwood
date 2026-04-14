@@ -1,5 +1,3 @@
-#![allow(clippy::unwrap_used)]
-
 mod mock;
 
 mod commit_reader;
