@@ -1,4 +1,3 @@
-#![allow(clippy::or_fun_call)]
 mod args;
 
 use std::str::FromStr;

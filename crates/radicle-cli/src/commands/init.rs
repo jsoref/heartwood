@@ -1,5 +1,3 @@
-#![allow(clippy::or_fun_call)]
-
 mod args;
 
 pub use args::Args;

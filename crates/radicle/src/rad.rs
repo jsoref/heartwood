@@ -1,4 +1,3 @@
-#![allow(clippy::let_unit_value)]
 use std::io;
 use std::path::Path;
 use std::str::FromStr;

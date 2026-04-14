@@ -1,4 +1,3 @@
-#![allow(clippy::box_default)]
 mod args;
 
 use std::path::PathBuf;
