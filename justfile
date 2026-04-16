@@ -1,4 +1,4 @@
-hooks := "pre-commit pre-push post-checkout"
+hooks := "pre-commit pre-push post-checkout commit-msg"
 hook-script := "scripts/git-hook-template.sh"
 
 WARN := "⚠️ " + YELLOW + BOLD
@@ -13,6 +13,12 @@ default: check-hooks
 # Run post-checkout checks
 [group('hooks')]
 post-checkout:
+
+# Run commit-msg checks
+[group('hooks')]
+commit-msg file: (verify-tool "typos" "typos-cli")
+    @echo "{{CHECK}}Checking commit message for typos...{{NORMAL}}"
+    @NORMAL="{{NORMAL}}" WARN="{{WARN}}" scripts/just/commit-msg.sh "{{file}}"
 
 # Run pre-commit checks
 [group('hooks')]
@@ -66,8 +72,8 @@ check-spelling: (verify-tool "codespell")
     @echo "{{CHECK}}Checking for code typos...{{NORMAL}}"
     @git ls-files -z | xargs -0 codespell --write-changes --check-filenames
 
-# just runs with `/bin/sh` which has no doublestar glob 
-# expansion, furthermore, `time ls **/*.sh` takes ~5s 
+# just runs with `/bin/sh` which has no doublestar glob
+# expansion, furthermore, `time ls **/*.sh` takes ~5s
 # locally. The `find` solution below is fastest ~900ms.
 #
 # Run shellcheck on all shell scripts

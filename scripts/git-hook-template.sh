@@ -3,7 +3,7 @@ set -euo pipefail
 
 readonly HOOK="${HOOK:-$(basename "$0")}"
 
-if ! [[ "$HOOK" =~ ^(pre-(commit|push)|post-checkout)$ ]]
+if ! [[ "$HOOK" =~ ^(pre-(commit|push)|post-checkout|commit-msg)$ ]]
 then
     echo "Unknown hook '${HOOK}'."
     exit 1
@@ -41,5 +41,10 @@ then
     esac
 fi
 
-just "$HOOK"
-
+# Execute the appropriate just recipe based on the hook name.
+if [ "$HOOK" = "commit-msg" ]
+then
+    just "$HOOK" "$1"
+else
+    just "$HOOK"
+fi
