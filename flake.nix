@@ -368,7 +368,10 @@
           sqlite
         ];
 
-        env.RUST_SRC_PATH = "${rustupDevShell.toolchain}/lib/rustlib/src/rust/library";
+        env = {
+          RUST_BACKTRACE = "full";
+          RUST_SRC_PATH = "${rustupDevShell.toolchain}/lib/rustlib/src/rust/library";
+        };
       };
     });
 }
