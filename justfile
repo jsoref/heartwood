@@ -22,7 +22,7 @@ commit-msg file: (verify-tool "typos" "typos-cli")
 
 # Run pre-commit checks
 [group('hooks')]
-pre-commit: format-rust check-rust check-docs check-typos check-spelling check-scripts check-keywords format-nix
+pre-commit: check-conflict-markers format-rust check-rust check-docs check-typos check-spelling check-scripts check-keywords format-nix
     @echo ""
     @echo "{{SUCCESS}}pre-commit passed!{{NORMAL}}"
     @echo ""
@@ -93,6 +93,15 @@ check-scripts: (verify-tool "shellcheck")
 check-keywords: (verify-tool "rg" "ripgrep")
     @CHECK="{{CHECK}}" NORMAL="{{NORMAL}}" scripts/just/check-keywords.sh
 
+# Run conflict marker checks
+[group('pre-commit')]
+[group('pre-push')]
+[group('check')]
+[parallel]
+check-conflict-markers: (verify-tool "rg" "ripgrep")
+    @echo "{{CHECK}}Checking for conflict markers...{{NORMAL}}"
+    @! rg -n '^(<{7}|\|{7}|={7}|>{7}|%{7}|\+{7}|-{7})( |$)'
+
 # Format Nix files
 [group('pre-commit')]
 [group('pre-push')]
@@ -103,7 +112,7 @@ format-nix:
 
 # Run pre-push checks
 [group('hooks')]
-pre-push: format-rust check-rust check-keywords check-docs check-spelling check-scripts check-typos format-nix lint-rust
+pre-push: check-conflict-markers format-rust check-rust check-keywords check-docs check-spelling check-scripts check-typos format-nix lint-rust
     @echo ""
     @echo "{{SUCCESS}}pre-push passed!{{NORMAL}}"
     @echo ""
