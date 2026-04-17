@@ -1,6 +1,8 @@
 hooks := "pre-commit pre-push post-checkout commit-msg"
 hook-script := "scripts/git-hook-template.sh"
 
+cargo_cmd := env_var_or_default("CARGO_CMD", "cargo")
+
 WARN := "⚠️ " + YELLOW + BOLD
 SUCCESS := "✅ " + GREEN + BOLD
 ERROR := "❌ " + RED + BOLD
@@ -34,7 +36,7 @@ pre-commit: check-conflict-markers format-rust check-rust check-docs check-typos
 [parallel]
 format-rust: (verify-tool "cargo")
     @echo "{{CHECK}}Cargo fmt...{{NORMAL}}"
-    @cargo fmt --all
+    @{{cargo_cmd}} fmt --all
 
 # Run cargo check
 [group('pre-commit')]
@@ -43,7 +45,7 @@ format-rust: (verify-tool "cargo")
 [parallel]
 check-rust:
     @echo "{{CHECK}}Cargo check...{{NORMAL}}"
-    @cargo check --workspace --all-targets --all-features
+    @{{cargo_cmd}} check --workspace --all-targets --all-features
 
 # Check documentation for warnings
 [group('pre-commit')]
@@ -52,7 +54,7 @@ check-rust:
 [parallel]
 check-docs:
     @echo "{{CHECK}}Checking docs for warnings...{{NORMAL}}"
-    @RUSTDOCFLAGS="--deny warnings" cargo doc --workspace --all-features --no-deps
+    @RUSTDOCFLAGS="--deny warnings" {{cargo_cmd}} doc --workspace --all-features --no-deps
 
 # Check for typos
 [group('pre-commit')]
@@ -121,7 +123,7 @@ pre-push: check-conflict-markers format-rust check-rust check-keywords check-doc
 [group('pre-push')]
 lint-rust: (verify-tool "cargo")
     @echo "{{CHECK}}Cargo clippy...{{NORMAL}}"
-    @cargo clippy --workspace --all-targets --all-features -- --deny warnings
+    @{{cargo_cmd}} clippy --workspace --all-targets --all-features -- --deny warnings
 
 # Check if required tools are in PATH.
 [private]
