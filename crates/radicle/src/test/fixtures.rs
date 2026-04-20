@@ -122,6 +122,17 @@ fn repository_with<P: AsRef<Path>>(
         let mut config = repo.config().unwrap();
         config.set_str("user.name", USER_NAME).unwrap();
         config.set_str("user.email", USER_EMAIL).unwrap();
+
+        // In Git 2.48.0, the option `remote.<name>.followRemoteHEAD` was added.
+        // Git versions older than 2.48.0 behave as if this option is set to
+        // `never`.
+        // We set it explicitly here for testing purposes, for consistent output
+        // of commands like `git branch -r` and `git show-ref`.
+        // Once Radicle requires Git 2.48.0 or newer, we can remove this
+        // (and adjust our tests to the new default behavior, creating `HEAD`).
+        config
+            .set_str("remote.rad.followRemoteHEAD", "never")
+            .unwrap();
     }
 
     let sig = git::raw::Signature::new(
