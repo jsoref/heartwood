@@ -18,6 +18,7 @@ test = ["tempfile", "qcheck", "radicle-crypto/test", "radicle-cob/test"]
 logger = ["colored", "chrono"]
 qcheck = [
   "radicle-core/qcheck",
+  "radicle-oid/qcheck",
   "dep:qcheck"
 ]
 schemars = [
