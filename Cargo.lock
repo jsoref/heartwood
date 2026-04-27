@@ -3217,6 +3217,7 @@ dependencies = [
  "cyphernet",
  "fastrand",
  "gix-packetline",
+ "indexmap",
  "lexopt",
  "log",
  "mio",

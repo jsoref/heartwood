@@ -1,9 +1,9 @@
-use std::collections::HashSet;
 use std::ops::Deref;
 use std::str::FromStr;
 use std::{fmt, net};
 
 use cyphernet::addr::PeerAddr;
+use indexmap::IndexSet;
 use localtime::LocalDuration;
 use serde::{Deserialize, Serialize};
 use serde_json as json;
@@ -547,7 +547,11 @@ pub struct Config {
     /// Peers to connect to on startup.
     /// Connections to these peers will be maintained.
     #[serde(default)]
-    pub connect: HashSet<ConnectAddress>,
+    #[cfg_attr(
+        feature = "schemars",
+        schemars(with = "std::collections::HashSet<ConnectAddress>")
+    )]
+    pub connect: IndexSet<ConnectAddress>,
     /// Specify the node's public addresses
     #[serde(default)]
     pub external_addresses: Vec<Address>,
@@ -617,7 +621,7 @@ impl Config {
             user_agent: Some(UserAgent::default()),
             peers: PeerConfig::default(),
             listen: vec![],
-            connect: HashSet::default(),
+            connect: IndexSet::default(),
             external_addresses: vec![],
             network: Network::default(),
             proxy: None,

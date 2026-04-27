@@ -233,11 +233,11 @@ fn test_inbound_connection() {
 
 #[test]
 fn test_persistent_peer_connect() {
-    use std::collections::HashSet;
+    use indexmap::IndexSet;
 
     let bob = Peer::new("bob", [8, 8, 8, 8]);
     let eve = Peer::new("eve", [9, 9, 9, 9]);
-    let connect = HashSet::<ConnectAddress>::from_iter([
+    let connect = IndexSet::<ConnectAddress>::from_iter([
         (bob.id(), bob.address()).into(),
         (eve.id(), eve.address()).into(),
     ]);
@@ -1186,7 +1186,7 @@ fn test_inventory_relay() {
 
 #[test]
 fn test_persistent_peer_reconnect_attempt() {
-    use std::collections::HashSet;
+    use indexmap::IndexSet;
 
     let mut bob = Peer::new("bob", [8, 8, 8, 8]);
     let mut eve = Peer::new("eve", [9, 9, 9, 9]);
@@ -1196,7 +1196,7 @@ fn test_persistent_peer_reconnect_attempt() {
         MockStorage::empty(),
         peer::Config {
             config: Config {
-                connect: HashSet::from_iter([
+                connect: IndexSet::from_iter([
                     (bob.id(), bob.address()).into(),
                     (eve.id(), eve.address()).into(),
                 ]),
@@ -1246,7 +1246,7 @@ fn test_persistent_peer_reconnect_attempt() {
 
 #[test]
 fn test_persistent_peer_reconnect_success() {
-    use std::collections::HashSet;
+    use indexmap::IndexSet;
 
     let bob = Peer::with_storage("bob", [9, 9, 9, 9], MockStorage::empty());
     let mut alice = Peer::config(
@@ -1255,7 +1255,7 @@ fn test_persistent_peer_reconnect_success() {
         MockStorage::empty(),
         peer::Config {
             config: Config {
-                connect: HashSet::from_iter([(bob.id, bob.addr()).into()]),
+                connect: IndexSet::from_iter([(bob.id, bob.addr()).into()]),
                 ..Config::new(node::Alias::new("alice"))
             },
             ..peer::Config::default()
