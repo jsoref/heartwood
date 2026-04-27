@@ -4,9 +4,9 @@ In its simplest form, `rad config` prints the current configuration.
 ```
 $ rad config
 {
-  "publicExplorer": "https://app.radicle.xyz/nodes/$host/$rid$path",
+  "publicExplorer": "https://radicle.network/nodes/$host/$rid$path",
   "preferredSeeds": [
-    "z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776"
+    "z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.network:8776"
   ],
   "web": {
     "pinned": {
@@ -71,7 +71,7 @@ $ rad config schema
     "publicExplorer": {
       "description": "Public explorer. This is used for generating links.",
       "$ref": "#/$defs/Explorer",
-      "default": "https://app.radicle.xyz/nodes/$host/$rid$path"
+      "default": "https://radicle.network/nodes/$host/$rid$path"
     },
     "preferredSeeds": {
       "description": "Preferred seeds. These seeds will be used for explorer links/nand in other situations when a seed needs to be chosen.",
@@ -115,7 +115,7 @@ $ rad config schema
       "type": "string",
       "pattern": "^.+@.+:((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))$",
       "examples": [
-        "z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@rosa.radicle.xyz:8776",
+        "z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@rosa.radicle.network:8776",
         "z6MkvUJtYD9dHDJfpevWRT98mzDDpdAtmUjwyDSkyqksUr7C@xmrhfasfg5suueegrnc4gsgyi2tyclcy5oz7f5drnrodmdtob6t2ioyd.onion:8776",
         "z6Mkvky2mnSYCTUMKRdAUoZXBXLLKtnWEkWeYQcGjjnmobAU@f2atcc7udeub5kh4nkljtjwyk7ikjviorufzgwnfwhkphljl3vhq.b32.i2p:8776",
         "z6MknSLrJoTcukLrE435hVNQT4JUhbvWLX4kUzqkEStBU8Vi@seed.example.com:8776",
@@ -815,7 +815,7 @@ You can also get any value in the configuration by path, eg.
 $ rad config get node.alias
 alice
 $ rad config get preferredSeeds
-z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776
+z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.network:8776
 $ rad config get node.limits.routingMaxSize
 1000
 ```

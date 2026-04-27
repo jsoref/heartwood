@@ -2,7 +2,7 @@
 set -e
 
 SSH_LOGIN=${SSH_LOGIN:-release}
-SSH_ADDRESS=${SSH_ADDRESS:-$SSH_LOGIN@files.radicle.xyz}
+SSH_ADDRESS=${SSH_ADDRESS:-$SSH_LOGIN@files.radicle.dev}
 SSH_KEY="$(rad path)/keys/radicle"
 
 main() {
@@ -17,7 +17,7 @@ main() {
     echo "fatal: empty version number" >&2 ; exit 1
   fi
 
-  destination="/var/www/files.radicle.xyz/releases/$version"
+  destination="/var/www/files.radicle.dev/releases/$version"
 
   # Create remote folder.
   ssh -i "$SSH_KEY" "$SSH_ADDRESS" mkdir -p "$destination"

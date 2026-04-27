@@ -93,7 +93,7 @@ install the binaries, as well as launching the new binaries on our team seed
 node.
 
 This is achieved through the `build/upload` script, which requires SSH access to
-`files.radicle.xyz`, for example:
+`files.radicle.dev`, for example:
 
 ```
 SSH_LOGIN=<user> build/upload 1.3.0-rc.3
@@ -102,14 +102,14 @@ SSH_LOGIN=<user> build/upload 1.3.0-rc.3
 Once the files are released we can install the binaries via:
 
 ```
-curl -O -L https://files.radicle.xyz/releases/latest/radicle-$TARGET.tar.xz
+curl -O -L https://files.radicle.dev/releases/latest/radicle-$TARGET.tar.xz
 ```
 
 where `$TARGET` is the relevant architecture and version.
 
 ### Release on Team Node
 To help with testing the pre-release internally, we upgrade our team node,
-`seed.radicle.xyz`, which is restricted to only replicate from our team's Node
+`seed.radicle.dev`, which is restricted to only replicate from our team's Node
 IDs.
 
 We do this using NixOS and the [`radicle-nix`][radicle-nix] and
@@ -133,7 +133,7 @@ Radicle 1.5.0-rc.2 (7b00bf2e3) is released.
 ## Installation
 
 ```
-curl -sSf https://radicle.xyz/install | sh -s -- --no-modify-path --version=1.5.0-rc.2
+curl -sSf https://radicle.dev/install | sh -s -- --no-modify-path --version=1.5.0-rc.2
 ```
 
 ## Notes
@@ -243,11 +243,11 @@ Remember that `heartwood/CHANGELOG.md` must be updated to include the latest
 changes in the patch release. These must be forward-ported to the `master`
 branch.
 
-[radicle-infra]: https://app.radicle.xyz/nodes/seed.radicle.xyz/rad:z254T5p17bdFPmzfDojsdjo4HjpoZ
+[radicle-infra]: https://radicle.network/nodes/seed.radicle.dev/rad:z254T5p17bdFPmzfDojsdjo4HjpoZ
 [radicle-nix]: https://github.com/radicle-nix/radicle-nix
-[get-started]: https://radicle.xyz/#get-started
-[radicle-xyz]: https://app.radicle.xyz/nodes/seed.radicle.xyz/rad:z371PVmDHdjJucejRoRYJcDEvD5pp
-[updates]: https://radicle.xyz/#updates
+[get-started]: https://radicle.dev/#get-started
+[radicle-xyz]: https://radicle.network/nodes/seed.radicle.dev/rad:z371PVmDHdjJucejRoRYJcDEvD5pp
+[updates]: https://radicle.dev/#updates
 [zulip]: https://radicle.zulipchat.com/#narrow/channel/409174-announcements
-[mastodon]: https://toot.radicle.xyz/explore
-[bsky]: https://bsky.app/profile/radicle.xyz
+[mastodon]: https://toot.radicle.dev/@radicle
+[bsky]: https://bsky.app/profile/radicle.dev

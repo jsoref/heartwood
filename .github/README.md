@@ -26,7 +26,7 @@ GitHub, but only via Radicle directly. However, pull requests are still
 accepted.
 
 To view existing issues and patches with your web browser, navigate to
-[app.radicle.xyz][heartwood].
+[radicle.network][heartwood].
 
 To contribute issues and patches, please consider [installing][install]
 Radicle and follow our [guides][guides].
@@ -34,7 +34,7 @@ Radicle and follow our [guides][guides].
 ## Feedback
 
 If you have feedback, feel free to create issues using `rad issue`, join
-[our Zulip][zulip], or email [feedback@radicle.xyz][mail-feedback].
+[our Zulip][zulip], or email [feedback@radicle.dev][mail-feedback].
 Emails sent to this address are [automatically posted][zulip-help-email] to
 [our **public** #feedback channel on Zulip][zulip-feedback], revealing the
 [`From` header][rfc2822s3.6.2] (which usually contains your name and email
@@ -42,12 +42,12 @@ address). This allows us to discuss your feedback on Zulip, and, if necessary,
 respond to you via email.
 
 
-[guides-protocol]: https://radicle.xyz/guides/protocol
-[guides]: https://radicle.xyz/guides
-[heartwood]: https://app.radicle.xyz/nodes/seed.radicle.xyz/rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5
-[homepage]: https://radicle.xyz
+[guides-protocol]: https://radicle.dev/guides/protocol
+[guides]: https://radicle.dev/guides
+[heartwood]: https://radicle.network/nodes/seed.radicle.dev/rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5
+[homepage]: https://radicle.dev
 [install]: ../README.md#installation
-[mail-feedback]: mailto:feedback@radicle.xyz
+[mail-feedback]: mailto:feedback@radicle.dev
 [readme]: ../README.md
 [rfc2822s3.6.2]: https://datatracker.ietf.org/doc/html/rfc2822#section-3.6.2
 [run]: ../README.md#running

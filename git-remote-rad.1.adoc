@@ -1,5 +1,5 @@
 = git-remote-rad(1)
-The Radicle Team <team@radicle.xyz>
+The Radicle Team <team@radicle.dev>
 :doctype: manpage
 :revnumber: 0.8.0
 :revdate: 2023-10-12

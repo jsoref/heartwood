@@ -7,12 +7,12 @@ if [ $# -ne 1 ]; then
 fi
 
 SSH_LOGIN=${SSH_LOGIN:-release}
-SSH_ADDRESS=${SSH_ADDRESS:-$SSH_LOGIN@files.radicle.xyz}
+SSH_ADDRESS=${SSH_ADDRESS:-$SSH_LOGIN@files.radicle.dev}
 SSH_KEY="$(rad path)/keys/radicle"
 
 main() {
   version="$1"
-  destination="/var/www/files.radicle.xyz/releases"
+  destination="/var/www/files.radicle.dev/releases"
 
   if [ -z "$version" ]; then
     echo "fatal: empty version number" >&2 ; exit 1

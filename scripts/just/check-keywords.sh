@@ -6,6 +6,10 @@ echo "${CHECK}Checking for forbidden words in staged files...${NORMAL}"
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep '\.rs$' || true)
 
 if [ -n "$STAGED_FILES" ]; then
+    if echo "$STAGED_FILES" | xargs rg --context=3 --fixed-strings 'radicle.dev'; then
+        exit 1
+    fi
+
     if echo "$STAGED_FILES" | xargs rg --context=3 --fixed-strings 'radicle.xyz'; then
         exit 1
     fi

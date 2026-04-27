@@ -27,7 +27,7 @@ See `rad <COMMAND> --help` to learn about a specific command.
 
 Do you have feedback?
  - Chat <\x1b]8;;https://radicle.zulipchat.com\x1b\\radicle.zulipchat.com\x1b]8;;\x1b\\>
- - Mail <\x1b]8;;mailto:feedback@radicle.xyz\x1b\\feedback@radicle.xyz\x1b]8;;\x1b\\>
+ - Mail <\x1b]8;;mailto:feedback@radicle.dev\x1b\\feedback@radicle.dev\x1b]8;;\x1b\\>
    (Messages are automatically posted to the public #feedback channel on Zulip.)\
 ";
 pub const TIMESTAMP: &str = env!("SOURCE_DATE_EPOCH");
@@ -116,7 +116,7 @@ fn main() {
         env!("CARGO_PKG_VERSION")
     )
     .homepage(env!("CARGO_PKG_HOMEPAGE"))
-    .support("Open a support request at https://radicle.zulipchat.com/ or file an issue via Radicle itself, or e-mail to team@radicle.xyz"));
+    .support("Open a support request at https://radicle.zulipchat.com/ or file an issue via Radicle itself, or e-mail to team@radicle.dev"));
 
     if let Some(lvl) = radicle::logger::env_level() {
         let logger = Box::new(radicle::logger::Logger::new(lvl));

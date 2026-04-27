@@ -15,9 +15,9 @@ A suite of tools to create simulated Radicle networks to run tests in:
 
 `heartwood` already has the following types of tests (as of 2026-04):
 
-- [Unit](https://app.radicle.xyz/nodes/iris.radicle.xyz/rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/tree/crates/radicle/src/profile.rs#L842)
-- [End-to-End](https://app.radicle.xyz/nodes/iris.radicle.xyz/rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/tree/crates/radicle-node/src/tests/e2e.rs)
-- [CLI](https://app.radicle.xyz/nodes/iris.radicle.xyz/rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/tree/crates/radicle-cli/tests/commands/checkout.rs)
+- [Unit](https://radicle.network/nodes/iris.radicle.network/rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/tree/crates/radicle/src/profile.rs#L842)
+- [End-to-End](https://radicle.network/nodes/iris.radicle.network/rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/tree/crates/radicle-node/src/tests/e2e.rs)
+- [CLI](https://radicle.network/nodes/iris.radicle.network/rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/tree/crates/radicle-cli/tests/commands/checkout.rs)
 
 However we can only run them on the currently checked out version of `heartwood`, this leaves gaps in our testing coverage, particularly for cross-version and cross-platform testing.
 
@@ -73,7 +73,7 @@ This will give us the following workflow for constructing test scenarios:
 
 ## Plan
 
-- [ ] Migrate existing [simulation environment repo](https://app.radicle.xyz/nodes/iris.radicle.xyz/rad%3Az2CzknCvAq9jSCpKdyjMppbvGmxyZ) into `heartwood`.
+- [ ] Migrate existing [simulation environment repo](https://radicle.network/nodes/iris.radicle.network/rad%3Az2CzknCvAq9jSCpKdyjMppbvGmxyZ) into `heartwood`.
   1. [ ] `radicle-node` timoni module.
   2. [ ] `radicle-node` custom container builder.
   3. [ ] `instances` topology definition files.

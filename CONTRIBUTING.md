@@ -28,7 +28,7 @@ simple guidelines.
   before submitting a patch. We wouldn't want you to waste your time!
 * If you need help or would like to discuss your changes, come to our community chat on [Zulip][zulip].
 
-[guide]: https://radicle.xyz/guides/user#working-with-patches
+[guide]: https://radicle.dev/guides/user#working-with-patches
 [zulip]: https://radicle.zulipchat.com
 
 ### Submitting patches
@@ -194,9 +194,9 @@ for the reader:
     for rid in self.storage.inventory()? {
         ...
 
-### Referring to radicle.xyz in Code
+### Referring to radicle.dev in Code
 
-While <https://radicle.xyz> is the main website of the project, and also the domain
+While <https://radicle.dev> is the main website of the project, and also the domain
 associated with COBs implemented in this repo, we strive to write code that is as
 independent as reasonably possible from this particular domain name. For example, it
 should not be used for default configuration values, or if it is, there should be a
@@ -208,10 +208,17 @@ or fork it altogether. It also tends to produce better, more flexible, code.
 In tests, instead use names that are compliant with RFC 2606, e.g.
 "radicle.example.com".
 
-Note that as of 2025-08, there are still a few mentions of "radicle.xyz" in the
+Note that as of 2025-08, there are still a few mentions of "radicle.dev" in the
 codebase (mostly tests or user hints, fallback for configuration), and some of them
 are not easy to remove. However, this is in no way a justification to add more
 references.
+
+In 2026-04, the project moved from "radicle.xyz" to "radicle.dev", and many IDs,
+most notably COB type names and payload IDs (both in reverse domain name notation)
+were not changed to stay backward compatible. So, while generally, "radicle.xyz"
+should not be used anymore, think twice before changing such occurrences to
+"radicle.dev". The same holds for "xyz.radicle", but in that case please think
+thrice.
 
 ### Proposing changes
 

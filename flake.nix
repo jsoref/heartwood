@@ -28,7 +28,7 @@
 
   nixConfig = {
     keepOutputs = true;
-    extra-substituters = ["https://attic.radicle.xyz/radicle"];
+    extra-substituters = ["https://attic.radicle.dev/radicle"];
     extra-trusted-public-keys = ["radicle:TruHbueGHPm9iYSq7Gq6wJApJOqddWH+CEo+fsZnf4g="];
   };
 
@@ -184,7 +184,7 @@
             grep = rec {
               generators = [
                 {
-                  word = "radicle.xyz";
+                  word = "radicle.dev";
                   files = "\\.rs$";
                   excludes = [];
                 }

@@ -6,7 +6,7 @@ See `rad <COMMAND> --help` to learn about a specific command.
 
 Do you have feedback?
  - Chat <radicle.zulipchat.com>
- - Mail <feedback@radicle.xyz>
+ - Mail <feedback@radicle.dev>
    (Messages are automatically posted to the public #feedback channel on Zulip.)
 
 Usage: rad[EXE] <COMMAND>

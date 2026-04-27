@@ -7,7 +7,7 @@ $ git push rad HEAD:refs/patches
 ✓ Patch acab0ec777a97d013f30be5d5d1aec32562ecb02 opened
 ✓ Synced with 1 seed(s)
 
-  https://app.radicle.xyz/nodes/[..]/rad:z3yXbb1sR6UG6ixxV2YF9jUP7ABra/patches/acab0ec777a97d013f30be5d5d1aec32562ecb02
+  https://radicle.network/nodes/[..]/rad:z3yXbb1sR6UG6ixxV2YF9jUP7ABra/patches/acab0ec777a97d013f30be5d5d1aec32562ecb02
 
 To rad://z3yXbb1sR6UG6ixxV2YF9jUP7ABra/z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk
  * [new reference]   HEAD -> refs/patches
@@ -25,7 +25,7 @@ To compare against your previous revision acab0ec, run:
 
 ✓ Synced with 1 seed(s)
 
-  https://app.radicle.xyz/nodes/[..]/rad:z3yXbb1sR6UG6ixxV2YF9jUP7ABra/patches/acab0ec777a97d013f30be5d5d1aec32562ecb02
+  https://radicle.network/nodes/[..]/rad:z3yXbb1sR6UG6ixxV2YF9jUP7ABra/patches/acab0ec777a97d013f30be5d5d1aec32562ecb02
 
 To rad://z3yXbb1sR6UG6ixxV2YF9jUP7ABra/z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk
  + e12525d...b2b6432 changes -> patches/acab0ec777a97d013f30be5d5d1aec32562ecb02 (forced update)
@@ -41,7 +41,7 @@ $ git push rad master
 ✓ Canonical reference refs/heads/master updated to target commit b2b6432af93f8fe188e32d400263021b602cfec8
 ✓ Synced with 1 seed(s)
 
-  https://app.radicle.xyz/nodes/[..]/rad:z3yXbb1sR6UG6ixxV2YF9jUP7ABra/tree/b2b6432af93f8fe188e32d400263021b602cfec8
+  https://radicle.network/nodes/[..]/rad:z3yXbb1sR6UG6ixxV2YF9jUP7ABra/tree/b2b6432af93f8fe188e32d400263021b602cfec8
 
 To rad://z3yXbb1sR6UG6ixxV2YF9jUP7ABra/z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk
    f2de534..b2b6432  master -> master

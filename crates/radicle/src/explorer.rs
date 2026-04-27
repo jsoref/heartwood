@@ -90,7 +90,7 @@ impl Default for Explorer {
     fn default() -> Self {
         Self(String::from(
             std::option_env!("RADICLE_EXPLORER")
-                .unwrap_or("https://app.radicle.xyz/nodes/$host/$rid$path"),
+                .unwrap_or("https://radicle.network/nodes/$host/$rid$path"),
         ))
     }
 }

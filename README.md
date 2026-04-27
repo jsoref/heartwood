@@ -11,11 +11,11 @@ Radicle was designed to be a secure, decentralized and powerful alternative to
 code forges such as GitHub and GitLab that preserves user sovereignty
 and freedom.
 
-See the [Radicle home page](https://radicle.xyz/) for general
+See the [Radicle home page](https://radicle.dev/) for general
 information, and the [Zulip chat](https://radicle.zulipchat.com/) to
 talk to the project.
 
-See the [Protocol Guide](https://radicle.xyz/guides/protocol) for an
+See the [Protocol Guide](https://radicle.dev/guides/protocol) for an
 in-depth description of how Radicle works.
 
 ## Installation
@@ -32,9 +32,9 @@ in-depth description of how Radicle works.
 
 Run the following command to install the latest binary release:
 
-    curl -sSf https://radicle.xyz/install | sh
+    curl -sSf https://radicle.dev/install | sh
 
-Or visit our [download](https://radicle.xyz/download) page.
+Or visit our [download](https://radicle.dev/download) page.
 
 ### 📦 From source
 
@@ -50,7 +50,7 @@ commands from inside this repository:
 Or directly from our seed node:
 
     cargo install --force --locked --root ~/.radicle \
-        --git https://seed.radicle.xyz/z3gqcJUoA1n9HaHKufZs5FCSGazv5.git \
+        --git https://seed.radicle.dev/z3gqcJUoA1n9HaHKufZs5FCSGazv5.git \
         crates/radicle-cli crates/radicle-node crates/radicle-remote-helper
 
 ## Running
@@ -63,7 +63,7 @@ For running in debug mode, see [HACKING.md](HACKING.md).
 ## Feedback
 
 If you have feedback, feel free to create issues using `rad issue`, join
-[our Zulip][zulip], or email [feedback@radicle.xyz][mail-feedback].
+[our Zulip][zulip], or email [feedback@radicle.dev][mail-feedback].
 Emails sent to this address are [automatically posted][zulip-help-email] to
 [our **public** #feedback channel on Zulip][zulip-feedback], revealing the
 [`From` header][rfc2822s3.6.2] (which usually contains your name and email
@@ -84,5 +84,5 @@ See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for details.
 [zulip]: https://radicle.zulipchat.com/
 [zulip-feedback]: https://radicle.zulipchat.com/#narrow/channel/392584-feedback
 [zulip-help-email]: https://talently.zulip.com/help/message-a-channel-by-email
-[mail-feedback]: mailto:feedback@radicle.xyz
+[mail-feedback]: mailto:feedback@radicle.dev
 [rfc2822s3.6.2]: https://datatracker.ietf.org/doc/html/rfc2822#section-3.6.2

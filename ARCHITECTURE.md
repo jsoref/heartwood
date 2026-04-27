@@ -1,3 +1,3 @@
 # ARCHITECTURE
 
-See the [Protocol Guide](https://radicle.xyz/guides/protocol).
+See the [Protocol Guide](https://radicle.dev/guides/protocol).

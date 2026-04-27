@@ -1,12 +1,12 @@
 Source: radicle
-Maintainer: The Radicle Team <team@radicle.xyz>
+Maintainer: The Radicle Team <team@radicle.dev>
 Uploaders: Lars Wirzenius <liw@liw.fi>, Sebastian Martinez <sebastian@rhizoma.dev>
 Section: vcs
 Priority: optional
 Standards-Version: 4.6.2
 Build-Depends: debhelper (>= 10~),
   asciidoctor
-Homepage: https://radicle.xyz/
+Homepage: https://radicle.dev/
 
 Package: radicle
 Architecture: any

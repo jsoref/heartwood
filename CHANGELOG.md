@@ -14,6 +14,7 @@ Following a domain move of the project, the names of the bootstrap nodes change:
 Old names in the Radicle configuration will be detected and cause warnings to
 be printed.
 The systemd credential IDs that node uses change: `{xyz → dev}.radicle.node.*`.
+COB type names and payload IDs remain unchanged for backwards compatibility.
 
 ## New Features
 

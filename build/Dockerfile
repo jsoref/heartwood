@@ -3,7 +3,7 @@ ARG RUST_VERSION="1.85"
 ARG ALPINE_VERSION="3.20"
 
 FROM rust:${RUST_VERSION}-alpine${ALPINE_VERSION} as builder
-LABEL maintainer="Radicle Team <team@radicle.xyz>"
+LABEL maintainer="Radicle Team <team@radicle.dev>"
 WORKDIR /src
 COPY . .
 

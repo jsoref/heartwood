@@ -14,7 +14,7 @@
 
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package
-    Id="xyz.radicle"
+    Id="dev.radicle"
     Name="Radicle"
     Manufacturer="Radicle Team"
     Version="$(env.RADICLE_VERSION)"
@@ -25,7 +25,7 @@
   >
     <MediaTemplate EmbedCab="yes" />
     <MajorUpgrade DowngradeErrorMessage="A newer version of Radicle is already installed." />
-    <Property Id="ARPURLINFOABOUT" Value="https://www.radicle.xyz/" />
+    <Property Id="ARPURLINFOABOUT" Value="https://www.radicle.dev/" />
     <StandardDirectory Id="LocalAppDataFolder">
       <Directory Id="INSTALLFOLDER" Name="Radicle">  
         <Component Id="InstallFolderComponent" Guid="*">

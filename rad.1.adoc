@@ -1,5 +1,5 @@
 = rad(1)
-The Radicle Team <team@radicle.xyz>
+The Radicle Team <team@radicle.dev>
 :doctype: manpage
 :revnumber: 1.0.0
 :revdate: 2024-04-22
@@ -111,7 +111,7 @@ the logs will go to the system journal. These can be viewed with **journalctl**(
 To connect to a specific peer, the *connect* sub-command can be used:
 For example, to connect to a community node, you can run:
 
-    $ rad node connect z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776
+    $ rad node connect z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.network:8776
 
 The argument given to *connect* is called a node _address_. It is composed of
 a Node ID (NID), followed by an *@* symbol, and the _host_ name and _port_.

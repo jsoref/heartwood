@@ -125,8 +125,8 @@ $ rad sync status
 ✗ Error: to sync a repository, your node must be running. To start it, run `rad node start`
 ```
 ``` (fail)
-$ rad node connect z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk@radicle.xyz:8776
-✗ Connecting to z6Mkt67…v4N1tRk@radicle.xyz:8776... <canceled>
+$ rad node connect z6Mkt67GdsW7715MEfRuP4pSZxJRJh6kj6Y48WRqVv4N1tRk@radicle.example:58776
+✗ Connecting to z6Mkt67…v4N1tRk@radicle.example:58776... <canceled>
 ✗ Error: failed to open node control socket "[..]/.radicle/node/control.sock" (entity not found)
 ✗ Hint: to start your node, run `rad node start`.
 ```

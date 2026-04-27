@@ -27,7 +27,7 @@ extend-ignore-re = [
     "`radicle`",
     "radicle heartwood protocol & stack", # Old fixture.
     "radicle-\\w+", # Crates in Cargo style
-    "radicle\\.((example|zulipchat)\\.com|xyz)", # URLs
+    "radicle\\.((example|zulipchat)\\.com|dev|network|xyz)", # URLs
     "radicle\\w*::", # Crates in Rust code style
     "xyz\\.radicle\\.(issue|patch|id)", # COB Type Names
 ]

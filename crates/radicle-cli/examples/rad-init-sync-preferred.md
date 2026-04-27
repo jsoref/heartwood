@@ -16,7 +16,7 @@ You can show it any time by running `rad .` from this directory.
 Your repository has been synced to the network and is now discoverable by peers.
 View it in your browser at:
 
-    https://app.radicle.xyz/nodes/[...]/rad:z3Rry7rpdWuGpfjPYGzdJKQADsoNW
+    https://radicle.network/nodes/[...]/rad:z3Rry7rpdWuGpfjPYGzdJKQADsoNW
 
 To push changes, run `git push`.
 ```
