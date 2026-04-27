@@ -213,6 +213,55 @@ enum ExecutionError {
     },
 }
 
+/// Loads a credential from systemd, if available.
+///
+/// The credential ID should only be given as a suffix, as this function will
+/// try different prefixes for backwards compatibility reasons.
+///
+/// The prefix `dev.radicle.node` is the preferred prefix, and should be used
+/// for new credentials, while the prefix `xyz.radicle.node` is deprecated and
+/// should be migrated away from. If it is used, a warning is logged.
+#[cfg(all(feature = "systemd", target_os = "linux"))]
+fn load_credential(id_suffix: &str) -> Option<String> {
+    const INFIX_NODE: &str = ".radicle.node.";
+    const PREFIX_DEV: &str = "dev";
+    const PREFIX_XYZ: &str = "xyz";
+
+    let id_dev = format!("{}{}{}", PREFIX_DEV, INFIX_NODE, id_suffix);
+
+    let credential = match radicle_systemd::credential::path(&id_dev) {
+        Ok(option) => option,
+        Err(err) => {
+            log::warn!(target: "node", "Failed to obtain path of the passphrase file via systemd credential with '{id_dev}': {err}");
+            None
+        }
+    };
+
+    let credential = credential.or_else(|| {
+        let id_xyz = format!("{}{}{}", PREFIX_XYZ, INFIX_NODE, id_suffix);
+        match radicle_systemd::credential::path(&id_xyz) {
+            Ok(option) => {
+                log::warn!(target: "node", "Obtain path of the passphrase file via systemd credential with '{id_xyz}'. Using this credential ID is discouraged. Please change the ID to '{id_dev}'.");
+                option
+            },
+            Err(err) => {
+                log::warn!(target: "node", "Failed to obtain path of the passphrase file via systemd credential with '{id_xyz}': {err}");
+                None
+            }
+        }
+    });
+
+    credential.and_then(|ref path| {
+        match std::fs::read_to_string(path) {
+            Ok(passphrase) => Some(passphrase),
+            Err(err) => {
+                log::warn!(target: "node", "Failed to read passphrase from '{}': {err}", path.display());
+                None
+            }
+        }
+    })
+}
+
 fn execute(options: Options) -> Result<(), ExecutionError> {
     let home = profile::home()?;
 
@@ -244,39 +293,14 @@ fn execute(options: Options) -> Result<(), ExecutionError> {
     let passphrase = None;
 
     #[cfg(all(feature = "systemd", target_os = "linux"))]
-    let passphrase = passphrase.or_else(|| {
-        const ID: &str = "xyz.radicle.node.passphrase";
-        match radicle_systemd::credential::path(ID) {
-            Err(err) => {
-                log::warn!(target: "node", "Failed to obtain path of the passphrase file via systemd credential with '{ID}': {err}");
-                None
-            },
-            Ok(Some(ref path)) => match std::fs::read_to_string(path) {
-                Ok(passphrase) => Some(passphrase.into()),
-                Err(err) => {
-                    log::warn!(target: "node", "Failed to read passphrase from '{}': {err}", path.display());
-                    None
-                }
-            }
-            Ok(None) => None,
-        }
-    });
+    let passphrase = passphrase.or_else(|| load_credential("passphrase").map(|s| s.into()));
 
     let passphrase = passphrase.or_else(profile::env::passphrase);
 
     let secret_path = options.secret;
 
     #[cfg(all(feature = "systemd", target_os = "linux"))]
-    let secret_path = secret_path.or_else(|| {
-        const ID: &str = "xyz.radicle.node.secret";
-        match radicle_systemd::credential::path(ID) {
-            Err(err) => {
-                log::warn!(target: "node", "Failed to obtain path of the secret key via systemd credential with ID '{ID}': {err}");
-                None
-            },
-            Ok(path) => path
-        }
-    });
+    let secret_path = secret_path.or_else(|| load_credential("secret").map(PathBuf::from));
 
     let secret_path = secret_path
         .or_else(|| config.node.secret.clone())

@@ -13,6 +13,7 @@ Following a domain move of the project, the names of the bootstrap nodes change:
 `{iris,rosa}.radicle.{xyz → network}`.
 Old names in the Radicle configuration will be detected and cause warnings to
 be printed.
+The systemd credential IDs that node uses change: `{xyz → dev}.radicle.node.*`.
 
 ## New Features
 
