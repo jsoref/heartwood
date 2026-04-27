@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Following a domain move of the project, the names of the bootstrap nodes change:
 `{iris,rosa}.radicle.{xyz → network}`.
+Old names in the Radicle configuration will be detected and cause warnings to
+be printed.
 
 ## New Features
 

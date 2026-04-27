@@ -3,6 +3,12 @@ $ rad config push preferredSeeds z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm
 z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@seed.radicle.garden:8776
 $ rad config push node.connect z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo@ash.radicle.garden:8776
 z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo@ash.radicle.garden:8776
+$ rad config push node.connect z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776
+z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo@ash.radicle.garden:8776
+z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776
+$ rad config push preferredSeeds z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo@rosa.radicle.xyz:8776
+z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@seed.radicle.garden:8776
+z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo@rosa.radicle.xyz:8776
 ```
 
 Note the warnings that the above configuration causes:
@@ -38,8 +44,10 @@ $ rad debug
     "RAD_RNG_SEED": "0"
   },
   "warnings": [
-    "Value of configuration option `node.connect` at index 0 mentions node with address 'ash.radicle.garden:8776', which has been renamed to 'rosa.radicle.xyz:8776'. Please edit your configuration file to use the new address.",
-    "Value of configuration option `preferredSeeds` at index 0 mentions node with address 'seed.radicle.garden:8776', which has been renamed to 'iris.radicle.xyz:8776'. Please edit your configuration file to use the new address."
+    "Value of configuration option `node.connect` at index 0 mentions node with hostname 'ash.radicle.garden', which has been renamed to 'rosa.radicle.network'. Please edit your configuration file to use the new address.",
+    "Value of configuration option `node.connect` at index 1 mentions node with hostname 'iris.radicle.xyz', which has been renamed to 'iris.radicle.network'. Please edit your configuration file to use the new address.",
+    "Value of configuration option `preferredSeeds` at index 0 mentions node with hostname 'seed.radicle.garden', which has been renamed to 'iris.radicle.network'. Please edit your configuration file to use the new address.",
+    "Value of configuration option `preferredSeeds` at index 1 mentions node with hostname 'rosa.radicle.xyz', which has been renamed to 'rosa.radicle.network'. Please edit your configuration file to use the new address."
   ]
 }
 ```
@@ -48,8 +56,10 @@ Also, `rad node status` will warn us:
 
 ```
 $ rad node status
-! Warning: Value of configuration option `node.connect` at index 0 mentions node with address 'ash.radicle.garden:8776', which has been renamed to 'rosa.radicle.xyz:8776'. Please edit your configuration file to use the new address.
-! Warning: Value of configuration option `preferredSeeds` at index 0 mentions node with address 'seed.radicle.garden:8776', which has been renamed to 'iris.radicle.xyz:8776'. Please edit your configuration file to use the new address.
+! Warning: Value of configuration option `node.connect` at index 0 mentions node with hostname 'ash.radicle.garden', which has been renamed to 'rosa.radicle.network'. Please edit your configuration file to use the new address.
+! Warning: Value of configuration option `node.connect` at index 1 mentions node with hostname 'iris.radicle.xyz', which has been renamed to 'iris.radicle.network'. Please edit your configuration file to use the new address.
+! Warning: Value of configuration option `preferredSeeds` at index 0 mentions node with hostname 'seed.radicle.garden', which has been renamed to 'iris.radicle.network'. Please edit your configuration file to use the new address.
+! Warning: Value of configuration option `preferredSeeds` at index 1 mentions node with hostname 'rosa.radicle.xyz', which has been renamed to 'rosa.radicle.network'. Please edit your configuration file to use the new address.
 Node is stopped.
 To start it, run `rad node start`.
 ```
