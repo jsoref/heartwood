@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Domain Name Migration
+
+Following a domain move of the project, the names of the bootstrap nodes change:
+`{iris,rosa}.radicle.{xyz → network}`.
+
 ## New Features
 
 - Teach `rad patch show` to show the full commit range for each revision.

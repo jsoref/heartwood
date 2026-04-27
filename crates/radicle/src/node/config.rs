@@ -42,7 +42,7 @@ pub mod seeds {
             #[allow(clippy::unwrap_used)] // Value is manually verified.
             NodeId::from_str("z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7").unwrap(),
             vec![
-                HostName::Dns("iris.radicle.xyz".to_owned()),
+                HostName::Dns("iris.radicle.network".to_owned()),
                 #[cfg(feature = "tor")]
                 #[allow(clippy::unwrap_used)] // Value is manually verified.
                 OnionAddrV3::from_str(
@@ -60,7 +60,7 @@ pub mod seeds {
             #[allow(clippy::unwrap_used)] // Value is manually verified.
             NodeId::from_str("z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo").unwrap(),
             vec![
-                HostName::Dns("rosa.radicle.xyz".to_owned()),
+                HostName::Dns("rosa.radicle.network".to_owned()),
                 #[cfg(feature = "tor")]
                 #[allow(clippy::unwrap_used)] // Value is manually verified.
                 OnionAddrV3::from_str(
@@ -89,11 +89,11 @@ impl Network {
         match self {
             Self::Main => [
                 (
-                    "iris.radicle.xyz",
+                    "iris.radicle.network",
                     seeds::RADICLE_NODE_BOOTSTRAP_IRIS.clone(),
                 ),
                 (
-                    "rosa.radicle.xyz",
+                    "rosa.radicle.network",
                     seeds::RADICLE_NODE_BOOTSTRAP_ROSA.clone(),
                 ),
             ]
