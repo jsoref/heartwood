@@ -28,9 +28,12 @@ pub use git2::{
     AnnotatedCommit, Diff, DiffFindOptions, DiffOptions, DiffStats, MergeAnalysis, MergeOptions,
 };
 
-// Re-exports for `radicle-cli`.
 pub mod build {
+    // Re-exports for `radicle-cli`.
     pub use git2::build::CheckoutBuilder;
+
+    #[cfg(test)]
+    pub(crate) use git2::build::TreeUpdateBuilder;
 }
 
 pub(crate) mod transport {
