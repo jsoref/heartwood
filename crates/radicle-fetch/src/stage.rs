@@ -270,7 +270,7 @@ impl ProtocolStage for CanonicalId {
         let verified = repo
             .identity_doc_at(
                 *s.canonical_rad_id()
-                    .expect("ensure we got canonicdal 'rad/id' ref"),
+                    .expect("ensure we got canonical 'rad/id' ref"),
             )
             .map_err(|err| error::Prepare::Verification {
                 remote: self.remote,

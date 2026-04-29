@@ -722,7 +722,7 @@ where
                                     ChannelsConfig::new(FETCH_TIMEOUT)
                                         .with_reader_limit(reader_limit),
                                 ) else {
-                                    log::debug!(target: "wire", "Peer attempted to open already-open stream stream {stream}");
+                                    log::debug!(target: "wire", "Peer attempted to open already-open stream {stream}");
                                     continue;
                                 };
 
